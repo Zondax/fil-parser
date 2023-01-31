@@ -78,7 +78,7 @@ func (p *Parser) parseSubTxs(subTxs []filTypes.ExecutionTrace, mainMsgCid cid.Ci
 
 func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
 	key filTypes.TipSetKey) (*types.Transaction, error) {
-	txType, err := p.getMethodName(trace.Msg, int64(tipSet.Height()), key)
+	txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), key)
 	if err != nil {
 		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", msgCid.String(), err)
 		txType = UnknownStr

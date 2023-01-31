@@ -63,7 +63,7 @@ func (p *Parser) getActorNameFromAddress(address address.Address, height int64, 
 	return actorName
 }
 
-func (p *Parser) getMethodName(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (string, *rosettaTypes.Error) {
+func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (string, *rosettaTypes.Error) {
 
 	if msg == nil {
 		return "", rosetta.BuildError(rosetta.ErrMalformedValue, nil, true)
