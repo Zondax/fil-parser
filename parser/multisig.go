@@ -7,11 +7,13 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v10/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	"github.com/filecoin-project/go-state-types/cbor"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/database"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	rosetta "github.com/zondax/rosetta-filecoin-proxy/rosetta/services"
+	"go.uber.org/zap"
 )
 
 func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
@@ -59,14 +61,14 @@ func (p *Parser) propose(msg *filTypes.Message, msgRct *filTypes.MessageReceipt)
 	if err != nil {
 		return metadata, err
 	}
-	innerParams, err := p.innerProposeParams(proposeParams)
+	method, innerParams, err := p.innerProposeParams(proposeParams)
 	if err != nil {
-		// TODO: log.
+		zap.S().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
 	metadata[ParamsKey] = propose{
 		To:     proposeParams.To.String(),
 		Value:  proposeParams.Value.String(),
-		Method: uint64(proposeParams.Method),
+		Method: method,
 		Params: innerParams,
 	}
 	var proposeReturn multisig.ProposeReturn
@@ -165,66 +167,73 @@ func (p *Parser) parseMsigParams(msg *filTypes.Message, height int64, key filTyp
 	return parsedParams, nil
 }
 
-func (p *Parser) innerProposeParams(propose multisig.ProposeParams) (cbor.Unmarshaler, error) {
+func (p *Parser) innerProposeParams(propose multisig.ProposeParams) (string, cbor.Unmarshaler, error) {
 	reader := bytes.NewReader(propose.Params)
 	switch propose.Method {
 	case builtin.MethodSend:
 		var params multisig.ProposeParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodSend, &params, nil
 	case builtin.MethodsMultisig.Approve,
 		builtin.MethodsMultisig.Cancel:
 		var params multisig.TxnIDParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodApprove, &params, nil
 	case builtin.MethodsMultisig.AddSigner:
 		var params multisig.AddSignerParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodAddSigner, &params, nil
 	case builtin.MethodsMultisig.RemoveSigner:
 		var params multisig.RemoveSignerParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodRemoveSigner, &params, nil
 	case builtin.MethodsMultisig.SwapSigner:
 		var params multisig.SwapSignerParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodSwapSigner, &params, nil
 	case builtin.MethodsMultisig.ChangeNumApprovalsThreshold:
 		var params multisig.ChangeNumApprovalsThresholdParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodChangeNumApprovalsThreshold, &params, nil
 	case builtin.MethodsMultisig.LockBalance:
 		var params multisig.LockBalanceParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodLockBalance, &params, nil
 	case builtin.MethodsMiner.WithdrawBalance:
 		var params miner.WithdrawBalanceParams
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
-		return &params, nil
+		return MethodWithdrawBalance, &params, nil
+	case builtin.MethodsVerifiedRegistry.AddVerifier:
+		var params verifreg.AddVerifierParams
+		err := params.UnmarshalCBOR(reader)
+		if err != nil {
+			return "", nil, err
+		}
+		return MethodAddVerifier, &params, nil
 	}
-	return nil, errUnknownMethod
+	return "", nil, errUnknownMethod
 }

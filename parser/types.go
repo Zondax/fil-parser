@@ -39,6 +39,6 @@ type getBeneficiryReturn struct {
 type propose struct {
 	To     string
 	Value  string
-	Method uint64
+	Method string
 	Params cbor.Unmarshaler
 }
