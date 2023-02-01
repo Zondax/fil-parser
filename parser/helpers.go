@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	rosettaTypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/filecoin-project/go-address"
 	methods "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -17,7 +17,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
-	rosetta "github.com/zondax/rosetta-filecoin-proxy/rosetta/services"
+	"go.uber.org/zap"
 	"reflect"
 )
 
@@ -28,17 +28,17 @@ func (p *Parser) getActorAddressInfo(add address.Address, height int64, key filT
 	)
 	addInfo.Robust, err = database.ActorsDB.GetRobustAddress(add)
 	if err != nil {
-		rosetta.Logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err.Error())
+		zap.S().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
 	addInfo.Short, err = database.ActorsDB.GetShortAddress(add)
 	if err != nil {
-		rosetta.Logger.Errorf("could not get short address for %s. Err: %v", add.String(), err.Error())
+		zap.S().Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	addInfo.ActorCid, err = database.ActorsDB.GetActorCode(add, height, key)
 	if err != nil {
-		rosetta.Logger.Error("could not get actor code from address. Err:", err.Error())
+		zap.S().Errorf("could not get actor code from address. Err:", err)
 	} else {
 		addInfo.ActorType, _ = p.lib.BuiltinActors.GetActorNameFromCid(addInfo.ActorCid)
 	}
@@ -63,10 +63,10 @@ func (p *Parser) getActorNameFromAddress(address address.Address, height int64, 
 	return actorName
 }
 
-func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (string, *rosettaTypes.Error) {
+func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (string, error) {
 
 	if msg == nil {
-		return "", rosetta.BuildError(rosetta.ErrMalformedValue, nil, true)
+		return "", errors.New("malformed value")
 	}
 
 	// Shortcut 1 - Method "0" corresponds to "MethodSend"
@@ -130,7 +130,7 @@ func ParseInitActorExecParams(raw []byte) (initActor.ExecParams, error) {
 	var params initActor.ExecParams
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		rosetta.Logger.Error("Could not parse 'Init' actor's 'Exec' parameters:", err.Error())
+		zap.S().Errorf("Could not parse 'Init' actor's 'Exec' parameters:", err)
 		return params, err
 	}
 	return params, nil
@@ -141,7 +141,7 @@ func ParsePowerActorCreateMinerParams(raw []byte) (power.CreateMinerParams, erro
 	var params power.CreateMinerParams
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		rosetta.Logger.Error("Could not parse 'Power' actor's 'CreateMiner' parameters:", err.Error())
+		zap.S().Errorf("could not parse 'Power' actor's 'CreateMiner' parameters: %v", err.Error())
 		return params, err
 	}
 	return params, nil
@@ -161,7 +161,7 @@ func ParseProposeParams(msg *filTypes.Message, height int64, key filTypes.TipSet
 	var params map[string]interface{}
 	msgSerial, err := msg.MarshalJSON()
 	if err != nil {
-		rosetta.Logger.Error("Could not parse params. Cannot serialize lotus message:", err.Error())
+		zap.S().Errorf("could not parse params. Cannot serialize lotus message: %v", err)
 		return params, err
 	}
 
@@ -176,7 +176,7 @@ func ParseProposeParams(msg *filTypes.Message, height int64, key filTypes.TipSet
 
 	parsedParams, err := rosettaLib.GetInnerProposeTxParams(string(msgSerial))
 	if err != nil {
-		rosetta.Logger.Errorf("Could not parse params. ParseProposeTxParams returned with error: %s", err.Error())
+		zap.S().Errorf("could not parse params. ParseProposeTxParams returned with error: %s", err)
 		return params, err
 	}
 
@@ -204,14 +204,14 @@ func ParseProposeParams(msg *filTypes.Message, height int64, key filTypes.TipSet
 
 	innerParams, err := rosettaLib.ParseParamsMultisigTx(string(msgSerial), actorCode)
 	if err != nil {
-		rosetta.Logger.Error("Could not parse inner params for propose method:", targetMethod, ". ParseParamsMultisigTx returned with error:", err.Error())
-		rosetta.Logger.Debugf("raw serial msg: %s", string(msgSerial))
+		zap.S().Errorf("could not parse inner params for propose method: %v. ParseParamsMultisigTx returned with error: %v", targetMethod, err)
+		zap.S().Debugf("raw serial msg: %s", string(msgSerial))
 		return params, err
 	}
 
 	innerParamsMap := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(innerParams), &innerParamsMap); err != nil {
-		rosetta.Logger.Error("Could not unmarshall inner params for propose method:", targetMethod, ". ParseParamsMultisigTx returned with error:", err.Error())
+		zap.S().Errorf("could not unmarshall inner params for propose method: %v. ParseParamsMultisigTx returned with error: %v", targetMethod, err)
 		return params, err
 	}
 
