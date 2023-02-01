@@ -13,6 +13,7 @@ import (
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	rosetta "github.com/zondax/rosetta-filecoin-proxy/rosetta/services"
 	"go.uber.org/zap"
+	"strconv"
 	"time"
 
 	"strings"
@@ -90,7 +91,6 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 		txType = UnknownStr
 	}
 	metadata, mErr := p.getMetadata(txType, trace.Msg, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs)
-	metadata["GasUsed"] = trace.MsgRct.GasUsed // TODO: cases where metadata nil?
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction '%s'", msgCid.String())
 	}
@@ -113,6 +113,7 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      getCastedAmount(trace.Msg.Value.String()),
+		GasUsed:     getCastedAmount(strconv.FormatInt(trace.MsgRct.GasUsed, 10)),
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
