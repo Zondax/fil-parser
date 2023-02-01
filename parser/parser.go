@@ -54,9 +54,11 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 			trace.Msg.Cid().String(), tipsetKey)...)
 
 		// Fees
-		minerTxs := p.feesTransactions(trace.Msg, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
-			transaction.TxType, trace.GasCost, uint64(tipSet.Height()), tipSet.MinTimestamp())
-		transactions = append(transactions, minerTxs...)
+		if trace.GasCost.TotalCost.Uint64() > 0 {
+			minerTxs := p.feesTransactions(trace.Msg, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
+				transaction.TxType, trace.GasCost, uint64(tipSet.Height()), tipSet.MinTimestamp())
+			transactions = append(transactions, minerTxs...)
+		}
 	}
 
 	return transactions, &p.addresses, nil
