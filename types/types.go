@@ -1,8 +1,10 @@
 package types
 
 import (
-	"github.com/ipfs/go-cid"
 	"time"
+
+	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
 )
 
 type AddressInfo struct {
@@ -56,4 +58,16 @@ type Transaction struct {
 	TxParams string `json:"tx_params"`
 	// TxReturn contains the returned data by the destination actor
 	TxReturn string `json:"tx_return"`
+}
+
+type LightBlockHeader struct {
+	Cid        string
+	BlockMiner string
+}
+
+type BlockMessages map[string][]LightBlockHeader // map[MessageCid][]LightBlockHeader
+
+type ExtendedTipSet struct {
+	lotusChainTypes.TipSet
+	BlockMessages
 }
