@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"time"
 
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
@@ -70,4 +71,20 @@ type BlockMessages map[string][]LightBlockHeader // map[MessageCid][]LightBlockH
 type ExtendedTipSet struct {
 	lotusChainTypes.TipSet
 	BlockMessages
+}
+
+func (e *ExtendedTipSet) MarshalJSON() ([]byte, error) {
+	data, err := json.Marshal(&struct {
+		lotusChainTypes.ExpTipSet
+		BlockMessages
+	}{
+		ExpTipSet: lotusChainTypes.ExpTipSet{
+			Cids:   e.TipSet.Cids(),
+			Blocks: e.TipSet.Blocks(),
+			Height: e.TipSet.Height(),
+		},
+		BlockMessages: e.BlockMessages,
+	})
+
+	return data, err
 }
