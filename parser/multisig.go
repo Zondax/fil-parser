@@ -12,7 +12,6 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/database"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
-	rosetta "github.com/zondax/rosetta-filecoin-proxy/rosetta/services"
 	"go.uber.org/zap"
 )
 
@@ -145,7 +144,7 @@ func (p *Parser) lockBalance(raw []byte) (map[string]interface{}, error) {
 func (p *Parser) parseMsigParams(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (string, error) {
 	msgSerial, err := msg.MarshalJSON()
 	if err != nil {
-		rosetta.Logger.Error("Could not parse params. Cannot serialize lotus message:", err.Error())
+		zap.S().Errorf("Could not parse params. Cannot serialize lotus message: %s", err.Error())
 		return "", err
 	}
 
@@ -160,7 +159,7 @@ func (p *Parser) parseMsigParams(msg *filTypes.Message, height int64, key filTyp
 
 	parsedParams, err := p.lib.ParseParamsMultisigTx(string(msgSerial), actorCode)
 	if err != nil {
-		rosetta.Logger.Error("Could not parse params. ParseParamsMultisigTx returned with error:", err.Error())
+		zap.S().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %s", err.Error())
 		return "", err
 	}
 

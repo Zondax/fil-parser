@@ -9,9 +9,9 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/shopspring/decimal"
 	"github.com/zondax/fil-parser/database"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	rosetta "github.com/zondax/rosetta-filecoin-proxy/rosetta/services"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -35,7 +35,7 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipSet.Key()
-	blockHash, err := rosetta.BuildTipSetKeyHash(tipsetKey)
+	blockHash, err := tools.BuildTipSetKeyHash(tipsetKey)
 	if err != nil {
 		return nil, nil, errBlockHash
 	}
