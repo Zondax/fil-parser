@@ -2,11 +2,9 @@ package parser
 
 import (
 	"bytes"
-	"github.com/filecoin-project/go-state-types/cbor"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/actors/builtin/power"
 	"github.com/filecoin-project/specs-actors/actors/runtime/proof"
-	"io"
 )
 
 func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt,
@@ -111,9 +109,4 @@ func (p *Parser) updateClaimedPower(raw []byte) (map[string]interface{}, error) 
 	}
 	metadata[ParamsKey] = params
 	return metadata, nil
-}
-
-func (p *Parser) unmarshalParams(reader io.Reader, unmarshaler cbor.Unmarshaler) (cbor.Unmarshaler, error) {
-	err := unmarshaler.UnmarshalCBOR(reader)
-	return unmarshaler, err
 }
