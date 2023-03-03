@@ -92,7 +92,7 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 	}
 	metadata, mErr := p.getMetadata(txType, trace.Msg, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs)
 	if mErr != nil {
-		zap.S().Warnf("Could not get metadata for transaction '%s'", msgCid.String())
+		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
 	}
 	if trace.Error != "" {
 		metadata["Error"] = trace.Error
