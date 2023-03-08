@@ -96,7 +96,7 @@ const (
 	MethodInvokeContractReadOnly      = "InvokeContractReadOnly"      // MethodsEVM
 	MethodInvokeContractDelegate      = "InvokeContractDelegate"      // MethodsEVM
 	MethodCreate                      = "Create"                      // MethodsEam
-	MethodCreate2                     = "create2"                     // MethodsEam
+	MethodCreate2                     = "Create2"                     // MethodsEam
 	MethodCreateExternal              = "CreateExternal"              // MethodsEam
 )
 
