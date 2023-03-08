@@ -1,6 +1,9 @@
 package parser
 
-import "github.com/filecoin-project/go-state-types/cbor"
+import (
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/cbor"
+)
 
 type controlAddress struct {
 	Owner        string   `json:"owner"`
@@ -41,4 +44,10 @@ type propose struct {
 	Value  string
 	Method string
 	Params cbor.Unmarshaler
+}
+
+type eamCreateReturn struct {
+	ActorId       uint64
+	RobustAddress *address.Address
+	EthAddress    string
 }

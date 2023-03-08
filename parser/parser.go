@@ -166,7 +166,8 @@ func getStatus(code string) string {
 	return code
 }
 
-func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt,
+	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var err error
 	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
@@ -200,6 +201,8 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 		return p.parseVerifiedRegistry(txType, msg, msgRct)
 	case manifest.EvmKey:
 		return p.parseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
+	case manifest.EamKey:
+		return p.parseEam(txType, msg, msgRct, mainMsgCid, ethLogs)
 	default:
 		return metadata, errNotValidActor
 	}
