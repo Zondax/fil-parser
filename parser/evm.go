@@ -15,13 +15,13 @@ func (p *Parser) parseEvm(txType string, msg *filTypes.Message, msgCid cid.Cid, 
 	case MethodConstructor:
 		return p.evmConstructor(msg.Params)
 	case MethodInvokeContract, MethodInvokeContractReadOnly, MethodInvokeContractDelegate:
-		metadata[ParamsKey] = "0x" + hex.EncodeToString(msg.Params)
-		metadata[ReturnKey] = "0x" + hex.EncodeToString(msgRct.Return)
+		metadata[ParamsKey] = ethPrefix + hex.EncodeToString(msg.Params)
+		metadata[ReturnKey] = ethPrefix + hex.EncodeToString(msgRct.Return)
 		logs, err := searchEthLogs(ethLogs, msgCid.String())
 		if err != nil {
 			return metadata, err
 		}
-		metadata["ethLogs"] = logs
+		metadata[ethLogsKey] = logs
 	case MethodGetBytecode:
 	}
 	return metadata, nil
@@ -39,6 +39,7 @@ func (p *Parser) evmConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
+// TODO: not sure this still works
 func searchEthLogs(logs []types.EthLog, msgCid string) ([]types.EthLog, error) {
 	res := make([]types.EthLog, 0)
 	for _, log := range logs {

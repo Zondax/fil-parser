@@ -9,9 +9,14 @@ const (
 	BurnFeeOp            = "BurnFee"
 
 	BurnAddress = "f099"
+	ethPrefix   = "0x"
 
-	ParamsKey = "Params"
-	ReturnKey = "Return"
+	// metadata keys
+	ParamsKey  = "Params"
+	ReturnKey  = "Return"
+	ethHashKey = "ethHash"
+	addressKey = "address"
+	ethLogsKey = "ethLogs"
 
 	UnknownStr = "unknown"
 
@@ -90,6 +95,9 @@ const (
 	MethodGetStorageAt                = "GetStorageAt"                // MethodsEVM
 	MethodInvokeContractReadOnly      = "InvokeContractReadOnly"      // MethodsEVM
 	MethodInvokeContractDelegate      = "InvokeContractDelegate"      // MethodsEVM
+	MethodCreate                      = "Create"                      // MethodsEam
+	MethodCreate2                     = "create2"                     // MethodsEam
+	MethodCreateExternal              = "CreateExternal"              // MethodsEam
 )
 
 // SupportedOperations operations that will be parsed
