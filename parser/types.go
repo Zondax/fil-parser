@@ -46,7 +46,7 @@ type propose struct {
 	Params cbor.Unmarshaler
 }
 
-type eamCreate struct {
+type eamCreateReturn struct {
 	ActorId       uint64
 	RobustAddress *address.Address
 	EthAddress    string

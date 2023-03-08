@@ -3,6 +3,8 @@ package parser
 import (
 	"bytes"
 	"encoding/hex"
+	"strconv"
+
 	"github.com/filecoin-project/go-state-types/builtin/v10/eam"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
@@ -24,6 +26,20 @@ func (p *Parser) parseEam(txType string, msg *filTypes.Message, msgRct *filTypes
 	return metadata, nil
 }
 
+func (p *Parser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
+	reader := bytes.NewReader(rawReturn)
+	err = cr.UnmarshalCBOR(reader)
+	return cr, err
+}
+
+func (p *Parser) newEamCreate(r eam.CreateReturn) eamCreateReturn {
+	return eamCreateReturn{
+		ActorId:       r.ActorID,
+		RobustAddress: r.RobustAddress,
+		EthAddress:    ethPrefix + hex.EncodeToString(r.EthAddress[:]),
+	}
+}
+
 func (p *Parser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 
@@ -35,17 +51,11 @@ func (p *Parser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[s
 	}
 	metadata[ParamsKey] = params
 
-	reader = bytes.NewReader(rawReturn)
-	var createReturn eam.CreateReturn
-	err = createReturn.UnmarshalCBOR(reader)
+	createReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = eamCreate{
-		ActorId:       createReturn.ActorID,
-		RobustAddress: createReturn.RobustAddress,
-		EthAddress:    ethPrefix + hex.EncodeToString(createReturn.EthAddress[:]),
-	}
+	metadata[ReturnKey] = p.newEamCreate(createReturn)
 	p.appendEamAddress(eam.Return(createReturn))
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
@@ -68,17 +78,11 @@ func (p *Parser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[
 	}
 	metadata[ParamsKey] = params
 
-	reader = bytes.NewReader(rawReturn)
-	var createReturn eam.Create2Return
-	err = createReturn.UnmarshalCBOR(reader)
+	createReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = eamCreate{
-		ActorId:       createReturn.ActorID,
-		RobustAddress: createReturn.RobustAddress,
-		EthAddress:    ethPrefix + hex.EncodeToString(createReturn.EthAddress[:]),
-	}
+	metadata[ReturnKey] = p.newEamCreate(createReturn)
 	p.appendEamAddress(eam.Return(createReturn))
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
@@ -94,17 +98,11 @@ func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.Mes
 	metadata := make(map[string]interface{})
 	metadata[ParamsKey] = ethPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
 
-	reader := bytes.NewReader(msgRct.Return)
-	var createExternalReturn eam.CreateExternalReturn
-	err := createExternalReturn.UnmarshalCBOR(reader)
+	createExternalReturn, err := p.parseEamReturn(msgRct.Return)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = eamCreate{
-		ActorId:       createExternalReturn.ActorID,
-		RobustAddress: createExternalReturn.RobustAddress,
-		EthAddress:    ethPrefix + hex.EncodeToString(createExternalReturn.EthAddress[:]),
-	}
+	metadata[ReturnKey] = p.newEamCreate(createExternalReturn)
 	p.appendEamAddress(eam.Return(createExternalReturn))
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
@@ -125,9 +123,9 @@ func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.Mes
 	return metadata, nil
 }
 
-// TODO: add cid and short?
 func (p *Parser) appendEamAddress(r eam.Return) {
 	p.appendToAddresses(types.AddressInfo{
+		Short:     filPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:    r.RobustAddress.String(),
 		ActorType: "evm",
 	})

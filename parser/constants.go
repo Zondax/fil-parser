@@ -10,6 +10,7 @@ const (
 
 	BurnAddress = "f099"
 	ethPrefix   = "0x"
+	filPrefix   = "f0"
 
 	// metadata keys
 	ParamsKey  = "Params"
