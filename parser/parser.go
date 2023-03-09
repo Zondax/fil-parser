@@ -56,9 +56,9 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			minerTxs := p.feesTransactions(trace.Msg, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
+			feeTx := p.feesTransactions(trace.Msg, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
 				transaction.TxType, trace.GasCost, uint64(tipSet.Height()), tipSet.MinTimestamp())
-			transactions = append(transactions, minerTxs...)
+			transactions = append(transactions, feeTx)
 		}
 	}
 
@@ -123,21 +123,32 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 }
 
 func (p *Parser) feesTransactions(msg *filTypes.Message, minerAddress, txHash, blockHash, txType string, gasCost api.MsgGasCost,
-	height uint64, timestamp uint64) (feeTxs []*types.Transaction) {
+	height uint64, timestamp uint64) *types.Transaction {
 	ts := p.getTimestamp(timestamp)
-	feeTxs = append(feeTxs, p.newFeeTx(msg, "", txHash, blockHash, txType,
-		TotalFeeOp, getCastedAmount(gasCost.TotalCost.String()), height, ts))
-	feeTxs = append(feeTxs, p.newFeeTx(msg, BurnAddress, txHash, blockHash, txType,
-		OverEstimationBurnOp, getCastedAmount(gasCost.OverEstimationBurn.String()), height, ts))
-	feeTxs = append(feeTxs, p.newFeeTx(msg, minerAddress, txHash, blockHash, txType,
-		MinerFeeOp, getCastedAmount(gasCost.MinerTip.String()), height, ts))
-	feeTxs = append(feeTxs, p.newFeeTx(msg, BurnAddress, txHash, blockHash, txType,
-		BurnFeeOp, getCastedAmount(gasCost.BaseFeeBurn.String()), height, ts))
-	return
+	metadata := FeesMetadata{
+		TxType: txType,
+		MinerFee: MinerFee{
+			MinerAddress: minerAddress,
+			Amount:       getCastedAmount(gasCost.MinerTip.String()),
+		},
+		OverEstimationBurnFee: OverEstimationBurnFee{
+			BurnAddress: BurnAddress,
+			Amount:      getCastedAmount(gasCost.OverEstimationBurn.String()),
+		},
+		BurnFee: BurnFee{
+			BurnAddress: BurnAddress,
+			Amount:      getCastedAmount(gasCost.BaseFeeBurn.String()),
+		},
+	}
+
+	feeTx := p.newFeeTx(msg, txHash, blockHash, getCastedAmount(gasCost.TotalCost.String()), height, ts, metadata)
+	return feeTx
 }
 
-func (p *Parser) newFeeTx(msg *filTypes.Message, txTo, txHash, blockHash, txType, feeType string, gasCost string, height uint64,
-	timestamp time.Time) *types.Transaction {
+func (p *Parser) newFeeTx(msg *filTypes.Message, txHash, blockHash string, gasCost string, height uint64,
+	timestamp time.Time, feesMetadata FeesMetadata) *types.Transaction {
+	metadata, _ := json.Marshal(feesMetadata)
+
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
 			Height: height,
@@ -146,12 +157,12 @@ func (p *Parser) newFeeTx(msg *filTypes.Message, txTo, txHash, blockHash, txType
 		TxTimestamp: timestamp,
 		TxHash:      txHash,
 		TxFrom:      msg.From.String(),
-		TxTo:        txTo,
 		Amount:      gasCost,
 		Status:      "Ok",
-		TxType:      feeType,
-		TxMetadata:  txType,
+		TxType:      TotalFeeOp,
+		TxMetadata:  string(metadata),
 	}
+
 }
 
 func hasMessage(trace *api.InvocResult) bool {
