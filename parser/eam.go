@@ -21,7 +21,7 @@ func (p *Parser) parseEam(txType string, msg *filTypes.Message, msgRct *filTypes
 	case MethodCreate2:
 		return p.parseCreate2(msg.Params, msgRct.Return, msgCid)
 	case MethodCreateExternal:
-		return p.parseCreateExternal(msg, msgRct, msgCid, ethLogs)
+		return p.parseCreateExternal(msg, msgRct, msgCid)
 	}
 	return metadata, nil
 }
@@ -94,7 +94,7 @@ func (p *Parser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[
 	return metadata, nil
 }
 
-func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.MessageReceipt, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.MessageReceipt, msgCid cid.Cid) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	metadata[ParamsKey] = ethPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
 
@@ -110,15 +110,6 @@ func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.Mes
 		return metadata, err
 	}
 	metadata[ethHashKey] = ethHash.String()
-
-	// TODO: still needs to get the name
-	res := make([]types.EthLog, 0)
-	for _, log := range ethLogs {
-		if log[addressKey] == ethPrefix+hex.EncodeToString(createExternalReturn.EthAddress[:]) {
-			res = append(res, log)
-		}
-	}
-	metadata[ethLogsKey] = res
 
 	return metadata, nil
 }

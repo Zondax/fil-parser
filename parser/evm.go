@@ -39,11 +39,10 @@ func (p *Parser) evmConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-// TODO: not sure this still works
 func searchEthLogs(logs []types.EthLog, msgCid string) ([]types.EthLog, error) {
 	res := make([]types.EthLog, 0)
 	for _, log := range logs {
-		if log["transactionCid"] == msgCid {
+		if log.TransactionCid == msgCid {
 			res = append(res, log)
 		}
 	}

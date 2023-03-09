@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"time"
 
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
@@ -25,7 +26,10 @@ func NewAddressInfoMap() AddressInfoMap {
 	return make(AddressInfoMap)
 }
 
-type EthLog map[string]interface{}
+type EthLog struct {
+	ethtypes.EthLog
+	TransactionCid string `json:"transactionCid"`
+}
 
 type BasicBlockData struct {
 	// Height contains the block height
