@@ -51,3 +51,25 @@ type eamCreateReturn struct {
 	RobustAddress *address.Address
 	EthAddress    string
 }
+
+type MinerFee struct {
+	MinerAddress string
+	Amount       string
+}
+
+type OverEstimationBurnFee struct {
+	BurnAddress string
+	Amount      string
+}
+
+type BurnFee struct {
+	BurnAddress string
+	Amount      string
+}
+
+type FeesMetadata struct {
+	TxType                string
+	MinerFee              MinerFee
+	OverEstimationBurnFee OverEstimationBurnFee
+	BurnFee               BurnFee
+}

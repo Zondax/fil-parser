@@ -4,15 +4,15 @@ go 1.19
 
 require (
 	github.com/filecoin-project/go-address v1.1.0
-	github.com/filecoin-project/go-state-types v0.10.0-rc3
-	github.com/filecoin-project/lotus v1.20.0-rc2
+	github.com/filecoin-project/go-state-types v0.10.0
+	github.com/filecoin-project/lotus v1.20.1
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
 	github.com/ipfs/go-cid v0.3.2
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/zondax/rosetta-filecoin-lib v1.2000.0-rc2-p1
+	github.com/zondax/rosetta-filecoin-lib v1.2000.0
 	go.uber.org/zap v1.23.0
 )
 
