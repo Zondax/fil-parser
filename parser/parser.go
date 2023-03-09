@@ -145,7 +145,7 @@ func (p *Parser) feesTransactions(msg *filTypes.Message, minerAddress, txHash, b
 	return feeTx
 }
 
-func (p *Parser) newFeeTx(msg *filTypes.Message, txHash, blockHash string, gasCost string, height uint64,
+func (p *Parser) newFeeTx(msg *filTypes.Message, txHash, blockHash, gasCost string, height uint64,
 	timestamp time.Time, feesMetadata FeesMetadata) *types.Transaction {
 	metadata, _ := json.Marshal(feesMetadata)
 
