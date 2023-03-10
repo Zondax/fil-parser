@@ -44,15 +44,19 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 			continue
 		}
 
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, trace.MsgCid.String(), tipsetKey)
+		// Main transaction
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, tipsetKey)
 		if err != nil {
 			continue
 		}
 		transactions = append(transactions, transaction)
 
-		// SubTransactions
-		transactions = append(transactions, p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
-			trace.Msg.Cid().String(), tipsetKey)...)
+		// Subcalls
+		subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
+			trace.Msg.Cid().String(), tipsetKey, 0)
+		if len(subTxs) > 0 {
+			transactions = append(transactions, subTxs...)
+		}
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
@@ -66,20 +70,22 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 }
 
 func (p *Parser) parseSubTxs(subTxs []filTypes.ExecutionTrace, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
-	key filTypes.TipSetKey) (txs []*types.Transaction) {
+	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
 
+	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, blockHash, key)
 		if err != nil {
 			continue
 		}
+		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key, level)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
+func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
 	key filTypes.TipSetKey) (*types.Transaction, error) {
 	txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), key)
 	if err != nil {
@@ -88,8 +94,8 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 	}
 	if err == nil && txType == UnknownStr {
 		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
-		txType = UnknownStr
 	}
+
 	metadata, mErr := p.getMetadata(txType, trace.Msg, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs)
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
@@ -108,8 +114,9 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 			Height: uint64(tipSet.Height()),
 			Hash:   blockHash,
 		},
+		Level:       0,
 		TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
-		TxHash:      txHash,
+		TxHash:      msgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      getCastedAmount(trace.Msg.Value.String()),
