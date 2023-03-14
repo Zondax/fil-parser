@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -121,7 +120,7 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      getCastedAmount(trace.Msg.Value.String()),
-		GasUsed:     getCastedAmount(strconv.FormatInt(trace.MsgRct.GasUsed, 10)),
+		GasUsed:     trace.MsgRct.GasUsed,
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
