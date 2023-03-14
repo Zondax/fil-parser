@@ -3,7 +3,7 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
-	
+
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	filInit "github.com/filecoin-project/specs-actors/actors/builtin/init"
