@@ -2,6 +2,7 @@ package tools
 
 import (
 	"encoding/hex"
+
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/multiformats/go-multihash"

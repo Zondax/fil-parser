@@ -2,10 +2,10 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"time"
 
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 )
 

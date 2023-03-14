@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v10/multisig"
 	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	"github.com/filecoin-project/go-state-types/cbor"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/zondax/fil-parser/database"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
+
+	"github.com/zondax/fil-parser/database"
 )
 
 func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {

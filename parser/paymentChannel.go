@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+
 	"github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )

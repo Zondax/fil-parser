@@ -3,20 +3,21 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/shopspring/decimal"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"go.uber.org/zap"
+
 	"github.com/zondax/fil-parser/database"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
-	"strconv"
-	"time"
-
-	"strings"
 )
 
 type Parser struct {

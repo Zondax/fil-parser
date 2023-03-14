@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+
 	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
