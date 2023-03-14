@@ -7,7 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v10/evm"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	
+
 	"github.com/zondax/fil-parser/types"
 )
 
