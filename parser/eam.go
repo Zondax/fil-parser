@@ -9,6 +9,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
+
 	"github.com/zondax/fil-parser/types"
 )
 

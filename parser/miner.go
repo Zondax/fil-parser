@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	filTypes "github.com/filecoin-project/lotus/chain/types"

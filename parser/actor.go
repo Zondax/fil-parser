@@ -3,11 +3,12 @@ package parser
 import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	parser "github.com/zondax/fil-parser/types"
+
+	"github.com/zondax/fil-parser/types"
 )
 
 func (p *Parser) searchForActorCreation(msg *filTypes.Message, receipt *filTypes.MessageReceipt,
-	height int64, key filTypes.TipSetKey) (*parser.AddressInfo, error) {
+	height int64, key filTypes.TipSetKey) (*types.AddressInfo, error) {
 
 	toAddressInfo := p.getActorAddressInfo(msg.To, height, key)
 	actorName, err := p.lib.BuiltinActors.GetActorNameFromCid(toAddressInfo.ActorCid)
@@ -34,7 +35,7 @@ func (p *Parser) searchForActorCreation(msg *filTypes.Message, receipt *filTypes
 						return nil, err
 					}
 
-					return &parser.AddressInfo{
+					return &types.AddressInfo{
 						Short:     execReturn.IDAddress.String(),
 						Robust:    execReturn.RobustAddress.String(),
 						ActorCid:  params.CodeCID,
@@ -51,7 +52,7 @@ func (p *Parser) searchForActorCreation(msg *filTypes.Message, receipt *filTypes
 			if err != nil {
 				return nil, err
 			}
-			return &parser.AddressInfo{
+			return &types.AddressInfo{
 				Short:     execReturn.IDAddress.String(),
 				Robust:    execReturn.RobustAddress.String(),
 				ActorType: "miner",
