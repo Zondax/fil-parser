@@ -54,7 +54,7 @@ type Transaction struct {
 	// Amount is the amount of the tx
 	Amount string `json:"amount"`
 	// GasUsed is the total gas used amount
-	GasUsed string `json:"gasUsed"`
+	GasUsed int64 `json:"gas_used"`
 	// Status
 	Status string `json:"status"`
 	// TxType is the message type
