@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"math/big"
 	"time"
 
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
@@ -35,7 +36,7 @@ type BasicBlockData struct {
 	// Height contains the block height
 	Height uint64 `json:"height" gorm:"index:idx_height"`
 	// Hash contains the block hash
-	Hash string `json:"hash" gorm:"index:idx_hash"`
+	Hash string `json:"block_hash" gorm:"index:idx_hash"`
 }
 
 // Transaction parses transaction data into the desired format for reports
@@ -51,9 +52,9 @@ type Transaction struct {
 	TxFrom string `json:"tx_from" gorm:"index:idx_transactions_tx_from"`
 	// TxTo is the receiver address
 	TxTo string `json:"tx_to" gorm:"index:idx_transactions_tx_to"`
-	// Amount is the amount of the tx
-	Amount string `json:"amount"`
-	// GasUsed is the total gas used amount
+	// Amount is the amount of the tx in attoFil
+	Amount *big.Int `json:"amount" gorm:"type:numeric"`
+	// GasUsed is the total gas used amount in attoFil
 	GasUsed int64 `json:"gas_used"`
 	// Status
 	Status string `json:"status"`
