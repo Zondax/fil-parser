@@ -36,7 +36,7 @@ type BasicBlockData struct {
 	// Height contains the block height
 	Height uint64 `json:"height" gorm:"index:idx_height"`
 	// Hash contains the block hash
-	Hash string `json:"block_hash" gorm:"index:idx_hash"`
+	Hash string `json:"hash"`
 }
 
 // Transaction parses transaction data into the desired format for reports
