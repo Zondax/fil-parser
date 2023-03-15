@@ -11,7 +11,6 @@ require (
 	github.com/ipfs/go-cid v0.3.2
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/orcaman/concurrent-map v1.0.0
-	github.com/shopspring/decimal v1.3.1
 	github.com/zondax/rosetta-filecoin-lib v1.2000.0
 	go.uber.org/zap v1.23.0
 )

@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/shopspring/decimal"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 
@@ -60,8 +59,8 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace.Msg, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
-				transaction.TxType, trace.GasCost, uint64(tipSet.Height()), tipSet.MinTimestamp())
+			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
+				transaction.TxType, uint64(tipSet.Height()), tipSet.MinTimestamp())
 			transactions = append(transactions, feeTx)
 		}
 	}
@@ -119,7 +118,7 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 		TxHash:      msgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
-		Amount:      getCastedAmount(trace.Msg.Value.String()),
+		Amount:      trace.Msg.Value.Int,
 		GasUsed:     trace.MsgRct.GasUsed,
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
@@ -129,30 +128,29 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *filTypes.Message, minerAddress, txHash, blockHash, txType string, gasCost api.MsgGasCost,
-	height uint64, timestamp uint64) *types.Transaction {
+func (p *Parser) feesTransactions(msg *api.InvocResult, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
 	ts := p.getTimestamp(timestamp)
 	metadata := FeesMetadata{
 		TxType: txType,
 		MinerFee: MinerFee{
 			MinerAddress: minerAddress,
-			Amount:       getCastedAmount(gasCost.MinerTip.String()),
+			Amount:       msg.GasCost.MinerTip.String(),
 		},
 		OverEstimationBurnFee: OverEstimationBurnFee{
 			BurnAddress: BurnAddress,
-			Amount:      getCastedAmount(gasCost.OverEstimationBurn.String()),
+			Amount:      msg.GasCost.OverEstimationBurn.String(),
 		},
 		BurnFee: BurnFee{
 			BurnAddress: BurnAddress,
-			Amount:      getCastedAmount(gasCost.BaseFeeBurn.String()),
+			Amount:      msg.GasCost.BaseFeeBurn.String(),
 		},
 	}
 
-	feeTx := p.newFeeTx(msg, txHash, blockHash, getCastedAmount(gasCost.TotalCost.String()), height, ts, metadata)
+	feeTx := p.newFeeTx(msg, txHash, blockHash, height, ts, metadata)
 	return feeTx
 }
 
-func (p *Parser) newFeeTx(msg *filTypes.Message, txHash, blockHash, gasCost string, height uint64,
+func (p *Parser) newFeeTx(msg *api.InvocResult, txHash, blockHash string, height uint64,
 	timestamp time.Time, feesMetadata FeesMetadata) *types.Transaction {
 	metadata, _ := json.Marshal(feesMetadata)
 
@@ -163,8 +161,8 @@ func (p *Parser) newFeeTx(msg *filTypes.Message, txHash, blockHash, gasCost stri
 		},
 		TxTimestamp: timestamp,
 		TxHash:      txHash,
-		TxFrom:      msg.From.String(),
-		Amount:      gasCost,
+		TxFrom:      msg.Msg.From.String(),
+		Amount:      msg.GasCost.TotalCost.Int,
 		Status:      "Ok",
 		TxType:      TotalFeeOp,
 		TxMetadata:  string(metadata),
@@ -250,16 +248,17 @@ func parseReturn(metadata map[string]interface{}) string {
 	return ""
 }
 
-func getCastedAmount(amount string) string {
-	decimal.DivisionPrecision = 18
-	parsed, err := decimal.NewFromString(amount)
-	if err != nil {
-		return amount
-	}
-	abs := parsed.Abs()
-	divided := abs.Div(decimal.NewFromInt(1e+18))
-	return divided.String()
-}
+//  func getCastedAmount(amount string) decimal.Decimal {
+//	  decimal.DivisionPrecision = 18
+//	  parsed, err := decimal.NewFromString(amount)
+//	  if err != nil {
+//		  return decimal.Decimal{}
+//	  }
+//	  abs := parsed.Abs()
+//	  divided := abs.DivRound(decimal.NewFromInt(1e+18), 18)
+//
+//	  return divided
+//  }
 
 func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filTypes.TipSetKey) {
 	fromAdd := p.getActorAddressInfo(msg.From, height, key)
