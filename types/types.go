@@ -19,6 +19,8 @@ type AddressInfo struct {
 	ActorCid cid.Cid
 	// ActorType is the actor's type name of this address
 	ActorType string
+	// CreationTxHash is the tx hash were this actor was created (if applicable)
+	CreationTxHash string
 }
 
 type AddressInfoMap map[string]AddressInfo
