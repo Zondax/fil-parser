@@ -7,11 +7,13 @@ import (
 	"github.com/filecoin-project/specs-actors/v8/actors/builtin/cron"
 )
 
-func (p *Parser) parseCron(txType string, msg *filTypes.Message) (map[string]interface{}, error) {
+func (p *Parser) parseCron(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodConstructor:
 		return p.cronConstructor(msg.Params)
 	case MethodEpochTick:
+	case UnknownStr:
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

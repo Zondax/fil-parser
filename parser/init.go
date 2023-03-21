@@ -18,6 +18,8 @@ func (p *Parser) parseInit(txType string, msg *filTypes.Message, msgRct *filType
 		return p.initConstructor(msg.Params)
 	case MethodExec:
 		return p.parseExec(msg, msgRct, height, key)
+	case UnknownStr:
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

@@ -17,6 +17,8 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 		return p.updateNerworkKpi(msg.Params)
 	case MethodThisEpochReward:
 		return p.thisEpochReward(msgRct.Return)
+	case UnknownStr:
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

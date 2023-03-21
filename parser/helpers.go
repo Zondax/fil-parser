@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -222,7 +223,7 @@ func ParseProposeParams(msg *filTypes.Message, height int64, key filTypes.TipSet
 	return params, nil
 }
 
-func (p *Parser) parseAccount(txType string, msg *filTypes.Message) (map[string]interface{}, error) {
+func (p *Parser) parseAccount(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
@@ -230,6 +231,8 @@ func (p *Parser) parseAccount(txType string, msg *filTypes.Message) (map[string]
 		metadata := make(map[string]interface{})
 		metadata[ParamsKey] = base64.StdEncoding.EncodeToString(msg.Params)
 		return metadata, nil
+	case UnknownStr:
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }
@@ -238,4 +241,15 @@ func (p *Parser) parseSend(msg *filTypes.Message) map[string]interface{} {
 	metadata := make(map[string]interface{})
 	metadata[ParamsKey] = msg.Params
 	return metadata
+}
+
+func (p *Parser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	if len(msgParams) > 0 {
+		metadata[ParamsKey] = hex.EncodeToString(msgParams)
+	}
+	if len(msgReturn) > 0 {
+		metadata[ReturnKey] = hex.EncodeToString(msgReturn)
+	}
+	return metadata, nil
 }
