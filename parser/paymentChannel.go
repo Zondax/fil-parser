@@ -7,7 +7,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
-func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message) (map[string]interface{}, error) {
+func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
@@ -17,6 +17,8 @@ func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message) (map[
 		return p.updateChannelState(msg.Params)
 	case MethodSettle:
 	case MethodCollect:
+	case UnknownStr:
+		return p.unkmownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

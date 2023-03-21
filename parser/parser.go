@@ -198,9 +198,9 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 	case manifest.InitKey:
 		return p.parseInit(txType, msg, msgRct, height, key)
 	case manifest.CronKey:
-		return p.parseCron(txType, msg)
+		return p.parseCron(txType, msg, msgRct)
 	case manifest.AccountKey:
-		return p.parseAccount(txType, msg)
+		return p.parseAccount(txType, msg, msgRct)
 	case manifest.PowerKey:
 		return p.parseStoragepower(txType, msg, msgRct, height, key)
 	case manifest.MinerKey:
@@ -208,7 +208,7 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 	case manifest.MarketKey:
 		return p.parseStoragemarket(txType, msg, msgRct)
 	case manifest.PaychKey:
-		return p.parsePaymentchannel(txType, msg)
+		return p.parsePaymentchannel(txType, msg, msgRct)
 	case manifest.MultisigKey:
 		return p.parseMultisig(txType, msg, msgRct, height, key)
 	case manifest.RewardKey:
