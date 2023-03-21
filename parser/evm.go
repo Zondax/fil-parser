@@ -26,7 +26,7 @@ func (p *Parser) parseEvm(txType string, msg *filTypes.Message, msgCid cid.Cid, 
 		metadata[ethLogsKey] = logs
 	case MethodGetBytecode:
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return metadata, nil
 }

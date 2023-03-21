@@ -28,7 +28,7 @@ func (p *Parser) parseStoragemarket(txType string, msg *filTypes.Message, msgRct
 		return p.computeDataCommitment(msg.Params, msgRct.Return)
 	case MethodCronTick:
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

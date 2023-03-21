@@ -29,7 +29,7 @@ func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct 
 	case MethodCurrentTotalPower:
 		return p.currentTotalPower(msgRct.Return)
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 
 	}
 	return map[string]interface{}{}, errUnknownMethod

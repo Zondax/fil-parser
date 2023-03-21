@@ -38,7 +38,7 @@ func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *fil
 	case MethodLockBalance:
 		return p.lockBalance(msg.Params)
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

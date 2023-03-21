@@ -232,7 +232,7 @@ func (p *Parser) parseAccount(txType string, msg *filTypes.Message, msgRct *filT
 		metadata[ParamsKey] = base64.StdEncoding.EncodeToString(msg.Params)
 		return metadata, nil
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }
@@ -243,7 +243,7 @@ func (p *Parser) parseSend(msg *filTypes.Message) map[string]interface{} {
 	return metadata
 }
 
-func (p *Parser) unkmownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
+func (p *Parser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if len(msgParams) > 0 {
 		metadata[ParamsKey] = hex.EncodeToString(msgParams)

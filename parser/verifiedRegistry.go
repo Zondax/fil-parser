@@ -27,7 +27,7 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 	case MethodRemoveExpiredAllocations:
 		return p.removeExpiredAllocations(msg.Params, msgRct.Return)
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

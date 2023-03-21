@@ -18,7 +18,7 @@ func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message, msgRc
 	case MethodSettle:
 	case MethodCollect:
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

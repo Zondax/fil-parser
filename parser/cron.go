@@ -13,7 +13,7 @@ func (p *Parser) parseCron(txType string, msg *filTypes.Message, msgRct *filType
 		return p.cronConstructor(msg.Params)
 	case MethodEpochTick:
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

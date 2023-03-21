@@ -70,7 +70,7 @@ func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct 
 	case MethodGetBeneficiary:
 		return p.getBeneficiary(msg.Params, msgRct.Return)
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

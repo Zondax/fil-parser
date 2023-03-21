@@ -24,7 +24,7 @@ func (p *Parser) parseEam(txType string, msg *filTypes.Message, msgRct *filTypes
 	case MethodCreateExternal:
 		return p.parseCreateExternal(msg, msgRct, msgCid)
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return metadata, nil
 }

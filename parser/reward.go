@@ -18,7 +18,7 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 	case MethodThisEpochReward:
 		return p.thisEpochReward(msgRct.Return)
 	case UnknownStr:
-		return p.unkmownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }
