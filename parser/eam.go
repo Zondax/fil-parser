@@ -57,7 +57,7 @@ func (p *Parser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[s
 		return metadata, err
 	}
 	metadata[ReturnKey] = p.newEamCreate(createReturn)
-	p.appendEamAddress(eam.Return(createReturn))
+	p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
@@ -84,7 +84,7 @@ func (p *Parser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[
 		return metadata, err
 	}
 	metadata[ReturnKey] = p.newEamCreate(createReturn)
-	p.appendEamAddress(eam.Return(createReturn))
+	p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
@@ -104,7 +104,7 @@ func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.Mes
 		return metadata, err
 	}
 	metadata[ReturnKey] = p.newEamCreate(createExternalReturn)
-	p.appendEamAddress(eam.Return(createExternalReturn))
+	p.appendCreatedEVMActor(eam.Return(createExternalReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
@@ -115,10 +115,11 @@ func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.Mes
 	return metadata, nil
 }
 
-func (p *Parser) appendEamAddress(r eam.Return) {
+func (p *Parser) appendCreatedEVMActor(r eam.Return, msgCid string) {
 	p.appendToAddresses(types.AddressInfo{
-		Short:     filPrefix + strconv.FormatUint(r.ActorID, 10),
-		Robust:    r.RobustAddress.String(),
-		ActorType: "evm",
+		Short:          filPrefix + strconv.FormatUint(r.ActorID, 10),
+		Robust:         r.RobustAddress.String(),
+		ActorType:      "evm",
+		CreationTxHash: msgCid,
 	})
 }

@@ -36,10 +36,11 @@ func (p *Parser) searchForActorCreation(msg *filTypes.Message, receipt *filTypes
 					}
 
 					return &types.AddressInfo{
-						Short:     execReturn.IDAddress.String(),
-						Robust:    execReturn.RobustAddress.String(),
-						ActorCid:  params.CodeCID,
-						ActorType: createdActorName,
+						Short:          execReturn.IDAddress.String(),
+						Robust:         execReturn.RobustAddress.String(),
+						ActorCid:       params.CodeCID,
+						ActorType:      createdActorName,
+						CreationTxHash: msg.Cid().String(),
 					}, nil
 				}
 			default:
@@ -53,9 +54,10 @@ func (p *Parser) searchForActorCreation(msg *filTypes.Message, receipt *filTypes
 				return nil, err
 			}
 			return &types.AddressInfo{
-				Short:     execReturn.IDAddress.String(),
-				Robust:    execReturn.RobustAddress.String(),
-				ActorType: "miner",
+				Short:          execReturn.IDAddress.String(),
+				Robust:         execReturn.RobustAddress.String(),
+				ActorType:      "miner",
+				CreationTxHash: msg.Cid().String(),
 			}, nil
 		}
 	default:
