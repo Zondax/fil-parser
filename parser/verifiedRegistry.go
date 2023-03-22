@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-
 	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
@@ -26,6 +25,10 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 		return p.removeVerifiedClientDataCap(msg.Params)
 	case MethodRemoveExpiredAllocations:
 		return p.removeExpiredAllocations(msg.Params, msgRct.Return)
+	case MethodVerifiedDeprecated1: // UseBytes
+		return p.deprecated1(msg.Params)
+	case MethodVerifiedDeprecated2: // RestoreBytes
+		return p.deprecated2(msg.Params)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
@@ -109,5 +112,29 @@ func (p *Parser) removeExpiredAllocations(raw, rawReturn []byte) (map[string]int
 		return metadata, err
 	}
 	metadata[ReturnKey] = expiredReturn
+	return metadata, nil
+}
+
+func (p *Parser) deprecated1(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params verifreg.RestoreBytesParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) deprecated2(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params verifreg.UseBytesParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
 	return metadata, nil
 }

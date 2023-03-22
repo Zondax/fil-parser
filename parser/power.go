@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"github.com/filecoin-project/go-state-types/abi"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/actors/builtin/power"
@@ -22,8 +23,9 @@ func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct 
 	case MethodEnrollCronEvent:
 		return p.enrollCronEvent(msg.Params)
 	case MethodCronTick:
-	case MethodUpdatePledgeTotal: // TODO
-	case MethodDeprecated1:
+	case MethodUpdatePledgeTotal:
+		return p.updatePledgeTotal(msg.Params)
+	case MethodPowerDeprecated1: // OnConsensusFault
 	case MethodSubmitPoRepForBulkVerify:
 		return p.submitPoRepForBulkVerify(msg.Params)
 	case MethodCurrentTotalPower:
@@ -106,6 +108,18 @@ func (p *Parser) updateClaimedPower(raw []byte) (map[string]interface{}, error) 
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params power.UpdateClaimedPowerParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) updatePledgeTotal(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params abi.TokenAmount
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
