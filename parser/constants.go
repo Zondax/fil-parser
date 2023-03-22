@@ -46,7 +46,7 @@ const (
 	MethodSubmitPoRepForBulkVerify    = "SubmitPoRepForBulkVerify"    // MethodsPower
 	MethodCurrentTotalPower           = "CurrentTotalPower"           // MethodsPower
 	MethodUpdatePledgeTotal           = "UpdatePledgeTotal"           // MethodsPower
-	MethodDeprecated1                 = "Deprecated1"                 // MethodsPower
+	MethodPowerDeprecated1            = "Deprecated1"                 // MethodsPower - OnConsensusFault
 	MethodOnDeferredCronEvent         = "OnDeferredCronEvent"         // MethodsMiner
 	MethodPreCommitSector             = "PreCommitSector"             // MethodsMiner
 	MethodProveCommitSector           = "ProveCommitSector"           // MethodsMiner
@@ -91,6 +91,8 @@ const (
 	MethodRestoreBytes                = "RestoreBytes"                // MethodsVerifiedRegistry
 	MethodRemoveExpiredAllocations    = "RemoveExpiredAllocations"    // MethodsVerifiedRegistry
 	MethodRemoveVerifiedClientDataCap = "RemoveVerifiedClientDataCap" // MethodsVerifiedRegistry
+	MethodVerifiedDeprecated1         = "Deprecated1"                 // MethodsVerifiedRegistry - UseBytes
+	MethodVerifiedDeprecated2         = "Deprecated2"                 // MethodsVerifiedRegistry - RestoreBytes
 	MethodInvokeContract              = "InvokeContract"              // MethodsEVM
 	MethodGetBytecode                 = "GetBytecode"                 // MethodsEVM
 	MethodGetStorageAt                = "GetStorageAt"                // MethodsEVM

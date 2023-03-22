@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/actors/builtin/reward"
 )
@@ -38,7 +39,7 @@ func (p *Parser) awardBlockReward(raw []byte) (map[string]interface{}, error) {
 func (p *Parser) updateNerworkKpi(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
-	var blockRewards reward.State
+	var blockRewards abi.StoragePower
 	err := blockRewards.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
