@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -221,20 +220,6 @@ func ParseProposeParams(msg *filTypes.Message, height int64, key filTypes.TipSet
 	params[ParamsKey] = innerParamsMap
 
 	return params, nil
-}
-
-func (p *Parser) parseAccount(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
-	switch txType {
-	case MethodSend:
-		return p.parseSend(msg), nil
-	case "PubkeyAddress":
-		metadata := make(map[string]interface{})
-		metadata[ParamsKey] = base64.StdEncoding.EncodeToString(msg.Params)
-		return metadata, nil
-	case UnknownStr:
-		return p.unknownMetadata(msg.Params, msgRct.Return)
-	}
-	return map[string]interface{}{}, errUnknownMethod
 }
 
 func (p *Parser) parseSend(msg *filTypes.Message) map[string]interface{} {

@@ -106,6 +106,21 @@ const (
 	MethodCreate                      = "Create"                      // MethodsEam
 	MethodCreate2                     = "Create2"                     // MethodsEam
 	MethodCreateExternal              = "CreateExternal"              // MethodsEam
+	MethodMintExported                = "MintExported"                // MethodsDatacap
+	MethodDestroyExported             = "DestroyExported"             // MethodsDatacap
+	MethodNameExported                = "NameExported"                // MethodsDatacap
+	MethodSymbolExported              = "SymbolExported"              // MethodsDatacap
+	MethodTotalSupplyExported         = "TotalSupplyExported"         // MethodsDatacap
+	MethodBalanceExported             = "BalanceExported"             // MethodsDatacap
+	MethodTransferExported            = "TransferExported"            // MethodsDatacap
+	MethodTransferFromExported        = "TransferFromExported"        // MethodsDatacap
+	MethodIncreaseAllowanceExported   = "IncreaseAllowanceExported"   // MethodsDatacap
+	MethodDecreaseAllowanceExported   = "DecreaseAllowanceExported"   // MethodsDatacap
+	MethodRevokeAllowanceExported     = "RevokeAllowanceExported"     // MethodsDatacap
+	MethodBurnExported                = "BurnExported"                // MethodsDatacap
+	MethodBurnFromExported            = "BurnFromExported"            // MethodsDatacap
+	MethodAllowanceExported           = "AllowanceExported"           // MethodsDatacap
+	MethodGranularityExported         = "GranularityExported"         // MethodsDatacap
 )
 
 // SupportedOperations operations that will be parsed
