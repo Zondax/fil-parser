@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v10/multisig"
@@ -44,6 +45,8 @@ func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *fil
 	case MethodAddVerifies: // ?
 	case MethodLockBalance:
 		return p.lockBalance(msg.Params)
+	case MethodMsigUniversalReceiverHook: // TODO: not tested
+		return p.universalReceiverHook(msg.Params)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
@@ -186,6 +189,18 @@ func (p *Parser) parseMsigParams(msg *filTypes.Message, height int64, key filTyp
 	}
 
 	return parsedParams, nil
+}
+
+func (p *Parser) universalReceiverHook(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	var params abi.CborBytesTransparent
+	reader := bytes.NewReader(raw)
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	return metadata, nil
 }
 
 func (p *Parser) innerProposeParams(propose multisig.ProposeParams) (string, cbor.Unmarshaler, error) {

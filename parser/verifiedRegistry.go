@@ -3,7 +3,7 @@ package parser
 import (
 	"bytes"
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
@@ -31,13 +31,17 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 		return p.deprecated1(msg.Params)
 	case MethodVerifiedDeprecated2: // RestoreBytes
 		return p.deprecated2(msg.Params)
+	case MethodClaimAllocations:
+		return p.claimAllocations(msg.Params, msgRct.Return)
 	case MethodGetClaims: // TODO: not tested
 		return p.getClaims(msg.Params, msgRct.Return)
 	case MethodExtendClaimTerms: // TODO: not tested
 		return p.extendClaimTerms(msg.Params, msgRct.Return)
-	case MethodRemoveExpiredClaims: // TODO: not tested
-		return p.removeExpiredClaims(msg.Params, msgRct.Return)
-	case UnknownStr:
+		return p.unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
@@ -171,6 +175,26 @@ func (p *Parser) deprecated2(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
+func (p *Parser) claimAllocations(raw, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params verifreg.ClaimAllocationsParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+
+	reader = bytes.NewReader(rawReturn)
+	var expiredReturn verifreg.ClaimAllocationsReturn
+	err = expiredReturn.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = expiredReturn
+	return metadata, nil
+}
+
 func (p *Parser) getClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
@@ -225,5 +249,25 @@ func (p *Parser) removeExpiredClaims(raw, rawReturn []byte) (map[string]interfac
 		return metadata, err
 	}
 	metadata[ReturnKey] = expiredReturn
+	return metadata, nil
+}
+
+func (p *Parser) verifregUniversalReceiverHook(raw, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	var params verifreg.UniversalReceiverParams
+	reader := bytes.NewReader(raw)
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+
+	reader = bytes.NewReader(rawReturn)
+	var r verifreg.AllocationsResponse
+	err = r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r
 	return metadata, nil
 }

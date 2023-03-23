@@ -13,7 +13,6 @@ import (
 Still needs to parse:
 
 	GetOwner
-	IsControllingAddress
 	GetSectorSize
 	GetAvailableBalance
 	GetVestingFunds
@@ -81,6 +80,8 @@ func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct 
 		return p.changeBeneficiary(msg.Params)
 	case MethodGetBeneficiary:
 		return p.getBeneficiary(msg.Params, msgRct.Return)
+	case MethodIsControllingAddressExported:
+		return p.isControllingAddressExported(msg.Params, msgRct.Return)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
@@ -441,6 +442,25 @@ func (p *Parser) getBeneficiary(rawParams, rawReturn []byte) (map[string]interfa
 			ApprovedByNominee:     beneficiaryReturn.Proposed.ApprovedByNominee,
 		},
 	}
+	return metadata, nil
+}
+
+func (p *Parser) isControllingAddressExported(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawParams)
+	var params miner.IsControllingAddressParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
+	reader = bytes.NewReader(rawReturn)
+	var terminateReturn miner.IsControllingAddressReturn
+	err = terminateReturn.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = terminateReturn
 	return metadata, nil
 }
 
