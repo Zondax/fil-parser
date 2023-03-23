@@ -37,6 +37,10 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 		return p.getClaims(msg.Params, msgRct.Return)
 	case MethodExtendClaimTerms: // TODO: not tested
 		return p.extendClaimTerms(msg.Params, msgRct.Return)
+	case MethodRemoveExpiredClaims:
+		return p.removeExpiredClaims(msg.Params, msgRct.Return)
+	case MethodUniversalReceiverHook:
+		return p.verifregUniversalReceiverHook(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
 }

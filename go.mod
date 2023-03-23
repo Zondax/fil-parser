@@ -11,6 +11,7 @@ require (
 	github.com/ipfs/go-cid v0.3.2
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/orcaman/concurrent-map v1.0.0
+	github.com/whyrusleeping/cbor-gen v0.0.0-20221021053955-c138aae13722
 	github.com/zondax/rosetta-filecoin-lib v1.2000.0
 	go.uber.org/zap v1.23.0
 )
@@ -130,7 +131,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/whyrusleeping/bencher v0.0.0-20190829221104-bb6607aa8bba // indirect
-	github.com/whyrusleeping/cbor-gen v0.0.0-20221021053955-c138aae13722 // indirect
 	github.com/whyrusleeping/timecache v0.0.0-20160911033111-cfcb2f1abfee // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opencensus.io v0.23.0 // indirect
