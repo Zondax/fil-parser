@@ -93,9 +93,14 @@ const (
 	MethodRemoveVerifiedClientDataCap = "RemoveVerifiedClientDataCap" // MethodsVerifiedRegistry
 	MethodVerifiedDeprecated1         = "Deprecated1"                 // MethodsVerifiedRegistry - UseBytes
 	MethodVerifiedDeprecated2         = "Deprecated2"                 // MethodsVerifiedRegistry - RestoreBytes
+	MethodGetClaims                   = "GetClaims"                   // MethodsVerifiedRegistry
+	MethodExtendClaimTerms            = "ExtendClaimTerms"            // MethodsVerifiedRegistry
+	MethodRemoveExpiredClaims         = "RemoveExpiredClaims"         // MethodsVerifiedRegistry
 	MethodInvokeContract              = "InvokeContract"              // MethodsEVM
 	MethodGetBytecode                 = "GetBytecode"                 // MethodsEVM
 	MethodGetStorageAt                = "GetStorageAt"                // MethodsEVM
+	MethodResurrect                   = "Resurrect"                   // MethodsEVM
+	MethodGetBytecodeHash             = "GetBytecodeHash"             // MethodsEVM
 	MethodInvokeContractReadOnly      = "InvokeContractReadOnly"      // MethodsEVM
 	MethodInvokeContractDelegate      = "InvokeContractDelegate"      // MethodsEVM
 	MethodCreate                      = "Create"                      // MethodsEam

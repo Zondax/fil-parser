@@ -253,3 +253,7 @@ func (p *Parser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interf
 	}
 	return metadata, nil
 }
+
+func (p *Parser) emptyParamsAndReturn() (map[string]interface{}, error) {
+	return make(map[string]interface{}), nil
+}

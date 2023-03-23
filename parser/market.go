@@ -3,17 +3,34 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
-
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v9/market" // TODO: v10 does not support ComputeDataCommitmentParams and OnMinerSectorsTerminateParams
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
+/*
+Still needs to parse:
+
+	GetBalance
+	GetDealDataCommitment
+	GetDealClient
+	GetDealProvider
+	GetDealLabel
+	GetDealTerm
+	GetDealTotalPrice
+	GetDealClientCollateral
+	GetDealProviderCollateral
+	GetDealVerified
+	GetDealActivation
+*/
 func (p *Parser) parseStoragemarket(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
 	case MethodConstructor:
+		return p.emptyParamsAndReturn()
 	case MethodAddBalance:
+		return p.addBalance(msg.Params)
 	case MethodWithdrawBalance:
 		return p.withdrawBalance(msg.Params, msgRct.Return)
 	case MethodPublishStorageDeals:
@@ -27,10 +44,23 @@ func (p *Parser) parseStoragemarket(txType string, msg *filTypes.Message, msgRct
 	case MethodComputeDataCommitment:
 		return p.computeDataCommitment(msg.Params, msgRct.Return)
 	case MethodCronTick:
+		return p.emptyParamsAndReturn()
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
+}
+
+func (p *Parser) addBalance(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params address.Address
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
+	return metadata, nil
 }
 
 func (p *Parser) withdrawBalance(raw, rawReturn []byte) (map[string]interface{}, error) {

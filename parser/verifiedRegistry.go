@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
@@ -10,18 +11,19 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
-	case MethodConstructor:
+	case MethodConstructor: // TODO: not tested
+		return p.verifregConstructor(msg.Params)
 	case MethodAddVerifier:
 		return p.addVerifier(msg.Params)
-	case MethodRemoveVerifier:
+	case MethodRemoveVerifier: // TODO: not tested
+		return p.removeVerifier(msg.Params)
 	case MethodAddVerifiedClient:
 		return p.addVerifiedClient(msg.Params)
 	case MethodUseBytes:
 		return p.useBytes(msg.Params)
 	case MethodRestoreBytes:
 		return p.restoreBytes(msg.Params)
-	case MethodRemoveVerifiedClientDataCap:
-		// TODO: untested
+	case MethodRemoveVerifiedClientDataCap: // TODO: not tested
 		return p.removeVerifiedClientDataCap(msg.Params)
 	case MethodRemoveExpiredAllocations:
 		return p.removeExpiredAllocations(msg.Params, msgRct.Return)
@@ -29,10 +31,28 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 		return p.deprecated1(msg.Params)
 	case MethodVerifiedDeprecated2: // RestoreBytes
 		return p.deprecated2(msg.Params)
+	case MethodGetClaims: // TODO: not tested
+		return p.getClaims(msg.Params, msgRct.Return)
+	case MethodExtendClaimTerms: // TODO: not tested
+		return p.extendClaimTerms(msg.Params, msgRct.Return)
+	case MethodRemoveExpiredClaims: // TODO: not tested
+		return p.removeExpiredClaims(msg.Params, msgRct.Return)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
+}
+
+func (p *Parser) verifregConstructor(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params address.Address
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
+	return metadata, nil
 }
 
 func (p *Parser) addVerifier(raw []byte) (map[string]interface{}, error) {
@@ -44,6 +64,18 @@ func (p *Parser) addVerifier(raw []byte) (map[string]interface{}, error) {
 		return metadata, err
 	}
 	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) removeVerifier(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params address.Address
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
 	return metadata, nil
 }
 
@@ -136,5 +168,62 @@ func (p *Parser) deprecated2(raw []byte) (map[string]interface{}, error) {
 		return metadata, err
 	}
 	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params verifreg.GetClaimsParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	reader = bytes.NewReader(rawReturn)
+	var expiredReturn verifreg.GetClaimsReturn
+	err = expiredReturn.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = expiredReturn
+	return metadata, nil
+}
+
+func (p *Parser) extendClaimTerms(raw, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params verifreg.ExtendClaimTermsParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	reader = bytes.NewReader(rawReturn)
+	var expiredReturn verifreg.ExtendClaimTermsReturn
+	err = expiredReturn.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = expiredReturn
+	return metadata, nil
+}
+
+func (p *Parser) removeExpiredClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params verifreg.RemoveExpiredClaimsParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	reader = bytes.NewReader(rawReturn)
+	var expiredReturn verifreg.RemoveExpiredClaimsReturn
+	err = expiredReturn.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = expiredReturn
 	return metadata, nil
 }

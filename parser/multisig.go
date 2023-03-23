@@ -17,9 +17,16 @@ import (
 	"github.com/zondax/fil-parser/database"
 )
 
+/*
+Still needs to parse:
+
+	LockBalance
+	Receive
+*/
 func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	switch txType {
-	case MethodConstructor:
+	case MethodConstructor: // TODO: not tested
+		return p.msigConstructor(msg.Params)
 	case MethodSend:
 		return p.parseSend(msg), nil
 	case MethodPropose:
@@ -34,13 +41,24 @@ func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *fil
 		return p.removeSigner(msg, height, key)
 	case MethodChangeNumApprovalsThreshold:
 		return p.changeNumApprovalsThreshold(msg.Params)
-	case MethodAddVerifies:
+	case MethodAddVerifies: // ?
 	case MethodLockBalance:
 		return p.lockBalance(msg.Params)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
+}
+
+func (p *Parser) msigConstructor(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var proposeParams multisig.ConstructorParams
+	err := proposeParams.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	return metadata, nil
 }
 
 func (p *Parser) msigParams(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {

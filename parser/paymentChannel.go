@@ -7,6 +7,12 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
+/*
+Still needs to parse:
+
+	LockBalance
+	Receive
+*/
 func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
@@ -15,8 +21,8 @@ func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message, msgRc
 		return p.paymentChannelConstructor(msg.Params)
 	case MethodUpdateChannelState:
 		return p.updateChannelState(msg.Params)
-	case MethodSettle:
-	case MethodCollect:
+	case MethodSettle, MethodCollect:
+		return p.emptyParamsAndReturn()
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}

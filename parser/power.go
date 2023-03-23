@@ -9,6 +9,14 @@ import (
 	"github.com/filecoin-project/specs-actors/actors/runtime/proof"
 )
 
+/*
+Still needs to parse:
+
+	NetworkRawPower
+	MinerRawPower
+	MinerCount
+	MinerConsensusCount
+*/
 func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt,
 	height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	switch txType {
@@ -23,6 +31,7 @@ func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct 
 	case MethodEnrollCronEvent:
 		return p.enrollCronEvent(msg.Params)
 	case MethodCronTick:
+		return p.emptyParamsAndReturn()
 	case MethodUpdatePledgeTotal:
 		return p.updatePledgeTotal(msg.Params)
 	case MethodPowerDeprecated1: // OnConsensusFault
