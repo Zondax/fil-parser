@@ -219,6 +219,8 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 		return p.parseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
 	case manifest.EamKey:
 		return p.parseEam(txType, msg, msgRct, mainMsgCid, ethLogs)
+	case manifest.DatacapKey:
+		return p.parseDatacap(txType, msg, msgRct)
 	default:
 		return metadata, errNotValidActor
 	}

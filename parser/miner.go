@@ -9,6 +9,16 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
+/*
+Still needs to parse:
+
+	GetOwner
+	GetSectorSize
+	GetAvailableBalance
+	GetVestingFunds
+	GetPeerID
+	GetMultiaddrs
+*/
 func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
@@ -54,9 +64,10 @@ func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct 
 		return p.compactPartitions(msg.Params)
 	case MethodCompactSectorNumbers:
 		return p.compactSectorNumbers(msg.Params)
-	case MethodConfirmUpdateWorkerKey:
+	case MethodConfirmUpdateWorkerKey: // TODO: ?
 	case MethodRepayDebt:
-	case MethodChangeOwnerAddress:
+	case MethodChangeOwnerAddress: // TODO: not tested
+		return p.changeOwnerAddress(msg.Params)
 	case MethodDisputeWindowedPoSt:
 		return p.disputeWindowedPoSt(msg.Params)
 	case MethodPreCommitSectorBatch:
@@ -69,6 +80,8 @@ func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct 
 		return p.changeBeneficiary(msg.Params)
 	case MethodGetBeneficiary:
 		return p.getBeneficiary(msg.Params, msgRct.Return)
+	case MethodIsControllingAddressExported:
+		return p.isControllingAddressExported(msg.Params, msgRct.Return)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
@@ -170,6 +183,18 @@ func (p *Parser) preCommitSectorBatch(raw []byte) (map[string]interface{}, error
 		return metadata, err
 	}
 	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) changeOwnerAddress(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params address.Address
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
 	return metadata, nil
 }
 
@@ -417,6 +442,25 @@ func (p *Parser) getBeneficiary(rawParams, rawReturn []byte) (map[string]interfa
 			ApprovedByNominee:     beneficiaryReturn.Proposed.ApprovedByNominee,
 		},
 	}
+	return metadata, nil
+}
+
+func (p *Parser) isControllingAddressExported(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawParams)
+	var params miner.IsControllingAddressParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
+	reader = bytes.NewReader(rawReturn)
+	var terminateReturn miner.IsControllingAddressReturn
+	err = terminateReturn.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = terminateReturn
 	return metadata, nil
 }
 
