@@ -3,6 +3,9 @@ package parser
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
+	"github.com/filecoin-project/go-address"
+	"go.uber.org/zap"
 	"strconv"
 
 	"github.com/filecoin-project/go-state-types/builtin/v10/eam"
@@ -32,7 +35,31 @@ func (p *Parser) parseEam(txType string, msg *filTypes.Message, msgRct *filTypes
 func (p *Parser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
 	reader := bytes.NewReader(rawReturn)
 	err = cr.UnmarshalCBOR(reader)
-	return cr, err
+	if err != nil {
+		return cr, err
+	}
+
+	err = validateEamReturn(&cr)
+	if err != nil {
+		rawString := hex.EncodeToString(rawReturn)
+		zap.S().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
+	}
+
+	return cr, nil
+}
+
+func validateEamReturn(ret *eam.CreateReturn) error {
+	if ret == nil {
+		return fmt.Errorf("input is nil")
+	}
+
+	if ret.RobustAddress == nil {
+		emptyAdd, _ := address.NewFromString("")
+		ret.RobustAddress = &emptyAdd
+		return fmt.Errorf("RobustAddress field is nil. Replaced with empty address")
+	}
+
+	return nil
 }
 
 func (p *Parser) newEamCreate(r eam.CreateReturn) eamCreateReturn {
