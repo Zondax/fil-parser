@@ -2,7 +2,7 @@ package parser
 
 import (
 	"bytes"
-	reward2 "github.com/filecoin-project/go-state-types/builtin/v11/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -15,7 +15,7 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 	case MethodAwardBlockReward:
 		return p.awardBlockReward(msg.Params)
 	case MethodUpdateNetworkKPI:
-		return p.updateNerworkKpi(msg.Params)
+		return p.updateNetworkKpi(msg.Params)
 	case MethodThisEpochReward:
 		return p.thisEpochReward(msgRct.Return)
 	case UnknownStr:
@@ -27,7 +27,7 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 func (p *Parser) awardBlockReward(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
-	var blockRewards reward2.AwardBlockRewardParams
+	var blockRewards reward.AwardBlockRewardParams
 	err := blockRewards.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
@@ -36,7 +36,7 @@ func (p *Parser) awardBlockReward(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func (p *Parser) updateNerworkKpi(raw []byte) (map[string]interface{}, error) {
+func (p *Parser) updateNetworkKpi(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var blockRewards abi.StoragePower
@@ -51,7 +51,7 @@ func (p *Parser) updateNerworkKpi(raw []byte) (map[string]interface{}, error) {
 func (p *Parser) thisEpochReward(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
-	var epochRewards reward2.ThisEpochRewardReturn
+	var epochRewards reward.ThisEpochRewardReturn
 	err := epochRewards.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
