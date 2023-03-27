@@ -30,6 +30,7 @@ const (
 	MethodPubkeyAddress                = "PubkeyAddress"                // MethodsAccount
 	MethodAuthenticateMessage          = "AuthenticateMessage"          // MethodsAccount
 	MethodExec                         = "Exec"                         // MethodsInit
+	MethodExec4                        = "Exec4"                        // MethodsInit
 	MethodSwapSigner                   = "SwapSigner"                   // MethodsMultisig
 	MethodAddSigner                    = "AddSigner"                    // MethodsMultisig
 	MethodRemoveSigner                 = "RemoveSigner"                 // MethodsMultisig

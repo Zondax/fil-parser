@@ -3,6 +3,8 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
+	"github.com/filecoin-project/go-address"
+	finit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -18,6 +20,8 @@ func (p *Parser) parseInit(txType string, msg *filTypes.Message, msgRct *filType
 		return p.initConstructor(msg.Params)
 	case MethodExec:
 		return p.parseExec(msg, msgRct, height, key)
+	case MethodExec4:
+		return p.parseExec4(msg, msgRct, height, key)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
@@ -58,6 +62,35 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 	metadata[ParamsKey] = execParams{
 		CodeCid:           params.CodeCID.String(),
 		ConstructorParams: base64.StdEncoding.EncodeToString(params.ConstructorParams),
+	}
+	metadata[ReturnKey] = createdActor
+	return metadata, nil
+}
+
+func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageReceipt,
+	height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+	// Check if this Exec contains actor creation event
+	createdActor, err := p.searchForActorCreation(msg, msgRct, height, key)
+	if err != nil {
+		return map[string]interface{}{}, err
+	}
+
+	if createdActor == nil {
+		return map[string]interface{}{}, errNotActorCreationEvent
+	}
+	p.appendToAddresses(*createdActor)
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(msg.Params)
+	var params finit.Exec4Params
+	err = params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	subAddress, _ := address.NewFromBytes(params.SubAddress)
+	metadata[ParamsKey] = exec4Params{
+		CodeCid:           params.CodeCID.String(),
+		ConstructorParams: base64.StdEncoding.EncodeToString(params.ConstructorParams),
+		SubAddress:        subAddress.String(),
 	}
 	metadata[ReturnKey] = createdActor
 	return metadata, nil

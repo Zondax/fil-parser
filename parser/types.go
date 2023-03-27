@@ -16,6 +16,12 @@ type execParams struct {
 	ConstructorParams string `json:"constructorParams"`
 }
 
+type exec4Params struct {
+	CodeCid           string `json:"CodeCid"`
+	ConstructorParams string `json:"constructorParams"`
+	SubAddress        string `json:"subAddress"`
+}
+
 type beneficiaryTerm struct {
 	Quota      string `json:"quota"`
 	UsedQuota  string `json:"usedQuota"`

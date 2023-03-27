@@ -15,6 +15,8 @@ type AddressInfo struct {
 	Short string
 	// Robust is the address in 'robust' format
 	Robust string
+	// EthAddress is the corresponding eth address (if applicable)
+	EthAddress string
 	// ActorCid is the actor's cid for this address
 	ActorCid cid.Cid
 	// ActorType is the actor's type name of this address

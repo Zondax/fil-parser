@@ -2,10 +2,10 @@ package parser
 
 import (
 	"bytes"
+	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/specs-actors/actors/builtin/reward"
 )
 
 func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
@@ -15,7 +15,7 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 	case MethodAwardBlockReward:
 		return p.awardBlockReward(msg.Params)
 	case MethodUpdateNetworkKPI:
-		return p.updateNerworkKpi(msg.Params)
+		return p.updateNetworkKpi(msg.Params)
 	case MethodThisEpochReward:
 		return p.thisEpochReward(msgRct.Return)
 	case UnknownStr:
@@ -36,7 +36,7 @@ func (p *Parser) awardBlockReward(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func (p *Parser) updateNerworkKpi(raw []byte) (map[string]interface{}, error) {
+func (p *Parser) updateNetworkKpi(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var blockRewards abi.StoragePower
