@@ -9,6 +9,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	methods "github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v11/account"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	initActor "github.com/filecoin-project/specs-actors/actors/builtin/init"
@@ -90,7 +91,10 @@ func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes
 	case manifest.CronKey:
 		method = methods.MethodsCron
 	case manifest.AccountKey:
-		method = methods.MethodsAccount
+		if m, ok := account.Methods[msg.Method]; ok {
+			return m.Name, nil
+		}
+		return UnknownStr, nil
 	case manifest.PowerKey:
 		method = methods.MethodsPower
 	case manifest.MinerKey:
