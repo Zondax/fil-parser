@@ -148,7 +148,7 @@ func (p *Parser) appendCreatedEVMActor(r eam.Return, msgCid string) {
 	p.appendToAddresses(types.AddressInfo{
 		Short:          filPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:         r.RobustAddress.String(),
-		EthAddress:     "0x" + hex.EncodeToString(r.EthAddress[:]),
+		EthAddress:     ethPrefix + hex.EncodeToString(r.EthAddress[:]),
 		ActorType:      "evm",
 		CreationTxHash: msgCid,
 	})
