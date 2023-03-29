@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -207,69 +206,45 @@ func (p *Parser) innerProposeParams(propose multisig.ProposeParams) (string, cbo
 	reader := bytes.NewReader(propose.Params)
 	switch propose.Method {
 	case builtin.MethodSend:
-		var params multisig.ProposeParams
-		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
+		if propose.Params == nil {
+			return MethodSend, nil, nil
 		}
-		return MethodSend, &params, nil
+		var params multisig.ProposeParams // TODO: is this correct?
+		err := params.UnmarshalCBOR(reader)
+		return MethodSend, &params, err
 	case builtin.MethodsMultisig.Approve,
 		builtin.MethodsMultisig.Cancel:
 		var params multisig.TxnIDParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodApprove, &params, nil
+		return MethodApprove, &params, err
 	case builtin.MethodsMultisig.AddSigner:
 		var params multisig.AddSignerParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodAddSigner, &params, nil
+		return MethodAddSigner, &params, err
 	case builtin.MethodsMultisig.RemoveSigner:
 		var params multisig.RemoveSignerParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodRemoveSigner, &params, nil
+		return MethodRemoveSigner, &params, err
 	case builtin.MethodsMultisig.SwapSigner:
 		var params multisig.SwapSignerParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodSwapSigner, &params, nil
+		return MethodSwapSigner, &params, err
 	case builtin.MethodsMultisig.ChangeNumApprovalsThreshold:
 		var params multisig.ChangeNumApprovalsThresholdParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodChangeNumApprovalsThreshold, &params, nil
+		return MethodChangeNumApprovalsThreshold, &params, err
 	case builtin.MethodsMultisig.LockBalance:
 		var params multisig.LockBalanceParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodLockBalance, &params, nil
+		return MethodLockBalance, &params, err
 	case builtin.MethodsMiner.WithdrawBalance:
 		var params miner.WithdrawBalanceParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodWithdrawBalance, &params, nil
+		return MethodWithdrawBalance, &params, err
 	case builtin.MethodsVerifiedRegistry.AddVerifier:
 		var params verifreg.AddVerifierParams
 		err := params.UnmarshalCBOR(reader)
-		if err != nil {
-			return "", nil, err
-		}
-		return MethodAddVerifier, &params, nil
+		return MethodAddVerifier, &params, err
 	}
 	return "", nil, errUnknownMethod
 }

@@ -20,19 +20,20 @@ import (
 )
 
 var v10methods = map[string]map[abi.MethodNum]builtin.MethodMeta{
-	manifest.InitKey:     filInit.Methods,
-	manifest.CronKey:     cron.Methods,
-	manifest.AccountKey:  account.Methods,
-	manifest.PowerKey:    power.Methods,
-	manifest.MinerKey:    miner.Methods,
-	manifest.MarketKey:   market.Methods,
-	manifest.PaychKey:    paych.Methods,
-	manifest.MultisigKey: multisig.Methods,
-	manifest.RewardKey:   reward.Methods,
-	manifest.VerifregKey: verifreg.Methods,
-	manifest.EvmKey:      evm.Methods,
-	manifest.EamKey:      eam.Methods,
-	manifest.DatacapKey:  datacap.Methods,
+	manifest.InitKey:       filInit.Methods,
+	manifest.CronKey:       cron.Methods,
+	manifest.AccountKey:    account.Methods,
+	manifest.PowerKey:      power.Methods,
+	manifest.MinerKey:      miner.Methods,
+	manifest.MarketKey:     market.Methods,
+	manifest.PaychKey:      paych.Methods,
+	manifest.MultisigKey:   multisig.Methods,
+	manifest.RewardKey:     reward.Methods,
+	manifest.VerifregKey:   verifreg.Methods,
+	manifest.EvmKey:        evm.Methods,
+	manifest.EamKey:        eam.Methods,
+	manifest.DatacapKey:    datacap.Methods,
+	manifest.EthAccountKey: evm.Methods,
 }
 
 func V10Methods() map[string]map[abi.MethodNum]builtin.MethodMeta {

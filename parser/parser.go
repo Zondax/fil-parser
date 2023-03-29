@@ -215,7 +215,7 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 		return p.parseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
 		return p.parseVerifiedRegistry(txType, msg, msgRct)
-	case manifest.EvmKey:
+	case manifest.EvmKey, manifest.EthAccountKey:
 		return p.parseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
 	case manifest.EamKey:
 		return p.parseEam(txType, msg, msgRct, mainMsgCid, ethLogs)
