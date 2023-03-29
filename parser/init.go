@@ -3,13 +3,14 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/filecoin-project/go-address"
-	"github.com/zondax/fil-parser/types"
 
+	"github.com/filecoin-project/go-address"
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	finit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	filInit "github.com/filecoin-project/specs-actors/actors/builtin/init"
+
+	"github.com/zondax/fil-parser/types"
 )
 
 func (p *Parser) parseInit(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
