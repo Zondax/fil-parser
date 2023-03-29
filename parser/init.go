@@ -6,7 +6,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/zondax/fil-parser/types"
 
-	builtinInit "github.com/filecoin-project/go-state-types/builtin/v10/init"
+	builtinInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	finit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	filInit "github.com/filecoin-project/specs-actors/actors/builtin/init"

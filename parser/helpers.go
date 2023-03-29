@@ -1,28 +1,21 @@
 package parser
 
 import (
-	"bytes"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	methods "github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v11/account"
-	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	initActor "github.com/filecoin-project/specs-actors/actors/builtin/init"
-	"github.com/filecoin-project/specs-actors/actors/builtin/power"
 	"github.com/ipfs/go-cid"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
-	"reflect"
 
 	"github.com/zondax/fil-parser/database"
+	"github.com/zondax/fil-parser/parser/methods"
 	"github.com/zondax/fil-parser/types"
 )
+
+var allMethods = methods.All()["v11"]()
 
 func (p *Parser) getActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) types.AddressInfo {
 	var (
@@ -84,146 +77,15 @@ func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes
 
 	actorName := p.getActorNameFromAddress(msg.To, height, key)
 
-	var method interface{}
-	switch actorName {
-	case manifest.InitKey:
-		method = methods.MethodsInit
-	case manifest.CronKey:
-		method = methods.MethodsCron
-	case manifest.AccountKey:
-		if m, ok := account.Methods[msg.Method]; ok {
-			return m.Name, nil
-		}
-		return UnknownStr, nil
-	case manifest.PowerKey:
-		method = methods.MethodsPower
-	case manifest.MinerKey:
-		method = methods.MethodsMiner
-	case manifest.MarketKey:
-		method = methods.MethodsMarket
-	case manifest.PaychKey:
-		method = methods.MethodsPaych
-	case manifest.MultisigKey:
-		method = methods.MethodsMultisig
-	case manifest.RewardKey:
-		method = methods.MethodsReward
-	case manifest.VerifregKey:
-		method = methods.MethodsVerifiedRegistry
-	case manifest.EvmKey:
-		method = methods.MethodsEVM
-	case manifest.EamKey:
-		method = methods.MethodsEAM
-	case manifest.DatacapKey:
-		method = methods.MethodsDatacap
-	default:
+	actorMethods, ok := allMethods[actorName]
+	if !ok {
+		return "", errNotKnownActor
+	}
+	method, ok := actorMethods[msg.Method]
+	if !ok {
 		return UnknownStr, nil
 	}
-
-	val := reflect.Indirect(reflect.ValueOf(method))
-	for i := 0; i < val.Type().NumField(); i++ {
-		field := val.Field(i)
-		methodNum := field.Uint()
-		if methodNum == uint64(msg.Method) {
-			methodName := val.Type().Field(i).Name
-			return methodName, nil
-		}
-	}
-	return UnknownStr, nil
-}
-
-func ParseInitActorExecParams(raw []byte) (initActor.ExecParams, error) {
-	reader := bytes.NewReader(raw)
-	var params initActor.ExecParams
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		zap.S().Errorf("Could not parse 'Init' actor's 'Exec' parameters:", err)
-		return params, err
-	}
-	return params, nil
-}
-
-func ParsePowerActorCreateMinerParams(raw []byte) (power.CreateMinerParams, error) {
-	reader := bytes.NewReader(raw)
-	var params power.CreateMinerParams
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		zap.S().Errorf("could not parse 'Power' actor's 'CreateMiner' parameters: %v", err.Error())
-		return params, err
-	}
-	return params, nil
-}
-
-func ParseExecReturn(raw []byte) (initActor.ExecReturn, error) {
-	reader := bytes.NewReader(raw)
-	var execReturn initActor.ExecReturn
-	err := execReturn.UnmarshalCBOR(reader)
-	if err != nil {
-		return execReturn, err
-	}
-	return execReturn, nil
-}
-
-func ParseProposeParams(msg *filTypes.Message, height int64, key filTypes.TipSetKey, rosettaLib *rosettaFilecoinLib.RosettaConstructionFilecoin) (map[string]interface{}, error) {
-	var params map[string]interface{}
-	msgSerial, err := msg.MarshalJSON()
-	if err != nil {
-		zap.S().Errorf("could not parse params. Cannot serialize lotus message: %v", err)
-		return params, err
-	}
-
-	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
-	if err != nil {
-		return params, err
-	}
-
-	if !rosettaLib.BuiltinActors.IsActor(actorCode, actors.ActorMultisigName) {
-		return params, fmt.Errorf("id %v (address %v) doesn't correspond to a multisig actor", actorCode, msg.To)
-	}
-
-	parsedParams, err := rosettaLib.GetInnerProposeTxParams(string(msgSerial))
-	if err != nil {
-		zap.S().Errorf("could not parse params. ParseProposeTxParams returned with error: %s", err)
-		return params, err
-	}
-
-	targetActorCode, err := database.ActorsDB.GetActorCode(parsedParams.To, height, key)
-	if err != nil {
-		return params, err
-	}
-
-	targetMethod, err := rosettaLib.GetProposedMethod(parsedParams, targetActorCode)
-	if err != nil {
-		return params, err
-	}
-
-	// We do this to turn multisig.ProposeParams into a map[string]interface{} with convenient types
-	jsonResponse, err := json.Marshal(parsedParams)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(jsonResponse, &params)
-	if err != nil {
-		return params, err
-	}
-
-	params["Method"] = targetMethod
-
-	innerParams, err := rosettaLib.ParseParamsMultisigTx(string(msgSerial), actorCode)
-	if err != nil {
-		zap.S().Errorf("could not parse inner params for propose method: %v. ParseParamsMultisigTx returned with error: %v", targetMethod, err)
-		zap.S().Debugf("raw serial msg: %s", string(msgSerial))
-		return params, err
-	}
-
-	innerParamsMap := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(innerParams), &innerParamsMap); err != nil {
-		zap.S().Errorf("could not unmarshall inner params for propose method: %v. ParseParamsMultisigTx returned with error: %v", targetMethod, err)
-		return params, err
-	}
-
-	params[ParamsKey] = innerParamsMap
-
-	return params, nil
+	return method.Name, nil
 }
 
 func (p *Parser) parseSend(msg *filTypes.Message) map[string]interface{} {

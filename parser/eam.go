@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/filecoin-project/go-address"
-	"go.uber.org/zap"
 	"strconv"
 
-	"github.com/filecoin-project/go-state-types/builtin/v10/eam"
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/types"
 )

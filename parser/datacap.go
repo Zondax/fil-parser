@@ -2,9 +2,10 @@ package parser
 
 import (
 	"bytes"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v10/datacap"
+	"github.com/filecoin-project/go-state-types/builtin/v11/datacap"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 

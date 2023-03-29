@@ -7,9 +7,9 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v10/multisig"
-	"github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v11/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	"github.com/filecoin-project/go-state-types/cbor"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/rosetta-filecoin-lib/actors"

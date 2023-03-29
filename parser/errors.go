@@ -7,4 +7,5 @@ var (
 	errNotActorCreationEvent = errors.New("not an actor creation event")
 	errBlockHash             = errors.New("unable to get block hash")
 	errNotValidActor         = errors.New("not a valid actor")
+	errNotKnownActor         = errors.New("actor is unknown")
 )
