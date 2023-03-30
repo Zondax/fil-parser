@@ -533,13 +533,13 @@ func (p *Parser) getOwner(rawReturn []byte) (map[string]interface{}, error) {
 func (p *Parser) getSectorSize(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	// TODO: miner.GetSectorSizeReturn does not implement UnmarshalCBOR
-	//reader := bytes.NewReader(rawReturn)
-	//var params abi.SectorSize
-	//err := params.UnmarshalCBOR(reader)
-	//if err != nil {
-	//	return metadata, err
-	//}
-	//metadata[ParamsKey] = params
+	// reader := bytes.NewReader(rawReturn)
+	// var params abi.SectorSize
+	// err := params.UnmarshalCBOR(reader)
+	// if err != nil {
+	// 	return metadata, err
+	// }
+	// metadata[ParamsKey] = params
 	return metadata, nil
 }
 
