@@ -3,34 +3,23 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
-
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
-/*
-Still needs to parse:
-
-	GetOwner
-	GetSectorSize
-	GetAvailableBalance
-	GetVestingFunds
-	GetPeerID
-	GetMultiaddrs
-*/
 func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
 	case MethodConstructor:
 		return p.minerConstructor(msg.Params)
-	case MethodAwardBlockReward: // ?
 	case MethodControlAddresses:
 		return p.controlAddresses(msg.Params, msgRct.Return)
-	case MethodChangeWorkerAddress:
+	case MethodChangeWorkerAddress, MethodChangeWorkerAddressExported:
 		return p.changeWorkerAddress(msg.Params)
-	case MethodChangePeerID:
+	case MethodChangePeerID, MethodChangePeerIDExported:
 		return p.changePeerID(msg.Params)
 	case MethodSubmitWindowedPoSt:
 		return p.submitWindowedPoSt(msg.Params)
@@ -54,19 +43,22 @@ func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct 
 		return p.applyRewards(msg.Params)
 	case MethodReportConsensusFault:
 		return p.reportConsensusFault(msg.Params)
-	case MethodWithdrawBalance:
+	case MethodWithdrawBalance, MethodWithdrawBalanceExported:
 		return p.parseWithdrawBalance(msg.Params)
 	case MethodConfirmSectorProofsValid:
 		return p.confirmSectorProofsValid(msg.Params)
-	case MethodChangeMultiaddrs:
+	case MethodChangeMultiaddrs, MethodChangeMultiaddrsExported:
 		return p.changeMultiaddrs(msg.Params)
 	case MethodCompactPartitions:
 		return p.compactPartitions(msg.Params)
 	case MethodCompactSectorNumbers:
 		return p.compactSectorNumbers(msg.Params)
+	case MethodConfirmChangeWorkerAddress, MethodConfirmChangeWorkerAddressExported:
+		return p.emptyParamsAndReturn()
 	case MethodConfirmUpdateWorkerKey: // TODO: ?
-	case MethodRepayDebt:
-	case MethodChangeOwnerAddress: // TODO: not tested
+	case MethodRepayDebt, MethodRepayDebtExported:
+		return p.emptyParamsAndReturn()
+	case MethodChangeOwnerAddress, MethodChangeOwnerAddressExported: // TODO: not tested
 		return p.changeOwnerAddress(msg.Params)
 	case MethodDisputeWindowedPoSt:
 		return p.disputeWindowedPoSt(msg.Params)
@@ -76,12 +68,30 @@ func (p *Parser) parseStorageminer(txType string, msg *filTypes.Message, msgRct 
 		return p.proveCommitAggregate(msg.Params)
 	case MethodProveReplicaUpdates:
 		return p.proveReplicaUpdates(msg.Params)
-	case MethodChangeBeneficiary:
+	case MethodPreCommitSectorBatch2:
+		return p.preCommitSectorBatch2(msg.Params)
+	case MethodProveReplicaUpdates2:
+		return p.proveReplicaUpdates2(msg.Params, msgRct.Return)
+	case MethodChangeBeneficiary, MethodChangeBeneficiaryExported:
 		return p.changeBeneficiary(msg.Params)
 	case MethodGetBeneficiary:
 		return p.getBeneficiary(msg.Params, msgRct.Return)
+	case MethodExtendSectorExpiration2:
+		return p.extendSectorExpiration2(msg.Params)
+	case MethodGetOwner:
+		return p.getOwner(msgRct.Return)
 	case MethodIsControllingAddressExported:
 		return p.isControllingAddressExported(msg.Params, msgRct.Return)
+	case MethodGetSectorSize:
+		return p.getSectorSize(msgRct.Return)
+	case MethodGetAvailableBalance:
+		return p.getAvailableBalance(msgRct.Return)
+	case MethodGetVestingFunds:
+		return p.getVestingFunds(msgRct.Return)
+	case MethodGetPeerID:
+		return p.getPeerID(msgRct.Return)
+	case MethodGetMultiaddrs:
+		return p.getMultiaddrs(msgRct.Return)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
@@ -159,6 +169,38 @@ func (p *Parser) proveReplicaUpdates(raw []byte) (map[string]interface{}, error)
 		return metadata, err
 	}
 	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) preCommitSectorBatch2(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params miner.PreCommitSectorBatchParams2
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) proveReplicaUpdates2(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawParams)
+	var params miner.ProveReplicaUpdatesParams2
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+
+	reader = bytes.NewReader(rawReturn)
+	var r bitfield.BitField
+	err = r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r
 	return metadata, nil
 }
 
@@ -461,6 +503,91 @@ func (p *Parser) isControllingAddressExported(rawParams, rawReturn []byte) (map[
 		return metadata, err
 	}
 	metadata[ReturnKey] = terminateReturn
+	return metadata, nil
+}
+
+func (p *Parser) extendSectorExpiration2(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params miner.ExtendSectorExpiration2Params
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getOwner(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var params miner.GetOwnerReturn
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getSectorSize(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	// TODO: miner.GetSectorSizeReturn does not implement UnmarshalCBOR
+	//reader := bytes.NewReader(rawReturn)
+	//var params abi.SectorSize
+	//err := params.UnmarshalCBOR(reader)
+	//if err != nil {
+	//	return metadata, err
+	//}
+	//metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getAvailableBalance(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var params miner.GetAvailableBalanceReturn
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getVestingFunds(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var params miner.GetVestingFundsReturn
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getPeerID(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var params miner.GetPeerIDReturn
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) getMultiaddrs(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var params miner.GetMultiAddrsReturn
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = params
 	return metadata, nil
 }
 

@@ -11,13 +11,13 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
-	case MethodConstructor: // TODO: not tested
-		return p.verifregConstructor(msg.Params)
+	case MethodConstructor:
+		return p.parseConstructor(msg.Params)
 	case MethodAddVerifier:
 		return p.addVerifier(msg.Params)
 	case MethodRemoveVerifier: // TODO: not tested
 		return p.removeVerifier(msg.Params)
-	case MethodAddVerifiedClient:
+	case MethodAddVerifiedClient, MethodAddVerifiedClientExported:
 		return p.addVerifiedClient(msg.Params)
 	case MethodUseBytes:
 		return p.useBytes(msg.Params)
@@ -25,7 +25,7 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 		return p.restoreBytes(msg.Params)
 	case MethodRemoveVerifiedClientDataCap: // TODO: not tested
 		return p.removeVerifiedClientDataCap(msg.Params)
-	case MethodRemoveExpiredAllocations:
+	case MethodRemoveExpiredAllocations, MethodRemoveExpiredAllocationsExported:
 		return p.removeExpiredAllocations(msg.Params, msgRct.Return)
 	case MethodVerifiedDeprecated1: // UseBytes
 		return p.deprecated1(msg.Params)
@@ -33,28 +33,16 @@ func (p *Parser) parseVerifiedRegistry(txType string, msg *filTypes.Message, msg
 		return p.deprecated2(msg.Params)
 	case MethodClaimAllocations:
 		return p.claimAllocations(msg.Params, msgRct.Return)
-	case MethodGetClaims: // TODO: not tested
+	case MethodGetClaims, MethodGetClaimsExported: // TODO: not tested
 		return p.getClaims(msg.Params, msgRct.Return)
-	case MethodExtendClaimTerms: // TODO: not tested
+	case MethodExtendClaimTerms, MethodExtendClaimTermsExported: // TODO: not tested
 		return p.extendClaimTerms(msg.Params, msgRct.Return)
-	case MethodRemoveExpiredClaims:
+	case MethodRemoveExpiredClaims, MethodRemoveExpiredClaimsExported:
 		return p.removeExpiredClaims(msg.Params, msgRct.Return)
 	case MethodUniversalReceiverHook:
 		return p.verifregUniversalReceiverHook(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
-}
-
-func (p *Parser) verifregConstructor(raw []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var params address.Address
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[ParamsKey] = params.String()
-	return metadata, nil
 }
 
 func (p *Parser) addVerifier(raw []byte) (map[string]interface{}, error) {

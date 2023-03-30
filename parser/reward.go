@@ -12,6 +12,8 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
+	case MethodConstructor:
+		return p.rewardConstructor(msg.Params)
 	case MethodAwardBlockReward:
 		return p.awardBlockReward(msg.Params)
 	case MethodUpdateNetworkKPI:
@@ -22,6 +24,18 @@ func (p *Parser) parseReward(txType string, msg *filTypes.Message, msgRct *filTy
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
+}
+
+func (p *Parser) rewardConstructor(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params abi.StoragePower
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+	return metadata, nil
 }
 
 func (p *Parser) awardBlockReward(raw []byte) (map[string]interface{}, error) {

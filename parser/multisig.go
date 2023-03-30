@@ -20,7 +20,6 @@ import (
 /*
 Still needs to parse:
 
-	LockBalance
 	Receive
 */
 func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
@@ -29,20 +28,20 @@ func (p *Parser) parseMultisig(txType string, msg *filTypes.Message, msgRct *fil
 		return p.msigConstructor(msg.Params)
 	case MethodSend:
 		return p.parseSend(msg), nil
-	case MethodPropose:
+	case MethodPropose, MethodProposeExported:
 		return p.propose(msg, msgRct)
-	case MethodApprove:
+	case MethodApprove, MethodApproveExported:
 		return p.approve(msg, msgRct, height, key)
-	case MethodCancel:
+	case MethodCancel, MethodCancelExported:
 		return p.cancel(msg, height, key)
-	case MethodAddSigner, MethodSwapSigner:
+	case MethodAddSigner, MethodAddSignerExported, MethodSwapSigner, MethodSwapSignerExported:
 		return p.msigParams(msg, height, key)
-	case MethodRemoveSigner:
+	case MethodRemoveSigner, MethodRemoveSignerExported:
 		return p.removeSigner(msg, height, key)
-	case MethodChangeNumApprovalsThreshold:
+	case MethodChangeNumApprovalsThreshold, MethodChangeNumApprovalsThresholdExported:
 		return p.changeNumApprovalsThreshold(msg.Params)
 	case MethodAddVerifies: // ?
-	case MethodLockBalance:
+	case MethodLockBalance, MethodLockBalanceExported:
 		return p.lockBalance(msg.Params)
 	case MethodMsigUniversalReceiverHook: // TODO: not tested
 		return p.universalReceiverHook(msg.Params)

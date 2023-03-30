@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/account"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	typegen "github.com/whyrusleeping/cbor-gen"
@@ -13,8 +14,10 @@ func (p *Parser) parseAccount(txType string, msg *filTypes.Message, msgRct *filT
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
+	case MethodConstructor:
+		return p.parseConstructor(msg.Params)
 	case MethodPubkeyAddress:
-		return p.pubkeyAddress(msg.Params)
+		return p.pubkeyAddress(msg.Params, msgRct.Return)
 	case MethodAuthenticateMessage:
 		return p.authenticateMessage(msg.Params, msgRct.Return)
 	case UnknownStr:
@@ -23,9 +26,16 @@ func (p *Parser) parseAccount(txType string, msg *filTypes.Message, msgRct *filT
 	return map[string]interface{}{}, errUnknownMethod
 }
 
-func (p *Parser) pubkeyAddress(raw []byte) (map[string]interface{}, error) {
+func (p *Parser) pubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	metadata[ParamsKey] = base64.StdEncoding.EncodeToString(raw)
+	reader := bytes.NewReader(rawReturn)
+	var r address.Address
+	err := r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r.String()
 	return metadata, nil
 }
 

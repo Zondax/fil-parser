@@ -12,7 +12,7 @@ import (
 func (p *Parser) parseDatacap(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodConstructor:
-		return p.datacapConstructor(msg.Params)
+		return p.parseConstructor(msg.Params)
 	case MethodMintExported:
 		return p.mintExported(msg.Params, msgRct.Return)
 	case MethodDestroyExported:
@@ -47,18 +47,6 @@ func (p *Parser) parseDatacap(txType string, msg *filTypes.Message, msgRct *filT
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, errUnknownMethod
-}
-
-func (p *Parser) datacapConstructor(raw []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var params address.Address
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[ParamsKey] = params
-	return metadata, nil
 }
 
 func (p *Parser) mintExported(raw, rawReturn []byte) (map[string]interface{}, error) {
