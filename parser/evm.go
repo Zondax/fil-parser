@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v10/evm"
+	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 
@@ -27,9 +27,9 @@ func (p *Parser) parseEvm(txType string, msg *filTypes.Message, msgCid cid.Cid, 
 			return metadata, err
 		}
 		metadata[ethLogsKey] = logs
-	case MethodInvokeContractDelegate: // TODO: not tested
+	case MethodInvokeContractDelegate:
 		return p.invokeContractDelegate(msg.Params, msgRct.Return)
-	case MethodGetBytecode: // TODO: not tested
+	case MethodGetBytecode:
 		return p.getByteCode(msgRct.Return)
 	case MethodGetBytecodeHash: // TODO: not tested
 		return p.getByteCodeHash(msgRct.Return)

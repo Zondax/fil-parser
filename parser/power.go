@@ -7,6 +7,8 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/actors/builtin/power"
 	"github.com/filecoin-project/specs-actors/actors/runtime/proof"
+
+	"github.com/zondax/fil-parser/types"
 )
 
 /*
@@ -17,15 +19,14 @@ Still needs to parse:
 	MinerCount
 	MinerConsensusCount
 */
-func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt,
-	height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
 	case MethodConstructor:
 		return p.powerConstructor(msg.Params)
 	case MethodCreateMiner:
-		return p.parseCreateMiner(msg, msgRct, height, key)
+		return p.parseCreateMiner(msg, msgRct)
 	case MethodUpdateClaimedPower:
 		return p.updateClaimedPower(msg.Params)
 	case MethodEnrollCronEvent:
@@ -82,22 +83,30 @@ func (p *Parser) powerConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func (p *Parser) parseCreateMiner(msg *filTypes.Message, msgRct *filTypes.MessageReceipt,
-	height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *Parser) parseCreateMiner(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	createdActor, err := p.searchForActorCreation(msg, msgRct, height, key)
-	if err != nil {
-		return map[string]interface{}{}, err
-	}
-	p.appendToAddresses(*createdActor)
-	metadata[ReturnKey] = createdActor
 	reader := bytes.NewReader(msg.Params)
 	var params power.CreateMinerParams
-	err = params.UnmarshalCBOR(reader)
+	err := params.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
 	metadata[ParamsKey] = params
+
+	reader = bytes.NewReader(msgRct.Return)
+	var r power.CreateMinerReturn
+	err = r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	createdActor := &types.AddressInfo{
+		Short:          r.IDAddress.String(),
+		Robust:         r.RobustAddress.String(),
+		ActorType:      "miner",
+		CreationTxHash: msg.Cid().String(),
+	}
+	metadata[ReturnKey] = createdActor
+	p.appendToAddresses(*createdActor)
 	return metadata, nil
 }
 

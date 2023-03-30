@@ -196,13 +196,13 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 	}
 	switch actor {
 	case manifest.InitKey:
-		return p.parseInit(txType, msg, msgRct, height, key)
+		return p.parseInit(txType, msg, msgRct)
 	case manifest.CronKey:
 		return p.parseCron(txType, msg, msgRct)
 	case manifest.AccountKey:
 		return p.parseAccount(txType, msg, msgRct)
 	case manifest.PowerKey:
-		return p.parseStoragepower(txType, msg, msgRct, height, key)
+		return p.parseStoragepower(txType, msg, msgRct)
 	case manifest.MinerKey:
 		return p.parseStorageminer(txType, msg, msgRct)
 	case manifest.MarketKey:
@@ -215,12 +215,14 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 		return p.parseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
 		return p.parseVerifiedRegistry(txType, msg, msgRct)
-	case manifest.EvmKey:
+	case manifest.EvmKey, manifest.EthAccountKey:
 		return p.parseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
 	case manifest.EamKey:
 		return p.parseEam(txType, msg, msgRct, mainMsgCid, ethLogs)
 	case manifest.DatacapKey:
 		return p.parseDatacap(txType, msg, msgRct)
+	case manifest.PlaceholderKey:
+		return metadata, nil // placeholder has no methods
 	default:
 		return metadata, errNotValidActor
 	}
@@ -232,7 +234,7 @@ func parseParams(metadata map[string]interface{}) string {
 		return params
 	}
 	jsonMetadata, err := json.Marshal(metadata[ParamsKey])
-	if err == nil {
+	if err == nil && string(jsonMetadata) != "null" {
 		return string(jsonMetadata)
 	}
 	return ""
