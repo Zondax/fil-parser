@@ -41,6 +41,8 @@ type BasicBlockData struct {
 	Height uint64 `json:"height" gorm:"index:idx_height"`
 	// Hash contains the block hash
 	Hash string `json:"hash"`
+	// Canonical indicates if this block belongs to the canonical chain
+	Canonical bool `json:"canonical"`
 }
 
 // Transaction parses transaction data into the desired format for reports
