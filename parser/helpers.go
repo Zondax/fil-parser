@@ -5,17 +5,47 @@ import (
 	"errors"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v11/account"
+	"github.com/filecoin-project/go-state-types/builtin/v11/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v11/datacap"
+	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
+	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
+	filInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
+	"github.com/filecoin-project/go-state-types/builtin/v11/market"
+	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v11/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v11/paych"
+	"github.com/filecoin-project/go-state-types/builtin/v11/power"
+	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/database"
-	"github.com/zondax/fil-parser/parser/methods"
 	"github.com/zondax/fil-parser/types"
 )
 
-var allMethods = methods.All()["v11"]()
+var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
+	manifest.InitKey:       filInit.Methods,
+	manifest.CronKey:       cron.Methods,
+	manifest.AccountKey:    account.Methods,
+	manifest.PowerKey:      power.Methods,
+	manifest.MinerKey:      miner.Methods,
+	manifest.MarketKey:     market.Methods,
+	manifest.PaychKey:      paych.Methods,
+	manifest.MultisigKey:   multisig.Methods,
+	manifest.RewardKey:     reward.Methods,
+	manifest.VerifregKey:   verifreg.Methods,
+	manifest.EvmKey:        evm.Methods,
+	manifest.EamKey:        eam.Methods,
+	manifest.DatacapKey:    datacap.Methods,
+	manifest.EthAccountKey: evm.Methods, // investigate this bafy2bzacebj3i5ehw2w6veowqisj2ag4wpp25glmmfsvejbwjj2e7axavonm6
+}
 
 func (p *Parser) getActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) types.AddressInfo {
 	var (
