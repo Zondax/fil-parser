@@ -12,17 +12,17 @@ import (
 
 type AddressInfo struct {
 	// Short is the address in 'short' format
-	Short string
+	Short string `json:"short" gorm:"uniqueIndex:idx_addresses_combination"`
 	// Robust is the address in 'robust' format
-	Robust string
+	Robust string `json:"id_address" gorm:"uniqueIndex:idx_addresses_combination"`
 	// EthAddress is the corresponding eth address (if applicable)
-	EthAddress string
+	EthAddress string `json:"eth_address" gorm:"index:idx_addresses_eth_address"`
 	// ActorCid is the actor's cid for this address
-	ActorCid cid.Cid
+	ActorCid cid.Cid `json:"actor_cid" gorm:"-"`
 	// ActorType is the actor's type name of this address
-	ActorType string
+	ActorType string `json:"actor_type"`
 	// CreationTxHash is the tx hash were this actor was created (if applicable)
-	CreationTxHash string
+	CreationTxHash string `json:"creation_tx_hash" gorm:"index:idx_addresses_creation_tx_hash"`
 }
 
 type AddressInfoMap map[string]AddressInfo
@@ -40,7 +40,7 @@ type BasicBlockData struct {
 	// Height contains the block height
 	Height uint64 `json:"height" gorm:"index:idx_height"`
 	// Hash contains the block hash
-	Hash string `json:"hash"`
+	Hash string `json:"hash" gorm:"index:idx_block_hash"`
 	// Canonical indicates if this block belongs to the canonical chain
 	Canonical bool `json:"canonical"`
 }
@@ -65,7 +65,7 @@ type Transaction struct {
 	// Status
 	Status string `json:"status"`
 	// TxType is the message type
-	TxType string `json:"tx_type"`
+	TxType string `json:"tx_type" gorm:"index:idx_tx_type"`
 	// TxMetadata is the message metadata
 	TxMetadata string `json:"tx_metadata"`
 	// TxParams contain the transaction params
