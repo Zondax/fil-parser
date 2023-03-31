@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 
@@ -122,6 +123,19 @@ func (p *Parser) parseSend(msg *filTypes.Message) map[string]interface{} {
 	metadata := make(map[string]interface{})
 	metadata[ParamsKey] = msg.Params
 	return metadata
+}
+
+// parseConstructor parse methods with format: *new(func(*address.Address) *abi.EmptyValue)
+func (p *Parser) parseConstructor(raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params address.Address
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params.String()
+	return metadata, nil
 }
 
 func (p *Parser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {

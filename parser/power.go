@@ -4,28 +4,20 @@ import (
 	"bytes"
 	"github.com/filecoin-project/go-state-types/abi"
 
+	"github.com/filecoin-project/go-state-types/builtin/v11/power"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/specs-actors/actors/builtin/power"
 	"github.com/filecoin-project/specs-actors/actors/runtime/proof"
 
 	"github.com/zondax/fil-parser/types"
 )
 
-/*
-Still needs to parse:
-
-	NetworkRawPower
-	MinerRawPower
-	MinerCount
-	MinerConsensusCount
-*/
 func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case MethodSend:
 		return p.parseSend(msg), nil
 	case MethodConstructor:
 		return p.powerConstructor(msg.Params)
-	case MethodCreateMiner:
+	case MethodCreateMiner, MethodCreateMinerExported:
 		return p.parseCreateMiner(msg, msgRct)
 	case MethodUpdateClaimedPower:
 		return p.updateClaimedPower(msg.Params)
@@ -40,6 +32,14 @@ func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct 
 		return p.submitPoRepForBulkVerify(msg.Params)
 	case MethodCurrentTotalPower:
 		return p.currentTotalPower(msgRct.Return)
+	case MethodNetworkRawPowerExported:
+		return p.networkRawPower(msgRct.Return)
+	case MethodMinerRawPowerExported:
+		return p.minerRawPower(msg.Params, msgRct.Return)
+	case MethodMinerCountExported:
+		return p.minerCount(msgRct.Return)
+	case MethodMinerConsensusCountExported:
+		return p.minerConsensusCount(msgRct.Return)
 	case UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 
@@ -143,5 +143,61 @@ func (p *Parser) updatePledgeTotal(raw []byte) (map[string]interface{}, error) {
 		return metadata, err
 	}
 	metadata[ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *Parser) networkRawPower(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var r power.NetworkRawPowerReturn
+	err := r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r
+	return metadata, nil
+}
+
+func (p *Parser) minerRawPower(raw, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	var params power.MinerRawPowerParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ParamsKey] = params
+
+	reader = bytes.NewReader(rawReturn)
+	var r power.MinerRawPowerReturn
+	err = r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r
+	return metadata, nil
+}
+
+func (p *Parser) minerCount(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var r power.MinerCountReturn
+	err := r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r
+	return metadata, nil
+}
+
+func (p *Parser) minerConsensusCount(rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawReturn)
+	var r power.MinerConsensusCountReturn
+	err := r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[ReturnKey] = r
 	return metadata, nil
 }

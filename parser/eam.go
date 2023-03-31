@@ -20,6 +20,7 @@ func (p *Parser) parseEam(txType string, msg *filTypes.Message, msgRct *filTypes
 	metadata := make(map[string]interface{})
 	switch txType {
 	case MethodConstructor:
+		return p.emptyParamsAndReturn()
 	case MethodCreate:
 		return p.parseCreate(msg.Params, msgRct.Return, msgCid)
 	case MethodCreate2:
