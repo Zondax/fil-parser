@@ -60,7 +60,11 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 	if err != nil {
 		return metadata, err
 	}
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	actorParams, err := ParseInitActorExecParams(msg.Params)
+	if err != nil {
+		return nil, err
+	}
+	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(actorParams.CodeCID)
 	if err != nil {
 		return metadata, err
 	}
@@ -91,7 +95,11 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 		SubAddress:        subAddress.String(),
 	}
 
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	actorParams, err := ParseInitActorExecParams(msg.Params)
+	if err != nil {
+		return nil, err
+	}
+	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(actorParams.CodeCID)
 	if err != nil {
 		return metadata, err
 	}
