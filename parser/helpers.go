@@ -152,14 +152,3 @@ func (p *Parser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interf
 func (p *Parser) emptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
-
-func ParseInitActorExecParams(raw []byte) (filInit.ExecParams, error) {
-	reader := bytes.NewReader(raw)
-	var params filInit.ExecParams
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		zap.S().Errorf("Could not parse 'Init' actor's 'Exec' parameters:", err)
-		return params, err
-	}
-	return params, nil
-}

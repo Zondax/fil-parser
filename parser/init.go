@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
@@ -60,11 +61,7 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 	if err != nil {
 		return metadata, err
 	}
-	actorParams, err := ParseInitActorExecParams(msg.Params)
-	if err != nil {
-		return nil, err
-	}
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(actorParams.CodeCID)
+	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
 		return metadata, err
 	}
@@ -72,7 +69,7 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
-		ActorType:      createdActorName,
+		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid().String(),
 	}
 	p.appendToAddresses(createdActor)
@@ -95,11 +92,7 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 		SubAddress:        subAddress.String(),
 	}
 
-	actorParams, err := ParseInitActorExecParams(msg.Params)
-	if err != nil {
-		return nil, err
-	}
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(actorParams.CodeCID)
+	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
 		return metadata, err
 	}
@@ -115,10 +108,15 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
-		ActorType:      createdActorName,
+		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid().String(),
 	}
 	metadata[ReturnKey] = createdActor
 	p.appendToAddresses(createdActor)
 	return metadata, nil
+}
+
+func parseExecActor(actor string) string {
+	s := strings.Split(actor, "/")
+	return s[len(s)-1]
 }
