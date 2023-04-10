@@ -25,6 +25,13 @@ func Test_parseExecActor(t *testing.T) {
 			},
 			want: "multisig",
 		},
+		{
+			name: "parse empty string",
+			args: args{
+				actor: "",
+			},
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

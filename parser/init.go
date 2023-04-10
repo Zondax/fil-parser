@@ -118,5 +118,8 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 
 func parseExecActor(actor string) string {
 	s := strings.Split(actor, "/")
+	if len(s) < 1 {
+		return actor
+	}
 	return s[len(s)-1]
 }
