@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"encoding/base64"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
@@ -68,7 +69,7 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
-		ActorType:      createdActorName,
+		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid().String(),
 	}
 	p.appendToAddresses(createdActor)
@@ -107,10 +108,18 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
-		ActorType:      createdActorName,
+		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid().String(),
 	}
 	metadata[ReturnKey] = createdActor
 	p.appendToAddresses(createdActor)
 	return metadata, nil
+}
+
+func parseExecActor(actor string) string {
+	s := strings.Split(actor, "/")
+	if len(s) < 1 {
+		return actor
+	}
+	return s[len(s)-1]
 }
