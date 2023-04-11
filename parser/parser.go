@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
@@ -30,7 +29,7 @@ func NewParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 	}
 }
 
-func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipSet.Key()
@@ -68,7 +67,7 @@ func (p *Parser) ParseTransactions(traces []*api.InvocResult, tipSet *filTypes.T
 	return transactions, &p.addresses, nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []filTypes.ExecutionTrace, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
+func (p *Parser) parseSubTxs(subTxs []types.ExecutionTrace, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
 	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
 
 	level++
@@ -84,7 +83,7 @@ func (p *Parser) parseSubTxs(subTxs []filTypes.ExecutionTrace, mainMsgCid cid.Ci
 	return
 }
 
-func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
+func (p *Parser) parseTrace(trace types.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
 	key filTypes.TipSetKey) (*types.Transaction, error) {
 	txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), key)
 	if err != nil {
@@ -128,7 +127,7 @@ func (p *Parser) parseTrace(trace filTypes.ExecutionTrace, msgCid cid.Cid, tipSe
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *api.InvocResult, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
+func (p *Parser) feesTransactions(msg *types.InvocResult, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
 	ts := p.getTimestamp(timestamp)
 	metadata := FeesMetadata{
 		TxType: txType,
@@ -150,7 +149,7 @@ func (p *Parser) feesTransactions(msg *api.InvocResult, minerAddress, txHash, bl
 	return feeTx
 }
 
-func (p *Parser) newFeeTx(msg *api.InvocResult, txHash, blockHash string, height uint64,
+func (p *Parser) newFeeTx(msg *types.InvocResult, txHash, blockHash string, height uint64,
 	timestamp time.Time, feesMetadata FeesMetadata) *types.Transaction {
 	metadata, _ := json.Marshal(feesMetadata)
 
@@ -170,7 +169,7 @@ func (p *Parser) newFeeTx(msg *api.InvocResult, txHash, blockHash string, height
 
 }
 
-func hasMessage(trace *api.InvocResult) bool {
+func hasMessage(trace *types.InvocResult) bool {
 	return trace.Msg != nil
 }
 

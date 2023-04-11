@@ -1,11 +1,9 @@
 package types
 
 import (
-	"encoding/json"
 	"math/big"
 	"time"
 
-	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 )
@@ -72,32 +70,4 @@ type Transaction struct {
 	TxParams string `json:"tx_params"`
 	// TxReturn contains the returned data by the destination actor
 	TxReturn string `json:"tx_return"`
-}
-
-type LightBlockHeader struct {
-	Cid        string
-	BlockMiner string
-}
-
-type BlockMessages map[string][]LightBlockHeader // map[MessageCid][]LightBlockHeader
-
-type ExtendedTipSet struct {
-	lotusChainTypes.TipSet
-	BlockMessages
-}
-
-func (e *ExtendedTipSet) MarshalJSON() ([]byte, error) {
-	data, err := json.Marshal(&struct {
-		lotusChainTypes.ExpTipSet
-		BlockMessages
-	}{
-		ExpTipSet: lotusChainTypes.ExpTipSet{
-			Cids:   e.TipSet.Cids(),
-			Blocks: e.TipSet.Blocks(),
-			Height: e.TipSet.Height(),
-		},
-		BlockMessages: e.BlockMessages,
-	})
-
-	return data, err
 }
