@@ -45,7 +45,7 @@ type BasicBlockData struct {
 
 // Transaction parses transaction data into the desired format for reports
 type Transaction struct {
-	BasicBlockData
+	BasicBlockData `gorm:"embedded"`
 	// Level reflects the level that this transaction belongs to inside the trace nest
 	Level uint16
 	// TxTimestamp is the timestamp of the transaction
