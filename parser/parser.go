@@ -207,9 +207,8 @@ func hasExecutionTrace(trace *types.InvocResult) (bool, *types.Transaction) {
 			TxType:     UnknownStr,
 			TxMetadata: trace.Error,
 		}
-	} else {
-		return true, nil
-	}
+	} 
+	return true, nil
 }
 
 func getStatus(code string) string {
