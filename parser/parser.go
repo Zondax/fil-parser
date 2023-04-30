@@ -42,6 +42,22 @@ func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes
 			continue
 		}
 
+		if ok, badTx := hasExecutionTrace(trace); !ok {
+			// Add missing fields and continue
+			badTx.BasicBlockData = types.BasicBlockData{
+				Height: uint64(tipSet.Height()),
+				Hash:   *blockHash,
+			}
+			badTx.TxTimestamp = p.getTimestamp(tipSet.MinTimestamp())
+
+			txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), tipsetKey)
+			if err != nil {
+				txType = UnknownStr
+			}
+			badTx.TxType = txType
+			continue
+		}
+
 		// Main transaction
 		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, tipsetKey)
 		if err != nil {
@@ -49,11 +65,13 @@ func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes
 		}
 		transactions = append(transactions, transaction)
 
-		// Subcalls
-		subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
-			trace.Msg.Cid().String(), tipsetKey, 0)
-		if len(subTxs) > 0 {
-			transactions = append(transactions, subTxs...)
+		// Only process sub-calls if the parent call was successfully executed
+		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
+			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
+				trace.Msg.Cid().String(), tipsetKey, 0)
+			if len(subTxs) > 0 {
+				transactions = append(transactions, subTxs...)
+			}
 		}
 
 		// Fees
@@ -173,6 +191,26 @@ func hasMessage(trace *types.InvocResult) bool {
 	return trace.Msg != nil
 }
 
+func hasExecutionTrace(trace *types.InvocResult) (bool, *types.Transaction) {
+	// check if this execution trace is valid
+	if trace.ExecutionTrace.Msg == nil || trace.ExecutionTrace.MsgRct == nil {
+
+		// this is an invalid message
+		return false, &types.Transaction{
+			Level:      0,
+			TxHash:     trace.MsgCid.String(),
+			TxFrom:     trace.Msg.From.String(),
+			TxTo:       trace.Msg.To.String(),
+			Amount:     trace.Msg.Value.Int,
+			GasUsed:    trace.MsgRct.GasUsed,
+			Status:     getStatus(trace.MsgRct.ExitCode.String()),
+			TxType:     UnknownStr,
+			TxMetadata: trace.Error,
+		}
+	} 
+	return true, nil
+}
+
 func getStatus(code string) string {
 	status := strings.Split(code, "(")
 	if len(status) == 2 {
@@ -184,6 +222,9 @@ func getStatus(code string) string {
 func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt,
 	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
+	if msg == nil {
+		return metadata, nil
+	}
 	var err error
 	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
 	if err != nil {
@@ -264,6 +305,9 @@ func parseReturn(metadata map[string]interface{}) string {
 //  }
 
 func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filTypes.TipSetKey) {
+	if msg == nil {
+		return
+	}
 	fromAdd := p.getActorAddressInfo(msg.From, height, key)
 	toAdd := p.getActorAddressInfo(msg.To, height, key)
 	p.appendToAddresses(fromAdd, toAdd)
