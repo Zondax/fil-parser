@@ -1,8 +1,9 @@
-package parser
+package actors
 
 import (
 	"bytes"
 	"encoding/base64"
+	"github.com/zondax/fil-parser/parser"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
@@ -14,23 +15,23 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Parser) parseInit(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseInit(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
-	case MethodSend:
-		return p.parseSend(msg), nil
-	case MethodConstructor:
-		return p.initConstructor(msg.Params)
-	case MethodExec:
-		return p.parseExec(msg, msgRct)
-	case MethodExec4:
-		return p.parseExec4(msg, msgRct)
-	case UnknownStr:
-		return p.unknownMetadata(msg.Params, msgRct.Return)
+	case parser.MethodSend:
+		return parseSend(msg), nil
+	case parser.MethodConstructor:
+		return initConstructor(msg.Params)
+	case parser.MethodExec:
+		return parseExec(msg, msgRct)
+	case parser.MethodExec4:
+		return parseExec4(msg, msgRct)
+	case parser.UnknownStr:
+		return unknownMetadata(msg.Params, msgRct.Return)
 	}
-	return map[string]interface{}{}, errUnknownMethod
+	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func (p *Parser) initConstructor(raw []byte) (map[string]interface{}, error) {
+func initConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor builtinInit.ConstructorParams
@@ -38,11 +39,11 @@ func (p *Parser) initConstructor(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = constructor
+	metadata[parser.ParamsKey] = constructor
 	return metadata, nil
 }
 
-func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func parseExec(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params filInit.ExecParams
@@ -50,7 +51,7 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = execParams{
+	metadata[parser.ParamsKey] = parser.ExecParams{
 		CodeCid:           params.CodeCID.String(),
 		ConstructorParams: base64.StdEncoding.EncodeToString(params.ConstructorParams),
 	}
@@ -61,7 +62,7 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 	if err != nil {
 		return metadata, err
 	}
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	createdActorName, err := p.Lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
 		return metadata, err
 	}
@@ -70,14 +71,14 @@ func (p *Parser) parseExec(msg *filTypes.Message, msgRct *filTypes.MessageReceip
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
 		ActorType:      parseExecActor(createdActorName),
-		CreationTxHash: msg.Cid().String(),
+		CreationTxHash: msg.Cid.String(),
 	}
-	p.appendToAddresses(createdActor)
-	metadata[ReturnKey] = createdActor
+	appendToAddresses(createdActor)
+	metadata[parser.ReturnKey] = createdActor
 	return metadata, nil
 }
 
-func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params finit.Exec4Params
@@ -86,13 +87,13 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 		return metadata, err
 	}
 	subAddress, _ := address.NewFromBytes(params.SubAddress)
-	metadata[ParamsKey] = exec4Params{
+	metadata[parser.ParamsKey] = parser.Exec4Params{
 		CodeCid:           params.CodeCID.String(),
 		ConstructorParams: base64.StdEncoding.EncodeToString(params.ConstructorParams),
 		SubAddress:        subAddress.String(),
 	}
 
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	createdActorName, err := p.Lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
 		return metadata, err
 	}
@@ -111,8 +112,8 @@ func (p *Parser) parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageRecei
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid().String(),
 	}
-	metadata[ReturnKey] = createdActor
-	p.appendToAddresses(createdActor)
+	metadata[parser.ReturnKey] = createdActor
+	appendToAddresses(createdActor)
 	return metadata, nil
 }
 

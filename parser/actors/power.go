@@ -1,8 +1,9 @@
-package parser
+package actors
 
 import (
 	"bytes"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/builtin/v11/power"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -11,43 +12,43 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Parser) parseStoragepower(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseStoragepower(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	switch txType {
-	case MethodSend:
-		return p.parseSend(msg), nil
-	case MethodConstructor:
-		return p.powerConstructor(msg.Params)
-	case MethodCreateMiner, MethodCreateMinerExported:
-		return p.parseCreateMiner(msg, msgRct)
-	case MethodUpdateClaimedPower:
-		return p.updateClaimedPower(msg.Params)
-	case MethodEnrollCronEvent:
-		return p.enrollCronEvent(msg.Params)
-	case MethodCronTick:
-		return p.emptyParamsAndReturn()
-	case MethodUpdatePledgeTotal:
-		return p.updatePledgeTotal(msg.Params)
-	case MethodPowerDeprecated1: // OnConsensusFault
-	case MethodSubmitPoRepForBulkVerify:
-		return p.submitPoRepForBulkVerify(msg.Params)
-	case MethodCurrentTotalPower:
-		return p.currentTotalPower(msgRct.Return)
-	case MethodNetworkRawPowerExported:
-		return p.networkRawPower(msgRct.Return)
-	case MethodMinerRawPowerExported:
-		return p.minerRawPower(msg.Params, msgRct.Return)
-	case MethodMinerCountExported:
-		return p.minerCount(msgRct.Return)
-	case MethodMinerConsensusCountExported:
-		return p.minerConsensusCount(msgRct.Return)
-	case UnknownStr:
-		return p.unknownMetadata(msg.Params, msgRct.Return)
+	case parser.MethodSend:
+		return parseSend(msg), nil
+	case parser.MethodConstructor:
+		return powerConstructor(msg.Params)
+	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
+		return parseCreateMiner(msg, msgRct)
+	case parser.MethodUpdateClaimedPower:
+		return updateClaimedPower(msg.Params)
+	case parser.MethodEnrollCronEvent:
+		return enrollCronEvent(msg.Params)
+	case parser.MethodCronTick:
+		return emptyParamsAndReturn()
+	case parser.MethodUpdatePledgeTotal:
+		return updatePledgeTotal(msg.Params)
+	case parser.MethodPowerDeprecated1: // OnConsensusFault
+	case parser.MethodSubmitPoRepForBulkVerify:
+		return submitPoRepForBulkVerify(msg.Params)
+	case parser.MethodCurrentTotalPower:
+		return currentTotalPower(msgRct.Return)
+	case parser.MethodNetworkRawPowerExported:
+		return networkRawPower(msgRct.Return)
+	case parser.MethodMinerRawPowerExported:
+		return minerRawPower(msg.Params, msgRct.Return)
+	case parser.MethodMinerCountExported:
+		return minerCount(msgRct.Return)
+	case parser.MethodMinerConsensusCountExported:
+		return minerConsensusCount(msgRct.Return)
+	case parser.UnknownStr:
+		return unknownMetadata(msg.Params, msgRct.Return)
 
 	}
-	return map[string]interface{}{}, errUnknownMethod
+	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func (p *Parser) currentTotalPower(raw []byte) (map[string]interface{}, error) {
+func currentTotalPower(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params power.CurrentTotalPowerReturn
@@ -55,11 +56,11 @@ func (p *Parser) currentTotalPower(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = params
+	metadata[parser.ReturnKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) submitPoRepForBulkVerify(raw []byte) (map[string]interface{}, error) {
+func submitPoRepForBulkVerify(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params proof.SealVerifyInfo
@@ -67,11 +68,11 @@ func (p *Parser) submitPoRepForBulkVerify(raw []byte) (map[string]interface{}, e
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) powerConstructor(raw []byte) (map[string]interface{}, error) {
+func powerConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params power.MinerConstructorParams
@@ -79,11 +80,11 @@ func (p *Parser) powerConstructor(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) parseCreateMiner(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func parseCreateMiner(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params power.CreateMinerParams
@@ -91,7 +92,7 @@ func (p *Parser) parseCreateMiner(msg *filTypes.Message, msgRct *filTypes.Messag
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 
 	reader = bytes.NewReader(msgRct.Return)
 	var r power.CreateMinerReturn
@@ -103,14 +104,14 @@ func (p *Parser) parseCreateMiner(msg *filTypes.Message, msgRct *filTypes.Messag
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorType:      "miner",
-		CreationTxHash: msg.Cid().String(),
+		CreationTxHash: msg.Cid.String(),
 	}
-	metadata[ReturnKey] = createdActor
-	p.appendToAddresses(*createdActor)
+	metadata[parser.ReturnKey] = createdActor
+	appendToAddresses(*createdActor)
 	return metadata, nil
 }
 
-func (p *Parser) enrollCronEvent(raw []byte) (map[string]interface{}, error) {
+func enrollCronEvent(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params power.EnrollCronEventParams
@@ -118,11 +119,11 @@ func (p *Parser) enrollCronEvent(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) updateClaimedPower(raw []byte) (map[string]interface{}, error) {
+func updateClaimedPower(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params power.UpdateClaimedPowerParams
@@ -130,11 +131,11 @@ func (p *Parser) updateClaimedPower(raw []byte) (map[string]interface{}, error) 
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) updatePledgeTotal(raw []byte) (map[string]interface{}, error) {
+func updatePledgeTotal(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params abi.TokenAmount
@@ -142,11 +143,11 @@ func (p *Parser) updatePledgeTotal(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) networkRawPower(rawReturn []byte) (map[string]interface{}, error) {
+func networkRawPower(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r power.NetworkRawPowerReturn
@@ -154,11 +155,11 @@ func (p *Parser) networkRawPower(rawReturn []byte) (map[string]interface{}, erro
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) minerRawPower(raw, rawReturn []byte) (map[string]interface{}, error) {
+func minerRawPower(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params power.MinerRawPowerParams
@@ -166,7 +167,7 @@ func (p *Parser) minerRawPower(raw, rawReturn []byte) (map[string]interface{}, e
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 
 	reader = bytes.NewReader(rawReturn)
 	var r power.MinerRawPowerReturn
@@ -174,11 +175,11 @@ func (p *Parser) minerRawPower(raw, rawReturn []byte) (map[string]interface{}, e
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) minerCount(rawReturn []byte) (map[string]interface{}, error) {
+func minerCount(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r power.MinerCountReturn
@@ -186,11 +187,11 @@ func (p *Parser) minerCount(rawReturn []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) minerConsensusCount(rawReturn []byte) (map[string]interface{}, error) {
+func minerConsensusCount(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r power.MinerConsensusCountReturn
@@ -198,6 +199,6 @@ func (p *Parser) minerConsensusCount(rawReturn []byte) (map[string]interface{}, 
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }

@@ -9,15 +9,15 @@ const (
 	BurnFeeOp            = "BurnFee"
 
 	BurnAddress = "f099"
-	ethPrefix   = "0x"
-	filPrefix   = "f0"
+	EthPrefix   = "0x"
+	FilPrefix   = "f0"
 
 	// metadata keys
 	ParamsKey  = "Params"
 	ReturnKey  = "Return"
-	ethHashKey = "ethHash"
-	addressKey = "address"
-	ethLogsKey = "ethLogs"
+	EthHashKey = "ethHash"
+	AddressKey = "address"
+	EthLogsKey = "ethLogs"
 
 	UnknownStr = "unknown"
 

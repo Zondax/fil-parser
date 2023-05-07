@@ -2,37 +2,39 @@ package parser
 
 import (
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
+	"github.com/ipfs/go-cid"
 )
 
-type controlAddress struct {
+type ControlAddress struct {
 	Owner        string   `json:"owner"`
 	Worker       string   `json:"worker"`
 	ControlAddrs []string `json:"controlAddrs"`
 }
 
-type execParams struct {
+type ExecParams struct {
 	CodeCid           string `json:"CodeCid"`
 	ConstructorParams string `json:"constructorParams"`
 }
 
-type exec4Params struct {
+type Exec4Params struct {
 	CodeCid           string `json:"CodeCid"`
 	ConstructorParams string `json:"constructorParams"`
 	SubAddress        string `json:"subAddress"`
 }
 
-type beneficiaryTerm struct {
+type BeneficiaryTerm struct {
 	Quota      string `json:"quota"`
 	UsedQuota  string `json:"usedQuota"`
 	Expiration int64  `json:"expiration"`
 }
-type activeBeneficiary struct {
+type ActiveBeneficiary struct {
 	Beneficiary string          `json:"beneficiary"`
-	Term        beneficiaryTerm `json:"term"`
+	Term        BeneficiaryTerm `json:"term"`
 }
 
-type proposed struct {
+type Proposed struct {
 	NewBeneficiary        string `json:"newBeneficiary"`
 	NewQuota              string `json:"newQuota"`
 	NewExpiration         int64  `json:"newExpiration"`
@@ -40,19 +42,19 @@ type proposed struct {
 	ApprovedByNominee     bool   `json:"approvedByNominee"`
 }
 
-type getBeneficiryReturn struct {
-	Active   activeBeneficiary `json:"active"`
-	Proposed proposed          `json:"proposed"`
+type GetBeneficiryReturn struct {
+	Active   ActiveBeneficiary `json:"active"`
+	Proposed Proposed          `json:"proposed"`
 }
 
-type propose struct {
+type Propose struct {
 	To     string
 	Value  string
 	Method string
 	Params cbor.Unmarshaler
 }
 
-type eamCreateReturn struct {
+type EamCreateReturn struct {
 	ActorId       uint64
 	RobustAddress *address.Address
 	EthAddress    string
@@ -78,4 +80,12 @@ type FeesMetadata struct {
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee
+}
+
+type LotusMessage struct {
+	To     address.Address
+	From   address.Address
+	Method abi.MethodNum
+	Cid    cid.Cid
+	Params []byte
 }

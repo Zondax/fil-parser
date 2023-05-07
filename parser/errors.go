@@ -3,8 +3,9 @@ package parser
 import "errors"
 
 var (
-	errUnknownMethod = errors.New("not known method")
-	errBlockHash     = errors.New("unable to get block hash")
-	errNotValidActor = errors.New("not a valid actor")
-	errNotKnownActor = errors.New("actor is unknown")
+	ErrUnknownMethod = errors.New("not known method")
+	ErrBlockHash     = errors.New("unable to get block hash")
+	ErrNotValidActor = errors.New("not a valid actor")
+	ErrNotKnownActor = errors.New("actor is unknown")
+	ErrInvalidType   = errors.New("invalid trace version")
 )

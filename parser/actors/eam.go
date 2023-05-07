@@ -1,9 +1,10 @@
-package parser
+package actors
 
 import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/zondax/fil-parser/parser"
 	"strconv"
 
 	"github.com/filecoin-project/go-address"
@@ -16,24 +17,24 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Parser) parseEam(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func ParseEam(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
-	case MethodConstructor:
-		return p.emptyParamsAndReturn()
-	case MethodCreate:
-		return p.parseCreate(msg.Params, msgRct.Return, msgCid)
-	case MethodCreate2:
-		return p.parseCreate2(msg.Params, msgRct.Return, msgCid)
-	case MethodCreateExternal:
-		return p.parseCreateExternal(msg, msgRct, msgCid)
-	case UnknownStr:
-		return p.unknownMetadata(msg.Params, msgRct.Return)
+	case parser.MethodConstructor:
+		return emptyParamsAndReturn()
+	case parser.MethodCreate:
+		return parseCreate(msg.Params, msgRct.Return, msgCid)
+	case parser.MethodCreate2:
+		return parseCreate2(msg.Params, msgRct.Return, msgCid)
+	case parser.MethodCreateExternal:
+		return parseCreateExternal(msg, msgRct, msgCid)
+	case parser.UnknownStr:
+		return unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return metadata, nil
 }
 
-func (p *Parser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
+func parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
 	reader := bytes.NewReader(rawReturn)
 	err = cr.UnmarshalCBOR(reader)
 	if err != nil {
@@ -63,15 +64,15 @@ func validateEamReturn(ret *eam.CreateReturn) error {
 	return nil
 }
 
-func (p *Parser) newEamCreate(r eam.CreateReturn) eamCreateReturn {
-	return eamCreateReturn{
+func newEamCreate(r eam.CreateReturn) parser.EamCreateReturn {
+	return parser.EamCreateReturn{
 		ActorId:       r.ActorID,
 		RobustAddress: r.RobustAddress,
-		EthAddress:    ethPrefix + hex.EncodeToString(r.EthAddress[:]),
+		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
 	}
 }
 
-func (p *Parser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
+func parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 
 	reader := bytes.NewReader(rawParams)
@@ -80,25 +81,25 @@ func (p *Parser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[s
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 
-	createReturn, err := p.parseEamReturn(rawReturn)
+	createReturn, err := parseEamReturn(rawReturn)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = p.newEamCreate(createReturn)
-	p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
+	metadata[parser.ReturnKey] = newEamCreate(createReturn)
+	appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ethHashKey] = ethHash.String()
+	metadata[parser.EthHashKey] = ethHash.String()
 
 	return metadata, nil
 }
 
-func (p *Parser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
+func parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 
 	reader := bytes.NewReader(rawParams)
@@ -107,49 +108,49 @@ func (p *Parser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 
-	createReturn, err := p.parseEamReturn(rawReturn)
+	createReturn, err := parseEamReturn(rawReturn)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = p.newEamCreate(createReturn)
+	metadata[parser.ReturnKey] = newEamCreate(createReturn)
 	p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ethHashKey] = ethHash.String()
+	metadata[parser.EthHashKey] = ethHash.String()
 
 	return metadata, nil
 }
 
-func (p *Parser) parseCreateExternal(msg *filTypes.Message, msgRct *filTypes.MessageReceipt, msgCid cid.Cid) (map[string]interface{}, error) {
+func parseCreateExternal(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, msgCid cid.Cid) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	metadata[ParamsKey] = ethPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
+	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
 
-	createExternalReturn, err := p.parseEamReturn(msgRct.Return)
+	createExternalReturn, err := parseEamReturn(msgRct.Return)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = p.newEamCreate(createExternalReturn)
-	p.appendCreatedEVMActor(eam.Return(createExternalReturn), msgCid.String())
+	metadata[parser.ReturnKey] = newEamCreate(createExternalReturn)
+	appendCreatedEVMActor(eam.Return(createExternalReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ethHashKey] = ethHash.String()
+	metadata[parser.EthHashKey] = ethHash.String()
 
 	return metadata, nil
 }
 
-func (p *Parser) appendCreatedEVMActor(r eam.Return, msgCid string) {
-	p.appendToAddresses(types.AddressInfo{
-		Short:          filPrefix + strconv.FormatUint(r.ActorID, 10),
+func appendCreatedEVMActor(r eam.Return, msgCid string) {
+	appendToAddresses(types.AddressInfo{
+		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:         r.RobustAddress.String(),
-		EthAddress:     ethPrefix + hex.EncodeToString(r.EthAddress[:]),
+		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
 		ActorType:      "evm",
 		CreationTxHash: msgCid,
 	})

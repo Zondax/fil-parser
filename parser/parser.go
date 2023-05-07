@@ -2,216 +2,45 @@ package parser
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/zondax/fil-parser/parser/V22"
 	"strings"
 	"time"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
-
 	"github.com/zondax/fil-parser/database"
-	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 )
 
+type IParser interface {
+	ParseTransactions(traces any, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error)
+}
+
 type Parser struct {
-	lib       *rosettaFilecoinLib.RosettaConstructionFilecoin
-	addresses types.AddressInfoMap
+	parserV22 IParser
+	parserV23 IParser
+
+	lib *rosettaFilecoinLib.RosettaConstructionFilecoin
 }
 
 func NewParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 	return &Parser{
+		parserV22: V22.NewParserV22(lib),
+		parserV23: V23.NewParserV23(lib),
 		lib:       lib,
-		addresses: types.NewAddressInfoMap(),
 	}
 }
 
-func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
-	var transactions []*types.Transaction
-	p.addresses = types.NewAddressInfoMap()
-	tipsetKey := tipSet.Key()
-	blockHash, err := tools.BuildTipSetKeyHash(tipsetKey)
-	if err != nil {
-		return nil, nil, errBlockHash
-	}
-	for _, trace := range traces {
-		if !hasMessage(trace) {
-			continue
-		}
-
-		if ok, badTx := hasExecutionTrace(trace); !ok {
-			// Add missing fields and continue
-			badTx.BasicBlockData = types.BasicBlockData{
-				Height: uint64(tipSet.Height()),
-				Hash:   *blockHash,
-			}
-			badTx.TxTimestamp = p.getTimestamp(tipSet.MinTimestamp())
-
-			txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), tipsetKey)
-			if err != nil {
-				txType = UnknownStr
-			}
-			badTx.TxType = txType
-			continue
-		}
-
-		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, tipsetKey)
-		if err != nil {
-			continue
-		}
-		transactions = append(transactions, transaction)
-
-		// Only process sub-calls if the parent call was successfully executed
-		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
-				trace.Msg.Cid().String(), tipsetKey, 0)
-			if len(subTxs) > 0 {
-				transactions = append(transactions, subTxs...)
-			}
-		}
-
-		// Fees
-		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
-				transaction.TxType, uint64(tipSet.Height()), tipSet.MinTimestamp())
-			transactions = append(transactions, feeTx)
-		}
-	}
-
-	return transactions, &p.addresses, nil
+func (p *Parser) ParseTransactions(traces any, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
+	// Parse traces according to its inner version
+	//p.parseTraceV23()
+	//p.parsetraceV22()
 }
 
-func (p *Parser) parseSubTxs(subTxs []types.ExecutionTrace, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
-	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
-
-	level++
-	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, blockHash, key)
-		if err != nil {
-			continue
-		}
-		subTransaction.Level = level
-		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key, level)...)
-	}
-	return
-}
-
-func (p *Parser) parseTrace(trace types.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
-	key filTypes.TipSetKey) (*types.Transaction, error) {
-	txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), key)
-	if err != nil {
-		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", msgCid.String(), err)
-		txType = UnknownStr
-	}
-	if err == nil && txType == UnknownStr {
-		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
-	}
-
-	metadata, mErr := p.getMetadata(txType, trace.Msg, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs)
-	if mErr != nil {
-		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
-	}
-	if trace.Error != "" {
-		metadata["Error"] = trace.Error
-	}
-	params := parseParams(metadata)
-	jsonMetadata, _ := json.Marshal(metadata)
-	txReturn := parseReturn(metadata)
-
-	p.appendAddressInfo(trace.Msg, int64(tipSet.Height()), key)
-
-	return &types.Transaction{
-		BasicBlockData: types.BasicBlockData{
-			Height: uint64(tipSet.Height()),
-			Hash:   blockHash,
-		},
-		Level:       0,
-		TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
-		TxHash:      msgCid.String(),
-		TxFrom:      trace.Msg.From.String(),
-		TxTo:        trace.Msg.To.String(),
-		Amount:      trace.Msg.Value.Int,
-		GasUsed:     trace.MsgRct.GasUsed,
-		Status:      getStatus(trace.MsgRct.ExitCode.String()),
-		TxType:      txType,
-		TxMetadata:  string(jsonMetadata),
-		TxParams:    fmt.Sprintf("%v", params),
-		TxReturn:    txReturn,
-	}, nil
-}
-
-func (p *Parser) feesTransactions(msg *types.InvocResult, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
-	ts := p.getTimestamp(timestamp)
-	metadata := FeesMetadata{
-		TxType: txType,
-		MinerFee: MinerFee{
-			MinerAddress: minerAddress,
-			Amount:       msg.GasCost.MinerTip.String(),
-		},
-		OverEstimationBurnFee: OverEstimationBurnFee{
-			BurnAddress: BurnAddress,
-			Amount:      msg.GasCost.OverEstimationBurn.String(),
-		},
-		BurnFee: BurnFee{
-			BurnAddress: BurnAddress,
-			Amount:      msg.GasCost.BaseFeeBurn.String(),
-		},
-	}
-
-	feeTx := p.newFeeTx(msg, txHash, blockHash, height, ts, metadata)
-	return feeTx
-}
-
-func (p *Parser) newFeeTx(msg *types.InvocResult, txHash, blockHash string, height uint64,
-	timestamp time.Time, feesMetadata FeesMetadata) *types.Transaction {
-	metadata, _ := json.Marshal(feesMetadata)
-
-	return &types.Transaction{
-		BasicBlockData: types.BasicBlockData{
-			Height: height,
-			Hash:   blockHash,
-		},
-		TxTimestamp: timestamp,
-		TxHash:      txHash,
-		TxFrom:      msg.Msg.From.String(),
-		Amount:      msg.GasCost.TotalCost.Int,
-		Status:      "Ok",
-		TxType:      TotalFeeOp,
-		TxMetadata:  string(metadata),
-	}
-
-}
-
-func hasMessage(trace *types.InvocResult) bool {
-	return trace.Msg != nil
-}
-
-func hasExecutionTrace(trace *types.InvocResult) (bool, *types.Transaction) {
-	// check if this execution trace is valid
-	if trace.ExecutionTrace.Msg == nil || trace.ExecutionTrace.MsgRct == nil {
-
-		// this is an invalid message
-		return false, &types.Transaction{
-			Level:      0,
-			TxHash:     trace.MsgCid.String(),
-			TxFrom:     trace.Msg.From.String(),
-			TxTo:       trace.Msg.To.String(),
-			Amount:     trace.Msg.Value.Int,
-			GasUsed:    trace.MsgRct.GasUsed,
-			Status:     getStatus(trace.MsgRct.ExitCode.String()),
-			TxType:     UnknownStr,
-			TxMetadata: trace.Error,
-		}
-	} 
-	return true, nil
-}
-
-func getStatus(code string) string {
+func GetStatus(code string) string {
 	status := strings.Split(code, "(")
 	if len(status) == 2 {
 		return status[0]
@@ -219,7 +48,7 @@ func getStatus(code string) string {
 	return code
 }
 
-func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt,
+func (p *Parser) GetMetadata(txType string, msg *LotusMessage, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt,
 	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
@@ -230,7 +59,7 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 	if err != nil {
 		return metadata, err
 	}
-	actor, err := p.lib.BuiltinActors.GetActorNameFromCid(actorCode)
+	actor, err := p.Lib.BuiltinActors.GetActorNameFromCid(actorCode)
 	if err != nil {
 		return metadata, err
 	}
@@ -264,7 +93,7 @@ func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid ci
 	case manifest.PlaceholderKey:
 		return metadata, nil // placeholder has no methods
 	default:
-		return metadata, errNotValidActor
+		return metadata, ErrNotValidActor
 	}
 }
 
@@ -292,18 +121,6 @@ func parseReturn(metadata map[string]interface{}) string {
 	return ""
 }
 
-//  func getCastedAmount(amount string) decimal.Decimal {
-//	  decimal.DivisionPrecision = 18
-//	  parsed, err := decimal.NewFromString(amount)
-//	  if err != nil {
-//		  return decimal.Decimal{}
-//	  }
-//	  abs := parsed.Abs()
-//	  divided := abs.DivRound(decimal.NewFromInt(1e+18), 18)
-//
-//	  return divided
-//  }
-
 func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filTypes.TipSetKey) {
 	if msg == nil {
 		return
@@ -314,13 +131,13 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filT
 }
 
 func (p *Parser) appendToAddresses(info ...types.AddressInfo) {
-	if p.addresses == nil {
+	if p.Addresses == nil {
 		return
 	}
 	for _, i := range info {
 		if i.Robust != "" && i.Short != "" && i.Robust != i.Short {
-			if _, ok := p.addresses[i.Short]; !ok {
-				p.addresses[i.Short] = i
+			if _, ok := p.Addresses[i.Short]; !ok {
+				p.Addresses[i.Short] = i
 			}
 		}
 	}
