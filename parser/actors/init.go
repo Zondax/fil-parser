@@ -9,13 +9,12 @@ import (
 	"github.com/filecoin-project/go-address"
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	finit "github.com/filecoin-project/go-state-types/builtin/v11/init"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	filInit "github.com/filecoin-project/specs-actors/actors/builtin/init"
 
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseInit(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseInit(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil
@@ -43,7 +42,7 @@ func initConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func parseExec(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params filInit.ExecParams
@@ -78,7 +77,7 @@ func parseExec(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[s
 	return metadata, nil
 }
 
-func parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params finit.Exec4Params
@@ -110,7 +109,7 @@ func parseExec4(msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[str
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
 		ActorType:      parseExecActor(createdActorName),
-		CreationTxHash: msg.Cid().String(),
+		CreationTxHash: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
 	appendToAddresses(createdActor)

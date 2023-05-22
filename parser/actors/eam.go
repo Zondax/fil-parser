@@ -9,7 +9,6 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
@@ -17,7 +16,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseEam(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func ParseEam(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodConstructor:
@@ -126,7 +125,7 @@ func parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]inter
 	return metadata, nil
 }
 
-func parseCreateExternal(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, msgCid cid.Cid) (map[string]interface{}, error) {
+func parseCreateExternal(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
 

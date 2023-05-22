@@ -21,7 +21,7 @@ Still needs to parse:
 
 	Receive
 */
-func ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodConstructor: // TODO: not tested
 		return msigConstructor(msg.Params)

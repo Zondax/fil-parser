@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"github.com/zondax/fil-parser/parser"
 
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/v8/actors/builtin/cron"
 )
 
-func ParseCron(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseCron(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodConstructor:
 		return cronConstructor(msg.Params)

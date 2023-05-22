@@ -5,7 +5,6 @@ import (
 	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/builtin/v8/paych"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
 /*
@@ -14,7 +13,7 @@ Still needs to parse:
 	LockBalance
 	Receive
 */
-func ParsePaymentchannel(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParsePaymentchannel(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil

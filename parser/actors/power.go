@@ -12,7 +12,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseStoragepower(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseStoragepower(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil

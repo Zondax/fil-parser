@@ -7,13 +7,12 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *filTypes.MessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *parser.LotusMessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodConstructor:

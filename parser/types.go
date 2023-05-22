@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
 )
 
@@ -88,4 +89,9 @@ type LotusMessage struct {
 	Method abi.MethodNum
 	Cid    cid.Cid
 	Params []byte
+}
+
+type LotusMessageReceipt struct {
+	ExitCode exitcode.ExitCode
+	Return   []byte
 }

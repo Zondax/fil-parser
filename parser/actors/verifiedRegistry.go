@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/parser"
 )
 
-func ParseVerifiedRegistry(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseVerifiedRegistry(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil

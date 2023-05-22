@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/zondax/fil-parser/parser"
 	typesv23 "github.com/zondax/fil-parser/parser/V23/types"
+	"github.com/zondax/fil-parser/parser/actors"
 	"github.com/zondax/fil-parser/parser/helper"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"strings"
@@ -19,16 +20,16 @@ import (
 )
 
 type Parser struct {
-	lib       *rosettaFilecoinLib.RosettaConstructionFilecoin
-	addresses types.AddressInfoMap
-	helper    *helper.Helper
+	actorParser *actors.ActorParser
+	addresses   types.AddressInfoMap
+	helper      *helper.Helper
 }
 
 func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) parser.IParser {
 	return &Parser{
-		lib:       lib,
-		addresses: types.NewAddressInfoMap(),
-		helper:    helper.NewHelper(lib),
+		actorParser: actors.NewActorParser(lib),
+		addresses:   types.NewAddressInfoMap(),
+		helper:      helper.NewHelper(lib),
 	}
 }
 
@@ -56,6 +57,11 @@ func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, 
 		if err != nil {
 			continue
 		}
+
+		// We only set the gas usage for the main transaction.
+		// If we need the gas usage of all sub-txs, we need to also parse GasCharges (today is very inefficient)
+		transaction.GasUsed = trace.GasCost.TotalCost.Int64()
+
 		transactions = append(transactions, transaction)
 
 		// Only process sub-calls if the parent call was successfully executed
@@ -110,18 +116,36 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
 	}
 
-	metadata, mErr := p.getMetadata(txType, trace.Msg, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs)
+	metadata, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+		To:     trace.Msg.To,
+		From:   trace.Msg.From,
+		Method: trace.Msg.Method,
+		Cid:    msgCid,
+		Params: trace.Msg.Params,
+	}, msgCid, &parser.LotusMessageReceipt{
+		ExitCode: trace.MsgRct.ExitCode,
+		Return:   trace.MsgRct.Return,
+	}, int64(tipSet.Height()), key, ethLogs)
+
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
 	}
-	if trace.Error != "" {
-		metadata["Error"] = trace.Error
+
+	if trace.MsgRct.ExitCode.IsError() {
+		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
+
 	params := parseParams(metadata)
 	jsonMetadata, _ := json.Marshal(metadata)
 	txReturn := parseReturn(metadata)
 
-	p.appendAddressInfo(trace.Msg, int64(tipSet.Height()), key)
+	p.appendAddressInfo(&parser.LotusMessage{
+		To:     trace.Msg.To,
+		From:   trace.Msg.From,
+		Method: trace.Msg.Method,
+		Cid:    msgCid,
+		Params: trace.Msg.Params,
+	}, int64(tipSet.Height()), key)
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
@@ -134,7 +158,6 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
-		GasUsed:     trace.MsgRct.GasUsed,
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
@@ -143,7 +166,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *types.InvocResult, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
 	ts := p.getTimestamp(timestamp)
 	metadata := parser.FeesMetadata{
 		TxType: txType,
@@ -165,7 +188,7 @@ func (p *Parser) feesTransactions(msg *types.InvocResult, minerAddress, txHash, 
 	return feeTx
 }
 
-func (p *Parser) newFeeTx(msg *types.InvocResult, txHash, blockHash string, height uint64,
+func (p *Parser) newFeeTx(msg *typesv23.InvocResultV23, txHash, blockHash string, height uint64,
 	timestamp time.Time, feesMetadata parser.FeesMetadata) *types.Transaction {
 	metadata, _ := json.Marshal(feesMetadata)
 
@@ -217,12 +240,12 @@ func parseReturn(metadata map[string]interface{}) string {
 	return ""
 }
 
-func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filTypes.TipSetKey) {
+func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.getActorAddressInfo(msg.From, height, key)
-	toAdd := p.getActorAddressInfo(msg.To, height, key)
+	fromAdd := p.helper.GetActorAddressInfo(msg.From, height, key)
+	toAdd := p.helper.GetActorAddressInfo(msg.To, height, key)
 	p.appendToAddresses(fromAdd, toAdd)
 }
 

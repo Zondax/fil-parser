@@ -20,16 +20,16 @@ import (
 )
 
 type Parser struct {
-	lib       *rosettaFilecoinLib.RosettaConstructionFilecoin
-	addresses types.AddressInfoMap
-	helper    *helper.Helper
+	actorParser *actors.ActorParser
+	addresses   types.AddressInfoMap
+	helper      *helper.Helper
 }
 
 func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) parser.IParser {
 	return &Parser{
-		lib:       lib,
-		addresses: types.NewAddressInfoMap(),
-		helper:    helper.NewHelper(lib),
+		actorParser: actors.NewActorParser(lib),
+		addresses:   types.NewAddressInfoMap(),
+		helper:      helper.NewHelper(lib),
 	}
 }
 
@@ -133,13 +133,16 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
 	}
 
-	metadata, mErr := actors.GetMetadata(txType, &parser.LotusMessage{
+	metadata, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
 		Cid:    trace.Msg.Cid(),
 		Params: trace.Msg.Params,
-	}, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs, p.lib)
+	}, msgCid, &parser.LotusMessageReceipt{
+		ExitCode: trace.MsgRct.ExitCode,
+		Return:   trace.MsgRct.Return,
+	}, int64(tipSet.Height()), key, ethLogs)
 
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())

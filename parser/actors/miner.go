@@ -6,11 +6,10 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/parser"
 )
 
-func ParseStorageminer(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseStorageminer(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil

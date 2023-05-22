@@ -6,11 +6,10 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market" // v0.10.0 does not support ComputeDataCommitmentParams and OnMinerSectorsTerminateParams on v11
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/parser"
 )
 
-func ParseStoragemarket(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseStoragemarket(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil

@@ -6,10 +6,9 @@ import (
 	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
-func ParseReward(txType string, msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func ParseReward(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
 		return parseSend(msg), nil

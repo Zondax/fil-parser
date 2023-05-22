@@ -10,21 +10,33 @@ import (
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 )
 
-func GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt,
-	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog, lib *rosettaFilecoinLib.RosettaConstructionFilecoin) (map[string]interface{}, error) {
+type ActorParser struct {
+	lib *rosettaFilecoinLib.RosettaConstructionFilecoin
+}
+
+func NewActorParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *ActorParser {
+	return &ActorParser{
+		lib: lib,
+	}
+}
+
+func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return metadata, nil
 	}
-	var err error
+
 	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
 	if err != nil {
 		return metadata, err
 	}
-	actor, err := lib.BuiltinActors.GetActorNameFromCid(actorCode)
+
+	actor, err := p.lib.BuiltinActors.GetActorNameFromCid(actorCode)
 	if err != nil {
 		return metadata, err
 	}
+
 	switch actor {
 	case manifest.InitKey:
 		return ParseInit(txType, msg, msgRct)
