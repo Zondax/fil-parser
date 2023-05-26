@@ -91,7 +91,6 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 		return metadata, nil, err
 	}
 	metadata[parser.ReturnKey] = p.newEamCreate(createReturn)
-	//p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
@@ -126,7 +125,6 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 		return metadata, nil, err
 	}
 	metadata[parser.ReturnKey] = p.newEamCreate(createReturn)
-	//p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
@@ -153,7 +151,6 @@ func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *pars
 		return metadata, nil, err
 	}
 	metadata[parser.ReturnKey] = p.newEamCreate(createExternalReturn)
-	//p.appendCreatedEVMActor(eam.Return(createExternalReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
@@ -170,13 +167,3 @@ func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *pars
 	}
 	return metadata, createdEvmActor, nil
 }
-
-//func (p *ActorParser) appendCreatedEVMActor(r eam.Return, msgCid string) {
-//	appendToAddresses(types.AddressInfo{
-//		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
-//		Robust:         r.RobustAddress.String(),
-//		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-//		ActorType:      "evm",
-//		CreationTxHash: msgCid,
-//	})
-//}

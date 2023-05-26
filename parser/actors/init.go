@@ -76,7 +76,6 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMe
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid.String(),
 	}
-	//appendToAddresses(createdActor)
 	metadata[parser.ReturnKey] = createdActor
 	return metadata, createdActor, nil
 }
@@ -115,7 +114,6 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusM
 		CreationTxHash: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
-	//appendToAddresses(createdActor)
 	return metadata, createdActor, nil
 }
 

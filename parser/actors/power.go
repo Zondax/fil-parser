@@ -110,7 +110,6 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 		CreationTxHash: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
-	//appendToAddresses(*createdActor)
 	return metadata, createdActor, nil
 }
 
