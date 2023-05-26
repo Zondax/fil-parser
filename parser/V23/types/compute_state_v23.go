@@ -19,9 +19,9 @@ type InvocResultV23 struct {
 	Msg            *types.Message
 	MsgRct         *types.MessageReceipt
 	GasCost        api.MsgGasCost
-	ExecutionTrace ExecutionTraceV23
 	Error          string
 	Duration       time.Duration
+	ExecutionTrace ExecutionTraceV23
 }
 
 // ExecutionTrace This is a copy of native lotus ExecutionTrace type

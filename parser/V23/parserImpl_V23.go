@@ -25,7 +25,7 @@ type Parser struct {
 	helper      *helper.Helper
 }
 
-func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) parser.IParser {
+func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 	return &Parser{
 		actorParser: actors.NewActorParser(lib),
 		addresses:   types.NewAddressInfoMap(),
@@ -33,7 +33,11 @@ func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) parser.IP
 	}
 }
 
-func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) Version() string {
+	return "v23"
+}
+
+func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
 	// cast to correct type
 	tracesV23, ok := traces.([]*typesv23.InvocResultV23)
 	if !ok {
@@ -81,7 +85,7 @@ func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, 
 		}
 	}
 
-	return transactions, &p.addresses, nil
+	return transactions, p.addresses, nil
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,

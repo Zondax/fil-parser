@@ -3,9 +3,6 @@ package V22
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/fil-parser/parser"
-	"github.com/zondax/fil-parser/parser/actors"
-	"github.com/zondax/fil-parser/parser/helper"
 	"strings"
 	"time"
 
@@ -14,7 +11,10 @@ import (
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 
+	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
+	"github.com/zondax/fil-parser/parser/actors"
+	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
@@ -25,7 +25,7 @@ type Parser struct {
 	helper      *helper.Helper
 }
 
-func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) parser.IParser {
+func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 	return &Parser{
 		actorParser: actors.NewActorParser(lib),
 		addresses:   types.NewAddressInfoMap(),
@@ -33,7 +33,11 @@ func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) parser.IP
 	}
 }
 
-func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) Version() string {
+	return "v22"
+}
+
+func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
 	// cast to correct type
 	tracesV22, ok := traces.([]*typesv22.InvocResultV22)
 	if !ok {
@@ -98,7 +102,7 @@ func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, 
 		}
 	}
 
-	return transactions, &p.addresses, nil
+	return transactions, p.addresses, nil
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
