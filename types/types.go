@@ -23,7 +23,7 @@ type AddressInfo struct {
 	CreationTxHash string `json:"creation_tx_hash" gorm:"index:idx_addresses_creation_tx_hash"`
 }
 
-type AddressInfoMap map[string]AddressInfo
+type AddressInfoMap map[string]*AddressInfo
 
 func NewAddressInfoMap() AddressInfoMap {
 	return make(AddressInfoMap)

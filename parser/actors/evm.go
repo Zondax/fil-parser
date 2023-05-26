@@ -12,13 +12,13 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *parser.LotusMessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func (p *ActorParser) ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *parser.LotusMessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodConstructor:
-		return evmConstructor(msg.Params)
+		return p.evmConstructor(msg.Params)
 	case parser.MethodResurrect: // TODO: not tested
-		return resurrect(msg.Params)
+		return p.resurrect(msg.Params)
 	case parser.MethodInvokeContract, parser.MethodInvokeContractReadOnly:
 		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params)
 		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(msgRct.Return)
@@ -28,20 +28,20 @@ func ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *p
 		}
 		metadata[parser.EthLogsKey] = logs
 	case parser.MethodInvokeContractDelegate:
-		return invokeContractDelegate(msg.Params, msgRct.Return)
+		return p.invokeContractDelegate(msg.Params, msgRct.Return)
 	case parser.MethodGetBytecode:
-		return getByteCode(msgRct.Return)
+		return p.getByteCode(msgRct.Return)
 	case parser.MethodGetBytecodeHash: // TODO: not tested
-		return getByteCodeHash(msgRct.Return)
+		return p.getByteCodeHash(msgRct.Return)
 	case parser.MethodGetStorageAt: // TODO: not tested
-		return getStorageAt(msg.Params, msgRct.Return)
+		return p.getStorageAt(msg.Params, msgRct.Return)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return metadata, nil
 }
 
-func resurrect(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) resurrect(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params evm.ResurrectParams
@@ -53,7 +53,7 @@ func resurrect(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func invokeContractDelegate(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) invokeContractDelegate(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params evm.DelegateCallParams
@@ -72,7 +72,7 @@ func invokeContractDelegate(rawParams, rawReturn []byte) (map[string]interface{}
 	return metadata, nil
 }
 
-func getByteCode(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getByteCode(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var r evm.GetBytecodeReturn
@@ -84,7 +84,7 @@ func getByteCode(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getByteCodeHash(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getByteCodeHash(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var r abi.CborBytes
@@ -96,7 +96,7 @@ func getByteCodeHash(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getStorageAt(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getStorageAt(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params evm.GetStorageAtParams
@@ -115,7 +115,7 @@ func getStorageAt(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func evmConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) evmConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params evm.ConstructorParams

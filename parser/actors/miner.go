@@ -9,96 +9,96 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func ParseStorageminer(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseStorageminer(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		return p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return minerConstructor(msg.Params)
+		return p.minerConstructor(msg.Params)
 	case parser.MethodControlAddresses:
-		return controlAddresses(msg.Params, msgRct.Return)
+		return p.controlAddresses(msg.Params, msgRct.Return)
 	case parser.MethodChangeWorkerAddress, parser.MethodChangeWorkerAddressExported:
-		return changeWorkerAddress(msg.Params)
+		return p.changeWorkerAddress(msg.Params)
 	case parser.MethodChangePeerID, parser.MethodChangePeerIDExported:
-		return changePeerID(msg.Params)
+		return p.changePeerID(msg.Params)
 	case parser.MethodSubmitWindowedPoSt:
-		return submitWindowedPoSt(msg.Params)
+		return p.submitWindowedPoSt(msg.Params)
 	case parser.MethodPreCommitSector:
-		return preCommitSector(msg.Params)
+		return p.preCommitSector(msg.Params)
 	case parser.MethodProveCommitSector:
-		return proveCommitSector(msg.Params)
+		return p.proveCommitSector(msg.Params)
 	case parser.MethodExtendSectorExpiration:
-		return extendSectorExpiration(msg.Params)
+		return p.extendSectorExpiration(msg.Params)
 	case parser.MethodTerminateSectors:
-		return terminateSectors(msg.Params, msgRct.Return)
+		return p.terminateSectors(msg.Params, msgRct.Return)
 	case parser.MethodDeclareFaults:
-		return declareFaults(msg.Params)
+		return p.declareFaults(msg.Params)
 	case parser.MethodDeclareFaultsRecovered:
-		return declareFaultsRecovered(msg.Params)
+		return p.declareFaultsRecovered(msg.Params)
 	case parser.MethodOnDeferredCronEvent:
-		return onDeferredCronEvent(msg.Params)
+		return p.onDeferredCronEvent(msg.Params)
 	case parser.MethodCheckSectorProven:
-		return checkSectorProven(msg.Params)
+		return p.checkSectorProven(msg.Params)
 	case parser.MethodApplyRewards:
-		return applyRewards(msg.Params)
+		return p.applyRewards(msg.Params)
 	case parser.MethodReportConsensusFault:
-		return reportConsensusFault(msg.Params)
+		return p.reportConsensusFault(msg.Params)
 	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
-		return parseWithdrawBalance(msg.Params)
+		return p.parseWithdrawBalance(msg.Params)
 	case parser.MethodConfirmSectorProofsValid:
-		return confirmSectorProofsValid(msg.Params)
+		return p.confirmSectorProofsValid(msg.Params)
 	case parser.MethodChangeMultiaddrs, parser.MethodChangeMultiaddrsExported:
 		return changeMultiaddrs(msg.Params)
 	case parser.MethodCompactPartitions:
-		return compactPartitions(msg.Params)
+		return p.compactPartitions(msg.Params)
 	case parser.MethodCompactSectorNumbers:
-		return compactSectorNumbers(msg.Params)
+		return p.compactSectorNumbers(msg.Params)
 	case parser.MethodConfirmChangeWorkerAddress, parser.MethodConfirmChangeWorkerAddressExported:
-		return emptyParamsAndReturn()
+		return p.emptyParamsAndReturn()
 	case parser.MethodConfirmUpdateWorkerKey: // TODO: ?
 	case parser.MethodRepayDebt, parser.MethodRepayDebtExported:
-		return emptyParamsAndReturn()
+		return p.emptyParamsAndReturn()
 	case parser.MethodChangeOwnerAddress, parser.MethodChangeOwnerAddressExported: // TODO: not tested
-		return changeOwnerAddress(msg.Params)
+		return p.changeOwnerAddress(msg.Params)
 	case parser.MethodDisputeWindowedPoSt:
-		return disputeWindowedPoSt(msg.Params)
+		return p.disputeWindowedPoSt(msg.Params)
 	case parser.MethodPreCommitSectorBatch:
-		return preCommitSectorBatch(msg.Params)
+		return p.preCommitSectorBatch(msg.Params)
 	case parser.MethodProveCommitAggregate:
-		return proveCommitAggregate(msg.Params)
+		return p.proveCommitAggregate(msg.Params)
 	case parser.MethodProveReplicaUpdates:
-		return proveReplicaUpdates(msg.Params)
+		return p.proveReplicaUpdates(msg.Params)
 	case parser.MethodPreCommitSectorBatch2:
-		return preCommitSectorBatch2(msg.Params)
+		return p.preCommitSectorBatch2(msg.Params)
 	case parser.MethodProveReplicaUpdates2:
-		return proveReplicaUpdates2(msg.Params, msgRct.Return)
+		return p.proveReplicaUpdates2(msg.Params, msgRct.Return)
 	case parser.MethodChangeBeneficiary, parser.MethodChangeBeneficiaryExported:
-		return changeBeneficiary(msg.Params)
+		return p.changeBeneficiary(msg.Params)
 	case parser.MethodGetBeneficiary:
-		return getBeneficiary(msg.Params, msgRct.Return)
+		return p.getBeneficiary(msg.Params, msgRct.Return)
 	case parser.MethodExtendSectorExpiration2:
-		return extendSectorExpiration2(msg.Params)
+		return p.extendSectorExpiration2(msg.Params)
 	case parser.MethodGetOwner:
-		return getOwner(msgRct.Return)
+		return p.getOwner(msgRct.Return)
 	case parser.MethodIsControllingAddressExported:
-		return isControllingAddressExported(msg.Params, msgRct.Return)
+		return p.isControllingAddressExported(msg.Params, msgRct.Return)
 	case parser.MethodGetSectorSize:
-		return getSectorSize(msgRct.Return)
+		return p.getSectorSize(msgRct.Return)
 	case parser.MethodGetAvailableBalance:
-		return getAvailableBalance(msgRct.Return)
+		return p.getAvailableBalance(msgRct.Return)
 	case parser.MethodGetVestingFunds:
-		return getVestingFunds(msgRct.Return)
+		return p.getVestingFunds(msgRct.Return)
 	case parser.MethodGetPeerID:
-		return getPeerID(msgRct.Return)
+		return p.getPeerID(msgRct.Return)
 	case parser.MethodGetMultiaddrs:
-		return getMultiaddrs(msgRct.Return)
+		return p.getMultiaddrs(msgRct.Return)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func terminateSectors(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) terminateSectors(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params miner.TerminateSectorsParams
@@ -117,7 +117,7 @@ func terminateSectors(rawParams, rawReturn []byte) (map[string]interface{}, erro
 	return metadata, nil
 }
 
-func controlAddresses(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) controlAddresses(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if rawParams != nil {
 		metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(rawParams)
@@ -136,7 +136,7 @@ func controlAddresses(rawParams, rawReturn []byte) (map[string]interface{}, erro
 	return metadata, nil
 }
 
-func declareFaults(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) declareFaults(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.DeclareFaultsParams
@@ -148,7 +148,7 @@ func declareFaults(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func declareFaultsRecovered(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) declareFaultsRecovered(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.DeclareFaultsRecoveredParams
@@ -160,7 +160,7 @@ func declareFaultsRecovered(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func proveReplicaUpdates(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) proveReplicaUpdates(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ProveReplicaUpdatesParams
@@ -172,7 +172,7 @@ func proveReplicaUpdates(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func preCommitSectorBatch2(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) preCommitSectorBatch2(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.PreCommitSectorBatchParams2
@@ -184,7 +184,7 @@ func preCommitSectorBatch2(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func proveReplicaUpdates2(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) proveReplicaUpdates2(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params miner.ProveReplicaUpdatesParams2
@@ -204,7 +204,7 @@ func proveReplicaUpdates2(rawParams, rawReturn []byte) (map[string]interface{}, 
 	return metadata, nil
 }
 
-func proveCommitAggregate(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) proveCommitAggregate(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ProveCommitAggregateParams
@@ -216,7 +216,7 @@ func proveCommitAggregate(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func preCommitSectorBatch(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) preCommitSectorBatch(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.PreCommitSectorBatchParams
@@ -228,7 +228,7 @@ func preCommitSectorBatch(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func changeOwnerAddress(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) changeOwnerAddress(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params address.Address
@@ -240,7 +240,7 @@ func changeOwnerAddress(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func disputeWindowedPoSt(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) disputeWindowedPoSt(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.DisputeWindowedPoStParams
@@ -252,7 +252,7 @@ func disputeWindowedPoSt(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func compactSectorNumbers(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) compactSectorNumbers(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.CompactSectorNumbersParams
@@ -264,7 +264,7 @@ func compactSectorNumbers(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func compactPartitions(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) compactPartitions(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.CompactPartitionsParams
@@ -288,7 +288,7 @@ func changeMultiaddrs(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func checkSectorProven(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) checkSectorProven(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.CheckSectorProvenParams
@@ -300,7 +300,7 @@ func checkSectorProven(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func extendSectorExpiration(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) extendSectorExpiration(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ExtendSectorExpirationParams
@@ -312,7 +312,7 @@ func extendSectorExpiration(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func changePeerID(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) changePeerID(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ChangePeerIDParams
@@ -324,7 +324,7 @@ func changePeerID(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func changeWorkerAddress(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) changeWorkerAddress(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ChangeWorkerAddressParams
@@ -336,7 +336,7 @@ func changeWorkerAddress(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func reportConsensusFault(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) reportConsensusFault(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ReportConsensusFaultParams
@@ -348,7 +348,7 @@ func reportConsensusFault(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func changeBeneficiary(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) changeBeneficiary(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ChangeBeneficiaryParams
@@ -360,7 +360,7 @@ func changeBeneficiary(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func confirmSectorProofsValid(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) confirmSectorProofsValid(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ConfirmSectorProofsParams
@@ -372,7 +372,7 @@ func confirmSectorProofsValid(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func minerConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) minerConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.MinerConstructorParams
@@ -384,7 +384,7 @@ func minerConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func parseWithdrawBalance(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) parseWithdrawBalance(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.WithdrawBalanceParams
@@ -396,7 +396,7 @@ func parseWithdrawBalance(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func applyRewards(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) applyRewards(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ApplyRewardParams
@@ -408,7 +408,7 @@ func applyRewards(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func preCommitSector(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) preCommitSector(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.PreCommitSectorParams
@@ -420,7 +420,7 @@ func preCommitSector(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func proveCommitSector(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) proveCommitSector(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ProveCommitSectorParams
@@ -432,7 +432,7 @@ func proveCommitSector(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func submitWindowedPoSt(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) submitWindowedPoSt(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.SubmitWindowedPoStParams
@@ -444,7 +444,7 @@ func submitWindowedPoSt(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func onDeferredCronEvent(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) onDeferredCronEvent(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.DeferredCronEventParams
@@ -456,7 +456,7 @@ func onDeferredCronEvent(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getBeneficiary(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getBeneficiary(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if rawParams != nil {
 		metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(rawParams)
@@ -487,7 +487,7 @@ func getBeneficiary(rawParams, rawReturn []byte) (map[string]interface{}, error)
 	return metadata, nil
 }
 
-func isControllingAddressExported(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) isControllingAddressExported(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params miner.IsControllingAddressParams
@@ -506,7 +506,7 @@ func isControllingAddressExported(rawParams, rawReturn []byte) (map[string]inter
 	return metadata, nil
 }
 
-func extendSectorExpiration2(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) extendSectorExpiration2(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ExtendSectorExpiration2Params
@@ -518,7 +518,7 @@ func extendSectorExpiration2(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getOwner(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getOwner(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var params miner.GetOwnerReturn
@@ -530,7 +530,7 @@ func getOwner(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getSectorSize(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getSectorSize(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	// TODO: miner.GetSectorSizeReturn does not implement UnmarshalCBOR
 	// reader := bytes.NewReader(rawReturn)
@@ -543,7 +543,7 @@ func getSectorSize(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getAvailableBalance(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getAvailableBalance(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var params miner.GetAvailableBalanceReturn
@@ -555,7 +555,7 @@ func getAvailableBalance(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getVestingFunds(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getVestingFunds(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var params miner.GetVestingFundsReturn
@@ -567,7 +567,7 @@ func getVestingFunds(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getPeerID(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getPeerID(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var params miner.GetPeerIDReturn
@@ -579,7 +579,7 @@ func getPeerID(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getMultiaddrs(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getMultiaddrs(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var params miner.GetMultiAddrsReturn

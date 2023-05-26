@@ -14,23 +14,27 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseInit(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseInit(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+	var err error
+	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		metadata, err = p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return initConstructor(msg.Params)
+		metadata, err = p.initConstructor(msg.Params)
 	case parser.MethodExec:
-		return parseExec(msg, msgRct)
+		return p.parseExec(msg, msgRct)
 	case parser.MethodExec4:
-		return parseExec4(msg, msgRct)
+		return p.parseExec4(msg, msgRct)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
+	default:
+		err = parser.ErrUnknownMethod
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return metadata, nil, err
 }
 
-func initConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) initConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor builtinInit.ConstructorParams
@@ -42,13 +46,13 @@ func initConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params filInit.ExecParams
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 	metadata[parser.ParamsKey] = parser.ExecParams{
 		CodeCid:           params.CodeCID.String(),
@@ -59,31 +63,31 @@ func parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (ma
 	var r finit.ExecReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
-	createdActorName, err := p.Lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
-	createdActor := types.AddressInfo{
+	createdActor := &types.AddressInfo{
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid.String(),
 	}
-	appendToAddresses(createdActor)
+	//appendToAddresses(createdActor)
 	metadata[parser.ReturnKey] = createdActor
-	return metadata, nil
+	return metadata, createdActor, nil
 }
 
-func parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params finit.Exec4Params
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 	subAddress, _ := address.NewFromBytes(params.SubAddress)
 	metadata[parser.ParamsKey] = parser.Exec4Params{
@@ -92,19 +96,18 @@ func parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (m
 		SubAddress:        subAddress.String(),
 	}
 
-	createdActorName, err := p.Lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
-	var createdActor types.AddressInfo
 	reader = bytes.NewReader(msgRct.Return)
 	var r finit.Exec4Return
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 
-	createdActor = types.AddressInfo{
+	createdActor := &types.AddressInfo{
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
 		ActorCid:       params.CodeCID,
@@ -112,8 +115,8 @@ func parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (m
 		CreationTxHash: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
-	appendToAddresses(createdActor)
-	return metadata, nil
+	//appendToAddresses(createdActor)
+	return metadata, createdActor, nil
 }
 
 func parseExecActor(actor string) string {

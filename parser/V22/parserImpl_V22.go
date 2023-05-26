@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/zondax/fil-parser/parser"
-	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
 	"github.com/zondax/fil-parser/parser/actors"
 	"github.com/zondax/fil-parser/parser/helper"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"strings"
 	"time"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 
+	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
@@ -133,7 +133,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
 	}
 
-	metadata, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -146,6 +146,9 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
+	}
+	if addressInfo != nil {
+		p.appendToAddresses(addressInfo)
 	}
 	if trace.Error != "" {
 		metadata["Error"] = trace.Error
@@ -284,7 +287,7 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filT
 	p.appendToAddresses(fromAdd, toAdd)
 }
 
-func (p *Parser) appendToAddresses(info ...types.AddressInfo) {
+func (p *Parser) appendToAddresses(info ...*types.AddressInfo) {
 	if p.addresses == nil {
 		return
 	}

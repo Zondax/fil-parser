@@ -21,36 +21,36 @@ Still needs to parse:
 
 	Receive
 */
-func ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodConstructor: // TODO: not tested
-		return msigConstructor(msg.Params)
+		return p.msigConstructor(msg.Params)
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		return p.parseSend(msg), nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		return propose(msg, msgRct)
+		return p.propose(msg.Params, msgRct.Return)
 	case parser.MethodApprove, parser.MethodApproveExported:
-		return approve(msg, msgRct, height, key)
+		return p.approve(msg, msgRct.Return, height, key)
 	case parser.MethodCancel, parser.MethodCancelExported:
-		return cancel(msg, height, key)
+		return p.cancel(msg, height, key)
 	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodSwapSigner, parser.MethodSwapSignerExported:
-		return msigParams(msg, height, key)
+		return p.msigParams(msg, height, key)
 	case parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
-		return removeSigner(msg, height, key)
+		return p.removeSigner(msg, height, key)
 	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
-		return changeNumApprovalsThreshold(msg.Params)
+		return p.changeNumApprovalsThreshold(msg.Params)
 	case parser.MethodAddVerifies: // ?
 	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
-		return lockBalance(msg.Params)
+		return p.lockBalance(msg.Params)
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
-		return universalReceiverHook(msg.Params)
+		return p.universalReceiverHook(msg.Params)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func msigConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) msigConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var proposeParams multisig.ConstructorParams
@@ -61,8 +61,8 @@ func msigConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func msigParams(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
-	params, err := parseMsigParams(msg, height, key)
+func (p *ActorParser) msigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+	params, err := p.parseMsigParams(msg, height, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -74,15 +74,15 @@ func msigParams(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (ma
 	return paramsMap, nil
 }
 
-func propose(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var proposeParams multisig.ProposeParams
-	reader := bytes.NewReader(msg.Params)
+	reader := bytes.NewReader(rawParams)
 	err := proposeParams.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	method, innerParams, err := innerProposeParams(proposeParams)
+	method, innerParams, err := p.innerProposeParams(proposeParams)
 	if err != nil {
 		zap.S().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
@@ -93,7 +93,7 @@ func propose(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[str
 		Params: innerParams,
 	}
 	var proposeReturn multisig.ProposeReturn
-	reader = bytes.NewReader(msgRct.Return)
+	reader = bytes.NewReader(rawReturn)
 	err = proposeReturn.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
@@ -102,14 +102,14 @@ func propose(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt) (map[str
 	return metadata, nil
 }
 
-func approve(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) approve(msg *parser.LotusMessage, rawReturn []byte, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := parseMsigParams(msg, height, key)
+	params, err := p.parseMsigParams(msg, height, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
 	metadata[parser.ParamsKey] = params
-	reader := bytes.NewReader(msgRct.Return)
+	reader := bytes.NewReader(rawReturn)
 	var approveReturn multisig.ApproveReturn
 	err = approveReturn.UnmarshalCBOR(reader)
 	if err != nil {
@@ -119,9 +119,9 @@ func approve(msg *parser.LotusMessage, msgRct *filTypes.MessageReceipt, height i
 	return metadata, nil
 }
 
-func cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := parseMsigParams(msg, height, key)
+	params, err := p.parseMsigParams(msg, height, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -129,9 +129,9 @@ func cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map
 	return metadata, nil
 }
 
-func removeSigner(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) removeSigner(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := parseMsigParams(msg, height, key)
+	params, err := p.parseMsigParams(msg, height, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -139,7 +139,7 @@ func removeSigner(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (
 	return metadata, nil
 }
 
-func changeNumApprovalsThreshold(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) changeNumApprovalsThreshold(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var params multisig.ChangeNumApprovalsThresholdParams
 	reader := bytes.NewReader(raw)
@@ -151,7 +151,7 @@ func changeNumApprovalsThreshold(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func lockBalance(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) lockBalance(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var params multisig.LockBalanceParams
 	reader := bytes.NewReader(raw)
@@ -163,10 +163,10 @@ func lockBalance(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func parseMsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
-	msgSerial, err := msg.MarshalJSON()
+func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
+	msgSerial, err := msg.MarshalJSON() // TODO: this may not work properly
 	if err != nil {
-		zap.S().Errorf("Could not parse params. Cannot serialize lotus message: %s", err.Error())
+		zap.S().Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
 		return "", err
 	}
 
@@ -175,16 +175,16 @@ func parseMsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSet
 		return "", err
 	}
 
-	parsedParams, err := Lib.ParseParamsMultisigTx(string(msgSerial), actorCode)
+	parsedParams, err := p.lib.ParseParamsMultisigTx(string(msgSerial), actorCode)
 	if err != nil {
-		zap.S().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %s", err.Error())
+		zap.S().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
 		return "", err
 	}
 
 	return parsedParams, nil
 }
 
-func universalReceiverHook(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) universalReceiverHook(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var params abi.CborBytesTransparent
 	reader := bytes.NewReader(raw)
@@ -196,7 +196,7 @@ func universalReceiverHook(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func innerProposeParams(propose multisig.ProposeParams) (string, cbor.Unmarshaler, error) {
+func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams) (string, cbor.Unmarshaler, error) {
 	reader := bytes.NewReader(propose.Params)
 	switch propose.Method {
 	case builtin.MethodSend:

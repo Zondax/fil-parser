@@ -7,19 +7,19 @@ import (
 	"github.com/filecoin-project/specs-actors/v8/actors/builtin/cron"
 )
 
-func ParseCron(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseCron(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodConstructor:
-		return cronConstructor(msg.Params)
+		return p.cronConstructor(msg.Params)
 	case parser.MethodEpochTick:
-		return emptyParamsAndReturn()
+		return p.emptyParamsAndReturn()
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func cronConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) cronConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor cron.ConstructorParams

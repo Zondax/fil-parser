@@ -9,47 +9,47 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/datacap"
 )
 
-func ParseDatacap(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseDatacap(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodConstructor:
-		return parseConstructor(msg.Params)
+		return p.parseConstructor(msg.Params)
 	case parser.MethodMintExported:
-		return mintExported(msg.Params, msgRct.Return)
+		return p.mintExported(msg.Params, msgRct.Return)
 	case parser.MethodDestroyExported:
-		return destroyExported(msg.Params, msgRct.Return)
+		return p.destroyExported(msg.Params, msgRct.Return)
 	case parser.MethodNameExported:
-		return nameExported(msgRct.Return)
+		return p.nameExported(msgRct.Return)
 	case parser.MethodSymbolExported:
-		return symbolExported(msgRct.Return)
+		return p.symbolExported(msgRct.Return)
 	case parser.MethodTotalSupplyExported:
-		return totalSupplyExported(msgRct.Return)
+		return p.totalSupplyExported(msgRct.Return)
 	case parser.MethodBalanceExported:
-		return balanceExported(msg.Params, msgRct.Return)
+		return p.balanceExported(msg.Params, msgRct.Return)
 	case parser.MethodTransferExported:
-		return transferExported(msg.Params, msgRct.Return)
+		return p.transferExported(msg.Params, msgRct.Return)
 	case parser.MethodTransferFromExported:
-		return transferFromExported(msg.Params, msgRct.Return)
+		return p.transferFromExported(msg.Params, msgRct.Return)
 	case parser.MethodIncreaseAllowanceExported:
-		return increaseAllowanceExported(msg.Params, msgRct.Return)
+		return p.increaseAllowanceExported(msg.Params, msgRct.Return)
 	case parser.MethodDecreaseAllowanceExported:
-		return decreaseAllowanceExported(msg.Params, msgRct.Return)
+		return p.decreaseAllowanceExported(msg.Params, msgRct.Return)
 	case parser.MethodRevokeAllowanceExported:
-		return revokeExportedAllowanceExported(msg.Params, msgRct.Return)
+		return p.revokeExportedAllowanceExported(msg.Params, msgRct.Return)
 	case parser.MethodBurnExported:
-		return burnExported(msg.Params, msgRct.Return)
+		return p.burnExported(msg.Params, msgRct.Return)
 	case parser.MethodBurnFromExported:
-		return burnFromExported(msg.Params, msgRct.Return)
+		return p.burnFromExported(msg.Params, msgRct.Return)
 	case parser.MethodAllowanceExported:
-		return allowanceExported(msg.Params, msgRct.Return)
+		return p.allowanceExported(msg.Params, msgRct.Return)
 	case parser.MethodGranularityExported:
-		return granularityExported(msgRct.Return)
+		return p.granularityExported(msgRct.Return)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func mintExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) mintExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.MintParams
@@ -69,7 +69,7 @@ func mintExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func destroyExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) destroyExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.DestroyParams
@@ -89,7 +89,7 @@ func destroyExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func nameExported(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) nameExported(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r abi.CborString
@@ -101,7 +101,7 @@ func nameExported(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func symbolExported(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) symbolExported(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r abi.CborString
@@ -113,7 +113,7 @@ func symbolExported(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func totalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) totalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r abi.TokenAmount
@@ -125,7 +125,7 @@ func totalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func balanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) balanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params address.Address
@@ -145,7 +145,7 @@ func balanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func transferExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) transferExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.TransferParams
@@ -165,7 +165,7 @@ func transferExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func transferFromExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) transferFromExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.TransferFromParams
@@ -185,7 +185,7 @@ func transferFromExported(raw, rawReturn []byte) (map[string]interface{}, error)
 	return metadata, nil
 }
 
-func increaseAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) increaseAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.IncreaseAllowanceParams
@@ -205,7 +205,7 @@ func increaseAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, e
 	return metadata, nil
 }
 
-func decreaseAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) decreaseAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.DecreaseAllowanceParams
@@ -225,7 +225,7 @@ func decreaseAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, e
 	return metadata, nil
 }
 
-func revokeExportedAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) revokeExportedAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.RevokeAllowanceParams
@@ -245,7 +245,7 @@ func revokeExportedAllowanceExported(raw, rawReturn []byte) (map[string]interfac
 	return metadata, nil
 }
 
-func burnExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) burnExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.BurnParams
@@ -265,7 +265,7 @@ func burnExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func burnFromExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) burnFromExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.BurnFromParams
@@ -285,7 +285,7 @@ func burnFromExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func allowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) allowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.GetAllowanceParams
@@ -305,7 +305,7 @@ func allowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func granularityExported(rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) granularityExported(rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
 	var r datacap.GranularityReturn

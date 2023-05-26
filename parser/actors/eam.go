@@ -16,31 +16,35 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseEam(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
+// TODO: do we need ethLogs?
+func (p *ActorParser) ParseEam(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
+	var err error
 	switch txType {
 	case parser.MethodConstructor:
-		return emptyParamsAndReturn()
+		metadata, err = p.emptyParamsAndReturn()
 	case parser.MethodCreate:
-		return parseCreate(msg.Params, msgRct.Return, msgCid)
+		return p.parseCreate(msg.Params, msgRct.Return, msgCid)
 	case parser.MethodCreate2:
-		return parseCreate2(msg.Params, msgRct.Return, msgCid)
+		return p.parseCreate2(msg.Params, msgRct.Return, msgCid)
 	case parser.MethodCreateExternal:
-		return parseCreateExternal(msg, msgRct, msgCid)
+		return p.parseCreateExternal(msg, msgRct, msgCid)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
+	default:
+		err = parser.ErrUnknownMethod
 	}
-	return metadata, nil
+	return metadata, nil, err
 }
 
-func parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
+func (p *ActorParser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
 	reader := bytes.NewReader(rawReturn)
 	err = cr.UnmarshalCBOR(reader)
 	if err != nil {
 		return cr, err
 	}
 
-	err = validateEamReturn(&cr)
+	err = p.validateEamReturn(&cr)
 	if err != nil {
 		rawString := hex.EncodeToString(rawReturn)
 		zap.S().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
@@ -49,7 +53,7 @@ func parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
 	return cr, nil
 }
 
-func validateEamReturn(ret *eam.CreateReturn) error {
+func (p *ActorParser) validateEamReturn(ret *eam.CreateReturn) error {
 	if ret == nil {
 		return fmt.Errorf("input is nil")
 	}
@@ -63,7 +67,7 @@ func validateEamReturn(ret *eam.CreateReturn) error {
 	return nil
 }
 
-func newEamCreate(r eam.CreateReturn) parser.EamCreateReturn {
+func (p *ActorParser) newEamCreate(r eam.CreateReturn) parser.EamCreateReturn {
 	return parser.EamCreateReturn{
 		ActorId:       r.ActorID,
 		RobustAddress: r.RobustAddress,
@@ -71,86 +75,108 @@ func newEamCreate(r eam.CreateReturn) parser.EamCreateReturn {
 	}
 }
 
-func parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
+func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 
 	reader := bytes.NewReader(rawParams)
 	var params eam.CreateParams
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 	metadata[parser.ParamsKey] = params
 
-	createReturn, err := parseEamReturn(rawReturn)
+	createReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
-	metadata[parser.ReturnKey] = newEamCreate(createReturn)
-	appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
+	metadata[parser.ReturnKey] = p.newEamCreate(createReturn)
+	//p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 	metadata[parser.EthHashKey] = ethHash.String()
 
-	return metadata, nil
+	r := eam.Return(createReturn)
+	createdEvmActor := &types.AddressInfo{
+		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
+		Robust:         r.RobustAddress.String(),
+		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
+		ActorType:      "evm",
+		CreationTxHash: msgCid.String(),
+	}
+	return metadata, createdEvmActor, nil
 }
 
-func parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, error) {
+func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 
 	reader := bytes.NewReader(rawParams)
 	var params eam.Create2Params
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 	metadata[parser.ParamsKey] = params
 
-	createReturn, err := parseEamReturn(rawReturn)
+	createReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
-	metadata[parser.ReturnKey] = newEamCreate(createReturn)
-	p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
+	metadata[parser.ReturnKey] = p.newEamCreate(createReturn)
+	//p.appendCreatedEVMActor(eam.Return(createReturn), msgCid.String())
 
 	ethHash, err := ethtypes.EthHashFromCid(msgCid)
 	if err != nil {
-		return metadata, err
+		return metadata, nil, err
 	}
 	metadata[parser.EthHashKey] = ethHash.String()
-
-	return metadata, nil
-}
-
-func parseCreateExternal(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
-
-	createExternalReturn, err := parseEamReturn(msgRct.Return)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = newEamCreate(createExternalReturn)
-	appendCreatedEVMActor(eam.Return(createExternalReturn), msgCid.String())
-
-	ethHash, err := ethtypes.EthHashFromCid(msgCid)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.EthHashKey] = ethHash.String()
-
-	return metadata, nil
-}
-
-func appendCreatedEVMActor(r eam.Return, msgCid string) {
-	appendToAddresses(types.AddressInfo{
+	r := eam.Return(createReturn)
+	createdEvmActor := &types.AddressInfo{
 		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:         r.RobustAddress.String(),
 		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
 		ActorType:      "evm",
-		CreationTxHash: msgCid,
-	})
+		CreationTxHash: msgCid.String(),
+	}
+	return metadata, createdEvmActor, nil
 }
+
+func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
+
+	createExternalReturn, err := p.parseEamReturn(msgRct.Return)
+	if err != nil {
+		return metadata, nil, err
+	}
+	metadata[parser.ReturnKey] = p.newEamCreate(createExternalReturn)
+	//p.appendCreatedEVMActor(eam.Return(createExternalReturn), msgCid.String())
+
+	ethHash, err := ethtypes.EthHashFromCid(msgCid)
+	if err != nil {
+		return metadata, nil, err
+	}
+	metadata[parser.EthHashKey] = ethHash.String()
+	r := eam.Return(createExternalReturn)
+	createdEvmActor := &types.AddressInfo{
+		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
+		Robust:         r.RobustAddress.String(),
+		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
+		ActorType:      "evm",
+		CreationTxHash: msgCid.String(),
+	}
+	return metadata, createdEvmActor, nil
+}
+
+//func (p *ActorParser) appendCreatedEVMActor(r eam.Return, msgCid string) {
+//	appendToAddresses(types.AddressInfo{
+//		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
+//		Robust:         r.RobustAddress.String(),
+//		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
+//		ActorType:      "evm",
+//		CreationTxHash: msgCid,
+//	})
+//}

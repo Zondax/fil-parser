@@ -57,9 +57,9 @@ func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Helper {
 	return &Helper{lib: lib}
 }
 
-func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) types.AddressInfo {
+func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) *types.AddressInfo {
 	var (
-		addInfo types.AddressInfo
+		addInfo *types.AddressInfo
 		err     error
 	)
 	addInfo.Robust, err = database.ActorsDB.GetRobustAddress(add)

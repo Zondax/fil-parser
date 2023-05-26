@@ -8,25 +8,25 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 )
 
-func ParseReward(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseReward(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		return p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return rewardConstructor(msg.Params)
+		return p.rewardConstructor(msg.Params)
 	case parser.MethodAwardBlockReward:
-		return awardBlockReward(msg.Params)
+		return p.awardBlockReward(msg.Params)
 	case parser.MethodUpdateNetworkKPI:
-		return updateNetworkKpi(msg.Params)
+		return p.updateNetworkKpi(msg.Params)
 	case parser.MethodThisEpochReward:
-		return thisEpochReward(msgRct.Return)
+		return p.thisEpochReward(msgRct.Return)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func rewardConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) rewardConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params abi.StoragePower
@@ -38,7 +38,7 @@ func rewardConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func awardBlockReward(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) awardBlockReward(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var blockRewards reward.AwardBlockRewardParams
@@ -50,7 +50,7 @@ func awardBlockReward(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func updateNetworkKpi(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) updateNetworkKpi(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var blockRewards abi.StoragePower
@@ -62,7 +62,7 @@ func updateNetworkKpi(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func thisEpochReward(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) thisEpochReward(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var epochRewards reward.ThisEpochRewardReturn

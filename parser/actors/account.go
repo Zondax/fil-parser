@@ -10,23 +10,23 @@ import (
 	typegen "github.com/whyrusleeping/cbor-gen"
 )
 
-func ParseAccount(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseAccount(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		return p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return parseConstructor(msg.Params)
+		return p.parseConstructor(msg.Params)
 	case parser.MethodPubkeyAddress:
-		return pubkeyAddress(msg.Params, msgRct.Return)
+		return p.pubkeyAddress(msg.Params, msgRct.Return)
 	case parser.MethodAuthenticateMessage:
-		return authenticateMessage(msg.Params, msgRct.Return)
+		return p.authenticateMessage(msg.Params, msgRct.Return)
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func pubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) pubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(raw)
 	reader := bytes.NewReader(rawReturn)
@@ -39,7 +39,7 @@ func pubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func authenticateMessage(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) authenticateMessage(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params account.AuthenticateMessageParams

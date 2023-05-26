@@ -7,45 +7,45 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func ParseVerifiedRegistry(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseVerifiedRegistry(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		return p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return parseConstructor(msg.Params)
+		return p.parseConstructor(msg.Params)
 	case parser.MethodAddVerifier:
-		return addVerifier(msg.Params)
+		return p.addVerifier(msg.Params)
 	case parser.MethodRemoveVerifier: // TODO: not tested
-		return removeVerifier(msg.Params)
+		return p.removeVerifier(msg.Params)
 	case parser.MethodAddVerifiedClient, parser.MethodAddVerifiedClientExported:
-		return addVerifiedClient(msg.Params)
+		return p.addVerifiedClient(msg.Params)
 	case parser.MethodUseBytes:
-		return useBytes(msg.Params)
+		return p.useBytes(msg.Params)
 	case parser.MethodRestoreBytes:
-		return restoreBytes(msg.Params)
+		return p.restoreBytes(msg.Params)
 	case parser.MethodRemoveVerifiedClientDataCap: // TODO: not tested
-		return removeVerifiedClientDataCap(msg.Params)
+		return p.removeVerifiedClientDataCap(msg.Params)
 	case parser.MethodRemoveExpiredAllocations, parser.MethodRemoveExpiredAllocationsExported:
-		return removeExpiredAllocations(msg.Params, msgRct.Return)
+		return p.removeExpiredAllocations(msg.Params, msgRct.Return)
 	case parser.MethodVerifiedDeprecated1: // UseBytes
-		return deprecated1(msg.Params)
+		return p.deprecated1(msg.Params)
 	case parser.MethodVerifiedDeprecated2: // RestoreBytes
-		return deprecated2(msg.Params)
+		return p.deprecated2(msg.Params)
 	case parser.MethodClaimAllocations:
-		return claimAllocations(msg.Params, msgRct.Return)
+		return p.claimAllocations(msg.Params, msgRct.Return)
 	case parser.MethodGetClaims, parser.MethodGetClaimsExported: // TODO: not tested
-		return getClaims(msg.Params, msgRct.Return)
+		return p.getClaims(msg.Params, msgRct.Return)
 	case parser.MethodExtendClaimTerms, parser.MethodExtendClaimTermsExported: // TODO: not tested
-		return extendClaimTerms(msg.Params, msgRct.Return)
+		return p.extendClaimTerms(msg.Params, msgRct.Return)
 	case parser.MethodRemoveExpiredClaims, parser.MethodRemoveExpiredClaimsExported:
-		return removeExpiredClaims(msg.Params, msgRct.Return)
+		return p.removeExpiredClaims(msg.Params, msgRct.Return)
 	case parser.MethodUniversalReceiverHook:
-		return verifregUniversalReceiverHook(msg.Params, msgRct.Return)
+		return p.verifregUniversalReceiverHook(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func addVerifier(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) addVerifier(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.AddVerifierParams
@@ -57,7 +57,7 @@ func addVerifier(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func removeVerifier(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) removeVerifier(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params address.Address
@@ -69,7 +69,7 @@ func removeVerifier(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func addVerifiedClient(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) addVerifiedClient(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.AddVerifiedClientParams
@@ -81,7 +81,7 @@ func addVerifiedClient(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func useBytes(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) useBytes(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.UseBytesParams
@@ -93,7 +93,7 @@ func useBytes(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func restoreBytes(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) restoreBytes(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.RestoreBytesParams
@@ -106,7 +106,7 @@ func restoreBytes(raw []byte) (map[string]interface{}, error) {
 }
 
 // TODO: untested
-func removeVerifiedClientDataCap(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) removeVerifiedClientDataCap(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var datacap verifreg.DataCap
@@ -118,7 +118,7 @@ func removeVerifiedClientDataCap(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func removeExpiredAllocations(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) removeExpiredAllocations(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.RemoveExpiredAllocationsParams
@@ -137,7 +137,7 @@ func removeExpiredAllocations(raw, rawReturn []byte) (map[string]interface{}, er
 	return metadata, nil
 }
 
-func deprecated1(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) deprecated1(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.RestoreBytesParams
@@ -149,7 +149,7 @@ func deprecated1(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func deprecated2(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) deprecated2(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.UseBytesParams
@@ -161,7 +161,7 @@ func deprecated2(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func claimAllocations(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) claimAllocations(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.ClaimAllocationsParams
@@ -181,7 +181,7 @@ func claimAllocations(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func getClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.GetClaimsParams
@@ -200,7 +200,7 @@ func getClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func extendClaimTerms(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) extendClaimTerms(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.ExtendClaimTermsParams
@@ -219,7 +219,7 @@ func extendClaimTerms(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func removeExpiredClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) removeExpiredClaims(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params verifreg.RemoveExpiredClaimsParams
@@ -238,7 +238,7 @@ func removeExpiredClaims(raw, rawReturn []byte) (map[string]interface{}, error) 
 	return metadata, nil
 }
 
-func verifregUniversalReceiverHook(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) verifregUniversalReceiverHook(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var params verifreg.UniversalReceiverParams
 	reader := bytes.NewReader(raw)

@@ -116,7 +116,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
 	}
 
-	metadata, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -130,7 +130,9 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
 	}
-
+	if addressInfo != nil {
+		p.appendToAddresses(addressInfo)
+	}
 	if trace.MsgRct.ExitCode.IsError() {
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
@@ -249,7 +251,7 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, height int64, key f
 	p.appendToAddresses(fromAdd, toAdd)
 }
 
-func (p *Parser) appendToAddresses(info ...types.AddressInfo) {
+func (p *Parser) appendToAddresses(info ...*types.AddressInfo) {
 	if p.addresses == nil {
 		return
 	}

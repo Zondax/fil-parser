@@ -7,14 +7,14 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func parseSend(msg *parser.LotusMessage) map[string]interface{} {
+func (p *ActorParser) parseSend(msg *parser.LotusMessage) map[string]interface{} {
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = msg.Params
 	return metadata
 }
 
 // parseConstructor parse methods with format: *new(func(*address.Address) *abi.EmptyValue)
-func parseConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) parseConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params address.Address
@@ -26,7 +26,7 @@ func parseConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if len(msgParams) > 0 {
 		metadata[parser.ParamsKey] = hex.EncodeToString(msgParams)
@@ -37,6 +37,6 @@ func unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error
 	return metadata, nil
 }
 
-func emptyParamsAndReturn() (map[string]interface{}, error) {
+func (p *ActorParser) emptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }

@@ -13,23 +13,23 @@ Still needs to parse:
 	LockBalance
 	Receive
 */
-func ParsePaymentchannel(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParsePaymentchannel(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodSend:
-		return parseSend(msg), nil
+		return p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return paymentChannelConstructor(msg.Params)
+		return p.paymentChannelConstructor(msg.Params)
 	case parser.MethodUpdateChannelState:
-		return updateChannelState(msg.Params)
+		return p.updateChannelState(msg.Params)
 	case parser.MethodSettle, parser.MethodCollect:
-		return emptyParamsAndReturn()
+		return p.emptyParamsAndReturn()
 	case parser.UnknownStr:
-		return unknownMetadata(msg.Params, msgRct.Return)
+		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func paymentChannelConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) paymentChannelConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor paych.ConstructorParams
@@ -41,7 +41,7 @@ func paymentChannelConstructor(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func updateChannelState(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) updateChannelState(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor paych.UpdateChannelStateParams
