@@ -2,21 +2,27 @@ package V23
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/bytedance/sonic"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"go.uber.org/zap"
+
 	"github.com/zondax/fil-parser/parser"
 	typesv23 "github.com/zondax/fil-parser/parser/V23/types"
 	"github.com/zondax/fil-parser/parser/actors"
 	"github.com/zondax/fil-parser/parser/helper"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"strings"
-	"time"
-
-	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
-
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+)
+
+const (
+	Version = "v23"
 )
 
 type Parser struct {
@@ -34,14 +40,16 @@ func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 }
 
 func (p *Parser) Version() string {
-	return "v23"
+	return Version
 }
 
-func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
-	// cast to correct type
-	tracesV23, ok := traces.([]*typesv23.InvocResultV23)
-	if !ok {
-		return nil, nil, parser.ErrInvalidType
+func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+	// Unmarshal into vComputeState
+	computeState := &typesv23.ComputeStateOutputV23{}
+	err := sonic.UnmarshalString(string(traces), &computeState)
+	if err != nil {
+		zap.S().Error(err)
+		return nil, nil, errors.New("could not decode")
 	}
 
 	var transactions []*types.Transaction
@@ -51,7 +59,7 @@ func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, 
 	if err != nil {
 		return nil, nil, parser.ErrBlockHash
 	}
-	for _, trace := range tracesV23 {
+	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
 			continue
 		}

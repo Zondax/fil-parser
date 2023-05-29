@@ -2,10 +2,12 @@ package V22
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
@@ -17,6 +19,10 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+)
+
+const (
+	Version = "v22"
 )
 
 type Parser struct {
@@ -34,14 +40,16 @@ func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 }
 
 func (p *Parser) Version() string {
-	return "v22"
+	return Version
 }
 
-func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
-	// cast to correct type
-	tracesV22, ok := traces.([]*typesv22.InvocResultV22)
-	if !ok {
-		return nil, nil, parser.ErrInvalidType
+func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+	// Unmarshal into vComputeState
+	computeState := &typesv22.ComputeStateOutputV22{}
+	err := sonic.UnmarshalString(string(traces), &computeState)
+	if err != nil {
+		zap.S().Error(err)
+		return nil, nil, errors.New("could not decode")
 	}
 
 	var transactions []*types.Transaction
@@ -52,7 +60,7 @@ func (p *Parser) ParseTransactions(traces interface{}, tipSet *filTypes.TipSet, 
 		return nil, nil, parser.ErrBlockHash
 	}
 
-	for _, trace := range tracesV22 {
+	for _, trace := range computeState.Trace {
 		if !hasMessage(trace) {
 			continue
 		}

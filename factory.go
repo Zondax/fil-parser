@@ -11,17 +11,21 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-type IParser interface {
+var (
+	errUnknownImpl = errors.New("unknown implementation")
+)
+
+type Parser interface {
 	Version() string
-	ParseTransactions(traces any, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error)
+	ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error)
 }
 
-func NewParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, version string) (IParser, error) {
+func NewParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, version string) (Parser, error) {
 	switch version {
-	case "v22":
+	case V22.Version:
 		return V22.NewParserV22(lib), nil
-	case "v23":
+	case V23.Version:
 		return V23.NewParserV23(lib), nil
 	}
-	return nil, errors.New("unknown implementation")
+	return nil, errUnknownImpl
 }

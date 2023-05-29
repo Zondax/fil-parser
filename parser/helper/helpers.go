@@ -2,11 +2,7 @@ package helper
 
 import (
 	"errors"
-	filInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
-	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/zondax/fil-parser/parser"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/account"
@@ -14,6 +10,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/datacap"
 	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
 	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
+	filInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	"github.com/filecoin-project/go-state-types/builtin/v11/market"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v11/multisig"
@@ -21,14 +18,15 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/power"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
-
-	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/database"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -58,10 +56,8 @@ func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Helper {
 }
 
 func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) *types.AddressInfo {
-	var (
-		addInfo *types.AddressInfo
-		err     error
-	)
+	var err error
+	addInfo := &types.AddressInfo{}
 	addInfo.Robust, err = database.ActorsDB.GetRobustAddress(add)
 	if err != nil {
 		zap.S().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
