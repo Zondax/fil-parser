@@ -91,6 +91,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 		if err != nil {
 			continue
 		}
+		transaction.GasUsed = trace.GasCost.GasUsed.Int64()
 		transactions = append(transactions, transaction)
 
 		// Only process sub-calls if the parent call was successfully executed
@@ -162,8 +163,8 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 	if addressInfo != nil {
 		p.appendToAddresses(addressInfo)
 	}
-	if trace.Error != "" {
-		metadata["Error"] = trace.Error
+	if trace.MsgRct.ExitCode.IsError() {
+		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
 	params := parseParams(metadata)
@@ -183,7 +184,6 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
-		GasUsed:     trace.MsgRct.GasUsed,
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),

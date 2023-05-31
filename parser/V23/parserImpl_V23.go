@@ -72,7 +72,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 		// We only set the gas usage for the main transaction.
 		// If we need the gas usage of all sub-txs, we need to also parse GasCharges (today is very inefficient)
-		transaction.GasUsed = trace.GasCost.TotalCost.Int64()
+		transaction.GasUsed = trace.GasCost.GasUsed.Int64()
 
 		transactions = append(transactions, transaction)
 
