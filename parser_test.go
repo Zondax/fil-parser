@@ -54,7 +54,10 @@ func readGzFile(fileName string) ([]byte, error) {
 	}
 	defer gzipReader.Close()
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(gzipReader)
+	_, err = buf.ReadFrom(gzipReader)
+	if err != nil {
+		return nil, err
+	}
 	return buf.Bytes(), nil
 }
 
