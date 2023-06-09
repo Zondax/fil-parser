@@ -1,6 +1,6 @@
 module github.com/zondax/fil-parser
 
-go 1.19
+go 1.20
 
 require (
 	github.com/bytedance/sonic v1.8.7
