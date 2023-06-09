@@ -2,7 +2,7 @@
 
 ## /data
 
-`data` dir contains tipsets, traces and ethlogs downloaded from nodes.
+`heights` dir contains tipsets, traces and ethlogs downloaded from nodes.
 
 In the following table rows:
 * `Node` indicates the version of the node.

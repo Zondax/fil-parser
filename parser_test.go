@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/actors/database"
 	"net/http"
 	"os"
 	"testing"
@@ -14,16 +15,16 @@ import (
 	"github.com/stretchr/testify/require"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 
-	"github.com/zondax/fil-parser/database"
 	"github.com/zondax/fil-parser/types"
 )
 
 const (
-	dataPath          = "tests/data"
+	dataPath          = "data/heights"
 	fileDataExtension = "json.gz"
 	tracesPrefix      = "traces"
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
+	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
 )
 
 func getFilename(prefix, height string) string {
@@ -105,7 +106,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		{
 			name:    "v22 parser with traces from v22",
 			version: "v22",
-			url:     "wss://node-fil-mainnet-light.zondax.ch/rpc/v1",
+			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  652,
@@ -115,7 +116,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		{
 			name:    "v23 parser with traces from v22",
 			version: "v23",
-			url:     "wss://node-fil-mainnet-light.zondax.dev/rpc/v1",
+			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  652,
@@ -125,7 +126,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		{
 			name:    "v22 parser with traces from v23",
 			version: "v22",
-			url:     "wss://node-fil-mainnet-light.zondax.ch/rpc/v1",
+			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
@@ -135,7 +136,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		{
 			name:    "v23 parser with traces from v23",
 			version: "v23",
-			url:     "wss://node-fil-mainnet-light.zondax.dev/rpc/v1",
+			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
@@ -180,12 +181,12 @@ func TestParser_InDepthCompare(t *testing.T) {
 	}{
 		{
 			name:   "height downloaded with v22",
-			url:    "wss://node-fil-mainnet-light.zondax.ch/rpc/v1",
+			url:    nodeUrl,
 			height: "2907480",
 		},
 		{
 			name:   "height downloaded with v23",
-			url:    "wss://node-fil-mainnet-light.zondax.dev/rpc/v1",
+			url:    nodeUrl,
 			height: "2907520",
 		},
 	}

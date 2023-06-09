@@ -15,3 +15,6 @@ check-modtidy:
 lint:
 	golangci-lint --version
 	golangci-lint run -E gofmt -E gosec -E goconst -E gocritic --timeout 5m
+
+test:
+	go test ./...

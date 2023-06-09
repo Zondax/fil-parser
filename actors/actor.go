@@ -4,7 +4,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/database"
+	"github.com/zondax/fil-parser/actors/database"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"

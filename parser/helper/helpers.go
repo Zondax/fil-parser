@@ -21,11 +21,11 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors/database"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
-	"github.com/zondax/fil-parser/database"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )

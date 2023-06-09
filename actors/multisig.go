@@ -10,10 +10,9 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	"github.com/filecoin-project/go-state-types/cbor"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/zondax/fil-parser/actors/database"
 	"github.com/zondax/fil-parser/parser"
 	"go.uber.org/zap"
-
-	"github.com/zondax/fil-parser/database"
 )
 
 /*

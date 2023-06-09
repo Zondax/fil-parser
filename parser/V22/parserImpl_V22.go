@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zondax/fil-parser/actors"
 	"strings"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 
 	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
-	"github.com/zondax/fil-parser/parser/actors"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
