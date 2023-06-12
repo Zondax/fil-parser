@@ -48,7 +48,7 @@ func (p *ActorParser) ParseStorageminer(txType string, msg *parser.LotusMessage,
 	case parser.MethodConfirmSectorProofsValid:
 		return p.confirmSectorProofsValid(msg.Params)
 	case parser.MethodChangeMultiaddrs, parser.MethodChangeMultiaddrsExported:
-		return changeMultiaddrs(msg.Params)
+		return p.changeMultiaddrs(msg.Params)
 	case parser.MethodCompactPartitions:
 		return p.compactPartitions(msg.Params)
 	case parser.MethodCompactSectorNumbers:
@@ -276,7 +276,7 @@ func (p *ActorParser) compactPartitions(raw []byte) (map[string]interface{}, err
 	return metadata, nil
 }
 
-func changeMultiaddrs(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) changeMultiaddrs(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params miner.ChangeMultiaddrsParams

@@ -26,7 +26,7 @@ func (p *ActorParser) ParseStoragemarket(txType string, msg *parser.LotusMessage
 	case parser.MethodActivateDeals:
 		return p.activateDeals(msg.Params)
 	case parser.MethodOnMinerSectorsTerminate:
-		return onMinerSectorsTerminate(msg.Params)
+		return p.onMinerSectorsTerminate(msg.Params)
 	case parser.MethodComputeDataCommitment:
 		return p.computeDataCommitment(msg.Params, msgRct.Return)
 	case parser.MethodCronTick:
@@ -136,7 +136,7 @@ func (p *ActorParser) activateDeals(rawParams []byte) (map[string]interface{}, e
 	return metadata, nil
 }
 
-func onMinerSectorsTerminate(rawParams []byte) (map[string]interface{}, error) {
+func (p *ActorParser) onMinerSectorsTerminate(rawParams []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params v9Market.OnMinerSectorsTerminateParams
