@@ -7,27 +7,29 @@ import (
 	"time"
 )
 
-type FilteredeComputeStateOutput struct {
+type ComputeStateOutputV22 struct {
 	Root  cid.Cid
-	Trace []*InvocResult
+	Trace []*InvocResultV22
 }
 
-type InvocResult struct {
+// InvocResultV22 This is a copy of native lotus InvocResult type. We need to copy it because
+// we need a modified ExecutionTrace field, and we can't do that in lotus codebase.
+type InvocResultV22 struct {
 	MsgCid         cid.Cid
 	Msg            *types.Message
 	MsgRct         *types.MessageReceipt
 	GasCost        api.MsgGasCost
 	Error          string
 	Duration       time.Duration
-	ExecutionTrace ExecutionTrace
+	ExecutionTrace ExecutionTraceV22
 }
 
-type ExecutionTrace struct {
+type ExecutionTraceV22 struct {
 	Msg        *types.Message
 	MsgRct     *types.MessageReceipt
 	Error      string
 	Duration   time.Duration
 	GasCharges []*types.GasTrace `json:"-"` // Ignoring this field increases the performance of the json unmarshalling
 
-	Subcalls []ExecutionTrace
+	Subcalls []ExecutionTraceV22
 }

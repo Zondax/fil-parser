@@ -16,7 +16,7 @@ jobs:
           submodules: true
       - uses: actions/setup-go@v3
         with:
-          go-version: '1.19'
+          go-version: '1.20'
       - name: Build
         run: |
           make build
@@ -32,10 +32,23 @@ jobs:
           submodules: true
       - uses: actions/setup-go@v3
         with:
-          go-version: '1.19'
+          go-version: '1.20'
       - name: ModTidy check
         run: make check-modtidy
       - name: Lint check
         run: |
           make install_lint
           make lint
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+      - name: test
+        run: make test

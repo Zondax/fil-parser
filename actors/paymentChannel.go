@@ -1,10 +1,10 @@
-package parser
+package actors
 
 import (
 	"bytes"
+	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/builtin/v8/paych"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
 /*
@@ -13,23 +13,23 @@ Still needs to parse:
 	LockBalance
 	Receive
 */
-func (p *Parser) parsePaymentchannel(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParsePaymentchannel(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
-	case MethodSend:
+	case parser.MethodSend:
 		return p.parseSend(msg), nil
-	case MethodConstructor:
+	case parser.MethodConstructor:
 		return p.paymentChannelConstructor(msg.Params)
-	case MethodUpdateChannelState:
+	case parser.MethodUpdateChannelState:
 		return p.updateChannelState(msg.Params)
-	case MethodSettle, MethodCollect:
+	case parser.MethodSettle, parser.MethodCollect:
 		return p.emptyParamsAndReturn()
-	case UnknownStr:
+	case parser.UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
-	return map[string]interface{}{}, errUnknownMethod
+	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func (p *Parser) paymentChannelConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) paymentChannelConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor paych.ConstructorParams
@@ -37,11 +37,11 @@ func (p *Parser) paymentChannelConstructor(raw []byte) (map[string]interface{}, 
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = constructor
+	metadata[parser.ParamsKey] = constructor
 	return metadata, nil
 }
 
-func (p *Parser) updateChannelState(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) updateChannelState(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var constructor paych.UpdateChannelStateParams
@@ -49,6 +49,6 @@ func (p *Parser) updateChannelState(raw []byte) (map[string]interface{}, error) 
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = constructor
+	metadata[parser.ParamsKey] = constructor
 	return metadata, nil
 }

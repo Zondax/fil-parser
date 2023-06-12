@@ -1,47 +1,47 @@
-package parser
+package actors
 
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Parser) parseEvm(txType string, msg *filTypes.Message, msgCid cid.Cid, msgRct *filTypes.MessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func (p *ActorParser) ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *parser.LotusMessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
-	case MethodConstructor:
+	case parser.MethodConstructor:
 		return p.evmConstructor(msg.Params)
-	case MethodResurrect: // TODO: not tested
+	case parser.MethodResurrect: // TODO: not tested
 		return p.resurrect(msg.Params)
-	case MethodInvokeContract, MethodInvokeContractReadOnly:
-		metadata[ParamsKey] = ethPrefix + hex.EncodeToString(msg.Params)
-		metadata[ReturnKey] = ethPrefix + hex.EncodeToString(msgRct.Return)
+	case parser.MethodInvokeContract, parser.MethodInvokeContractReadOnly:
+		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params)
+		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(msgRct.Return)
 		logs, err := searchEthLogs(ethLogs, msgCid.String())
 		if err != nil {
 			return metadata, err
 		}
-		metadata[ethLogsKey] = logs
-	case MethodInvokeContractDelegate:
+		metadata[parser.EthLogsKey] = logs
+	case parser.MethodInvokeContractDelegate:
 		return p.invokeContractDelegate(msg.Params, msgRct.Return)
-	case MethodGetBytecode:
+	case parser.MethodGetBytecode:
 		return p.getByteCode(msgRct.Return)
-	case MethodGetBytecodeHash: // TODO: not tested
+	case parser.MethodGetBytecodeHash: // TODO: not tested
 		return p.getByteCodeHash(msgRct.Return)
-	case MethodGetStorageAt: // TODO: not tested
+	case parser.MethodGetStorageAt: // TODO: not tested
 		return p.getStorageAt(msg.Params, msgRct.Return)
-	case UnknownStr:
+	case parser.UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return metadata, nil
 }
 
-func (p *Parser) resurrect(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) resurrect(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params evm.ResurrectParams
@@ -49,11 +49,11 @@ func (p *Parser) resurrect(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) invokeContractDelegate(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) invokeContractDelegate(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params evm.DelegateCallParams
@@ -61,18 +61,18 @@ func (p *Parser) invokeContractDelegate(rawParams, rawReturn []byte) (map[string
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r abi.CborBytes
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getByteCode(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getByteCode(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var r evm.GetBytecodeReturn
@@ -80,11 +80,11 @@ func (p *Parser) getByteCode(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getByteCodeHash(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getByteCodeHash(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var r abi.CborBytes
@@ -92,11 +92,11 @@ func (p *Parser) getByteCodeHash(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getStorageAt(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getStorageAt(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params evm.GetStorageAtParams
@@ -104,18 +104,18 @@ func (p *Parser) getStorageAt(rawParams, rawReturn []byte) (map[string]interface
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r abi.CborBytes
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) evmConstructor(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) evmConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params evm.ConstructorParams
@@ -123,7 +123,7 @@ func (p *Parser) evmConstructor(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 

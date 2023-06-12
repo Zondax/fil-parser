@@ -1,4 +1,4 @@
-package parser
+package actors
 
 import (
 	"bytes"
@@ -6,60 +6,60 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market" // v0.10.0 does not support ComputeDataCommitmentParams and OnMinerSectorsTerminateParams on v11
-	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/zondax/fil-parser/parser"
 )
 
-func (p *Parser) parseStoragemarket(txType string, msg *filTypes.Message, msgRct *filTypes.MessageReceipt) (map[string]interface{}, error) {
+func (p *ActorParser) ParseStoragemarket(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	switch txType {
-	case MethodSend:
+	case parser.MethodSend:
 		return p.parseSend(msg), nil
-	case MethodConstructor:
+	case parser.MethodConstructor:
 		return p.emptyParamsAndReturn()
-	case MethodAddBalance, MethodAddBalanceExported:
+	case parser.MethodAddBalance, parser.MethodAddBalanceExported:
 		return p.addBalance(msg.Params)
-	case MethodWithdrawBalance, MethodWithdrawBalanceExported:
+	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
 		return p.withdrawBalance(msg.Params, msgRct.Return)
-	case MethodPublishStorageDeals, MethodPublishStorageDealsExported:
+	case parser.MethodPublishStorageDeals, parser.MethodPublishStorageDealsExported:
 		return p.publishStorageDeals(msg.Params, msgRct.Return)
-	case MethodVerifyDealsForActivation:
+	case parser.MethodVerifyDealsForActivation:
 		return p.verifyDealsForActivation(msg.Params, msgRct.Return)
-	case MethodActivateDeals:
+	case parser.MethodActivateDeals:
 		return p.activateDeals(msg.Params)
-	case MethodOnMinerSectorsTerminate:
+	case parser.MethodOnMinerSectorsTerminate:
 		return p.onMinerSectorsTerminate(msg.Params)
-	case MethodComputeDataCommitment:
+	case parser.MethodComputeDataCommitment:
 		return p.computeDataCommitment(msg.Params, msgRct.Return)
-	case MethodCronTick:
+	case parser.MethodCronTick:
 		return p.emptyParamsAndReturn()
-	case MethodGetBalance:
+	case parser.MethodGetBalance:
 		return p.getBalance(msg.Params, msgRct.Return)
-	case MethodGetDealDataCommitment:
+	case parser.MethodGetDealDataCommitment:
 		return p.getDealDataCommitment(msg.Params, msgRct.Return)
-	case MethodGetDealClient:
+	case parser.MethodGetDealClient:
 		return p.getDealClient(msg.Params, msgRct.Return)
-	case MethodGetDealProvider:
+	case parser.MethodGetDealProvider:
 		return p.getDealProvider(msg.Params, msgRct.Return)
-	case MethodGetDealLabel:
+	case parser.MethodGetDealLabel:
 		return p.getDealLabel(msg.Params, msgRct.Return)
-	case MethodGetDealTerm:
+	case parser.MethodGetDealTerm:
 		return p.getDealTerm(msg.Params, msgRct.Return)
-	case MethodGetDealTotalPrice:
+	case parser.MethodGetDealTotalPrice:
 		return p.getDealTotalPrice(msg.Params, msgRct.Return)
-	case MethodGetDealClientCollateral:
+	case parser.MethodGetDealClientCollateral:
 		return p.getDealClientCollateral(msg.Params, msgRct.Return)
-	case MethodGetDealProviderCollateral:
+	case parser.MethodGetDealProviderCollateral:
 		return p.getDealProviderCollateral(msg.Params, msgRct.Return)
-	case MethodGetDealVerified:
+	case parser.MethodGetDealVerified:
 		return p.getDealVerified(msg.Params, msgRct.Return)
-	case MethodGetDealActivation:
+	case parser.MethodGetDealActivation:
 		return p.getDealActivation(msg.Params, msgRct.Return)
-	case UnknownStr:
+	case parser.UnknownStr:
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
-	return map[string]interface{}{}, errUnknownMethod
+	return map[string]interface{}{}, parser.ErrUnknownMethod
 }
 
-func (p *Parser) addBalance(raw []byte) (map[string]interface{}, error) {
+func (p *ActorParser) addBalance(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params address.Address
@@ -67,11 +67,11 @@ func (p *Parser) addBalance(raw []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params.String()
+	metadata[parser.ParamsKey] = params.String()
 	return metadata, nil
 }
 
-func (p *Parser) withdrawBalance(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) withdrawBalance(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params market.WithdrawBalanceParams
@@ -79,14 +79,14 @@ func (p *Parser) withdrawBalance(raw, rawReturn []byte) (map[string]interface{},
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	if rawReturn != nil {
-		metadata[ReturnKey] = base64.StdEncoding.EncodeToString(rawReturn)
+		metadata[parser.ReturnKey] = base64.StdEncoding.EncodeToString(rawReturn)
 	}
 	return metadata, nil
 }
 
-func (p *Parser) publishStorageDeals(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) publishStorageDeals(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.PublishStorageDealsParams
@@ -94,18 +94,18 @@ func (p *Parser) publishStorageDeals(rawParams, rawReturn []byte) (map[string]in
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var publishReturn market.PublishStorageDealsReturn
 	err = publishReturn.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = publishReturn
+	metadata[parser.ReturnKey] = publishReturn
 	return metadata, nil
 }
 
-func (p *Parser) verifyDealsForActivation(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) verifyDealsForActivation(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.VerifyDealsForActivationParams
@@ -113,18 +113,18 @@ func (p *Parser) verifyDealsForActivation(rawParams, rawReturn []byte) (map[stri
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var dealsReturn market.VerifyDealsForActivationReturn
 	err = dealsReturn.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = dealsReturn
+	metadata[parser.ReturnKey] = dealsReturn
 	return metadata, nil
 }
 
-func (p *Parser) activateDeals(rawParams []byte) (map[string]interface{}, error) {
+func (p *ActorParser) activateDeals(rawParams []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.ActivateDealsParams
@@ -132,11 +132,11 @@ func (p *Parser) activateDeals(rawParams []byte) (map[string]interface{}, error)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) onMinerSectorsTerminate(rawParams []byte) (map[string]interface{}, error) {
+func (p *ActorParser) onMinerSectorsTerminate(rawParams []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params v9Market.OnMinerSectorsTerminateParams
@@ -144,11 +144,11 @@ func (p *Parser) onMinerSectorsTerminate(rawParams []byte) (map[string]interface
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }
 
-func (p *Parser) computeDataCommitment(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) computeDataCommitment(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params v9Market.ComputeDataCommitmentParams
@@ -156,18 +156,18 @@ func (p *Parser) computeDataCommitment(rawParams, rawReturn []byte) (map[string]
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var computeReturn market.ComputeDataCommitmentReturn
 	err = computeReturn.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = computeReturn
+	metadata[parser.ReturnKey] = computeReturn
 	return metadata, nil
 }
 
-func (p *Parser) getBalance(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getBalance(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params address.Address
@@ -175,18 +175,18 @@ func (p *Parser) getBalance(rawParams, rawReturn []byte) (map[string]interface{}
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params.String()
+	metadata[parser.ParamsKey] = params.String()
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetBalanceReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealDataCommitment(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealDataCommitment(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealDataCommitmentParams
@@ -194,18 +194,18 @@ func (p *Parser) getDealDataCommitment(rawParams, rawReturn []byte) (map[string]
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealDataCommitmentReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealClient(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealClient(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealClientParams
@@ -213,18 +213,18 @@ func (p *Parser) getDealClient(rawParams, rawReturn []byte) (map[string]interfac
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealClientReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealProvider(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealProvider(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealProviderParams
@@ -232,18 +232,18 @@ func (p *Parser) getDealProvider(rawParams, rawReturn []byte) (map[string]interf
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealProviderReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealLabel(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealLabel(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealLabelParams
@@ -251,18 +251,18 @@ func (p *Parser) getDealLabel(rawParams, rawReturn []byte) (map[string]interface
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealLabelReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealTerm(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealTerm(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealTermParams
@@ -270,18 +270,18 @@ func (p *Parser) getDealTerm(rawParams, rawReturn []byte) (map[string]interface{
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealTermReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealTotalPrice(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealTotalPrice(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealTotalPriceParams
@@ -289,18 +289,18 @@ func (p *Parser) getDealTotalPrice(rawParams, rawReturn []byte) (map[string]inte
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealTotalPriceReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealClientCollateral(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealClientCollateral(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealClientCollateralParams
@@ -308,18 +308,18 @@ func (p *Parser) getDealClientCollateral(rawParams, rawReturn []byte) (map[strin
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealClientCollateralReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealProviderCollateral(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealProviderCollateral(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealProviderCollateralParams
@@ -327,18 +327,18 @@ func (p *Parser) getDealProviderCollateral(rawParams, rawReturn []byte) (map[str
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealProviderCollateralReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealVerified(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealVerified(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealVerifiedParams
@@ -346,18 +346,18 @@ func (p *Parser) getDealVerified(rawParams, rawReturn []byte) (map[string]interf
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealVerifiedReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 
-func (p *Parser) getDealActivation(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) getDealActivation(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.GetDealActivationParams
@@ -365,13 +365,13 @@ func (p *Parser) getDealActivation(rawParams, rawReturn []byte) (map[string]inte
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ParamsKey] = params
+	metadata[parser.ParamsKey] = params
 	reader = bytes.NewReader(rawReturn)
 	var r market.GetDealActivationReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[ReturnKey] = r
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }

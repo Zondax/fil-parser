@@ -1,10 +1,7 @@
-package parser
+package helper
 
 import (
-	"bytes"
-	"encoding/hex"
 	"errors"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -24,10 +21,12 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors/database"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
-	"github.com/zondax/fil-parser/database"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -48,11 +47,17 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.EthAccountKey: evm.Methods, // investigate this bafy2bzacebj3i5ehw2w6veowqisj2ag4wpp25glmmfsvejbwjj2e7axavonm6
 }
 
-func (p *Parser) getActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) types.AddressInfo {
-	var (
-		addInfo types.AddressInfo
-		err     error
-	)
+type Helper struct {
+	lib *rosettaFilecoinLib.RosettaConstructionFilecoin
+}
+
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Helper {
+	return &Helper{lib: lib}
+}
+
+func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) *types.AddressInfo {
+	var err error
+	addInfo := &types.AddressInfo{}
 	addInfo.Robust, err = database.ActorsDB.GetRobustAddress(add)
 	if err != nil {
 		zap.S().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
@@ -67,13 +72,13 @@ func (p *Parser) getActorAddressInfo(add address.Address, height int64, key filT
 	if err != nil {
 		zap.S().Errorf("could not get actor code from address. Err:", err)
 	} else {
-		addInfo.ActorType, _ = p.lib.BuiltinActors.GetActorNameFromCid(addInfo.ActorCid)
+		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(addInfo.ActorCid)
 	}
 
 	return addInfo
 }
 
-func (p *Parser) getActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) string {
+func (h *Helper) getActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) string {
 	var actorCode cid.Cid
 	// Search for actor in cache
 	var err error
@@ -82,7 +87,7 @@ func (p *Parser) getActorNameFromAddress(address address.Address, height int64, 
 		return actors.UnknownStr
 	}
 
-	actorName, err := p.lib.BuiltinActors.GetActorNameFromCid(actorCode)
+	actorName, err := h.lib.BuiltinActors.GetActorNameFromCid(actorCode)
 	if err != nil {
 		return actors.UnknownStr
 	}
@@ -90,7 +95,7 @@ func (p *Parser) getActorNameFromAddress(address address.Address, height int64, 
 	return actorName
 }
 
-func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes.TipSetKey) (string, error) {
+func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
 
 	if msg == nil {
 		return "", errors.New("malformed value")
@@ -98,57 +103,23 @@ func (p *Parser) GetMethodName(msg *filTypes.Message, height int64, key filTypes
 
 	// Shortcut 1 - Method "0" corresponds to "MethodSend"
 	if msg.Method == 0 {
-		return MethodSend, nil
+		return parser.MethodSend, nil
 	}
 
 	// Shortcut 2 - Method "1" corresponds to "MethodConstructor"
 	if msg.Method == 1 {
-		return MethodConstructor, nil
+		return parser.MethodConstructor, nil
 	}
 
-	actorName := p.getActorNameFromAddress(msg.To, height, key)
+	actorName := h.getActorNameFromAddress(msg.To, height, key)
 
 	actorMethods, ok := allMethods[actorName]
 	if !ok {
-		return "", errNotKnownActor
+		return "", parser.ErrNotKnownActor
 	}
 	method, ok := actorMethods[msg.Method]
 	if !ok {
-		return UnknownStr, nil
+		return parser.UnknownStr, nil
 	}
 	return method.Name, nil
-}
-
-func (p *Parser) parseSend(msg *filTypes.Message) map[string]interface{} {
-	metadata := make(map[string]interface{})
-	metadata[ParamsKey] = msg.Params
-	return metadata
-}
-
-// parseConstructor parse methods with format: *new(func(*address.Address) *abi.EmptyValue)
-func (p *Parser) parseConstructor(raw []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var params address.Address
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[ParamsKey] = params.String()
-	return metadata, nil
-}
-
-func (p *Parser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	if len(msgParams) > 0 {
-		metadata[ParamsKey] = hex.EncodeToString(msgParams)
-	}
-	if len(msgReturn) > 0 {
-		metadata[ReturnKey] = hex.EncodeToString(msgReturn)
-	}
-	return metadata, nil
-}
-
-func (p *Parser) emptyParamsAndReturn() (map[string]interface{}, error) {
-	return make(map[string]interface{}), nil
 }

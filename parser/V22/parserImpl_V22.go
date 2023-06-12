@@ -1,43 +1,66 @@
-package parser
+package V22
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/zondax/fil-parser/actors"
 	"strings"
 	"time"
 
-	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 
-	"github.com/zondax/fil-parser/database"
+	"github.com/zondax/fil-parser/parser"
+	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
+	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
 
+const (
+	Version = "v22"
+)
+
 type Parser struct {
-	lib       *rosettaFilecoinLib.RosettaConstructionFilecoin
-	addresses types.AddressInfoMap
+	actorParser *actors.ActorParser
+	addresses   types.AddressInfoMap
+	helper      *helper.Helper
 }
 
-func NewParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
+func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
 	return &Parser{
-		lib:       lib,
-		addresses: types.NewAddressInfoMap(),
+		actorParser: actors.NewActorParser(lib),
+		addresses:   types.NewAddressInfoMap(),
+		helper:      helper.NewHelper(lib),
 	}
 }
 
-func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) Version() string {
+	return Version
+}
+
+func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+	// Unmarshal into vComputeState
+	computeState := &typesv22.ComputeStateOutputV22{}
+	err := sonic.UnmarshalString(string(traces), &computeState)
+	if err != nil {
+		zap.S().Error(err)
+		return nil, nil, errors.New("could not decode")
+	}
+
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipSet.Key()
 	blockHash, err := tools.BuildTipSetKeyHash(tipsetKey)
 	if err != nil {
-		return nil, nil, errBlockHash
+		return nil, nil, parser.ErrBlockHash
 	}
-	for _, trace := range traces {
+
+	for _, trace := range computeState.Trace {
 		if !hasMessage(trace) {
 			continue
 		}
@@ -50,9 +73,14 @@ func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes
 			}
 			badTx.TxTimestamp = p.getTimestamp(tipSet.MinTimestamp())
 
-			txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), tipsetKey)
+			txType, err := p.helper.GetMethodName(&parser.LotusMessage{
+				To:     trace.Msg.To,
+				From:   trace.Msg.From,
+				Method: trace.Msg.Method,
+			}, int64(tipSet.Height()), tipsetKey)
+
 			if err != nil {
-				txType = UnknownStr
+				txType = parser.UnknownStr
 			}
 			badTx.TxType = txType
 			continue
@@ -63,6 +91,7 @@ func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes
 		if err != nil {
 			continue
 		}
+		transaction.GasUsed = trace.GasCost.GasUsed.Int64()
 		transactions = append(transactions, transaction)
 
 		// Only process sub-calls if the parent call was successfully executed
@@ -82,10 +111,10 @@ func (p *Parser) ParseTransactions(traces []*types.InvocResult, tipSet *filTypes
 		}
 	}
 
-	return transactions, &p.addresses, nil
+	return transactions, p.addresses, nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []types.ExecutionTrace, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
+func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
 	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
 
 	level++
@@ -101,24 +130,43 @@ func (p *Parser) parseSubTxs(subTxs []types.ExecutionTrace, mainMsgCid cid.Cid, 
 	return
 }
 
-func (p *Parser) parseTrace(trace types.ExecutionTrace, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
+func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
 	key filTypes.TipSetKey) (*types.Transaction, error) {
-	txType, err := p.GetMethodName(trace.Msg, int64(tipSet.Height()), key)
+	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
+		To:     trace.Msg.To,
+		From:   trace.Msg.From,
+		Method: trace.Msg.Method,
+	}, int64(tipSet.Height()), key)
+
 	if err != nil {
 		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", msgCid.String(), err)
-		txType = UnknownStr
+		txType = parser.UnknownStr
 	}
-	if err == nil && txType == UnknownStr {
+	if err == nil && txType == parser.UnknownStr {
 		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
 	}
 
-	metadata, mErr := p.getMetadata(txType, trace.Msg, msgCid, trace.MsgRct, int64(tipSet.Height()), key, ethLogs)
+	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+		To:     trace.Msg.To,
+		From:   trace.Msg.From,
+		Method: trace.Msg.Method,
+		Cid:    trace.Msg.Cid(),
+		Params: trace.Msg.Params,
+	}, msgCid, &parser.LotusMessageReceipt{
+		ExitCode: trace.MsgRct.ExitCode,
+		Return:   trace.MsgRct.Return,
+	}, int64(tipSet.Height()), key, ethLogs)
+
 	if mErr != nil {
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
 	}
-	if trace.Error != "" {
-		metadata["Error"] = trace.Error
+	if addressInfo != nil {
+		p.appendToAddresses(addressInfo)
 	}
+	if trace.MsgRct.ExitCode.IsError() {
+		metadata["Error"] = trace.MsgRct.ExitCode.Error()
+	}
+
 	params := parseParams(metadata)
 	jsonMetadata, _ := json.Marshal(metadata)
 	txReturn := parseReturn(metadata)
@@ -136,7 +184,6 @@ func (p *Parser) parseTrace(trace types.ExecutionTrace, msgCid cid.Cid, tipSet *
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
-		GasUsed:     trace.MsgRct.GasUsed,
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
@@ -145,20 +192,20 @@ func (p *Parser) parseTrace(trace types.ExecutionTrace, msgCid cid.Cid, tipSet *
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *types.InvocResult, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
 	ts := p.getTimestamp(timestamp)
-	metadata := FeesMetadata{
+	metadata := parser.FeesMetadata{
 		TxType: txType,
-		MinerFee: MinerFee{
+		MinerFee: parser.MinerFee{
 			MinerAddress: minerAddress,
 			Amount:       msg.GasCost.MinerTip.String(),
 		},
-		OverEstimationBurnFee: OverEstimationBurnFee{
-			BurnAddress: BurnAddress,
+		OverEstimationBurnFee: parser.OverEstimationBurnFee{
+			BurnAddress: parser.BurnAddress,
 			Amount:      msg.GasCost.OverEstimationBurn.String(),
 		},
-		BurnFee: BurnFee{
-			BurnAddress: BurnAddress,
+		BurnFee: parser.BurnFee{
+			BurnAddress: parser.BurnAddress,
 			Amount:      msg.GasCost.BaseFeeBurn.String(),
 		},
 	}
@@ -167,8 +214,8 @@ func (p *Parser) feesTransactions(msg *types.InvocResult, minerAddress, txHash, 
 	return feeTx
 }
 
-func (p *Parser) newFeeTx(msg *types.InvocResult, txHash, blockHash string, height uint64,
-	timestamp time.Time, feesMetadata FeesMetadata) *types.Transaction {
+func (p *Parser) newFeeTx(msg *typesv22.InvocResultV22, txHash, blockHash string, height uint64,
+	timestamp time.Time, feesMetadata parser.FeesMetadata) *types.Transaction {
 	metadata, _ := json.Marshal(feesMetadata)
 
 	return &types.Transaction{
@@ -181,17 +228,17 @@ func (p *Parser) newFeeTx(msg *types.InvocResult, txHash, blockHash string, heig
 		TxFrom:      msg.Msg.From.String(),
 		Amount:      msg.GasCost.TotalCost.Int,
 		Status:      "Ok",
-		TxType:      TotalFeeOp,
+		TxType:      parser.TotalFeeOp,
 		TxMetadata:  string(metadata),
 	}
 
 }
 
-func hasMessage(trace *types.InvocResult) bool {
+func hasMessage(trace *typesv22.InvocResultV22) bool {
 	return trace.Msg != nil
 }
 
-func hasExecutionTrace(trace *types.InvocResult) (bool, *types.Transaction) {
+func hasExecutionTrace(trace *typesv22.InvocResultV22) (bool, *types.Transaction) {
 	// check if this execution trace is valid
 	if trace.ExecutionTrace.Msg == nil || trace.ExecutionTrace.MsgRct == nil {
 
@@ -204,10 +251,10 @@ func hasExecutionTrace(trace *types.InvocResult) (bool, *types.Transaction) {
 			Amount:     trace.Msg.Value.Int,
 			GasUsed:    trace.MsgRct.GasUsed,
 			Status:     getStatus(trace.MsgRct.ExitCode.String()),
-			TxType:     UnknownStr,
+			TxType:     parser.UnknownStr,
 			TxMetadata: trace.Error,
 		}
-	} 
+	}
 	return true, nil
 }
 
@@ -219,61 +266,12 @@ func getStatus(code string) string {
 	return code
 }
 
-func (p *Parser) getMetadata(txType string, msg *filTypes.Message, mainMsgCid cid.Cid, msgRct *filTypes.MessageReceipt,
-	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	if msg == nil {
-		return metadata, nil
-	}
-	var err error
-	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
-	if err != nil {
-		return metadata, err
-	}
-	actor, err := p.lib.BuiltinActors.GetActorNameFromCid(actorCode)
-	if err != nil {
-		return metadata, err
-	}
-	switch actor {
-	case manifest.InitKey:
-		return p.parseInit(txType, msg, msgRct)
-	case manifest.CronKey:
-		return p.parseCron(txType, msg, msgRct)
-	case manifest.AccountKey:
-		return p.parseAccount(txType, msg, msgRct)
-	case manifest.PowerKey:
-		return p.parseStoragepower(txType, msg, msgRct)
-	case manifest.MinerKey:
-		return p.parseStorageminer(txType, msg, msgRct)
-	case manifest.MarketKey:
-		return p.parseStoragemarket(txType, msg, msgRct)
-	case manifest.PaychKey:
-		return p.parsePaymentchannel(txType, msg, msgRct)
-	case manifest.MultisigKey:
-		return p.parseMultisig(txType, msg, msgRct, height, key)
-	case manifest.RewardKey:
-		return p.parseReward(txType, msg, msgRct)
-	case manifest.VerifregKey:
-		return p.parseVerifiedRegistry(txType, msg, msgRct)
-	case manifest.EvmKey, manifest.EthAccountKey:
-		return p.parseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
-	case manifest.EamKey:
-		return p.parseEam(txType, msg, msgRct, mainMsgCid, ethLogs)
-	case manifest.DatacapKey:
-		return p.parseDatacap(txType, msg, msgRct)
-	case manifest.PlaceholderKey:
-		return metadata, nil // placeholder has no methods
-	default:
-		return metadata, errNotValidActor
-	}
-}
-
 func parseParams(metadata map[string]interface{}) string {
-	params, ok := metadata[ParamsKey].(string)
+	params, ok := metadata[parser.ParamsKey].(string)
 	if ok && params != "" {
 		return params
 	}
-	jsonMetadata, err := json.Marshal(metadata[ParamsKey])
+	jsonMetadata, err := json.Marshal(metadata[parser.ParamsKey])
 	if err == nil && string(jsonMetadata) != "null" {
 		return string(jsonMetadata)
 	}
@@ -281,39 +279,27 @@ func parseParams(metadata map[string]interface{}) string {
 }
 
 func parseReturn(metadata map[string]interface{}) string {
-	params, ok := metadata[ReturnKey].(string)
+	params, ok := metadata[parser.ReturnKey].(string)
 	if ok && params != "" {
 		return params
 	}
-	jsonMetadata, err := json.Marshal(metadata[ReturnKey])
+	jsonMetadata, err := json.Marshal(metadata[parser.ReturnKey])
 	if err == nil && string(jsonMetadata) != "null" {
 		return string(jsonMetadata)
 	}
 	return ""
 }
 
-//  func getCastedAmount(amount string) decimal.Decimal {
-//	  decimal.DivisionPrecision = 18
-//	  parsed, err := decimal.NewFromString(amount)
-//	  if err != nil {
-//		  return decimal.Decimal{}
-//	  }
-//	  abs := parsed.Abs()
-//	  divided := abs.DivRound(decimal.NewFromInt(1e+18), 18)
-//
-//	  return divided
-//  }
-
 func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filTypes.TipSetKey) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.getActorAddressInfo(msg.From, height, key)
-	toAdd := p.getActorAddressInfo(msg.To, height, key)
+	fromAdd := p.helper.GetActorAddressInfo(msg.From, height, key)
+	toAdd := p.helper.GetActorAddressInfo(msg.To, height, key)
 	p.appendToAddresses(fromAdd, toAdd)
 }
 
-func (p *Parser) appendToAddresses(info ...types.AddressInfo) {
+func (p *Parser) appendToAddresses(info ...*types.AddressInfo) {
 	if p.addresses == nil {
 		return
 	}

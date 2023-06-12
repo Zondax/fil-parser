@@ -23,7 +23,7 @@ type AddressInfo struct {
 	CreationTxHash string `json:"creation_tx_hash" gorm:"index:idx_addresses_creation_tx_hash"`
 }
 
-type AddressInfoMap map[string]AddressInfo
+type AddressInfoMap map[string]*AddressInfo
 
 func NewAddressInfoMap() AddressInfoMap {
 	return make(AddressInfoMap)
@@ -43,7 +43,7 @@ type BasicBlockData struct {
 	Canonical bool `json:"canonical"`
 }
 
-// Transaction parses transaction data into the desired format for reports
+// Transaction parses transaction heights into the desired format for reports
 type Transaction struct {
 	BasicBlockData `gorm:"embedded"`
 	// Level reflects the level that this transaction belongs to inside the trace nest
@@ -68,6 +68,6 @@ type Transaction struct {
 	TxMetadata string `json:"tx_metadata"`
 	// TxParams contain the transaction params
 	TxParams string `json:"tx_params"`
-	// TxReturn contains the returned data by the destination actor
+	// TxReturn contains the returned heights by the destination actor
 	TxReturn string `json:"tx_return"`
 }

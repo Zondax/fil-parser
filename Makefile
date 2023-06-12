@@ -6,7 +6,7 @@ clean:
 	go clean
 
 install_lint:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.53.2
 
 check-modtidy:
 	go mod tidy
@@ -15,3 +15,6 @@ check-modtidy:
 lint:
 	golangci-lint --version
 	golangci-lint run -E gofmt -E gosec -E goconst -E gocritic --timeout 5m
+
+test:
+	go test ./...
