@@ -89,6 +89,18 @@ func readEthLogs(height string) ([]types.EthLog, error) {
 	return logs, nil
 }
 
+func getLib(t *testing.T, url string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
+	lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), url, http.Header{})
+	require.NoError(t, err)
+	require.NotNil(t, lotusClient, "Lotus client should not be nil")
+
+	database.SetupActorsDatabase(&lotusClient)
+
+	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
+	require.NotNil(t, lib, "Rosetta lib should not be nil")
+	return lib
+}
+
 func TestParser_ParseTransactions(t *testing.T) {
 	// expectedResults are from previous runs. This assures backward compatibility. (Worst case would be fewer traces
 	// or address than previous versions)
@@ -146,14 +158,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), tt.url, http.Header{})
-			require.NoError(t, err)
-			require.NotNil(t, lotusClient)
-
-			database.SetupActorsDatabase(&lotusClient)
-
-			lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-			require.NotNil(t, lib)
+			lib := getLib(t, tt.url)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
@@ -193,14 +198,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), tt.url, http.Header{})
-			require.NoError(t, err)
-			require.NotNil(t, lotusClient)
-
-			database.SetupActorsDatabase(&lotusClient)
-
-			lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-			require.NotNil(t, lib)
+			lib := getLib(t, tt.url)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
