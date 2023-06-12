@@ -148,6 +148,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), tt.url, http.Header{})
 			require.NoError(t, err)
+			require.NotNil(t, lotusClient)
 
 			database.SetupActorsDatabase(&lotusClient)
 
@@ -194,6 +195,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), tt.url, http.Header{})
 			require.NoError(t, err)
+			require.NotNil(t, lotusClient)
 
 			database.SetupActorsDatabase(&lotusClient)
 
