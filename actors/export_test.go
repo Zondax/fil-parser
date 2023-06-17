@@ -2,7 +2,12 @@ package actors
 
 import (
 	"context"
+	"encoding/gob"
+	"encoding/json"
 	"fmt"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 	"net/http"
 	"os"
 
@@ -36,13 +41,43 @@ func getActorParser() *ActorParser {
 }
 
 func getParmasAndReturn(actor, txType string) ([]byte, []byte, error) {
-	rawParams, err := loadFile(actor, txType, "params")
+	rawParams, err := loadFile(actor, txType, parser.ParamsKey)
 	if err != nil {
 		return nil, nil, err
 	}
-	rawReturn, err := loadFile(actor, txType, "return")
+	rawReturn, err := loadFile(actor, txType, parser.ReturnKey)
 	if err != nil {
 		return nil, nil, err
 	}
 	return rawParams, rawReturn, nil
+}
+
+func deserializeMessage(actor, txType string) (*parser.LotusMessage, error) {
+	file, err := os.Open(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, "Message"))
+	if err != nil {
+		return nil, err
+	}
+	decoder := gob.NewDecoder(file)
+	message := &parser.LotusMessage{}
+	err = decoder.Decode(message)
+	return message, err
+}
+
+func deserializeTipset(actor, txType string) (t filTypes.TipSet, err error) {
+	file, err := os.Open(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, "Tipset"))
+	if err != nil {
+		return
+	}
+	err = t.UnmarshalCBOR(file)
+	return
+}
+
+func getEthLogs(actor, txType string) ([]types.EthLog, error) {
+	file, err := os.ReadFile(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, parser.EthLogsKey))
+	if err != nil {
+		return nil, err
+	}
+	var ethLogs []types.EthLog
+	err = json.Unmarshal(file, &ethLogs)
+	return ethLogs, nil
 }
