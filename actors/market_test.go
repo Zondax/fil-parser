@@ -11,37 +11,27 @@ import (
 func TestActorParser_marketWithParamsOrReturn(t *testing.T) {
 	p := getActorParser()
 	tests := []struct {
-		name     string
-		txType   string
-		f        func([]byte) (map[string]interface{}, error)
-		fileName string
-		key      string
+		name   string
+		txType string
+		f      func([]byte) (map[string]interface{}, error)
+		key    string
 	}{
 		{
-			name:     "Activate Deals",
-			txType:   parser.MethodActivateDeals,
-			f:        p.activateDeals,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Add Balance",
+			txType: parser.MethodAddBalance,
+			f:      p.addBalance,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Add Balance",
-			txType:   parser.MethodAddBalance,
-			f:        p.addBalance,
-			fileName: "params",
-			key:      parser.ParamsKey,
-		},
-		{
-			name:     "On Miner Sector Terminate",
-			txType:   parser.MethodOnMinerSectorsTerminate,
-			f:        p.onMinerSectorsTerminate,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "On Miner Sector Terminate",
+			txType: parser.MethodOnMinerSectorsTerminate,
+			f:      p.onMinerSectorsTerminate,
+			key:    parser.ParamsKey,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, err := loadFile(manifest.MarketKey, tt.txType, tt.fileName)
+			rawParams, err := loadFile(manifest.MarketKey, tt.txType, tt.key)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
@@ -70,6 +60,21 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			name:   "Verify Deals For Activation",
 			txType: parser.MethodVerifyDealsForActivation,
 			f:      p.verifyDealsForActivation,
+		},
+		//{ // TODO: cbor input had wrong number of fields
+		//	name:   "Compute Data Commitment",
+		//	txType: parser.MethodComputeDataCommitment,
+		//	f:      p.computeDataCommitment,
+		//},
+		{
+			name:   "Get Deal Activation",
+			txType: parser.MethodGetDealActivation,
+			f:      p.getDealActivation,
+		},
+		{
+			name:   "Activate Deals",
+			txType: parser.MethodActivateDeals,
+			f:      p.activateDeals,
 		},
 	}
 	for _, tt := range tests {

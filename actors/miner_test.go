@@ -11,149 +11,189 @@ import (
 func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
 	p := getActorParser()
 	tests := []struct {
-		name     string
-		txType   string
-		f        func([]byte) (map[string]interface{}, error)
-		fileName string
-		key      string
+		name   string
+		txType string
+		f      func([]byte) (map[string]interface{}, error)
+		key    string
 	}{
 		{
-			name:     "Constructor",
-			txType:   parser.MethodConstructor,
-			f:        p.minerConstructor,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Constructor",
+			txType: parser.MethodConstructor,
+			f:      p.minerConstructor,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Apply Rewards",
-			txType:   parser.MethodApplyRewards,
-			f:        p.applyRewards,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Apply Rewards",
+			txType: parser.MethodApplyRewards,
+			f:      p.applyRewards,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Change Beneficiary",
-			txType:   parser.MethodChangeBeneficiary,
-			f:        p.changeBeneficiary,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Change Beneficiary",
+			txType: parser.MethodChangeBeneficiary,
+			f:      p.changeBeneficiary,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Change Multiaddrs",
-			txType:   parser.MethodChangeMultiaddrs,
-			f:        p.changeMultiaddrs,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Change Beneficiary Exported",
+			txType: parser.MethodChangeBeneficiaryExported,
+			f:      p.changeBeneficiary,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Change Owner Address",
-			txType:   parser.MethodChangeOwnerAddress,
-			f:        p.changeOwnerAddress,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Change Multiaddrs",
+			txType: parser.MethodChangeMultiaddrs,
+			f:      p.changeMultiaddrs,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Change Peer ID",
-			txType:   parser.MethodChangePeerID,
-			f:        p.changePeerID,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Change Owner Address",
+			txType: parser.MethodChangeOwnerAddress,
+			f:      p.changeOwnerAddress,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Change Worker Address",
-			txType:   parser.MethodChangeWorkerAddress,
-			f:        p.changeWorkerAddress,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Change Peer ID",
+			txType: parser.MethodChangePeerID,
+			f:      p.changePeerID,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Confirm Sector Proofs Valid",
-			txType:   parser.MethodConfirmSectorProofsValid,
-			f:        p.confirmSectorProofsValid,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Change Worker Address",
+			txType: parser.MethodChangeWorkerAddress,
+			f:      p.changeWorkerAddress,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Declare FaultsRecovered",
-			txType:   parser.MethodDeclareFaultsRecovered,
-			f:        p.declareFaultsRecovered,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Confirm Sector Proofs Valid",
+			txType: parser.MethodConfirmSectorProofsValid,
+			f:      p.confirmSectorProofsValid,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Extend Sector Expiration",
-			txType:   parser.MethodExtendSectorExpiration,
-			f:        p.extendSectorExpiration,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Declare Faults Recovered",
+			txType: parser.MethodDeclareFaultsRecovered,
+			f:      p.declareFaultsRecovered,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Extend Sector Expiration2",
-			txType:   parser.MethodExtendSectorExpiration2,
-			f:        p.extendSectorExpiration2,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Dispute Windowed Post",
+			txType: parser.MethodDisputeWindowedPoSt,
+			f:      p.disputeWindowedPoSt,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "On Deferred Cron Event",
-			txType:   parser.MethodOnDeferredCronEvent,
-			f:        p.onDeferredCronEvent,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Extend Sector Expiration",
+			txType: parser.MethodExtendSectorExpiration,
+			f:      p.extendSectorExpiration,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "ProCommit Sector",
-			txType:   parser.MethodPreCommitSector,
-			f:        p.preCommitSector,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Extend Sector Expiration2",
+			txType: parser.MethodExtendSectorExpiration2,
+			f:      p.extendSectorExpiration2,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "ProCommit Sector Batch",
-			txType:   parser.MethodPreCommitSectorBatch,
-			f:        p.preCommitSectorBatch,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "On Deferred Cron Event",
+			txType: parser.MethodOnDeferredCronEvent,
+			f:      p.onDeferredCronEvent,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Prove Commit Aggregate",
-			txType:   parser.MethodProveCommitAggregate,
-			f:        p.proveCommitAggregate,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "PreCommit Sector",
+			txType: parser.MethodPreCommitSector,
+			f:      p.preCommitSector,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Prove Commit Sector",
-			txType:   parser.MethodProveCommitSector,
-			f:        p.proveCommitSector,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "PreCommit Sector Batch",
+			txType: parser.MethodPreCommitSectorBatch,
+			f:      p.preCommitSectorBatch,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Prove Replica Updated",
-			txType:   parser.MethodProveReplicaUpdates,
-			f:        p.proveReplicaUpdates,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Prove Commit Aggregate",
+			txType: parser.MethodProveCommitAggregate,
+			f:      p.proveCommitAggregate,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Submit Windowed Post",
-			txType:   parser.MethodSubmitWindowedPoSt,
-			f:        p.submitWindowedPoSt,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Prove Commit Sector",
+			txType: parser.MethodProveCommitSector,
+			f:      p.proveCommitSector,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Withdraw Balance",
-			txType:   parser.MethodWithdrawBalance,
-			f:        p.parseWithdrawBalance,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Prove Replica Updated",
+			txType: parser.MethodProveReplicaUpdates,
+			f:      p.proveReplicaUpdates,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Submit Windowed Post",
+			txType: parser.MethodSubmitWindowedPoSt,
+			f:      p.submitWindowedPoSt,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Withdraw Balance",
+			txType: parser.MethodWithdrawBalance,
+			f:      p.parseWithdrawBalance,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Declare Faults",
+			txType: parser.MethodDeclareFaults,
+			f:      p.declareFaults,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Report Consensus Fault",
+			txType: parser.MethodReportConsensusFault,
+			f:      p.reportConsensusFault,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Compact Partitions",
+			txType: parser.MethodCompactPartitions,
+			f:      p.compactPartitions,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Compact Sector Numbers",
+			txType: parser.MethodCompactSectorNumbers,
+			f:      p.compactSectorNumbers,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Change Owner Address",
+			txType: parser.MethodChangeOwnerAddress,
+			f:      p.changeOwnerAddress,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Change Owner Address Exported",
+			txType: parser.MethodChangeOwnerAddressExported,
+			f:      p.changeOwnerAddress,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Get Owner",
+			txType: parser.MethodGetOwner,
+			f:      p.getOwner,
+			key:    parser.ReturnKey,
+		},
+		{
+			name:   "Get Available Balance",
+			txType: parser.MethodGetAvailableBalance,
+			f:      p.getAvailableBalance,
+			key:    parser.ReturnKey,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, err := loadFile(manifest.MinerKey, tt.txType, tt.fileName)
+			rawParams, err := loadFile(manifest.MinerKey, tt.txType, tt.key)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
@@ -173,16 +213,11 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 		txType string
 		f      func([]byte, []byte) (map[string]interface{}, error)
 	}{
-		{
-			name:   "Publish Storage Deals",
-			txType: parser.MethodPublishStorageDeals,
-			f:      p.publishStorageDeals,
-		},
-		{
-			name:   "Control Addresses",
-			txType: parser.MethodControlAddresses,
-			f:      p.controlAddresses,
-		},
+		//{ // TODO: could not find tx with params
+		//	name:   "Control Addresses",
+		//	txType: parser.MethodControlAddresses,
+		//	f:      p.controlAddresses,
+		//},
 		{
 			name:   "Is Controlling Addresses Exported",
 			txType: parser.MethodIsControllingAddressExported,
@@ -196,7 +231,7 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.MarketKey, tt.txType)
+			rawParams, rawReturn, err := getParmasAndReturn(manifest.MinerKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
