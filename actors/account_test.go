@@ -19,6 +19,11 @@ func TestActorParser_accountWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodAuthenticateMessage,
 			f:      p.authenticateMessage,
 		},
+		{
+			name:   "PubKey Address",
+			txType: parser.MethodPubkeyAddress,
+			f:      p.pubkeyAddress,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

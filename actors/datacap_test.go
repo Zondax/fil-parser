@@ -30,6 +30,11 @@ func TestActorParser_datacapWithParamsAndReturn(t *testing.T) {
 			f:      p.balanceExported,
 		},
 		{
+			name:   "Transfer Exported",
+			txType: parser.MethodTransferExported,
+			f:      p.transferExported,
+		},
+		{
 			name:   "Transfer From Exported",
 			txType: parser.MethodTransferFromExported,
 			f:      p.transferFromExported,
