@@ -11,51 +11,45 @@ import (
 func TestActorParser_powertWithParamsOrReturn(t *testing.T) {
 	p := getActorParser()
 	tests := []struct {
-		name     string
-		txType   string
-		f        func([]byte) (map[string]interface{}, error)
-		fileName string
-		key      string
+		name   string
+		txType string
+		f      func([]byte) (map[string]interface{}, error)
+		key    string
 	}{
 		{
-			name:     "Current Total Power",
-			txType:   parser.MethodCurrentTotalPower,
-			f:        p.currentTotalPower,
-			fileName: "return",
-			key:      parser.ReturnKey,
+			name:   "Current Total Power",
+			txType: parser.MethodCurrentTotalPower,
+			f:      p.currentTotalPower,
+			key:    parser.ReturnKey,
 		},
 		{
-			name:     "Enroll Cron Event",
-			txType:   parser.MethodEnrollCronEvent,
-			f:        p.enrollCronEvent,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Enroll Cron Event",
+			txType: parser.MethodEnrollCronEvent,
+			f:      p.enrollCronEvent,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Submit PoRep For Bulk Verify",
-			txType:   parser.MethodSubmitPoRepForBulkVerify,
-			f:        p.submitPoRepForBulkVerify,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Submit PoRep For Bulk Verify",
+			txType: parser.MethodSubmitPoRepForBulkVerify,
+			f:      p.submitPoRepForBulkVerify,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Update Claimed Power",
-			txType:   parser.MethodUpdateClaimedPower,
-			f:        p.updateClaimedPower,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Update Claimed Power",
+			txType: parser.MethodUpdateClaimedPower,
+			f:      p.updateClaimedPower,
+			key:    parser.ParamsKey,
 		},
 		{
-			name:     "Update Pledge Total",
-			txType:   parser.MethodUpdatePledgeTotal,
-			f:        p.updatePledgeTotal,
-			fileName: "params",
-			key:      parser.ParamsKey,
+			name:   "Update Pledge Total",
+			txType: parser.MethodUpdatePledgeTotal,
+			f:      p.updatePledgeTotal,
+			key:    parser.ParamsKey,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, err := loadFile(manifest.PowerKey, tt.txType, tt.fileName)
+			rawParams, err := loadFile(manifest.PowerKey, tt.txType, tt.key)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
@@ -69,13 +63,17 @@ func TestActorParser_powertWithParamsOrReturn(t *testing.T) {
 }
 
 func TestActorParser_powerWithParamsAndReturn(t *testing.T) {
-	//p := getActorParser()
+	p := getActorParser()
 	tests := []struct {
 		name   string
 		txType string
 		f      func([]byte, []byte) (map[string]interface{}, error)
 	}{
-		{},
+		{
+			name:   "Miner Raw Power Exported",
+			txType: parser.MethodMinerRawPowerExported,
+			f:      p.minerRawPower,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -93,4 +91,21 @@ func TestActorParser_powerWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, got[parser.ReturnKey])
 		})
 	}
+}
+
+func TestActorParser_parseCreateMiner(t *testing.T) {
+	p := getActorParser()
+	rawReturn, err := loadFile(manifest.PowerKey, parser.MethodCreateMiner, parser.ReturnKey)
+	require.NoError(t, err)
+	require.NotNil(t, rawReturn)
+
+	msg, err := deserializeMessage(manifest.PowerKey, parser.MethodCreateMiner)
+	require.NoError(t, err)
+	require.NotNil(t, msg)
+
+	got, addr, err := p.parseCreateMiner(msg, rawReturn)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	require.NotNil(t, addr)
+	require.Contains(t, got, parser.ReturnKey)
 }
