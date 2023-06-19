@@ -61,11 +61,13 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodVerifyDealsForActivation,
 			f:      p.verifyDealsForActivation,
 		},
-		//{ // TODO: cbor input had wrong number of fields
-		//	name:   "Compute Data Commitment",
-		//	txType: parser.MethodComputeDataCommitment,
-		//	f:      p.computeDataCommitment,
-		//},
+		/*
+			{ // TODO: cbor input had wrong number of fields
+				name:   "Compute Data Commitment",
+				txType: parser.MethodComputeDataCommitment,
+				f:      p.computeDataCommitment,
+			},
+		*/
 		{
 			name:   "Get Deal Activation",
 			txType: parser.MethodGetDealActivation,

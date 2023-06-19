@@ -82,5 +82,5 @@ func getEthLogs(actor, txType string) ([]types.EthLog, error) {
 	}
 	var ethLogs []types.EthLog
 	err = json.Unmarshal(file, &ethLogs)
-	return ethLogs, nil
+	return ethLogs, err
 }
