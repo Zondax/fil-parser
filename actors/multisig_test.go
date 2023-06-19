@@ -115,6 +115,12 @@ func TestActorParser_multisigWithParamsOrReturn(t *testing.T) {
 		key    string
 	}{
 		{
+			name:   "Constructor",
+			txType: parser.MethodConstructor,
+			f:      p.msigConstructor,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "Change Num Approvals Threshold",
 			txType: parser.MethodChangeNumApprovalsThreshold,
 			f:      p.changeNumApprovalsThreshold,
