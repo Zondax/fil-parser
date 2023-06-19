@@ -142,7 +142,7 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 	return metadata, createdEvmActor, nil
 }
 
-func (p *ActorParser) parseCreateExternal(rawParams []byte, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams[3:]) // TODO
 
