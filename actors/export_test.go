@@ -17,10 +17,13 @@ import (
 	"github.com/zondax/fil-parser/actors/database"
 )
 
-const testUrl = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
+const (
+	testUrl  = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
+	dataPath = "../data/actors"
+)
 
 func loadFile(actor, txType, name string) ([]byte, error) {
-	item, err := os.ReadFile(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, name))
+	item, err := os.ReadFile(fmt.Sprintf("%s/%s/%s/%s", dataPath, actor, txType, name))
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +56,7 @@ func getParmasAndReturn(actor, txType string) ([]byte, []byte, error) {
 }
 
 func deserializeMessage(actor, txType string) (*parser.LotusMessage, error) {
-	file, err := os.Open(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, "Message"))
+	file, err := os.Open(fmt.Sprintf("%s/%s/%s/%s", dataPath, actor, txType, "Message"))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +67,7 @@ func deserializeMessage(actor, txType string) (*parser.LotusMessage, error) {
 }
 
 func deserializeTipset(actor, txType string) (t filTypes.TipSet, err error) {
-	file, err := os.Open(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, "Tipset"))
+	file, err := os.Open(fmt.Sprintf("%s/%s/%s/%s", dataPath, actor, txType, "Tipset"))
 	if err != nil {
 		return
 	}
@@ -73,7 +76,7 @@ func deserializeTipset(actor, txType string) (t filTypes.TipSet, err error) {
 }
 
 func getEthLogs(actor, txType string) ([]types.EthLog, error) {
-	file, err := os.ReadFile(fmt.Sprintf("%s/%s/%s/%s", testDataPath, actor, txType, parser.EthLogsKey))
+	file, err := os.ReadFile(fmt.Sprintf("%s/%s/%s/%s", dataPath, actor, txType, parser.EthLogsKey))
 	if err != nil {
 		return nil, err
 	}
