@@ -66,11 +66,13 @@ func TestActorParser_verifiedWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodMsigUniversalReceiverHook,
 			f:      p.verifregUniversalReceiverHook,
 		},
-		//{ // TODO: `cbor input had wrong number of fields`
-		//	name:   "Remove Expired Allocations",
-		//	txType: parser.MethodRemoveExpiredAllocations,
-		//	f:      p.removeExpiredClaims,
-		//},
+		/*
+			{ // TODO: `cbor input had wrong number of fields`
+				name:   "Remove Expired Allocations",
+				txType: parser.MethodRemoveExpiredAllocations,
+				f:      p.removeExpiredClaims,
+			},
+		*/
 		{
 			name:   "Get Claims",
 			txType: parser.MethodGetClaims,
