@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCheckCheCommonError(t *testing.T) {
+func TestCheckExitCodeCommonError(t *testing.T) {
 	tests := []struct {
 		name string
 		code exitcode.ExitCode

@@ -27,6 +27,7 @@ func TestBuildTipSetKeyHash(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, tipset)
 			got, err := BuildTipSetKeyHash(tipset.Key())
+			require.NoError(t, err)
 			require.NotEmpty(t, got)
 		})
 	}
