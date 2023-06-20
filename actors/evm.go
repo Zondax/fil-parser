@@ -20,13 +20,7 @@ func (p *ActorParser) ParseEvm(txType string, msg *parser.LotusMessage, msgCid c
 	case parser.MethodResurrect: // TODO: not tested
 		return p.resurrect(msg.Params)
 	case parser.MethodInvokeContract, parser.MethodInvokeContractReadOnly:
-		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params)
-		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(msgRct.Return)
-		logs, err := searchEthLogs(ethLogs, msgCid.String())
-		if err != nil {
-			return metadata, err
-		}
-		metadata[parser.EthLogsKey] = logs
+		return p.invokeContract(msg.Params, msgRct.Return, msgCid, ethLogs)
 	case parser.MethodInvokeContractDelegate:
 		return p.invokeContractDelegate(msg.Params, msgRct.Return)
 	case parser.MethodGetBytecode:
@@ -50,6 +44,18 @@ func (p *ActorParser) resurrect(raw []byte) (map[string]interface{}, error) {
 		return metadata, err
 	}
 	metadata[parser.ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
+	metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(rawReturn)
+	logs, err := searchEthLogs(ethLogs, msgCid.String())
+	if err != nil {
+		return metadata, err
+	}
+	metadata[parser.EthLogsKey] = logs
 	return metadata, nil
 }
 

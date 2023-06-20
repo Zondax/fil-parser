@@ -70,6 +70,6 @@ func (p *ActorParser) thisEpochReward(raw []byte) (map[string]interface{}, error
 	if err != nil {
 		return metadata, err
 	}
-	metadata[parser.ParamsKey] = epochRewards
+	metadata[parser.ReturnKey] = epochRewards
 	return metadata, nil
 }

@@ -23,9 +23,9 @@ func (p *ActorParser) ParseInit(txType string, msg *parser.LotusMessage, msgRct 
 	case parser.MethodConstructor:
 		metadata, err = p.initConstructor(msg.Params)
 	case parser.MethodExec:
-		return p.parseExec(msg, msgRct)
+		return p.parseExec(msg, msgRct.Return)
 	case parser.MethodExec4:
-		return p.parseExec4(msg, msgRct)
+		return p.parseExec4(msg, msgRct.Return)
 	case parser.UnknownStr:
 		metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
 	default:
@@ -46,7 +46,7 @@ func (p *ActorParser) initConstructor(raw []byte) (map[string]interface{}, error
 	return metadata, nil
 }
 
-func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseExec(msg *parser.LotusMessage, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params filInit.ExecParams
@@ -59,7 +59,7 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMe
 		ConstructorParams: base64.StdEncoding.EncodeToString(params.ConstructorParams),
 	}
 
-	reader = bytes.NewReader(msgRct.Return)
+	reader = bytes.NewReader(rawReturn)
 	var r finit.ExecReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
@@ -80,7 +80,7 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMe
 	return metadata, createdActor, nil
 }
 
-func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseExec4(msg *parser.LotusMessage, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params finit.Exec4Params
@@ -99,7 +99,7 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusM
 	if err != nil {
 		return metadata, nil, err
 	}
-	reader = bytes.NewReader(msgRct.Return)
+	reader = bytes.NewReader(rawReturn)
 	var r finit.Exec4Return
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
