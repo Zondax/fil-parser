@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zondax/fil-parser/actors"
-	"strings"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -149,9 +148,9 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
-	params := parseParams(metadata)
+	params := parser.ParseParams(metadata)
 	jsonMetadata, _ := json.Marshal(metadata)
-	txReturn := parseReturn(metadata)
+	txReturn := parser.ParseReturn(metadata)
 
 	p.appendAddressInfo(&parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -167,12 +166,12 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 			Hash:   blockHash,
 		},
 		Level:       0,
-		TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
+		TxTimestamp: parser.GetTimestamp(tipSet.MinTimestamp()),
 		TxHash:      msgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
-		Status:      getStatus(trace.MsgRct.ExitCode.String()),
+		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
 		TxParams:    fmt.Sprintf("%v", params),
@@ -181,7 +180,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 }
 
 func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
-	ts := p.getTimestamp(timestamp)
+	ts := parser.GetTimestamp(timestamp)
 	metadata := parser.FeesMetadata{
 		TxType: txType,
 		MinerFee: parser.MinerFee{
@@ -222,38 +221,6 @@ func (p *Parser) newFeeTx(msg *typesv23.InvocResultV23, txHash, blockHash string
 
 }
 
-func getStatus(code string) string {
-	status := strings.Split(code, "(")
-	if len(status) == 2 {
-		return status[0]
-	}
-	return code
-}
-
-func parseParams(metadata map[string]interface{}) string {
-	params, ok := metadata[parser.ParamsKey].(string)
-	if ok && params != "" {
-		return params
-	}
-	jsonMetadata, err := json.Marshal(metadata[parser.ParamsKey])
-	if err == nil && string(jsonMetadata) != "null" {
-		return string(jsonMetadata)
-	}
-	return ""
-}
-
-func parseReturn(metadata map[string]interface{}) string {
-	params, ok := metadata[parser.ReturnKey].(string)
-	if ok && params != "" {
-		return params
-	}
-	jsonMetadata, err := json.Marshal(metadata[parser.ReturnKey])
-	if err == nil && string(jsonMetadata) != "null" {
-		return string(jsonMetadata)
-	}
-	return ""
-}
-
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) {
 	if msg == nil {
 		return
@@ -274,9 +241,4 @@ func (p *Parser) appendToAddresses(info ...*types.AddressInfo) {
 			}
 		}
 	}
-}
-
-func (p *Parser) getTimestamp(timestamp uint64) time.Time {
-	blockTimeStamp := int64(timestamp) * 1000
-	return time.Unix(blockTimeStamp/1000, blockTimeStamp%1000)
 }
