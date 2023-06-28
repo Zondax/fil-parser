@@ -277,7 +277,6 @@ func (m *KVStore) GetShortAddress(address address.Address) (string, error) {
 
 func (m *KVStore) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
-		zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -289,7 +288,6 @@ func (m *KVStore) storeRobustShort(robust string, short string) {
 
 func (m *KVStore) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
-		zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -308,7 +306,6 @@ func (m *KVStore) StoreAddressInfo(info types.AddressInfo) {
 
 func (m *KVStore) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
-		zap.S().Warn("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
 
