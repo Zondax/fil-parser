@@ -9,28 +9,21 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	blocks "github.com/ipfs/go-block-format"
-	"github.com/ipfs/go-cid"
-	"github.com/multiformats/go-multihash"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
 
-func BuildTipSetKeyHash(key filTypes.TipSetKey) (*string, error) {
-	cidBuilder := cid.V1Builder{Codec: cid.DagCBOR, MhType: multihash.BLAKE2B_MIN + 31}
-	tipSetKeyHash, err := cidBuilder.Sum(key.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	outStr := hex.EncodeToString(tipSetKeyHash.Bytes())
-
-	return &outStr, nil
-}
-
-func BuildMessageHash(tipsetHash, blockCid, messageCid string) string {
+func BuildMessageId(tipsetHash, blockCid, messageCid string) string {
 	h := sha256.New()
 	h.Write([]byte(tipsetHash + blockCid + messageCid))
+	hash := h.Sum(nil)
+	return hex.EncodeToString(hash)
+}
+
+func BuildFeeId(tipsetHash, blockCid, messageCid string) string {
+	h := sha256.New()
+	h.Write([]byte(tipsetHash + blockCid + messageCid + "fee"))
 	hash := h.Sum(nil)
 	return hex.EncodeToString(hash)
 }
