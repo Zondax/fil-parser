@@ -72,7 +72,7 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMe
 	createdActor := &types.AddressInfo{
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
-		ActorCid:       params.CodeCID,
+		ActorCid:       params.CodeCID.String(),
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid.String(),
 	}
@@ -109,7 +109,7 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusM
 	createdActor := &types.AddressInfo{
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
-		ActorCid:       params.CodeCID,
+		ActorCid:       params.CodeCID.String(),
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid.String(),
 	}

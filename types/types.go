@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
-	"github.com/ipfs/go-cid"
 )
 
 type AddressInfo struct {
@@ -16,7 +15,7 @@ type AddressInfo struct {
 	// EthAddress is the corresponding eth address (if applicable)
 	EthAddress string `json:"eth_address" gorm:"index:idx_addresses_eth_address"`
 	// ActorCid is the actor's cid for this address
-	ActorCid cid.Cid `json:"actor_cid" gorm:"-"`
+	ActorCid string `json:"actor_cid"`
 	// ActorType is the actor's type name of this address
 	ActorType string `json:"actor_type"`
 	// CreationTxHash is the tx hash were this actor was created (if applicable)
@@ -37,8 +36,10 @@ type EthLog struct {
 type BasicBlockData struct {
 	// Height contains the block height
 	Height uint64 `json:"height" gorm:"index:idx_height"`
-	// Hash contains the block hash
-	Hash string `json:"hash" gorm:"index:idx_block_hash"`
+	// TipsetHash contains the tipset hash
+	TipsetCid string `json:"tipset_cid" gorm:"index:idx_tipset_cid"`
+	// Block Cid
+	BlockCid string `json:"block_cid" gorm:"index:idx_block_cid"`
 	// Canonical indicates if this block belongs to the canonical chain
 	Canonical bool `json:"canonical"`
 }
@@ -46,8 +47,10 @@ type BasicBlockData struct {
 // Transaction parses transaction heights into the desired format for reports
 type Transaction struct {
 	BasicBlockData `gorm:"embedded"`
-	// Level reflects the level that this transaction belongs to inside the trace nest
-	Level uint16
+	// Id is the unique identifier for this transaction
+	Id string `json:"id"`
+	// Level is the nested level of the transaction
+	Level uint16 `json:"level"`
 	// TxTimestamp is the timestamp of the transaction
 	TxTimestamp time.Time `json:"tx_timestamp"`
 	// TxHash is the transaction hash
@@ -66,8 +69,4 @@ type Transaction struct {
 	TxType string `json:"tx_type" gorm:"index:idx_tx_type"`
 	// TxMetadata is the message metadata
 	TxMetadata string `json:"tx_metadata"`
-	// TxParams contain the transaction params
-	TxParams string `json:"tx_params"`
-	// TxReturn contains the returned heights by the destination actor
-	TxReturn string `json:"tx_return"`
 }

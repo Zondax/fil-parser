@@ -10,7 +10,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	"github.com/filecoin-project/go-state-types/cbor"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/zondax/fil-parser/actors/database"
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"go.uber.org/zap"
 )
@@ -169,12 +169,17 @@ func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, height int64, ke
 		return "", err
 	}
 
-	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
+	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key)
 	if err != nil {
 		return "", err
 	}
 
-	parsedParams, err := p.lib.ParseParamsMultisigTx(string(msgSerial), actorCode)
+	c, err := cid.Parse(actorCode)
+	if err != nil {
+		zap.S().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+		return "", err
+	}
+	parsedParams, err := p.lib.ParseParamsMultisigTx(string(msgSerial), c)
 	if err != nil {
 		zap.S().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
 		return "", err

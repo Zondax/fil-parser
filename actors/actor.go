@@ -4,19 +4,22 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors/database"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"go.uber.org/zap"
 )
 
 type ActorParser struct {
-	lib *rosettaFilecoinLib.RosettaConstructionFilecoin
+	lib    *rosettaFilecoinLib.RosettaConstructionFilecoin
+	helper *helper.Helper
 }
 
-func NewActorParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *ActorParser {
+func NewActorParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, helper *helper.Helper) *ActorParser {
 	return &ActorParser{
-		lib: lib,
+		lib:    lib,
+		helper: helper,
 	}
 }
 
@@ -27,12 +30,18 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		return metadata, nil, nil
 	}
 
-	actorCode, err := database.ActorsDB.GetActorCode(msg.To, height, key)
+	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key)
 	if err != nil {
 		return metadata, nil, err
 	}
 
-	actor, err := p.lib.BuiltinActors.GetActorNameFromCid(actorCode)
+	c, err := cid.Parse(actorCode)
+	if err != nil {
+		zap.S().Errorf("Could not parse actor code: %v", err)
+		return metadata, nil, err
+	}
+
+	actor, err := p.lib.BuiltinActors.GetActorNameFromCid(c)
 	if err != nil {
 		return metadata, nil, err
 	}

@@ -3,7 +3,6 @@ package V23
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/zondax/fil-parser/actors"
 	"strings"
 	"time"
@@ -31,11 +30,11 @@ type Parser struct {
 	helper      *helper.Helper
 }
 
-func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
+func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, helper *helper.Helper) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(lib),
+		actorParser: actors.NewActorParser(lib, helper),
 		addresses:   types.NewAddressInfoMap(),
-		helper:      helper.NewHelper(lib),
+		helper:      helper,
 	}
 }
 
@@ -43,7 +42,7 @@ func (p *Parser) Version() string {
 	return Version
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesv23.ComputeStateOutputV23{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
@@ -55,7 +54,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipSet.Key()
-	blockHash, err := tools.BuildTipSetKeyHash(tipsetKey)
+	tipsetHash, err := tools.BuildTipSetKeyHash(tipsetKey)
 	if err != nil {
 		return nil, nil, parser.ErrBlockHash
 	}
@@ -65,7 +64,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, tipsetKey)
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *tipsetHash, tipsetKey)
 		if err != nil {
 			continue
 		}
@@ -78,8 +77,8 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
-				trace.Msg.Cid().String(), tipsetKey, 0)
+			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *tipsetHash,
+				trace.Msg.Cid().String(), tipsetKey)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -87,7 +86,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
+			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *tipsetHash,
 				transaction.TxType, uint64(tipSet.Height()), tipSet.MinTimestamp())
 			transactions = append(transactions, feeTx)
 		}
@@ -96,23 +95,22 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 	return transactions, p.addresses, nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
-	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
+func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, blockHash, txHash string,
+	key filTypes.TipSetKey) (txs []*types.Transaction) {
 
-	level++
 	for _, subTx := range subTxs {
 		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, blockHash, key)
 		if err != nil {
 			continue
 		}
-		subTransaction.Level = level
+
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key, level)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
+func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, tipsetHash string,
 	key filTypes.TipSetKey) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -149,9 +147,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
-	params := parseParams(metadata)
 	jsonMetadata, _ := json.Marshal(metadata)
-	txReturn := parseReturn(metadata)
 
 	p.appendAddressInfo(&parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -161,12 +157,25 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		Params: trace.Msg.Params,
 	}, int64(tipSet.Height()), key)
 
+	blockCid, err := tools.GetBlockCidFromMsgCid(msgCid.String(), txType, metadata, tipSet)
+	if err != nil {
+		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+	}
+
+	messageCid, err := tools.BuildCidFromMessageTrace(&trace.Msg)
+	if err != nil {
+		zap.S().Errorf("Error when trying to build message cid in tx cid'%s': %v", msgCid.String(), err)
+	}
+	messageUuid := tools.BuildMessageHash(tipsetHash, blockCid, messageCid)
+
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
-			Height: uint64(tipSet.Height()),
-			Hash:   blockHash,
+			Height:    uint64(tipSet.Height()),
+			TipsetCid: tipsetHash,
+			BlockCid:  blockCid,
 		},
-		Level:       0,
+
+		Id:          messageUuid,
 		TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
 		TxHash:      msgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
@@ -175,8 +184,6 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
-		TxParams:    fmt.Sprintf("%v", params),
-		TxReturn:    txReturn,
 	}, nil
 }
 
@@ -208,8 +215,8 @@ func (p *Parser) newFeeTx(msg *typesv23.InvocResultV23, txHash, blockHash string
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
-			Height: height,
-			Hash:   blockHash,
+			Height:    height,
+			TipsetCid: blockHash,
 		},
 		TxTimestamp: timestamp,
 		TxHash:      txHash,

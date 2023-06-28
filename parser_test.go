@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/zondax/fil-parser/actors/database"
+	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"net/http"
 	"os"
 	"testing"
@@ -26,6 +26,10 @@ const (
 	ethLogPrefix      = "ethlog"
 	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
 )
+
+func getActorsCacheDataSource() common.DataSource {
+
+}
 
 func getFilename(prefix, height string) string {
 	return fmt.Sprintf(`%s/%s_%s.%s`, dataPath, prefix, height, fileDataExtension)
@@ -93,8 +97,6 @@ func getLib(t *testing.T, url string) *rosettaFilecoinLib.RosettaConstructionFil
 	lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), url, http.Header{})
 	require.NoError(t, err)
 	require.NotNil(t, lotusClient, "Lotus client should not be nil")
-
-	database.SetupActorsDatabase(&lotusClient)
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
 	require.NotNil(t, lib, "Rosetta lib should not be nil")
@@ -167,9 +169,9 @@ func TestParser_ParseTransactions(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewParser(lib, tt.version)
+			p, err := NewFilecoinParser(lib, tt.version)
 			require.NoError(t, err)
-			txs, adds, err := p.ParseTransactions(traces, &tipset.TipSet, ethlogs)
+			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, tt.version)
 			require.NoError(t, err)
 			require.NotNil(t, txs)
 			require.NotNil(t, adds)
@@ -207,7 +209,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			v22P, err := NewParser(lib, "v22")
+			v22P, err := NewFilecoinParser(lib, "v22")
 			require.NoError(t, err)
 			v22Txs, v22Adds, err := v22P.ParseTransactions(traces, &tipset.TipSet, ethlogs)
 			require.NoError(t, err)

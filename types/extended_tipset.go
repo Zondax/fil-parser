@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
@@ -10,11 +11,33 @@ type LightBlockHeader struct {
 	BlockMiner string
 }
 
+// FIXME LightBlockHeader shouldn't be a slice
 type BlockMessages map[string][]LightBlockHeader // map[MessageCid][]LightBlockHeader
 
 type ExtendedTipSet struct {
 	lotusChainTypes.TipSet
 	BlockMessages
+}
+
+func (e *ExtendedTipSet) GetCidString() string {
+	cid, _ := e.Key().Cid()
+	return cid.String()
+}
+func (e *ExtendedTipSet) GetParentCidString() string {
+	cid, _ := e.Parents().Cid()
+	return cid.String()
+}
+
+func (e *ExtendedTipSet) GetBlockMinedByMiner(minerAddress string) (string, error) {
+	for _, blocks := range e.BlockMessages {
+		for _, block := range blocks {
+			if block.BlockMiner == minerAddress {
+				return block.Cid, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not find block mined by miner '%s'", minerAddress)
 }
 
 func (e *ExtendedTipSet) MarshalJSON() ([]byte, error) {

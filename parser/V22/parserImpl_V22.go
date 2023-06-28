@@ -3,7 +3,6 @@ package V22
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/zondax/fil-parser/actors"
 	"strings"
 	"time"
@@ -31,11 +30,11 @@ type Parser struct {
 	helper      *helper.Helper
 }
 
-func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
+func NewParserV22(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, helper *helper.Helper) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(lib),
+		actorParser: actors.NewActorParser(lib, helper),
 		addresses:   types.NewAddressInfoMap(),
-		helper:      helper.NewHelper(lib),
+		helper:      helper,
 	}
 }
 
@@ -43,7 +42,7 @@ func (p *Parser) Version() string {
 	return Version
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesv22.ComputeStateOutputV22{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
@@ -55,7 +54,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipSet.Key()
-	blockHash, err := tools.BuildTipSetKeyHash(tipsetKey)
+	tipsetHash, err := tools.BuildTipSetKeyHash(tipsetKey)
 	if err != nil {
 		return nil, nil, parser.ErrBlockHash
 	}
@@ -65,29 +64,46 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 			continue
 		}
 
-		if ok, badTx := hasExecutionTrace(trace); !ok {
-			// Add missing fields and continue
-			badTx.BasicBlockData = types.BasicBlockData{
-				Height: uint64(tipSet.Height()),
-				Hash:   *blockHash,
-			}
-			badTx.TxTimestamp = p.getTimestamp(tipSet.MinTimestamp())
-
-			txType, err := p.helper.GetMethodName(&parser.LotusMessage{
+		// TODO find a way to not having this special case handled outside func parseTrace
+		if ok := hasExecutionTrace(trace); !ok {
+			// Create tx
+			txType, _ := p.helper.GetMethodName(&parser.LotusMessage{
 				To:     trace.Msg.To,
 				From:   trace.Msg.From,
 				Method: trace.Msg.Method,
 			}, int64(tipSet.Height()), tipsetKey)
 
+			blockCid, err := tools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, tipSet)
 			if err != nil {
-				txType = parser.UnknownStr
+				zap.S().Errorf("Error when trying to get block cid from message,txType '%s': %v", txType, err)
 			}
-			badTx.TxType = txType
+			messageUuid := tools.BuildMessageHash(*tipsetHash, blockCid, trace.Msg.Cid().String())
+
+			badTx := &types.Transaction{
+				BasicBlockData: types.BasicBlockData{
+					Height:    uint64(tipSet.Height()),
+					TipsetCid: *tipsetHash,
+					BlockCid:  blockCid,
+					Canonical: false,
+				},
+				Id:          messageUuid,
+				TxHash:      trace.MsgCid.String(),
+				TxFrom:      trace.Msg.From.String(),
+				TxTo:        trace.Msg.To.String(),
+				TxType:      txType,
+				Amount:      trace.Msg.Value.Int,
+				GasUsed:     trace.MsgRct.GasUsed,
+				Status:      getStatus(trace.MsgRct.ExitCode.String()),
+				TxMetadata:  trace.Error,
+				TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
+			}
+
+			transactions = append(transactions, badTx)
 			continue
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, tipsetKey)
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *tipsetHash, tipsetKey)
 		if err != nil {
 			continue
 		}
@@ -96,8 +112,8 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
-				trace.Msg.Cid().String(), tipsetKey, 0)
+			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *tipsetHash,
+				trace.Msg.Cid().String(), tipsetKey)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -105,7 +121,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
+			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *tipsetHash,
 				transaction.TxType, uint64(tipSet.Height()), tipSet.MinTimestamp())
 			transactions = append(transactions, feeTx)
 		}
@@ -114,24 +130,24 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 	return transactions, p.addresses, nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
-	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
+func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, tipsetHash, txHash string,
+	key filTypes.TipSetKey) (txs []*types.Transaction) {
 
-	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, blockHash, key)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, tipsetHash, key)
 		if err != nil {
 			continue
 		}
-		subTransaction.Level = level
+
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key, level)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, tipsetHash, txHash, key)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
+func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, tipsetHash string,
 	key filTypes.TipSetKey) (*types.Transaction, error) {
+
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -139,11 +155,11 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 	}, int64(tipSet.Height()), key)
 
 	if err != nil {
-		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", msgCid.String(), err)
+		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	}
 	if err == nil && txType == parser.UnknownStr {
-		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
+		zap.S().Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
 	}
 
 	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
@@ -152,7 +168,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 		Method: trace.Msg.Method,
 		Cid:    trace.Msg.Cid(),
 		Params: trace.Msg.Params,
-	}, msgCid, &parser.LotusMessageReceipt{
+	}, mainMsgCid, &parser.LotusMessageReceipt{
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipSet.Height()), key, ethLogs)
@@ -167,28 +183,33 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, msgCid cid.Cid, ti
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
-	params := parseParams(metadata)
 	jsonMetadata, _ := json.Marshal(metadata)
-	txReturn := parseReturn(metadata)
 
 	p.appendAddressInfo(trace.Msg, int64(tipSet.Height()), key)
 
+	blockCid, err := tools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipSet)
+	if err != nil {
+		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+	}
+
+	messageUuid := tools.BuildMessageHash(tipsetHash, blockCid, trace.Msg.Cid().String())
+
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
-			Height: uint64(tipSet.Height()),
-			Hash:   blockHash,
+			Height:    uint64(tipSet.Height()),
+			TipsetCid: tipsetHash,
+			BlockCid:  blockCid,
+			Canonical: false,
 		},
-		Level:       0,
+		Id:          messageUuid,
 		TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
-		TxHash:      msgCid.String(),
+		TxHash:      mainMsgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
 		Status:      getStatus(trace.MsgRct.ExitCode.String()),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
-		TxParams:    fmt.Sprintf("%v", params),
-		TxReturn:    txReturn,
 	}, nil
 }
 
@@ -220,8 +241,8 @@ func (p *Parser) newFeeTx(msg *typesv22.InvocResultV22, txHash, blockHash string
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
-			Height: height,
-			Hash:   blockHash,
+			Height:    height,
+			TipsetCid: blockHash,
 		},
 		TxTimestamp: timestamp,
 		TxHash:      txHash,
@@ -238,24 +259,13 @@ func hasMessage(trace *typesv22.InvocResultV22) bool {
 	return trace.Msg != nil
 }
 
-func hasExecutionTrace(trace *typesv22.InvocResultV22) (bool, *types.Transaction) {
+func hasExecutionTrace(trace *typesv22.InvocResultV22) bool {
 	// check if this execution trace is valid
 	if trace.ExecutionTrace.Msg == nil || trace.ExecutionTrace.MsgRct == nil {
-
 		// this is an invalid message
-		return false, &types.Transaction{
-			Level:      0,
-			TxHash:     trace.MsgCid.String(),
-			TxFrom:     trace.Msg.From.String(),
-			TxTo:       trace.Msg.To.String(),
-			Amount:     trace.Msg.Value.Int,
-			GasUsed:    trace.MsgRct.GasUsed,
-			Status:     getStatus(trace.MsgRct.ExitCode.String()),
-			TxType:     parser.UnknownStr,
-			TxMetadata: trace.Error,
-		}
+		return false
 	}
-	return true, nil
+	return true
 }
 
 func getStatus(code string) string {
