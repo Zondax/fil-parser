@@ -113,7 +113,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs, tipsetCid.String(),
-				trace.Msg.Cid().String(), tipsetKey)
+				trace.Msg.Cid().String(), tipsetKey, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -130,16 +130,18 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, tipsetHash, txHash string,
-	key filTypes.TipSetKey) (txs []*types.Transaction) {
+	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
 
+	level++
 	for _, subTx := range subTxs {
 		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, tipsetHash, key)
 		if err != nil {
 			continue
 		}
 
+		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, tipsetHash, txHash, key)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, tipsetHash, txHash, key, level)...)
 	}
 	return
 }
