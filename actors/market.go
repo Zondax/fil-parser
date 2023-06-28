@@ -24,7 +24,7 @@ func (p *ActorParser) ParseStoragemarket(txType string, msg *parser.LotusMessage
 	case parser.MethodVerifyDealsForActivation:
 		return p.verifyDealsForActivation(msg.Params, msgRct.Return)
 	case parser.MethodActivateDeals:
-		return p.activateDeals(msg.Params)
+		return p.activateDeals(msg.Params, msgRct.Return)
 	case parser.MethodOnMinerSectorsTerminate:
 		return p.onMinerSectorsTerminate(msg.Params)
 	case parser.MethodComputeDataCommitment:
@@ -124,7 +124,7 @@ func (p *ActorParser) verifyDealsForActivation(rawParams, rawReturn []byte) (map
 	return metadata, nil
 }
 
-func (p *ActorParser) activateDeals(rawParams []byte) (map[string]interface{}, error) {
+func (p *ActorParser) activateDeals(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params market.ActivateDealsParams
@@ -133,6 +133,13 @@ func (p *ActorParser) activateDeals(rawParams []byte) (map[string]interface{}, e
 		return metadata, err
 	}
 	metadata[parser.ParamsKey] = params
+	reader = bytes.NewReader(rawReturn)
+	var r market.ActivateDealsResult
+	err = r.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }
 

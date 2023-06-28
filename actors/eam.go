@@ -28,7 +28,7 @@ func (p *ActorParser) ParseEam(txType string, msg *parser.LotusMessage, msgRct *
 	case parser.MethodCreate2:
 		return p.parseCreate2(msg.Params, msgRct.Return, msgCid)
 	case parser.MethodCreateExternal:
-		return p.parseCreateExternal(msg, msgRct, msgCid)
+		return p.parseCreateExternal(msg.Params, msgRct.Return, msgCid)
 	case parser.UnknownStr:
 		metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
 	default:
@@ -142,11 +142,11 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 	return metadata, createdEvmActor, nil
 }
 
-func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
-	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params[3:]) // TODO
+	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams[3:]) // TODO
 
-	createExternalReturn, err := p.parseEamReturn(msgRct.Return)
+	createExternalReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
 		return metadata, nil, err
 	}

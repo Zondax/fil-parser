@@ -57,6 +57,7 @@ func (p *ActorParser) msigConstructor(raw []byte) (map[string]interface{}, error
 	if err != nil {
 		return metadata, err
 	}
+	metadata[parser.ParamsKey] = proposeParams
 	return metadata, nil
 }
 
