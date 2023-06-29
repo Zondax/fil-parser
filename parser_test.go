@@ -211,7 +211,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.NotNil(t, v22Txs)
 			require.NotNil(t, v22Adds)
 
-			v23P, err := NewParser(lib, "v23")
+			v23P, err := NewFilecoinParser(lib, "v23")
 			require.NoError(t, err)
 			v23Txs, v23Adds, err := v23P.ParseTransactions(traces, &tipset.TipSet, ethlogs)
 			require.NoError(t, err)

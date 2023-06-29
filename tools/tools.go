@@ -14,16 +14,16 @@ import (
 	"go.uber.org/zap"
 )
 
-func BuildMessageId(tipsetHash, blockCid, messageCid string) string {
+func BuildMessageId(tipsetCid, blockCid, messageCid string) string {
 	h := sha256.New()
-	h.Write([]byte(tipsetHash + blockCid + messageCid))
+	h.Write([]byte(tipsetCid + blockCid + messageCid))
 	hash := h.Sum(nil)
 	return hex.EncodeToString(hash)
 }
 
-func BuildFeeId(tipsetHash, blockCid, messageCid string) string {
+func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
 	h := sha256.New()
-	h.Write([]byte(tipsetHash + blockCid + messageCid + "fee"))
+	h.Write([]byte(tipsetCid + blockCid + messageCid + "fee"))
 	hash := h.Sum(nil)
 	return hex.EncodeToString(hash)
 }

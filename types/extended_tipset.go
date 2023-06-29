@@ -28,6 +28,18 @@ func (e *ExtendedTipSet) GetParentCidString() string {
 	return cid.String()
 }
 
+func (e *ExtendedTipSet) GetBlockMiner(blockCid string) (string, error) {
+	for _, blocks := range e.BlockMessages {
+		for _, block := range blocks {
+			if block.Cid == blockCid {
+				return block.BlockMiner, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not find miner that mined block '%s'", blockCid)
+}
+
 func (e *ExtendedTipSet) GetBlockMinedByMiner(minerAddress string) (string, error) {
 	for _, blocks := range e.BlockMessages {
 		for _, block := range blocks {

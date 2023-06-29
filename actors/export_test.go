@@ -48,7 +48,6 @@ func getActorParser() *ActorParser {
 	helper := helper2.NewHelper(lib, actorsCache)
 
 	return &ActorParser{
-		lib:    lib,
 		helper: helper,
 	}
 }
