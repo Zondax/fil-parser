@@ -23,35 +23,48 @@ var SystemActorsId = map[string]bool{
 }
 
 func SetupActorsCache(dataSource common.DataSource) (*ActorsCache, error) {
-	var kvStoreCache impl.KVStore
+	var offlineCache IActorsCache
 	var onChainCache impl.OnChain
 
-	err := kvStoreCache.NewImpl(dataSource)
+	err := onChainCache.NewImpl(dataSource)
 	if err != nil {
 		return nil, err
 	}
 
-	err = onChainCache.NewImpl(dataSource)
-	if err != nil {
-		return nil, err
+	// Try kvStore cache, if it fails, on-memory cache
+	var kvStoreCache impl.KVStore
+	err = kvStoreCache.NewImpl(dataSource)
+	if err == nil {
+		offlineCache = &kvStoreCache
+	} else {
+		zap.S().Warn("[ActorsCache] - Unable to initialize kv store cache. Using on-memory cache")
+		var inMemoryCache impl.Memory
+		err = inMemoryCache.NewImpl(dataSource)
+		if err != nil {
+			zap.S().Errorf("[ActorsCache] - Unable to initialize on-memory cache: %s", err.Error())
+			return nil, err
+		}
+		offlineCache = &inMemoryCache
 	}
+
+	zap.S().Infof("[ActorsCache] - Actors cache initialized. Offline cache implementation: %s", offlineCache.ImplementationType())
 
 	return &ActorsCache{
-		kvStore: &kvStoreCache,
-		onChain: &onChainCache,
+		offlineCache: offlineCache,
+		onChainCache: &onChainCache,
 	}, nil
 }
 
 func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey) (string, error) {
 	// Try kv store cache
-	actorCode, err := a.kvStore.GetActorCode(add, key)
+	actorCode, err := a.offlineCache.GetActorCode(add, key)
 	if err == nil {
 		return actorCode, nil
 	}
 
 	zap.S().Debugf("[ActorsCache] - Unable to retrieve actor code from kv store for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
-	actorCode, err = a.onChain.GetActorCode(add, key)
+	actorCode, err = a.onChainCache.GetActorCode(add, key)
 	if err != nil {
 		zap.S().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
@@ -76,7 +89,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	}
 
 	// Try kv store cache
-	robust, err := a.kvStore.GetRobustAddress(add)
+	robust, err := a.offlineCache.GetRobustAddress(add)
 	if err == nil {
 		return robust, nil
 	}
@@ -84,7 +97,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	zap.S().Debugf("[ActorsCache] - Unable to retrieve robust address from kv store for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
-	robust, err = a.onChain.GetRobustAddress(add)
+	robust, err = a.onChainCache.GetRobustAddress(add)
 	if err != nil {
 		zap.S().Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
@@ -105,7 +118,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 
 func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	// Try kv store cache
-	short, err := a.kvStore.GetShortAddress(add)
+	short, err := a.offlineCache.GetShortAddress(add)
 	if err == nil {
 		return short, nil
 	}
@@ -113,7 +126,7 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	zap.S().Debugf("[ActorsCache] - Unable to retrieve short address from kv store for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
-	short, err = a.onChain.GetShortAddress(add)
+	short, err = a.onChainCache.GetShortAddress(add)
 	if err != nil {
 		zap.S().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
@@ -138,7 +151,7 @@ func (a *ActorsCache) storeActorCode(add address.Address, info types.AddressInfo
 		return err
 	}
 
-	a.kvStore.StoreAddressInfo(types.AddressInfo{
+	a.offlineCache.StoreAddressInfo(types.AddressInfo{
 		Short:    shortAddress,
 		ActorCid: info.ActorCid,
 	})
@@ -152,7 +165,7 @@ func (a *ActorsCache) storeShortAddress(add address.Address, info types.AddressI
 		return err
 	}
 
-	a.kvStore.StoreAddressInfo(types.AddressInfo{
+	a.offlineCache.StoreAddressInfo(types.AddressInfo{
 		Short:  info.Short,
 		Robust: robustAddress,
 	})
@@ -166,7 +179,7 @@ func (a *ActorsCache) storeRobustAddress(add address.Address, info types.Address
 		return err
 	}
 
-	a.kvStore.StoreAddressInfo(types.AddressInfo{
+	a.offlineCache.StoreAddressInfo(types.AddressInfo{
 		Short:  shortAddress,
 		Robust: info.Robust,
 	})

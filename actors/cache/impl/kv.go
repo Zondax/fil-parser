@@ -117,7 +117,10 @@ func (m *KVStore) NewImpl(source common.DataSource) error {
 		return err
 	}
 
-	m.nats.MapKVStore[StateStoreName].Store.Put(backFillInProgressKey, []byte("false"))
+	_, err = m.nats.MapKVStore[StateStoreName].Store.Put(backFillInProgressKey, []byte("false"))
+	if err != nil {
+		zap.S().Warnf("[ActorsCache] - Error setting backfill in progress key: %s", err)
+	}
 
 	if m.isNatsCacheEmpty() {
 		err = m.BackFill()

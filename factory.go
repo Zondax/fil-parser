@@ -36,8 +36,8 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache)
-	parserV22 := V22.NewParserV22(lib, helper)
-	parserV23 := V23.NewParserV23(lib, helper)
+	parserV22 := V22.NewParserV22(helper)
+	parserV23 := V23.NewParserV23(helper)
 
 	return &FilecoinParser{
 		ParserV22: parserV22,

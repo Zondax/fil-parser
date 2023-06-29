@@ -180,7 +180,7 @@ func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, height int64, ke
 		zap.S().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		return "", err
 	}
-	parsedParams, err := p.lib.ParseParamsMultisigTx(string(msgSerial), c)
+	parsedParams, err := p.helper.GetFilecoinLib().ParseParamsMultisigTx(string(msgSerial), c)
 	if err != nil {
 		zap.S().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
 		return "", err

@@ -18,6 +18,6 @@ type IActorsCache interface {
 }
 
 type ActorsCache struct {
-	kvStore IActorsCache
-	onChain IActorsCache
+	offlineCache IActorsCache
+	onChainCache IActorsCache
 }

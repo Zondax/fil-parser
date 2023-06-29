@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"net/http"
 	"os"
 	"testing"
@@ -26,10 +25,6 @@ const (
 	ethLogPrefix      = "ethlog"
 	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
 )
-
-func getActorsCacheDataSource() common.DataSource {
-
-}
 
 func getFilename(prefix, height string) string {
 	return fmt.Sprintf(`%s/%s_%s.%s`, dataPath, prefix, height, fileDataExtension)

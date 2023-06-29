@@ -3,13 +3,10 @@ package V23
 import (
 	"encoding/json"
 	"errors"
-	"github.com/zondax/fil-parser/actors"
-	"time"
-
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"github.com/zondax/fil-parser/actors"
 	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/parser"
@@ -29,9 +26,9 @@ type Parser struct {
 	helper      *helper.Helper
 }
 
-func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, helper *helper.Helper) *Parser {
+func NewParserV23(helper *helper.Helper) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(lib, helper),
+		actorParser: actors.NewActorParser(helper),
 		addresses:   types.NewAddressInfoMap(),
 		helper:      helper,
 	}
@@ -176,7 +173,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		},
 
 		Id:          messageUuid,
-		TxTimestamp: p.getTimestamp(tipSet.MinTimestamp()),
+		TxTimestamp: parser.GetTimestamp(tipSet.MinTimestamp()),
 		TxHash:      msgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
@@ -188,7 +185,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 }
 
 func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, tipset *types.ExtendedTipSet, txType string) *types.Transaction {
-	timestamp := p.getTimestamp(tipset.MinTimestamp())
+	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
 	minerAddress := tipset.Blocks()[0].Miner.String()
 	feesMetadata := parser.FeesMetadata{
 		TxType: txType,

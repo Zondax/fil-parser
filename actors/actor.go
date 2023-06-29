@@ -7,18 +7,15 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 )
 
 type ActorParser struct {
-	lib    *rosettaFilecoinLib.RosettaConstructionFilecoin
 	helper *helper.Helper
 }
 
-func NewActorParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, helper *helper.Helper) *ActorParser {
+func NewActorParser(helper *helper.Helper) *ActorParser {
 	return &ActorParser{
-		lib:    lib,
 		helper: helper,
 	}
 }
@@ -41,7 +38,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		return metadata, nil, err
 	}
 
-	actor, err := p.lib.BuiltinActors.GetActorNameFromCid(c)
+	actor, err := p.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
 	if err != nil {
 		return metadata, nil, err
 	}

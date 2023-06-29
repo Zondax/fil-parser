@@ -60,6 +60,10 @@ func (h *Helper) GetActorsCache() *cache.ActorsCache {
 	return h.actorCache
 }
 
+func (h *Helper) GetFilecoinLib() *rosettaFilecoinLib.RosettaConstructionFilecoin {
+	return h.lib
+}
+
 func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
