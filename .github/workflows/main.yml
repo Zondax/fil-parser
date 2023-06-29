@@ -6,16 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  GOPRIVATE: "github.com/zondax/znats"
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git for private modules
-        env:
-          TOKEN: ${{ secrets.PECORINO_READ_TOKEN }}
-        run: git config --global url."https://zondax:${TOKEN}@github.com".insteadOf "https://github.com"
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -26,6 +20,8 @@ jobs:
       - name: Build
         run: |
           make build
+        env:
+          TOKEN: ${{ secrets.PECORINO_READ_TOKEN }}
 
   checks:
     runs-on: ubuntu-latest
