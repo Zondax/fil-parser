@@ -7,13 +7,12 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
-	"go.uber.org/zap"
-
 	"github.com/zondax/fil-parser/parser"
 	typesv23 "github.com/zondax/fil-parser/parser/V23/types"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
 const (
@@ -87,6 +86,11 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	}
 
 	return transactions, p.addresses, nil
+}
+
+func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,

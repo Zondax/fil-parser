@@ -7,9 +7,8 @@ import (
 	"github.com/zondax/fil-parser/parser/V22"
 	"github.com/zondax/fil-parser/parser/V23"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
-	"go.uber.org/zap"
-
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/types"
 )
@@ -26,6 +25,7 @@ type FilecoinParser struct {
 type Parser interface {
 	Version() string
 	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error)
+	GetBaseFee(traces []byte) (uint64, error)
 }
 
 func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource) (*FilecoinParser, error) {
@@ -53,4 +53,15 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 		return p.ParserV23.ParseTransactions(traces, tipSet, ethLogs)
 	}
 	return nil, nil, errUnknownImpl
+}
+
+func (p *FilecoinParser) GetBaseFee(traces []byte, version string) (uint64, error) {
+	switch version {
+	case V22.Version:
+		return p.ParserV22.GetBaseFee(traces)
+	case V23.Version:
+		return p.ParserV23.GetBaseFee(traces)
+	}
+
+	return 0, errUnknownImpl
 }

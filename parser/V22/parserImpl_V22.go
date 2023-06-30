@@ -8,6 +8,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"go.uber.org/zap"
+	"math/big"
 
 	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
@@ -123,6 +124,30 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	}
 
 	return transactions, p.addresses, nil
+}
+
+func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
+	// Unmarshal into vComputeState
+	computeState := &typesv22.ComputeStateOutputV22{}
+	err := sonic.UnmarshalString(string(traces), &computeState)
+	if err != nil {
+		zap.S().Error(err)
+		return 0, errors.New("could not decode")
+	}
+
+	baseFee := big.NewInt(0)
+	for _, trace := range computeState.Trace {
+		baseFeeBurn := trace.GasCost.BaseFeeBurn
+		gasUsed := trace.GasCost.GasUsed
+		if gasUsed.IsZero() {
+			continue
+		}
+
+		baseFee.Div(baseFeeBurn.Int, gasUsed.Int)
+		break
+	}
+
+	return baseFee.Uint64(), nil
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
