@@ -174,7 +174,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {
-		p.appendToAddresses(addressInfo)
+		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if trace.MsgRct.ExitCode.IsError() {
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
@@ -183,7 +183,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 	tipsetCid := tipset.GetCidString()
 	jsonMetadata, _ := json.Marshal(metadata)
 
-	p.appendAddressInfo(trace.Msg, int64(tipset.Height()), tipset.Key())
+	p.appendAddressInfo(trace.Msg, tipset.Key())
 
 	blockCid, err := tools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
@@ -272,24 +272,11 @@ func hasExecutionTrace(trace *typesv22.InvocResultV22) bool {
 	return true
 }
 
-func (p *Parser) appendAddressInfo(msg *filTypes.Message, height int64, key filTypes.TipSetKey) {
+func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, height, key)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, height, key)
-	p.appendToAddresses(fromAdd, toAdd)
-}
-
-func (p *Parser) appendToAddresses(info ...*types.AddressInfo) {
-	if p.addresses == nil {
-		return
-	}
-	for _, i := range info {
-		if i.Robust != "" && i.Short != "" && i.Robust != i.Short {
-			if _, ok := p.addresses[i.Short]; !ok {
-				p.addresses[i.Short] = i
-			}
-		}
-	}
+	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
+	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
 }

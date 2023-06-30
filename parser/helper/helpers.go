@@ -64,7 +64,7 @@ func (h *Helper) GetFilecoinLib() *rosettaFilecoinLib.RosettaConstructionFilecoi
 	return h.lib
 }
 
-func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) *types.AddressInfo {
+func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
 
