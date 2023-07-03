@@ -136,6 +136,7 @@ func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 	}
 
 	baseFee := big.NewInt(0)
+	found := false
 	for _, trace := range computeState.Trace {
 		baseFeeBurn := trace.GasCost.BaseFeeBurn
 		gasUsed := trace.GasCost.GasUsed
@@ -143,8 +144,13 @@ func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 			continue
 		}
 
+		found = true
 		baseFee.Div(baseFeeBurn.Int, gasUsed.Int)
 		break
+	}
+
+	if !found {
+		return 0, errors.New("could not find base fee")
 	}
 
 	return baseFee.Uint64(), nil

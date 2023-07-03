@@ -13,6 +13,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
+	"math/big"
 )
 
 const (
@@ -89,8 +90,34 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 }
 
 func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
-	//TODO implement me
-	panic("implement me")
+	// Unmarshal into vComputeState
+	computeState := &typesv23.ComputeStateOutputV23{}
+	err := sonic.UnmarshalString(string(traces), &computeState)
+	if err != nil {
+		zap.S().Error(err)
+		return 0, errors.New("could not decode")
+	}
+
+	baseFee := big.NewInt(0)
+	found := false
+	for _, trace := range computeState.Trace {
+		baseFeeBurn := trace.GasCost.BaseFeeBurn
+		gasUsed := trace.GasCost.GasUsed
+		if gasUsed.IsZero() {
+			continue
+		}
+
+		found = true
+		baseFee.Div(baseFeeBurn.Int, gasUsed.Int)
+		break
+	}
+
+	if !found {
+		return 0, errors.New("could not find base fee")
+	}
+
+	return baseFee.Uint64(), nil
+
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
