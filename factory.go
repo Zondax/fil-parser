@@ -18,8 +18,9 @@ var (
 )
 
 type FilecoinParser struct {
-	ParserV22 Parser
-	ParserV23 Parser
+	parserV22 Parser
+	parserV23 Parser
+	Helper    *helper2.Helper
 }
 
 type Parser interface {
@@ -40,17 +41,18 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	parserV23 := V23.NewParserV23(helper)
 
 	return &FilecoinParser{
-		ParserV22: parserV22,
-		ParserV23: parserV23,
+		parserV22: parserV22,
+		parserV23: parserV23,
+		Helper:    helper,
 	}, nil
 }
 
 func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, version string) ([]*types.Transaction, types.AddressInfoMap, error) {
 	switch version {
 	case V22.Version:
-		return p.ParserV22.ParseTransactions(traces, tipSet, ethLogs)
+		return p.parserV22.ParseTransactions(traces, tipSet, ethLogs)
 	case V23.Version:
-		return p.ParserV23.ParseTransactions(traces, tipSet, ethLogs)
+		return p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
 	}
 	return nil, nil, errUnknownImpl
 }
@@ -58,9 +60,9 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 func (p *FilecoinParser) GetBaseFee(traces []byte, version string) (uint64, error) {
 	switch version {
 	case V22.Version:
-		return p.ParserV22.GetBaseFee(traces)
+		return p.parserV22.GetBaseFee(traces)
 	case V23.Version:
-		return p.ParserV23.GetBaseFee(traces)
+		return p.parserV23.GetBaseFee(traces)
 	}
 
 	return 0, errUnknownImpl
