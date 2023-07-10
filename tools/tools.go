@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -18,7 +19,8 @@ func BuildMessageId(tipsetCid, blockCid, messageCid string) string {
 	h := sha256.New()
 	h.Write([]byte(tipsetCid + blockCid + messageCid))
 	hash := h.Sum(nil)
-	return hex.EncodeToString(hash)
+	id := uuid.NewSHA1(uuid.Nil, hash)
+	return id.String()
 }
 
 func BuildFeeId(tipsetCid, blockCid, messageCid string) string {

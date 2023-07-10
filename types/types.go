@@ -40,8 +40,6 @@ type BasicBlockData struct {
 	TipsetCid string `json:"tipset_cid" gorm:"index:idx_tipset_cid"`
 	// Block Cid
 	BlockCid string `json:"block_cid" gorm:"index:idx_block_cid"`
-	// Canonical indicates if this block belongs to the canonical chain
-	Canonical bool `json:"canonical"`
 }
 
 // Transaction parses transaction heights into the desired format for reports
