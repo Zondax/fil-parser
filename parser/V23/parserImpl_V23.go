@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -203,7 +204,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 			TipsetCid: tipsetCid,
 			BlockCid:  blockCid,
 		},
-
+		ParentId:    uuid.Nil.String(),
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:       msgCid.String(),
@@ -246,6 +247,7 @@ func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, tipset *types.Ex
 
 	metadata, _ := json.Marshal(feesMetadata)
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
+	msgId := tools.BuildMessageId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
@@ -254,6 +256,7 @@ func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, tipset *types.Ex
 			BlockCid:  blockCid,
 		},
 		Id:          feeID,
+		ParentId:    msgId,
 		TxTimestamp: timestamp,
 		TxCid:       msg.MsgCid.String(),
 		TxFrom:      msg.Msg.From.String(),

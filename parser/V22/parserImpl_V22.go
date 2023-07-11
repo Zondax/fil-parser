@@ -8,14 +8,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
-	"go.uber.org/zap"
-	"math/big"
-
 	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
+	"math/big"
 )
 
 const (
@@ -53,9 +52,6 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipset.Key()
 	tipsetCid := tipset.GetCidString()
-	if err != nil {
-		return nil, nil, parser.ErrBlockHash
-	}
 
 	for _, trace := range computeState.Trace {
 		if !hasMessage(trace) {
