@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"go.uber.org/zap"
@@ -83,6 +84,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 					BlockCid:  blockCid,
 				},
 				Id:          messageUuid,
+				ParentId:    uuid.Nil.String(),
 				TxCid:       trace.MsgCid.String(),
 				TxFrom:      trace.Msg.From.String(),
 				TxTo:        trace.Msg.To.String(),
@@ -228,6 +230,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 			TipsetCid: tipsetCid,
 			BlockCid:  blockCid,
 		},
+		ParentId:    uuid.Nil.String(),
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:       mainMsgCid.String(),
@@ -270,6 +273,7 @@ func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.Ex
 
 	metadata, _ := json.Marshal(feesMetadata)
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
+	msgId := tools.BuildMessageId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
@@ -278,6 +282,7 @@ func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.Ex
 			BlockCid:  blockCid,
 		},
 		Id:          feeID,
+		ParentId:    msgId,
 		TxTimestamp: timestamp,
 		TxCid:       msg.MsgCid.String(),
 		TxFrom:      msg.Msg.From.String(),
