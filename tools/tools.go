@@ -3,7 +3,6 @@ package tools
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
@@ -23,11 +22,20 @@ func BuildMessageId(tipsetCid, blockCid, messageCid string) string {
 	return id.String()
 }
 
+func BuildTipsetId(tipsetCid string) string {
+	h := sha256.New()
+	h.Write([]byte(tipsetCid))
+	hash := h.Sum(nil)
+	id := uuid.NewSHA1(uuid.Nil, hash)
+	return id.String()
+}
+
 func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
 	h := sha256.New()
 	h.Write([]byte(tipsetCid + blockCid + messageCid + "fee"))
 	hash := h.Sum(nil)
-	return hex.EncodeToString(hash)
+	id := uuid.NewSHA1(uuid.Nil, hash)
+	return id.String()
 }
 
 func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet) (string, error) {
