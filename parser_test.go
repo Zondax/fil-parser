@@ -5,6 +5,10 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"github.com/filecoin-project/lotus/api"
+	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	"github.com/zondax/fil-parser/parser/V22"
+	"github.com/zondax/fil-parser/parser/V23"
 	"net/http"
 	"os"
 	"testing"
@@ -88,14 +92,26 @@ func readEthLogs(height string) ([]types.EthLog, error) {
 	return logs, nil
 }
 
-func getLib(t *testing.T, url string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
+func getLotusClient(t *testing.T, url string) api.FullNode {
 	lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), url, http.Header{})
 	require.NoError(t, err)
 	require.NotNil(t, lotusClient, "Lotus client should not be nil")
 
+	return lotusClient
+}
+
+func getLib(t *testing.T, nodeURL string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
+	lotusClient := getLotusClient(t, nodeURL)
+
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
 	require.NotNil(t, lib, "Rosetta lib should not be nil")
 	return lib
+}
+
+func getCacheDataSource(t *testing.T, nodeURL string) common.DataSource {
+	return common.DataSource{
+		Node: getLotusClient(t, nodeURL),
+	}
 }
 
 func TestParser_ParseTransactions(t *testing.T) {
@@ -164,7 +180,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, tt.version)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url))
 			require.NoError(t, err)
 			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, tt.version)
 			require.NoError(t, err)
@@ -204,16 +220,16 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			v22P, err := NewFilecoinParser(lib, "v22")
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url))
 			require.NoError(t, err)
-			v22Txs, v22Adds, err := v22P.ParseTransactions(traces, &tipset.TipSet, ethlogs)
+			v22Txs, v22Adds, err := p.ParseTransactions(traces, tipset, ethlogs, V22.Version)
 			require.NoError(t, err)
 			require.NotNil(t, v22Txs)
 			require.NotNil(t, v22Adds)
 
-			v23P, err := NewFilecoinParser(lib, "v23")
+			v23P, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url))
 			require.NoError(t, err)
-			v23Txs, v23Adds, err := v23P.ParseTransactions(traces, &tipset.TipSet, ethlogs)
+			v23Txs, v23Adds, err := v23P.ParseTransactions(traces, tipset, ethlogs, V23.Version)
 			require.NoError(t, err)
 			require.NotNil(t, v23Txs)
 			require.NotNil(t, v23Adds)

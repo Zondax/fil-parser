@@ -77,7 +77,9 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 	blockCids, ok := tipset.BlockMessages[msgCid]
 	if !ok {
 		return blockCid, fmt.Errorf("could not find block hash for message cid '%s'", msgCid)
-	} else if len(blockCids) == 0 {
+	}
+
+	if len(blockCids) == 0 {
 		return blockCid, fmt.Errorf("could not find block hash for message cid '%s'. Slice is empty", msgCid)
 	} else {
 		blockCid = blockCids[0].Cid
