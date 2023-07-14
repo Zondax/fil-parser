@@ -27,8 +27,7 @@ const (
 	tracesPrefix      = "traces"
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
-	//nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
-	nodeUrl = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
+	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
 )
 
 func getFilename(prefix, height string) string {
@@ -219,14 +218,14 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.Equal(t, len(v22Adds), len(v23Adds))
 
 			// FIX: do not compare id and parent_id because they are different
-			//for i := range v22Txs {
-			//	require.Equal(t, v22Txs[i], v23Txs[i])
-			//}
-			//for k := range v22Adds {
-			//	require.Equal(t, v22Adds[k], v23Adds[k])
-			//}
-			//// todo
-			//require.Equal(t, v22Txs, v23Txs)
+			//  for i := range v22Txs {
+			//	  require.Equal(t, v22Txs[i], v23Txs[i])
+			//  }
+			//  for k := range v22Adds {
+			//	  require.Equal(t, v22Adds[k], v23Adds[k])
+			//  }
+			// todo
+			// require.Equal(t, v22Txs, v23Txs)
 		})
 	}
 }
