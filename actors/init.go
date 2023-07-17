@@ -65,14 +65,14 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, rawReturn []byte) (map
 	if err != nil {
 		return metadata, nil, err
 	}
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	createdActorName, err := p.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
 		return metadata, nil, err
 	}
 	createdActor := &types.AddressInfo{
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
-		ActorCid:       params.CodeCID,
+		ActorCid:       params.CodeCID.String(),
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid.String(),
 	}
@@ -95,7 +95,7 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, rawReturn []byte) (ma
 		SubAddress:        subAddress.String(),
 	}
 
-	createdActorName, err := p.lib.BuiltinActors.GetActorNameFromCid(params.CodeCID)
+	createdActorName, err := p.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(params.CodeCID)
 	if err != nil {
 		return metadata, nil, err
 	}
@@ -109,7 +109,7 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, rawReturn []byte) (ma
 	createdActor := &types.AddressInfo{
 		Short:          r.IDAddress.String(),
 		Robust:         r.RobustAddress.String(),
-		ActorCid:       params.CodeCID,
+		ActorCid:       params.CodeCID.String(),
 		ActorType:      parseExecActor(createdActorName),
 		CreationTxHash: msg.Cid.String(),
 	}

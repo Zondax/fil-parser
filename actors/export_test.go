@@ -6,15 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/zondax/fil-parser/actors/cache"
+	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/parser"
+	helper2 "github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
 	"net/http"
 	"os"
 
 	"github.com/filecoin-project/lotus/api/client"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-
-	"github.com/zondax/fil-parser/actors/database"
 )
 
 const (
@@ -35,11 +36,19 @@ func getActorParser() *ActorParser {
 	if err != nil {
 		return nil
 	}
-	database.SetupActorsDatabase(&lotusClient)
+	actorsCache, err := cache.SetupActorsCache(common.DataSource{
+		Node: lotusClient,
+	})
+
+	if err != nil {
+		return nil
+	}
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
+	helper := helper2.NewHelper(lib, actorsCache)
+
 	return &ActorParser{
-		lib: lib,
+		helper: helper,
 	}
 }
 

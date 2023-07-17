@@ -3,21 +3,18 @@ package V23
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/zondax/fil-parser/actors"
-	"time"
-
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
-
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	typesv23 "github.com/zondax/fil-parser/parser/V23/types"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
+	"math/big"
 )
 
 const (
@@ -30,11 +27,11 @@ type Parser struct {
 	helper      *helper.Helper
 }
 
-func NewParserV23(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Parser {
+func NewParserV23(helper *helper.Helper) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(lib),
+		actorParser: actors.NewActorParser(helper),
 		addresses:   types.NewAddressInfoMap(),
-		helper:      helper.NewHelper(lib),
+		helper:      helper,
 	}
 }
 
@@ -42,7 +39,7 @@ func (p *Parser) Version() string {
 	return Version
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesv23.ComputeStateOutputV23{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
@@ -53,8 +50,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
-	tipsetKey := tipSet.Key()
-	blockHash, err := tools.BuildTipSetKeyHash(tipsetKey)
+
 	if err != nil {
 		return nil, nil, parser.ErrBlockHash
 	}
@@ -64,21 +60,21 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipSet, ethLogs, *blockHash, tipsetKey)
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs)
 		if err != nil {
 			continue
 		}
 
 		// We only set the gas usage for the main transaction.
 		// If we need the gas usage of all sub-txs, we need to also parse GasCharges (today is very inefficient)
-		transaction.GasUsed = trace.GasCost.GasUsed.Int64()
+		transaction.GasUsed = trace.GasCost.GasUsed.Uint64()
 
 		transactions = append(transactions, transaction)
 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipSet, ethLogs, *blockHash,
-				trace.Msg.Cid().String(), tipsetKey, 0)
+			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs,
+				trace.Msg.Cid().String(), transaction.Id, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -86,8 +82,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipSet.Blocks()[0].Miner.String(), transaction.TxHash, *blockHash,
-				transaction.TxType, uint64(tipSet.Height()), tipSet.MinTimestamp())
+			feeTx := p.feesTransactions(trace, tipset, transaction.TxType)
 			transactions = append(transactions, feeTx)
 		}
 	}
@@ -95,29 +90,61 @@ func (p *Parser) ParseTransactions(traces []byte, tipSet *filTypes.TipSet, ethLo
 	return transactions, p.addresses, nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash, txHash string,
-	key filTypes.TipSetKey, level uint16) (txs []*types.Transaction) {
+func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
+	// Unmarshal into vComputeState
+	computeState := &typesv23.ComputeStateOutputV23{}
+	err := sonic.UnmarshalString(string(traces), &computeState)
+	if err != nil {
+		zap.S().Error(err)
+		return 0, errors.New("could not decode")
+	}
 
+	baseFee := big.NewInt(0)
+	found := false
+	for _, trace := range computeState.Trace {
+		baseFeeBurn := trace.GasCost.BaseFeeBurn
+		gasUsed := trace.GasCost.GasUsed
+		if gasUsed.IsZero() {
+			continue
+		}
+
+		found = true
+		baseFee.Div(baseFeeBurn.Int, gasUsed.Int)
+		break
+	}
+
+	if !found {
+		return 0, errors.New("could not find base fee")
+	}
+
+	return baseFee.Uint64(), nil
+
+}
+
+func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
+	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, blockHash, key)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs)
 		if err != nil {
 			continue
 		}
+
 		subTransaction.Level = level
+		subTransaction.ParentId = parentId
+
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, blockHash, txHash, key, level)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipSet *filTypes.TipSet, ethLogs []types.EthLog, blockHash string,
-	key filTypes.TipSetKey) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
-	}, int64(tipSet.Height()), key)
+	}, int64(tipset.Height()), tipset.Key())
 
 	if err != nil {
 		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", msgCid.String(), err)
@@ -136,21 +163,19 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 	}, msgCid, &parser.LotusMessageReceipt{
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
-	}, int64(tipSet.Height()), key, ethLogs)
+	}, int64(tipset.Height()), tipset.Key(), ethLogs)
 
 	if mErr != nil {
-		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipSet.Height().String(), txType, mErr.Error())
+		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {
-		p.appendToAddresses(addressInfo)
+		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if trace.MsgRct.ExitCode.IsError() {
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
-	params := parser.ParseParams(metadata)
 	jsonMetadata, _ := json.Marshal(metadata)
-	txReturn := parser.ParseReturn(metadata)
 
 	p.appendAddressInfo(&parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -158,30 +183,53 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		Method: trace.Msg.Method,
 		Cid:    msgCid,
 		Params: trace.Msg.Params,
-	}, int64(tipSet.Height()), key)
+	}, tipset.Key())
+
+	blockCid, err := tools.GetBlockCidFromMsgCid(msgCid.String(), txType, metadata, tipset)
+	if err != nil {
+		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+	}
+
+	messageCid, err := tools.BuildCidFromMessageTrace(&trace.Msg)
+	if err != nil {
+		zap.S().Errorf("Error when trying to build message cid in tx cid'%s': %v", msgCid.String(), err)
+	}
+
+	tipsetCid := tipset.GetCidString()
+	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, messageCid)
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
-			Height: uint64(tipSet.Height()),
-			Hash:   blockHash,
+			Height:    uint64(tipset.Height()),
+			TipsetCid: tipsetCid,
+			BlockCid:  blockCid,
 		},
-		Level:       0,
-		TxTimestamp: parser.GetTimestamp(tipSet.MinTimestamp()),
-		TxHash:      msgCid.String(),
+		ParentId:    uuid.Nil.String(),
+		Id:          messageUuid,
+		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
+		TxCid:       msgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
-		TxParams:    fmt.Sprintf("%v", params),
-		TxReturn:    txReturn,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, minerAddress, txHash, blockHash, txType string, height uint64, timestamp uint64) *types.Transaction {
-	ts := parser.GetTimestamp(timestamp)
-	metadata := parser.FeesMetadata{
+func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, tipset *types.ExtendedTipSet, txType string) *types.Transaction {
+	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
+	blockCid, err := tools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
+	if err != nil {
+		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+	}
+
+	minerAddress, err := tipset.GetBlockMiner(blockCid)
+	if err != nil {
+		zap.S().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+	}
+
+	feesMetadata := parser.FeesMetadata{
 		TxType: txType,
 		MinerFee: parser.MinerFee{
 			MinerAddress: minerAddress,
@@ -197,48 +245,33 @@ func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, minerAddress, tx
 		},
 	}
 
-	feeTx := p.newFeeTx(msg, txHash, blockHash, height, ts, metadata)
-	return feeTx
-}
-
-func (p *Parser) newFeeTx(msg *typesv23.InvocResultV23, txHash, blockHash string, height uint64,
-	timestamp time.Time, feesMetadata parser.FeesMetadata) *types.Transaction {
 	metadata, _ := json.Marshal(feesMetadata)
+	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
+	msgId := tools.BuildMessageId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
-			Height: height,
-			Hash:   blockHash,
+			Height:    uint64(tipset.Height()),
+			TipsetCid: tipset.GetCidString(),
+			BlockCid:  blockCid,
 		},
+		Id:          feeID,
+		ParentId:    msgId,
 		TxTimestamp: timestamp,
-		TxHash:      txHash,
+		TxCid:       msg.MsgCid.String(),
 		TxFrom:      msg.Msg.From.String(),
 		Amount:      msg.GasCost.TotalCost.Int,
 		Status:      "Ok",
 		TxType:      parser.TotalFeeOp,
 		TxMetadata:  string(metadata),
 	}
-
 }
 
-func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) {
+func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, height, key)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, height, key)
-	p.appendToAddresses(fromAdd, toAdd)
-}
-
-func (p *Parser) appendToAddresses(info ...*types.AddressInfo) {
-	if p.addresses == nil {
-		return
-	}
-	for _, i := range info {
-		if i.Robust != "" && i.Short != "" && i.Robust != i.Short {
-			if _, ok := p.addresses[i.Short]; !ok {
-				p.addresses[i.Short] = i
-			}
-		}
-	}
+	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
+	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
 }

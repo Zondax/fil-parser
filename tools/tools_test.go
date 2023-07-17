@@ -26,9 +26,9 @@ func TestBuildTipSetKeyHash(t *testing.T) {
 			err = tipset.UnmarshalCBOR(file)
 			require.NoError(t, err)
 			require.NotNil(t, tipset)
-			got, err := BuildTipSetKeyHash(tipset.Key())
+			got, err := tipset.Key().Cid()
 			require.NoError(t, err)
-			require.NotEmpty(t, got)
+			require.NotEmpty(t, got.String())
 		})
 	}
 }

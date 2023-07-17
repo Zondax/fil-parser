@@ -21,7 +21,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors/database"
+	"github.com/zondax/fil-parser/actors/cache"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
@@ -48,46 +48,69 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 }
 
 type Helper struct {
-	lib *rosettaFilecoinLib.RosettaConstructionFilecoin
+	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
+	actorCache *cache.ActorsCache
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin) *Helper {
-	return &Helper{lib: lib}
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache) *Helper {
+	return &Helper{lib: lib, actorCache: actorsCache}
 }
 
-func (h *Helper) GetActorAddressInfo(add address.Address, height int64, key filTypes.TipSetKey) *types.AddressInfo {
+func (h *Helper) GetActorsCache() *cache.ActorsCache {
+	return h.actorCache
+}
+
+func (h *Helper) GetFilecoinLib() *rosettaFilecoinLib.RosettaConstructionFilecoin {
+	return h.lib
+}
+
+func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
-	addInfo.Robust, err = database.ActorsDB.GetRobustAddress(add)
+
+	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key)
 	if err != nil {
-		zap.S().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
+		zap.S().Errorf("could not get actor code from address. Err: %s", err)
+	} else {
+		c, err := cid.Parse(addInfo.ActorCid)
+		if err != nil {
+			zap.S().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+		}
+		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
 	}
 
-	addInfo.Short, err = database.ActorsDB.GetShortAddress(add)
+	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
 		zap.S().Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
-	addInfo.ActorCid, err = database.ActorsDB.GetActorCode(add, height, key)
+	// Ignore searching robust addresses for Msig and miners
+	if addInfo.ActorType == manifest.MinerKey || addInfo.ActorType == manifest.MultisigKey {
+		return addInfo
+	}
+
+	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
-		zap.S().Errorf("could not get actor code from address. Err:", err)
-	} else {
-		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(addInfo.ActorCid)
+		zap.S().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
 	return addInfo
 }
 
 func (h *Helper) getActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) string {
-	var actorCode cid.Cid
 	// Search for actor in cache
-	var err error
-	actorCode, err = database.ActorsDB.GetActorCode(address, height, key)
+	actorCode, err := h.actorCache.GetActorCode(address, key)
 	if err != nil {
 		return actors.UnknownStr
 	}
 
-	actorName, err := h.lib.BuiltinActors.GetActorNameFromCid(actorCode)
+	c, err := cid.Parse(actorCode)
+	if err != nil {
+		zap.S().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+		return actors.UnknownStr
+	}
+
+	actorName, err := h.lib.BuiltinActors.GetActorNameFromCid(c)
 	if err != nil {
 		return actors.UnknownStr
 	}
