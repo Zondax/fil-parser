@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	Version = "v22"
+	Version = "v1.22"
 )
 
 type Parser struct {
@@ -115,7 +115,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipset, transaction.TxType)
+			feeTx := p.feesTransactions(trace, tipset, transaction.TxType, transaction.Id)
 			transactions = append(transactions, feeTx)
 		}
 	}
@@ -239,7 +239,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.ExtendedTipSet, txType string) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
 	blockCid, err := tools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
@@ -269,7 +269,6 @@ func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.Ex
 
 	metadata, _ := json.Marshal(feesMetadata)
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
-	msgId := tools.BuildMessageId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
@@ -278,7 +277,7 @@ func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.Ex
 			BlockCid:  blockCid,
 		},
 		Id:          feeID,
-		ParentId:    msgId,
+		ParentId:    parentTxId,
 		TxTimestamp: timestamp,
 		TxCid:       msg.MsgCid.String(),
 		TxFrom:      msg.Msg.From.String(),

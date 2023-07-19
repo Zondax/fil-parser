@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	errUnknownImpl = errors.New("unknown implementation")
+	errUnknownImpl    = errors.New("unknown implementation")
+	errUnknownVersion = errors.New("unknown trace version")
 )
 
 type FilecoinParser struct {
@@ -47,7 +48,12 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, version string) ([]*types.Transaction, types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata *types.BlockMetadata) ([]*types.Transaction, types.AddressInfoMap, error) {
+	version := detectTraceVersion(*metadata)
+	if version == "" {
+		return nil, nil, errUnknownVersion
+	}
+
 	switch version {
 	case V22.Version:
 		return p.parserV22.ParseTransactions(traces, tipSet, ethLogs)
@@ -57,7 +63,24 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	return nil, nil, errUnknownImpl
 }
 
-func (p *FilecoinParser) GetBaseFee(traces []byte, version string) (uint64, error) {
+func detectTraceVersion(metadata types.BlockMetadata) string {
+	switch metadata.NodeMajorMinorVersion {
+	case V22.Version, "": // The empty string is for backwards compatibility with older traces versions
+		return V22.Version
+	case V23.Version:
+		return V23.Version
+	default:
+		zap.S().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
+		return ""
+	}
+}
+
+func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata) (uint64, error) {
+	version := detectTraceVersion(metadata)
+	if version == "" {
+		return 0, errUnknownVersion
+	}
+
 	switch version {
 	case V22.Version:
 		return p.parserV22.GetBaseFee(traces)

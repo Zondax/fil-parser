@@ -6,6 +6,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/lotus/api"
 	"github.com/ipfs/go-cid"
 )
 
@@ -109,4 +110,9 @@ func (m *LotusMessage) MarshalJSON() ([]byte, error) {
 type LotusMessageReceipt struct {
 	ExitCode exitcode.ExitCode
 	Return   []byte
+}
+
+type ComputeOutputVersioned struct {
+	api.ComputeStateOutput
+	Version string
 }
