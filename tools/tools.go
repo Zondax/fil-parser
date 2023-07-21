@@ -40,7 +40,7 @@ func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
 
 func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet) (string, error) {
 	// Default value
-	blockCid := tipset.GetCidString()
+	blockCid := ""
 
 	// Process the special cases first were this kind of txs are not explicitly included in a block
 	switch txType {
