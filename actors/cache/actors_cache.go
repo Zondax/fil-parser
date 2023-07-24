@@ -1,12 +1,15 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
+	"strings"
 )
 
 // SystemActorsId Map to identify system actors which don't have an associated robust address
@@ -52,21 +55,35 @@ func SetupActorsCache(dataSource common.DataSource) (*ActorsCache, error) {
 	return &ActorsCache{
 		offlineCache: offlineCache,
 		onChainCache: &onChainCache,
+		badAddress:   cmap.New(),
 	}, nil
 }
 
+func (a *ActorsCache) ClearBadAddressCache() {
+	a.badAddress.Clear()
+}
+
 func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey) (string, error) {
+	// Check if this address is flagged as bad
+	if a.isBadAddress(add) {
+		return "", fmt.Errorf("address %s is flagged as bad", add.String())
+	}
+
 	// Try kv store cache
 	actorCode, err := a.offlineCache.GetActorCode(add, key)
 	if err == nil {
 		return actorCode, nil
 	}
 
-	zap.S().Debugf("[ActorsCache] - Unable to retrieve actor code from kv store for address %s. Trying on-chain cache", add.String())
+	zap.S().Debugf("[ActorsCache] - Unable to retrieve actor code from offline cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
 	actorCode, err = a.onChainCache.GetActorCode(add, key)
 	if err != nil {
 		zap.S().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		if strings.Contains(err.Error(), "actor not found") {
+			a.badAddress.Set(add.String(), true)
+		}
+
 		return "", err
 	}
 
@@ -88,13 +105,18 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 		return add.String(), nil
 	}
 
-	// Try kv store cache
+	// Try offline store cache
 	robust, err := a.offlineCache.GetRobustAddress(add)
 	if err == nil {
 		return robust, nil
 	}
 
-	zap.S().Debugf("[ActorsCache] - Unable to retrieve robust address from kv store for address %s. Trying on-chain cache", add.String())
+	// Check if this is a flagged address
+	if a.isBadAddress(add) {
+		return "", fmt.Errorf("address %s is flagged as bad", add.String())
+	}
+
+	zap.S().Debugf("[ActorsCache] - Unable to retrieve robust address from offline cache for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
 	robust, err = a.onChainCache.GetRobustAddress(add)
@@ -123,7 +145,12 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 		return short, nil
 	}
 
-	zap.S().Debugf("[ActorsCache] - Unable to retrieve short address from kv store for address %s. Trying on-chain cache", add.String())
+	// Check if this is a flagged address
+	if a.isBadAddress(add) {
+		return "", fmt.Errorf("address %s is flagged as bad", add.String())
+	}
+
+	zap.S().Debugf("[ActorsCache] - Unable to retrieve short address from offline cache for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
 	short, err = a.onChainCache.GetShortAddress(add)
@@ -185,4 +212,9 @@ func (a *ActorsCache) storeRobustAddress(add address.Address, info types.Address
 	})
 
 	return nil
+}
+
+func (a *ActorsCache) isBadAddress(add address.Address) bool {
+	_, bad := a.badAddress.Get(add.String())
+	return bad
 }
