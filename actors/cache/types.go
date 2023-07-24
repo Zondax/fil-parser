@@ -3,6 +3,7 @@ package cache
 import (
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/types"
 )
@@ -20,4 +21,5 @@ type IActorsCache interface {
 type ActorsCache struct {
 	offlineCache IActorsCache
 	onChainCache IActorsCache
+	badAddress   cmap.ConcurrentMap
 }

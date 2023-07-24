@@ -8,7 +8,6 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 const InMemoryImpl = "in-memory"
@@ -108,7 +107,7 @@ func (m *Memory) GetShortAddress(address address.Address) (string, error) {
 
 func (m *Memory) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
-		zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
+		// zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -117,7 +116,7 @@ func (m *Memory) storeRobustShort(robust string, short string) {
 
 func (m *Memory) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
-		zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
+		// zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -127,12 +126,12 @@ func (m *Memory) storeShortRobust(short string, robust string) {
 func (m *Memory) StoreAddressInfo(info types.AddressInfo) {
 	m.storeRobustShort(info.Robust, info.Short)
 	m.storeShortRobust(info.Short, info.Robust)
-	m.storeActorCode(info.Robust, info.ActorCid)
+	m.storeActorCode(info.Short, info.ActorCid)
 }
 
 func (m *Memory) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
-		zap.S().Warn("[ActorsCache] - Trying to store empty cid or short address")
+		// zap.S().Warn("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
 

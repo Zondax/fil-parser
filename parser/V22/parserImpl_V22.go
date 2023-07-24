@@ -120,6 +120,9 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 	}
 
+	// Clear this cache when we finish processing a tipset.
+	// Bad addresses in this tipset might be valid in the next one
+	p.helper.GetActorsCache().ClearBadAddressCache()
 	return transactions, p.addresses, nil
 }
 
