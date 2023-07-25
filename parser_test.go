@@ -114,14 +114,6 @@ func getCacheDataSource(t *testing.T, nodeURL string) common.DataSource {
 	}
 }
 
-func areTxsEqual(a, b *types.Transaction) bool {
-	if a.BasicBlockData != b.BasicBlockData {
-		return false
-	}
-
-	return true
-}
-
 func TestParser_ParseTransactions(t *testing.T) {
 	// expectedResults are from previous runs. This assures backward compatibility. (Worst case would be fewer traces
 	// or address than previous versions)
