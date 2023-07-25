@@ -14,9 +14,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func BuildMessageId(tipsetCid, blockCid, messageCid string) string {
+func BuildMessageId(tipsetCid, blockCid, messageCid, parentId string) string {
 	h := sha256.New()
-	h.Write([]byte(tipsetCid + blockCid + messageCid))
+	h.Write([]byte(tipsetCid + blockCid + messageCid + parentId))
 	hash := h.Sum(nil)
 	id := uuid.NewSHA1(uuid.Nil, hash)
 	return id.String()
@@ -88,7 +88,7 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 	return blockCid, nil
 }
 
-func BuildCidFromMessageTrace(msg *filTypes.MessageTrace) (string, error) {
+func BuildCidFromMessageTrace(msg *filTypes.MessageTrace, parentMsgCid string) (string, error) {
 	// Serialize
 	buf := new(bytes.Buffer)
 	if err := msg.MarshalCBOR(buf); err != nil {
@@ -96,6 +96,7 @@ func BuildCidFromMessageTrace(msg *filTypes.MessageTrace) (string, error) {
 	}
 
 	data := buf.Bytes()
+	data = append(data, []byte(parentMsgCid)...)
 
 	// ToStorageBlock
 	c, err := abi.CidBuilder.Sum(data)
