@@ -60,7 +60,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs)
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -128,21 +128,19 @@ func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid
 	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, parentId)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
-		subTransaction.ParentId = parentId
-
 		txs = append(txs, subTransaction)
 		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -193,13 +191,13 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
-	messageCid, err := tools.BuildCidFromMessageTrace(&trace.Msg)
+	messageCid, err := tools.BuildCidFromMessageTrace(&trace.Msg, msgCid.String())
 	if err != nil {
 		zap.S().Errorf("Error when trying to build message cid in tx cid'%s': %v", msgCid.String(), err)
 	}
 
 	tipsetCid := tipset.GetCidString()
-	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, messageCid)
+	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, messageCid, parentId)
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
@@ -207,7 +205,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 			TipsetCid: tipsetCid,
 			BlockCid:  blockCid,
 		},
-		ParentId:    uuid.Nil.String(),
+		ParentId:    parentId,
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:       msgCid.String(),
