@@ -11,19 +11,36 @@ import (
 
 func TestActorParser_approve(t *testing.T) {
 	p := getActorParser()
-	rawParams, rawReturn, err := getParmasAndReturn(manifest.MultisigKey, parser.MethodApprove)
-	require.NoError(t, err)
-	require.NotNil(t, rawParams)
-	require.NotNil(t, rawReturn)
-	msg, err := deserializeMessage(manifest.MultisigKey, parser.MethodApprove)
-	require.NoError(t, err)
-	require.NotNil(t, msg)
-	tipSet, err := deserializeTipset(manifest.MultisigKey, parser.MethodApprove)
-	require.NoError(t, err)
+	tests := []struct {
+		name   string
+		method string
+	}{
+		{
+			name:   "Approve",
+			method: parser.MethodApprove,
+		},
+		{
+			name:   "Approve",
+			method: parser.MethodApproveExported,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawParams, rawReturn, err := getParmasAndReturn(manifest.MultisigKey, tt.method)
+			require.NoError(t, err)
+			require.NotNil(t, rawParams)
+			require.NotNil(t, rawReturn)
+			msg, err := deserializeMessage(manifest.MultisigKey, tt.method)
+			require.NoError(t, err)
+			require.NotNil(t, msg)
+			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.method)
+			require.NoError(t, err)
 
-	got, err := p.approve(msg, rawReturn, int64(tipSet.Height()), tipSet.Key())
-	require.NoError(t, err)
-	require.NotNil(t, got)
+			got, err := p.approve(msg, rawReturn, int64(tipSet.Height()), tipSet.Key())
+			require.NoError(t, err)
+			require.NotNil(t, got)
+		})
+	}
 }
 
 func TestActorParser_multisigWithParamsAndReturn(t *testing.T) {
@@ -36,6 +53,11 @@ func TestActorParser_multisigWithParamsAndReturn(t *testing.T) {
 		{
 			name:   "Propose",
 			txType: parser.MethodPropose,
+			f:      p.propose,
+		},
+		{
+			name:   "Propose Exported",
+			txType: parser.MethodProposeExported,
 			f:      p.propose,
 		},
 	}
@@ -70,8 +92,18 @@ func TestActorParser_multiSigParams(t *testing.T) {
 			f:      p.msigParams,
 		},
 		{
+			name:   "Add Signer Exported",
+			txType: parser.MethodAddSignerExported,
+			f:      p.msigParams,
+		},
+		{
 			name:   "Remove Signer",
 			txType: parser.MethodRemoveSigner,
+			f:      p.removeSigner,
+		},
+		{
+			name:   "Remove Signer Exported",
+			txType: parser.MethodRemoveSignerExported,
 			f:      p.removeSigner,
 		},
 		{
@@ -89,6 +121,11 @@ func TestActorParser_multiSigParams(t *testing.T) {
 		{
 			name:   "Swap Signer",
 			txType: parser.MethodSwapSigner,
+			f:      p.cancel,
+		},
+		{
+			name:   "Swap Signer Exported",
+			txType: parser.MethodSwapSignerExported,
 			f:      p.cancel,
 		},
 	}
@@ -129,9 +166,27 @@ func TestActorParser_multisigWithParamsOrReturn(t *testing.T) {
 			key:    parser.ParamsKey,
 		},
 		{
+			name:   "Change Num Approvals Threshold",
+			txType: parser.MethodChangeNumApprovalsThresholdExported,
+			f:      p.changeNumApprovalsThreshold,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "Lock Balance",
 			txType: parser.MethodLockBalance,
 			f:      p.lockBalance,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Lock Balance Exported",
+			txType: parser.MethodLockBalanceExported,
+			f:      p.lockBalance,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Msig Universal Receiver Hook",
+			txType: parser.MethodMsigUniversalReceiverHook,
+			f:      p.universalReceiverHook,
 			key:    parser.ParamsKey,
 		},
 	}

@@ -17,6 +17,12 @@ func TestActorParser_powertWithParamsOrReturn(t *testing.T) {
 		key    string
 	}{
 		{
+			name:   "Constructor",
+			txType: parser.MethodConstructor,
+			f:      p.powerConstructor,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "Current Total Power",
 			txType: parser.MethodCurrentTotalPower,
 			f:      p.currentTotalPower,
@@ -45,6 +51,24 @@ func TestActorParser_powertWithParamsOrReturn(t *testing.T) {
 			txType: parser.MethodUpdatePledgeTotal,
 			f:      p.updatePledgeTotal,
 			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Network Raw Power Exported",
+			txType: parser.MethodNetworkRawPowerExported,
+			f:      p.networkRawPower,
+			key:    parser.ReturnKey,
+		},
+		{
+			name:   "Miner Count Exported",
+			txType: parser.MethodMinerCountExported,
+			f:      p.minerCount,
+			key:    parser.ReturnKey,
+		},
+		{
+			name:   "Miner Consensus Count Exported",
+			txType: parser.MethodMinerConsensusCountExported,
+			f:      p.minerConsensusCount,
+			key:    parser.ReturnKey,
 		},
 	}
 	for _, tt := range tests {
@@ -95,17 +119,34 @@ func TestActorParser_powerWithParamsAndReturn(t *testing.T) {
 
 func TestActorParser_parseCreateMiner(t *testing.T) {
 	p := getActorParser()
-	rawReturn, err := loadFile(manifest.PowerKey, parser.MethodCreateMiner, parser.ReturnKey)
-	require.NoError(t, err)
-	require.NotNil(t, rawReturn)
+	tests := []struct {
+		name   string
+		method string
+	}{
+		{
+			name:   "Create Miner",
+			method: parser.MethodCreateMiner,
+		},
+		{
+			name:   "Create Miner Exported",
+			method: parser.MethodCreateMinerExported,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawReturn, err := loadFile(manifest.PowerKey, tt.method, parser.ReturnKey)
+			require.NoError(t, err)
+			require.NotNil(t, rawReturn)
 
-	msg, err := deserializeMessage(manifest.PowerKey, parser.MethodCreateMiner)
-	require.NoError(t, err)
-	require.NotNil(t, msg)
+			msg, err := deserializeMessage(manifest.PowerKey, tt.method)
+			require.NoError(t, err)
+			require.NotNil(t, msg)
 
-	got, addr, err := p.parseCreateMiner(msg, rawReturn)
-	require.NoError(t, err)
-	require.NotNil(t, got)
-	require.NotNil(t, addr)
-	require.Contains(t, got, parser.ReturnKey)
+			got, addr, err := p.parseCreateMiner(msg, rawReturn)
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.NotNil(t, addr)
+			require.Contains(t, got, parser.ReturnKey)
+		})
+	}
 }

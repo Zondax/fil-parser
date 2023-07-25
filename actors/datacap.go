@@ -34,7 +34,7 @@ func (p *ActorParser) ParseDatacap(txType string, msg *parser.LotusMessage, msgR
 	case parser.MethodDecreaseAllowanceExported:
 		return p.decreaseAllowanceExported(msg.Params, msgRct.Return)
 	case parser.MethodRevokeAllowanceExported:
-		return p.revokeExportedAllowanceExported(msg.Params, msgRct.Return)
+		return p.revokeAllowanceExported(msg.Params, msgRct.Return)
 	case parser.MethodBurnExported:
 		return p.burnExported(msg.Params, msgRct.Return)
 	case parser.MethodBurnFromExported:
@@ -225,7 +225,7 @@ func (p *ActorParser) decreaseAllowanceExported(raw, rawReturn []byte) (map[stri
 	return metadata, nil
 }
 
-func (p *ActorParser) revokeExportedAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) revokeAllowanceExported(raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	var params datacap.RevokeAllowanceParams

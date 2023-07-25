@@ -44,11 +44,11 @@ func (p *ActorParser) paymentChannelConstructor(raw []byte) (map[string]interfac
 func (p *ActorParser) updateChannelState(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
-	var constructor paych.UpdateChannelStateParams
-	err := constructor.UnmarshalCBOR(reader)
+	var params paych.UpdateChannelStateParams
+	err := params.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
-	metadata[parser.ParamsKey] = constructor
+	metadata[parser.ParamsKey] = params
 	return metadata, nil
 }

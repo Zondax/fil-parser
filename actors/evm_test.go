@@ -34,6 +34,12 @@ func TestActorParser_evmWithParamsOrReturn(t *testing.T) {
 			f:      p.resurrect,
 			key:    parser.ParamsKey,
 		},
+		{
+			name:   "Get ByteCode Hash",
+			txType: parser.MethodGetBytecodeHash,
+			f:      p.getByteCodeHash,
+			key:    parser.ReturnKey,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -61,6 +67,11 @@ func TestActorParser_evmWithParamsAndReturn(t *testing.T) {
 			name:   "Invoke Contract Delegate",
 			txType: parser.MethodInvokeContractDelegate,
 			f:      p.invokeContractDelegate,
+		},
+		{
+			name:   "Get Storage At",
+			txType: parser.MethodGetStorageAt,
+			f:      p.getStorageAt,
 		},
 	}
 	for _, tt := range tests {
@@ -93,6 +104,26 @@ func TestActorParser_invokeContract(t *testing.T) {
 	require.NotNil(t, msg)
 
 	ethLogs, err := getEthLogs(manifest.EvmKey, parser.MethodInvokeContract)
+	require.NoError(t, err)
+	require.NotNil(t, ethLogs)
+
+	got, err := p.invokeContract(rawParams, rawReturn, msg.Cid, ethLogs)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+}
+
+func TestActorParser_invokeContractReadOnly(t *testing.T) {
+	p := getActorParser()
+	rawParams, rawReturn, err := getParmasAndReturn(manifest.EvmKey, parser.MethodInvokeContractReadOnly)
+	require.NoError(t, err)
+	require.NotNil(t, rawParams)
+	require.NotNil(t, rawReturn)
+
+	msg, err := deserializeMessage(manifest.EvmKey, parser.MethodInvokeContractReadOnly)
+	require.NoError(t, err)
+	require.NotNil(t, msg)
+
+	ethLogs, err := getEthLogs(manifest.EvmKey, parser.MethodInvokeContractReadOnly)
 	require.NoError(t, err)
 	require.NotNil(t, ethLogs)
 
