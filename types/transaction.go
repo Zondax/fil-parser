@@ -46,3 +46,14 @@ type EthLog struct {
 	ethtypes.EthLog
 	TransactionCid string `json:"transactionCid"`
 }
+
+type GenesisBalances struct {
+	Actors struct {
+		All []struct {
+			Key   string `json:"Key"`
+			Value struct {
+				Balance string `json:"Balance"`
+			}
+		}
+	}
+}

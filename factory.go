@@ -2,15 +2,20 @@ package fil_parser
 
 import (
 	"errors"
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/big"
+	types2 "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/V22"
 	"github.com/zondax/fil-parser/parser/V23"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
-
-	"github.com/zondax/fil-parser/types"
 )
 
 var (
@@ -89,4 +94,46 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 	}
 
 	return 0, errUnknownImpl
+}
+
+func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.Transaction, types.AddressInfoMap) {
+	genesisTxs := make([]*types.Transaction, 0)
+	addresses := make(types.AddressInfoMap)
+	genesisTimestamp := parser.GetTimestamp(genesisTipset.MinTimestamp())
+
+	for _, balance := range genesis.Actors.All {
+		if balance.Value.Balance == "0" {
+			continue
+		}
+
+		filAdd, _ := address.NewFromString(balance.Key)
+		shortAdd, _ := p.Helper.GetActorsCache().GetShortAddress(filAdd)
+		robustAdd, _ := p.Helper.GetActorsCache().GetRobustAddress(filAdd)
+		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK)
+		actorName := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
+
+		addresses[balance.Key] = &types.AddressInfo{
+			Short:     shortAdd,
+			Robust:    robustAdd,
+			ActorCid:  actorCode,
+			ActorType: actorName,
+		}
+		amount, _ := big.FromString(balance.Value.Balance)
+		genesisTxs = append(genesisTxs, &types.Transaction{
+			BasicBlockData: types.BasicBlockData{
+				Height:    0,
+				TipsetCid: genesisTipset.Key().String(),
+			},
+			Id:          tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
+			ParentId:    uuid.Nil.String(),
+			Level:       0,
+			TxTimestamp: genesisTimestamp,
+			TxTo:        balance.Key,
+			Amount:      amount.Int,
+			Status:      "Ok",
+			TxType:      "Genesis",
+		})
+	}
+
+	return genesisTxs, addresses
 }
