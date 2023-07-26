@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"math/big"
+	"reflect"
 	"time"
 )
 
@@ -35,41 +36,10 @@ type Transaction struct {
 	TxMetadata string `json:"tx_metadata"`
 }
 
-func (t *Transaction) Equal(b *Transaction) bool {
-	if t.BasicBlockData != b.BasicBlockData {
-		return false
-	}
-	if t.Level != b.Level {
-		return false
-	}
-	if t.TxTimestamp != b.TxTimestamp {
-		return false
-	}
-	if t.TxCid != b.TxCid {
-		return false
-	}
-	if t.TxFrom != b.TxFrom {
-		return false
-	}
-	if t.TxTo != b.TxTo {
-		return false
-	}
-	if t.Amount.Cmp(b.Amount) != 0 {
-		return false
-	}
-	if t.GasUsed != b.GasUsed {
-		return false
-	}
-	if t.Status != b.Status {
-		return false
-	}
-	if t.TxType != b.TxType {
-		return false
-	}
-	if t.TxMetadata != b.TxMetadata {
-		return false
-	}
-	return true
+func (t Transaction) Equal(b Transaction) bool {
+	b.ParentId = t.ParentId
+	b.Id = t.Id
+	return reflect.DeepEqual(t, b)
 }
 
 type EthLog struct {

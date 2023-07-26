@@ -9,13 +9,13 @@ import (
 func TestTransaction_Equal(t1 *testing.T) {
 	tests := []struct {
 		name string
-		a    *Transaction
-		b    *Transaction
+		a    Transaction
+		b    Transaction
 		want bool
 	}{
 		{
 			name: "equal txs",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -34,7 +34,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -57,7 +57,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "Different BlockData",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    500,
 					TipsetCid: "test",
@@ -76,7 +76,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -99,7 +99,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "Different Id",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -118,7 +118,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -141,7 +141,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different ParendId",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -160,7 +160,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -183,7 +183,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different Level",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -202,7 +202,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -225,7 +225,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different TxTimestamp",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -244,7 +244,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -267,7 +267,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different txCid",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -286,7 +286,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -309,7 +309,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different txFrom",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -328,7 +328,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -351,7 +351,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different txTo",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -370,7 +370,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -393,7 +393,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different Amount",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -412,7 +412,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -435,7 +435,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different GasUsed",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -454,7 +454,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -477,7 +477,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different Status",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -496,7 +496,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -519,7 +519,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different TxType",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -538,7 +538,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -561,7 +561,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 		},
 		{
 			name: "different metadata",
-			a: &Transaction{
+			a: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -580,7 +580,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxType:      "Send",
 				TxMetadata:  "{}",
 			},
-			b: &Transaction{
+			b: Transaction{
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
@@ -604,7 +604,6 @@ func TestTransaction_Equal(t1 *testing.T) {
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-
 			if got := tt.a.Equal(tt.b); got != tt.want {
 				t1.Errorf("Equal() = %v, want %v", got, tt.want)
 			}

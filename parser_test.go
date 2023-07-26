@@ -216,7 +216,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.Equal(t, len(v22Adds), len(v23Adds))
 
 			for i := range v22Txs {
-				require.True(t, v22Txs[i].Equal(v23Txs[i]))
+				require.True(t, v22Txs[i].Equal(*v23Txs[i]))
 			}
 			for k := range v22Adds {
 				require.Equal(t, v22Adds[k], v23Adds[k])
