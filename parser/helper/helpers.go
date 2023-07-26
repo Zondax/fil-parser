@@ -97,7 +97,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	return addInfo
 }
 
-func (h *Helper) getActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) string {
+func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) string {
 	// Search for actor in cache
 	actorCode, err := h.actorCache.GetActorCode(address, key)
 	if err != nil {
@@ -134,7 +134,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	actorName := h.getActorNameFromAddress(msg.To, height, key)
+	actorName := h.GetActorNameFromAddress(msg.To, height, key)
 
 	actorMethods, ok := allMethods[actorName]
 	if !ok {

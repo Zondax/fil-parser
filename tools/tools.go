@@ -14,25 +14,30 @@ import (
 	"go.uber.org/zap"
 )
 
-func BuildMessageId(tipsetCid, blockCid, messageCid, parentId string) string {
+func BuildId(input ...string) string {
 	h := sha256.New()
-	h.Write([]byte(tipsetCid + blockCid + messageCid + parentId))
+	a := make([]byte, 0)
+	for _, v := range input {
+		a = append(a, []byte(v)...)
+	}
+
+	h.Write(a)
 	hash := h.Sum(nil)
 	id := uuid.NewSHA1(uuid.Nil, hash)
 	return id.String()
+}
+
+func BuildMessageId(tipsetCid, blockCid, messageCid, parentId string) string {
+	return BuildId(tipsetCid, blockCid, messageCid, parentId)
+}
+
+func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
+	return BuildId(tipsetCid, blockCid, messageCid, "fee")
 }
 
 func BuildTipsetId(tipsetCid string) string {
 	h := sha256.New()
 	h.Write([]byte(tipsetCid))
-	hash := h.Sum(nil)
-	id := uuid.NewSHA1(uuid.Nil, hash)
-	return id.String()
-}
-
-func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
-	h := sha256.New()
-	h.Write([]byte(tipsetCid + blockCid + messageCid + "fee"))
 	hash := h.Sum(nil)
 	id := uuid.NewSHA1(uuid.Nil, hash)
 	return id.String()
