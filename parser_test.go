@@ -135,7 +135,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  652,
-				totalAddress: 95,
+				totalAddress: 98,
 			},
 		},
 		{
@@ -145,7 +145,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 85,
+				totalAddress: 88,
 			},
 		},
 	}
@@ -162,7 +162,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url))
 			require.NoError(t, err)
-			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, tt.version)
+			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
 			require.NoError(t, err)
 			require.NotNil(t, txs)
 			require.NotNil(t, adds)
@@ -202,14 +202,12 @@ func TestParser_InDepthCompare(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url))
 			require.NoError(t, err)
-			v22Txs, v22Adds, err := p.ParseTransactions(traces, tipset, ethlogs, V22.Version)
+			v22Txs, v22Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
 			require.NotNil(t, v22Txs)
 			require.NotNil(t, v22Adds)
 
-			v23P, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url))
-			require.NoError(t, err)
-			v23Txs, v23Adds, err := v23P.ParseTransactions(traces, tipset, ethlogs, V23.Version)
+			v23Txs, v23Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
 			require.NoError(t, err)
 			require.NotNil(t, v23Txs)
 			require.NotNil(t, v23Adds)
@@ -217,15 +215,12 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.Equal(t, len(v22Txs), len(v23Txs))
 			require.Equal(t, len(v22Adds), len(v23Adds))
 
-			// FIX: do not compare id and parent_id because they are different
-			//  for i := range v22Txs {
-			//	  require.Equal(t, v22Txs[i], v23Txs[i])
-			//  }
-			//  for k := range v22Adds {
-			//	  require.Equal(t, v22Adds[k], v23Adds[k])
-			//  }
-			// todo
-			// require.Equal(t, v22Txs, v23Txs)
+			for i := range v22Txs {
+				require.True(t, v22Txs[i].Equal(*v23Txs[i]))
+			}
+			for k := range v22Adds {
+				require.Equal(t, v22Adds[k], v23Adds[k])
+			}
 		})
 	}
 }

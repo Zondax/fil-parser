@@ -47,6 +47,12 @@ func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
 			key:    parser.ParamsKey,
 		},
 		{
+			name:   "Change Multiaddrs Exported",
+			txType: parser.MethodChangeMultiaddrsExported,
+			f:      p.changeMultiaddrs,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "Change Owner Address",
 			txType: parser.MethodChangeOwnerAddress,
 			f:      p.changeOwnerAddress,
@@ -55,6 +61,12 @@ func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
 		{
 			name:   "Change Peer ID",
 			txType: parser.MethodChangePeerID,
+			f:      p.changePeerID,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Change Peer ID Exported",
+			txType: parser.MethodChangePeerIDExported,
 			f:      p.changePeerID,
 			key:    parser.ParamsKey,
 		},
@@ -113,6 +125,12 @@ func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
 			key:    parser.ParamsKey,
 		},
 		{
+			name:   "PreCommit Sector Batch2",
+			txType: parser.MethodPreCommitSectorBatch2,
+			f:      p.preCommitSectorBatch2,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "Prove Commit Aggregate",
 			txType: parser.MethodProveCommitAggregate,
 			f:      p.proveCommitAggregate,
@@ -139,6 +157,12 @@ func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
 		{
 			name:   "Withdraw Balance",
 			txType: parser.MethodWithdrawBalance,
+			f:      p.parseWithdrawBalance,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Withdraw Balance Exported",
+			txType: parser.MethodWithdrawBalanceExported,
 			f:      p.parseWithdrawBalance,
 			key:    parser.ParamsKey,
 		},
@@ -190,6 +214,30 @@ func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
 			f:      p.getAvailableBalance,
 			key:    parser.ReturnKey,
 		},
+		{
+			name:   "Check Sector Proven",
+			txType: parser.MethodCheckSectorProven,
+			f:      p.checkSectorProven,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Get Vesting Funds",
+			txType: parser.MethodGetVestingFunds,
+			f:      p.getVestingFunds,
+			key:    parser.ReturnKey,
+		},
+		{
+			name:   "Get Peer ID",
+			txType: parser.MethodGetPeerID,
+			f:      p.getPeerID,
+			key:    parser.ReturnKey,
+		},
+		{
+			name:   "Multiaddrs",
+			txType: parser.MethodGetMultiaddrs,
+			f:      p.getMultiaddrs,
+			key:    parser.ReturnKey,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -229,6 +277,21 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 			name:   "Terminate Sectors",
 			txType: parser.MethodTerminateSectors,
 			f:      p.terminateSectors,
+		},
+		{
+			name:   "Control Addresses",
+			txType: parser.MethodControlAddresses,
+			f:      p.controlAddresses,
+		},
+		{
+			name:   "Prove Replica Updates2",
+			txType: parser.MethodProveReplicaUpdates2,
+			f:      p.proveReplicaUpdates2,
+		},
+		{
+			name:   "Get Beneficiary",
+			txType: parser.MethodGetBeneficiary,
+			f:      p.getBeneficiary,
 		},
 	}
 	for _, tt := range tests {

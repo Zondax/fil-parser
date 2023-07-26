@@ -23,6 +23,12 @@ func TestActorParser_marketWithParamsOrReturn(t *testing.T) {
 			key:    parser.ParamsKey,
 		},
 		{
+			name:   "Add Balance Exported",
+			txType: parser.MethodAddBalanceExported,
+			f:      p.addBalance,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "On Miner Sector Terminate",
 			txType: parser.MethodOnMinerSectorsTerminate,
 			f:      p.onMinerSectorsTerminate,
@@ -57,6 +63,11 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			f:      p.publishStorageDeals,
 		},
 		{
+			name:   "Publish Storage Deals Exported",
+			txType: parser.MethodPublishStorageDealsExported,
+			f:      p.publishStorageDeals,
+		},
+		{
 			name:   "Verify Deals For Activation",
 			txType: parser.MethodVerifyDealsForActivation,
 			f:      p.verifyDealsForActivation,
@@ -77,6 +88,70 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			name:   "Activate Deals",
 			txType: parser.MethodActivateDeals,
 			f:      p.activateDeals,
+		},
+		{
+			name:   "Withdraw Balance",
+			txType: parser.MethodWithdrawBalance,
+			f:      p.withdrawBalance,
+		},
+		{
+			name:   "Withdraw Balance Exported",
+			txType: parser.MethodWithdrawBalanceExported,
+			f:      p.withdrawBalance,
+		},
+		{
+			name:   "Get Balance",
+			txType: parser.MethodGetBalance,
+			f:      p.getBalance,
+		},
+		/*
+			{
+				name:   "Get Deal Data Commitment",
+				txType: parser.MethodGetDealDataCommitment,
+				f:      p.getDealDataCommitment,
+			},
+		*/
+		{
+			name:   "Get Deal Client Exported",
+			txType: parser.MethodGetDealClient,
+			f:      p.getDealClient,
+		},
+		{
+			name:   "Get Deal Provided Exported",
+			txType: parser.MethodGetDealProvider,
+			f:      p.getDealProvider,
+		},
+		/*
+			{
+				name:   "Get Deal Label",
+				txType: parser.MethodGetDealLabel,
+				f:      p.getDealProvider,
+			},
+		*/
+		{
+			name:   "Get Deal Term",
+			txType: parser.MethodGetDealTerm,
+			f:      p.getDealTerm,
+		},
+		{
+			name:   "Get Deal Total Price",
+			txType: parser.MethodGetDealTotalPrice,
+			f:      p.getDealTotalPrice,
+		},
+		{
+			name:   "Get Deal Client Collateral",
+			txType: parser.MethodGetDealClientCollateral,
+			f:      p.getDealClientCollateral,
+		},
+		{
+			name:   "Get Deal Provider Collateral",
+			txType: parser.MethodGetDealProviderCollateral,
+			f:      p.getDealProviderCollateral,
+		},
+		{
+			name:   "Get Deal Verified",
+			txType: parser.MethodGetDealVerified,
+			f:      p.getDealVerified,
 		},
 	}
 	for _, tt := range tests {

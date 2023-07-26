@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"math/big"
+	"reflect"
 	"time"
 )
 
@@ -33,6 +34,12 @@ type Transaction struct {
 	TxType string `json:"tx_type" gorm:"index:idx_tx_type"`
 	// TxMetadata is the message metadata
 	TxMetadata string `json:"tx_metadata"`
+}
+
+func (t Transaction) Equal(b Transaction) bool {
+	b.ParentId = t.ParentId
+	b.Id = t.Id
+	return reflect.DeepEqual(t, b)
 }
 
 type EthLog struct {

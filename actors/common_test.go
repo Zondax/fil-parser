@@ -18,8 +18,6 @@ func TestActorParser_parseSend(t *testing.T) {
 	require.Contains(t, got, parser.ParamsKey, fmt.Sprintf("%s could no be found in metadata", parser.ParamsKey))
 }
 
-/*
-// TODO: could not find a constructor without errors
 func TestActorParser_parseConstructor(t *testing.T) {
 	p := getActorParser()
 	rawParams, err := loadFile(manifest.AccountKey, parser.MethodConstructor, parser.ParamsKey)
@@ -30,7 +28,6 @@ func TestActorParser_parseConstructor(t *testing.T) {
 	require.NotNil(t, got)
 	require.Contains(t, got, parser.ParamsKey, fmt.Sprintf("%s could no be found in metadata", parser.ParamsKey))
 }
-*/
 
 func TestActorParser_parseUnknown(t *testing.T) {
 	p := getActorParser()

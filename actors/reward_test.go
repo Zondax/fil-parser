@@ -17,6 +17,12 @@ func TestActorParser_rewardWithParamsOrReturn(t *testing.T) {
 		key    string
 	}{
 		{
+			name:   "Constructor",
+			txType: parser.MethodConstructor,
+			f:      p.rewardConstructor,
+			key:    parser.ParamsKey,
+		},
+		{
 			name:   "Award Block Reward",
 			txType: parser.MethodAwardBlockReward,
 			f:      p.awardBlockReward,

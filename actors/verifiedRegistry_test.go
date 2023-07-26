@@ -28,6 +28,42 @@ func TestActorParser_verifiedWithParamsOrReturn(t *testing.T) {
 			f:      p.addVerifiedClient,
 			key:    parser.ParamsKey,
 		},
+		{
+			name:   "Add Verified Client Exported",
+			txType: parser.MethodAddVerifiedClientExported,
+			f:      p.addVerifiedClient,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Use Bytes",
+			txType: parser.MethodUseBytes,
+			f:      p.useBytes,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Restore Bytes",
+			txType: parser.MethodRestoreBytes,
+			f:      p.restoreBytes,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Remove Verified Client DataCap",
+			txType: parser.MethodRemoveVerifiedClientDataCap,
+			f:      p.removeVerifiedClientDataCap,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Deprecated1",
+			txType: parser.MethodVerifiedDeprecated1,
+			f:      p.deprecated1,
+			key:    parser.ParamsKey,
+		},
+		{
+			name:   "Deprecated2",
+			txType: parser.MethodVerifiedDeprecated2,
+			f:      p.deprecated2,
+			key:    parser.ParamsKey,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -62,26 +98,44 @@ func TestActorParser_verifiedWithParamsAndReturn(t *testing.T) {
 			f:      p.extendClaimTerms,
 		},
 		{
+			name:   "Extend Claims Terms Exported",
+			txType: parser.MethodExtendClaimTermsExported,
+			f:      p.extendClaimTerms,
+		},
+		{
 			name:   "Universal Receiver Hook",
 			txType: parser.MethodMsigUniversalReceiverHook,
 			f:      p.verifregUniversalReceiverHook,
 		},
-
 		{
 			name:   "Remove Expired Allocations",
 			txType: parser.MethodRemoveExpiredAllocations,
 			f:      p.removeExpiredAllocations,
 		},
-
+		{
+			name:   "Remove Expired Allocations Exported",
+			txType: parser.MethodRemoveExpiredAllocationsExported,
+			f:      p.removeExpiredAllocations,
+		},
 		{
 			name:   "Get Claims",
 			txType: parser.MethodGetClaims,
 			f:      p.getClaims,
 		},
 		{
-			name:   "Extend Claims Terms",
-			txType: parser.MethodExtendClaimTerms,
-			f:      p.extendClaimTerms,
+			name:   "Get Claims Exported",
+			txType: parser.MethodGetClaimsExported,
+			f:      p.getClaims,
+		},
+		{
+			name:   "Remove Expired Claims",
+			txType: parser.MethodRemoveExpiredClaims,
+			f:      p.removeExpiredClaims,
+		},
+		{
+			name:   "Remove Expired Claims Exported",
+			txType: parser.MethodRemoveExpiredClaimsExported,
+			f:      p.removeExpiredClaims,
 		},
 	}
 	for _, tt := range tests {
