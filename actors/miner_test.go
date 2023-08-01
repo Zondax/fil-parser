@@ -261,13 +261,11 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 		txType string
 		f      func([]byte, []byte) (map[string]interface{}, error)
 	}{
-		/*
-			{ // TODO: could not find tx with params
-				name:   "Control Addresses",
-				txType: parser.MethodControlAddresses,
-				f:      p.controlAddresses,
-			},
-		*/
+		{
+			name:   "Control Addresses",
+			txType: parser.MethodControlAddresses,
+			f:      p.controlAddresses,
+		},
 		{
 			name:   "Is Controlling Addresses Exported",
 			txType: parser.MethodIsControllingAddressExported,

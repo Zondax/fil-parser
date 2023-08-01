@@ -72,13 +72,11 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodVerifyDealsForActivation,
 			f:      p.verifyDealsForActivation,
 		},
-		/*
-			{ // TODO: cbor input had wrong number of fields
-				name:   "Compute Data Commitment",
-				txType: parser.MethodComputeDataCommitment,
-				f:      p.computeDataCommitment,
-			},
-		*/
+		{
+			name:   "Compute Data Commitment",
+			txType: parser.MethodComputeDataCommitment,
+			f:      p.computeDataCommitment,
+		},
 		{
 			name:   "Get Deal Activation",
 			txType: parser.MethodGetDealActivation,
@@ -104,13 +102,11 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodGetBalance,
 			f:      p.getBalance,
 		},
-		/*
-			{
-				name:   "Get Deal Data Commitment",
-				txType: parser.MethodGetDealDataCommitment,
-				f:      p.getDealDataCommitment,
-			},
-		*/
+		{
+			name:   "Get Deal Data Commitment",
+			txType: parser.MethodGetDealDataCommitment,
+			f:      p.getDealDataCommitment,
+		},
 		{
 			name:   "Get Deal Client Exported",
 			txType: parser.MethodGetDealClient,
@@ -121,13 +117,11 @@ func TestActorParser_marketWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodGetDealProvider,
 			f:      p.getDealProvider,
 		},
-		/*
-			{
-				name:   "Get Deal Label",
-				txType: parser.MethodGetDealLabel,
-				f:      p.getDealProvider,
-			},
-		*/
+		{
+			name:   "Get Deal Label",
+			txType: parser.MethodGetDealLabel,
+			f:      p.getDealLabel,
+		},
 		{
 			name:   "Get Deal Term",
 			txType: parser.MethodGetDealTerm,
