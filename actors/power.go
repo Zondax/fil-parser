@@ -30,7 +30,6 @@ func (p *ActorParser) ParseStoragepower(txType string, msg *parser.LotusMessage,
 		metadata, err = p.emptyParamsAndReturn()
 	case parser.MethodUpdatePledgeTotal:
 		metadata, err = p.updatePledgeTotal(msg.Params)
-	case parser.MethodPowerDeprecated1: // OnConsensusFault
 	case parser.MethodSubmitPoRepForBulkVerify:
 		metadata, err = p.submitPoRepForBulkVerify(msg.Params)
 	case parser.MethodCurrentTotalPower:

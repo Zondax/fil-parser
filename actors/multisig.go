@@ -38,7 +38,6 @@ func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msg
 		return p.removeSigner(msg, height, key)
 	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
 		return p.changeNumApprovalsThreshold(msg.Params)
-	case parser.MethodAddVerifies: // ?
 	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
 		return p.lockBalance(msg.Params)
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested

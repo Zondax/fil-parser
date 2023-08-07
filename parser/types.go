@@ -45,7 +45,7 @@ type Proposed struct {
 	ApprovedByNominee     bool   `json:"approvedByNominee"`
 }
 
-type GetBeneficiryReturn struct {
+type GetBeneficiaryReturn struct {
 	Active   ActiveBeneficiary `json:"active"`
 	Proposed Proposed          `json:"proposed"`
 }

@@ -467,7 +467,7 @@ func (p *ActorParser) getBeneficiary(rawParams, rawReturn []byte) (map[string]in
 	if err != nil {
 		return metadata, err
 	}
-	metadata[parser.ReturnKey] = parser.GetBeneficiryReturn{
+	metadata[parser.ReturnKey] = parser.GetBeneficiaryReturn{
 		Active: parser.ActiveBeneficiary{
 			Beneficiary: beneficiaryReturn.Active.Beneficiary.String(),
 			Term: parser.BeneficiaryTerm{
