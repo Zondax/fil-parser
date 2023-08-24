@@ -144,7 +144,13 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 
 func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
-	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams[3:]) // TODO
+
+	params := parser.EthPrefix
+	if len(rawParams) > 3 {
+		// TODO as go-state-type package has no CreateExternalParams type, we are just stripping out the cbor header manually. We should use that lib to parse this instead
+		params += hex.EncodeToString(rawParams[3:])
+	}
+	metadata[parser.ParamsKey] = params
 
 	createExternalReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
