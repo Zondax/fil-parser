@@ -148,7 +148,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 	params := parser.EthPrefix
 	if len(rawParams) > 3 {
 		// TODO as go-state-type package has no CreateExternalParams type, we are just stripping out the cbor header manually. We should use that lib to parse this instead
-		params = params + hex.EncodeToString(rawParams[3:])
+		params += hex.EncodeToString(rawParams[3:])
 	}
 	metadata[parser.ParamsKey] = params
 
