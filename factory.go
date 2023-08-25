@@ -59,13 +59,25 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 		return nil, nil, errUnknownVersion
 	}
 
+	var txs []*types.Transaction
+	var addrs types.AddressInfoMap
+	var err error
+
 	switch version {
 	case V22.Version:
-		return p.parserV22.ParseTransactions(traces, tipSet, ethLogs)
+		txs, addrs, err = p.parserV22.ParseTransactions(traces, tipSet, ethLogs)
 	case V23.Version:
-		return p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
+		txs, addrs, err = p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
+	default:
+		zap.S().Errorf("[parser] implementation not supported: %s", version)
+		return nil, nil, errUnknownImpl
 	}
-	return nil, nil, errUnknownImpl
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return p.FilterDuplicated(txs), addrs, nil
 }
 
 func detectTraceVersion(metadata types.BlockMetadata) string {
@@ -78,6 +90,20 @@ func detectTraceVersion(metadata types.BlockMetadata) string {
 		zap.S().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
 		return ""
 	}
+}
+
+func (p *FilecoinParser) FilterDuplicated(txs []*types.Transaction) []*types.Transaction {
+	idsFound := make(map[string]bool)
+	filteredTxs := make([]*types.Transaction, 0)
+
+	for _, tx := range txs {
+		if _, found := idsFound[tx.Id]; !found {
+			idsFound[tx.Id] = true
+			filteredTxs = append(filteredTxs, tx)
+		}
+	}
+
+	return filteredTxs
 }
 
 func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata) (uint64, error) {
