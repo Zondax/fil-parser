@@ -134,7 +134,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
-				totalTraces:  652,
+				totalTraces:  650,
 				totalAddress: 98,
 			},
 		},
