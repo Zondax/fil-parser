@@ -43,7 +43,7 @@ func GetTimestamp(timestamp uint64) time.Time {
 	return time.Unix(blockTimeStamp/1000, blockTimeStamp%1000)
 }
 
-func AppendToAddressesMap(addressMap types.AddressInfoMap, info ...*types.AddressInfo) {
+func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.AddressInfo) {
 	if addressMap == nil {
 		return
 	}
@@ -54,14 +54,14 @@ func AppendToAddressesMap(addressMap types.AddressInfoMap, info ...*types.Addres
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
 			if i.Short != "" {
-				if _, ok := addressMap[i.Short]; !ok {
-					addressMap[i.Short] = i
+				if _, ok := addressMap.Get(i.Short); !ok {
+					addressMap.Set(i.Short, i)
 				}
 			}
 		default:
 			if i.Robust != "" && i.Short != "" && i.Robust != i.Short {
-				if _, ok := addressMap[i.Short]; !ok {
-					addressMap[i.Short] = i
+				if _, ok := addressMap.Get(i.Short); !ok {
+					addressMap.Set(i.Short, i)
 				}
 			}
 		}

@@ -1,5 +1,7 @@
 package types
 
+import "sync"
+
 type AddressInfo struct {
 	// Short is the address in 'short' format
 	Short string `json:"short" gorm:"uniqueIndex:idx_addresses_combination"`
@@ -15,8 +17,43 @@ type AddressInfo struct {
 	CreationTxHash string `json:"creation_tx_hash" gorm:"index:idx_addresses_creation_tx_hash"`
 }
 
-type AddressInfoMap map[string]*AddressInfo
+type AddressInfoMap struct {
+	sync.Mutex
+	m map[string]*AddressInfo
+}
 
-func NewAddressInfoMap() AddressInfoMap {
-	return make(AddressInfoMap)
+func NewAddressInfoMap() *AddressInfoMap {
+	return &AddressInfoMap{
+		m: make(map[string]*AddressInfo),
+	}
+}
+
+func (a *AddressInfoMap) Set(key string, value *AddressInfo) {
+	a.Lock()
+	defer a.Unlock()
+	a.m[key] = value
+}
+
+func (a *AddressInfoMap) Get(key string) (*AddressInfo, bool) {
+	a.Lock()
+	defer a.Unlock()
+	val, ok := a.m[key]
+	return val, ok
+}
+
+func (a *AddressInfoMap) Len() int {
+	a.Lock()
+	defer a.Unlock()
+	return len(a.m)
+}
+
+func (a *AddressInfoMap) Range(f func(key string, value *AddressInfo) bool) {
+	a.Lock()
+	defer a.Unlock()
+
+	for k, v := range a.m {
+		if !f(k, v) {
+			break
+		}
+	}
 }

@@ -167,7 +167,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			require.NotNil(t, txs)
 			require.NotNil(t, adds)
 			require.Equal(t, tt.results.totalTraces, len(txs))
-			require.Equal(t, tt.results.totalAddress, len(adds))
+			require.Equal(t, tt.results.totalAddress, adds.Len())
 		})
 	}
 }
@@ -213,14 +213,18 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.NotNil(t, v23Adds)
 
 			require.Equal(t, len(v22Txs), len(v23Txs))
-			require.Equal(t, len(v22Adds), len(v23Adds))
+			require.Equal(t, v22Adds.Len(), v23Adds.Len())
 
 			for i := range v22Txs {
 				require.True(t, v22Txs[i].Equal(*v23Txs[i]))
 			}
-			for k := range v22Adds {
-				require.Equal(t, v22Adds[k], v23Adds[k])
-			}
+
+			v22Adds.Range(func(key string, value *types.AddressInfo) bool {
+				v23Value, ok := v23Adds.Get(key)
+				require.True(t, ok)
+				require.Equal(t, value, v23Value)
+				return true
+			})
 		})
 	}
 }
