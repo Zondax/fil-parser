@@ -23,7 +23,7 @@ const (
 
 type Parser struct {
 	actorParser *actors.ActorParser
-	addresses   types.AddressInfoMap
+	addresses   *types.AddressInfoMap
 	helper      *helper.Helper
 }
 
@@ -39,7 +39,7 @@ func (p *Parser) Version() string {
 	return Version
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesv22.ComputeStateOutputV22{}
 	err := sonic.UnmarshalString(string(traces), &computeState)

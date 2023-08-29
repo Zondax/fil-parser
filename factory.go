@@ -31,7 +31,7 @@ type FilecoinParser struct {
 
 type Parser interface {
 	Version() string
-	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, types.AddressInfoMap, error)
+	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error)
 	GetBaseFee(traces []byte) (uint64, error)
 }
 
@@ -53,14 +53,14 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata *types.BlockMetadata) ([]*types.Transaction, types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata *types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
 	version := detectTraceVersion(*metadata)
 	if version == "" {
 		return nil, nil, errUnknownVersion
 	}
 
 	var txs []*types.Transaction
-	var addrs types.AddressInfoMap
+	var addrs *types.AddressInfoMap
 	var err error
 
 	switch version {
@@ -122,9 +122,9 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 	return 0, errUnknownImpl
 }
 
-func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.Transaction, types.AddressInfoMap) {
+func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.Transaction, *types.AddressInfoMap) {
 	genesisTxs := make([]*types.Transaction, 0)
-	addresses := make(types.AddressInfoMap)
+	addresses := &types.AddressInfoMap{}
 	genesisTimestamp := parser.GetTimestamp(genesisTipset.MinTimestamp())
 
 	for _, balance := range genesis.Actors.All {
@@ -138,12 +138,12 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK)
 		actorName := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
 
-		addresses[balance.Key] = &types.AddressInfo{
+		addresses.Set(balance.Key, &types.AddressInfo{
 			Short:     shortAdd,
 			Robust:    robustAdd,
 			ActorCid:  actorCode,
 			ActorType: actorName,
-		}
+		})
 		amount, _ := big.FromString(balance.Value.Balance)
 		genesisTxs = append(genesisTxs, &types.Transaction{
 			BasicBlockData: types.BasicBlockData{
