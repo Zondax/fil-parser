@@ -139,6 +139,26 @@ func TestParser_ParseTransactions(t *testing.T) {
 			},
 		},
 		{
+			name:    "parser with traces from v22",
+			version: V22.Version,
+			url:     nodeUrl,
+			height:  "2907480",
+			results: expectedResults{
+				totalTraces:  650,
+				totalAddress: 98,
+			},
+		},
+		{
+			name:    "parser with traces from v22 and the corner case of duplicated fees with level 0",
+			version: V22.Version,
+			url:     nodeUrl,
+			height:  "845259",
+			results: expectedResults{
+				totalTraces:  29,
+				totalAddress: 3,
+			},
+		},
+		{
 			name:    "parser with traces from v23",
 			version: V23.Version,
 			url:     nodeUrl,
