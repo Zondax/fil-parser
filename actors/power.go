@@ -103,10 +103,10 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 		return metadata, nil, err
 	}
 	createdActor := &types.AddressInfo{
-		Short:          r.IDAddress.String(),
-		Robust:         r.RobustAddress.String(),
-		ActorType:      "miner",
-		CreationTxHash: msg.Cid.String(),
+		Short:         r.IDAddress.String(),
+		Robust:        r.RobustAddress.String(),
+		ActorType:     "miner",
+		CreationTxCid: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
 	return metadata, createdActor, nil

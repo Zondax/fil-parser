@@ -25,12 +25,12 @@ func (suite *AddressInfoMapSuite) TestNewAddressInfoMap() {
 
 func (suite *AddressInfoMapSuite) TestSetAndGet() {
 	address := &AddressInfo{
-		Short:          "short",
-		Robust:         "robust",
-		EthAddress:     "ethAddress",
-		ActorCid:       "actorCid",
-		ActorType:      "actorType",
-		CreationTxHash: "creationTxHash",
+		Short:         "short",
+		Robust:        "robust",
+		EthAddress:    "ethAddress",
+		ActorCid:      "actorCid",
+		ActorType:     "actorType",
+		CreationTxCid: "creationTxCid",
 	}
 	suite.aim.Set("key", address)
 

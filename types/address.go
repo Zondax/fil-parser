@@ -13,8 +13,8 @@ type AddressInfo struct {
 	ActorCid string `json:"actor_cid"`
 	// ActorType is the actor's type name of this address
 	ActorType string `json:"actor_type"`
-	// CreationTxHash is the tx hash were this actor was created (if applicable)
-	CreationTxHash string `json:"creation_tx_hash" gorm:"index:idx_addresses_creation_tx_hash"`
+	// CreationTxCid is the tx cid were this actor was created (if applicable)
+	CreationTxCid string `json:"creation_tx_cid" gorm:"index:idx_addresses_creation_tx_cid"`
 }
 
 type AddressInfoMap struct {
