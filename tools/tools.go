@@ -27,8 +27,8 @@ func BuildId(input ...string) string {
 	return id.String()
 }
 
-func BuildMessageId(tipsetCid, blockCid, messageCid, parentId string) string {
-	return BuildId(tipsetCid, blockCid, messageCid, parentId)
+func BuildMessageId(tipsetCid, blockCid, messageCid, mainMsgCid, parentId string) string {
+	return BuildId(tipsetCid, blockCid, messageCid, mainMsgCid, parentId)
 }
 
 func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
