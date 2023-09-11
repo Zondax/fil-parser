@@ -197,7 +197,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 	}
 
 	tipsetCid := tipset.GetCidString()
-	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, messageCid, msgCid.String(), parentId)
+	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, msgCid.String(), messageCid, parentId)
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{

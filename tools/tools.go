@@ -27,12 +27,12 @@ func BuildId(input ...string) string {
 	return id.String()
 }
 
-func BuildMessageId(tipsetCid, blockCid, messageCid, mainMsgCid, parentId string) string {
-	return BuildId(tipsetCid, blockCid, messageCid, mainMsgCid, parentId)
+func BuildMessageId(tipsetCid, blockCid, mainMsgCid, messageCid, parentId string) string {
+	return BuildId(tipsetCid, blockCid, mainMsgCid, messageCid, parentId)
 }
 
-func BuildFeeId(tipsetCid, blockCid, messageCid string) string {
-	return BuildId(tipsetCid, blockCid, messageCid, "fee")
+func BuildFeeId(tipsetCid, blockCid, mainMsgCid string) string {
+	return BuildId(tipsetCid, blockCid, mainMsgCid, "fee")
 }
 
 func BuildTipsetId(tipsetCid string) string {
