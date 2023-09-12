@@ -70,11 +70,11 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, rawReturn []byte) (map
 		return metadata, nil, err
 	}
 	createdActor := &types.AddressInfo{
-		Short:          r.IDAddress.String(),
-		Robust:         r.RobustAddress.String(),
-		ActorCid:       params.CodeCID.String(),
-		ActorType:      parseExecActor(createdActorName),
-		CreationTxHash: msg.Cid.String(),
+		Short:         r.IDAddress.String(),
+		Robust:        r.RobustAddress.String(),
+		ActorCid:      params.CodeCID.String(),
+		ActorType:     parseExecActor(createdActorName),
+		CreationTxCid: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
 	return metadata, createdActor, nil
@@ -107,11 +107,11 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, rawReturn []byte) (ma
 	}
 
 	createdActor := &types.AddressInfo{
-		Short:          r.IDAddress.String(),
-		Robust:         r.RobustAddress.String(),
-		ActorCid:       params.CodeCID.String(),
-		ActorType:      parseExecActor(createdActorName),
-		CreationTxHash: msg.Cid.String(),
+		Short:         r.IDAddress.String(),
+		Robust:        r.RobustAddress.String(),
+		ActorCid:      params.CodeCID.String(),
+		ActorType:     parseExecActor(createdActorName),
+		CreationTxCid: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
 	return metadata, createdActor, nil

@@ -100,11 +100,11 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 
 	r := eam.Return(createReturn)
 	createdEvmActor := &types.AddressInfo{
-		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
-		Robust:         r.RobustAddress.String(),
-		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:      "evm",
-		CreationTxHash: msgCid.String(),
+		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
+		Robust:        r.RobustAddress.String(),
+		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
+		ActorType:     "evm",
+		CreationTxCid: msgCid.String(),
 	}
 	return metadata, createdEvmActor, nil
 }
@@ -133,11 +133,11 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 	metadata[parser.EthHashKey] = ethHash.String()
 	r := eam.Return(createReturn)
 	createdEvmActor := &types.AddressInfo{
-		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
-		Robust:         r.RobustAddress.String(),
-		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:      "evm",
-		CreationTxHash: msgCid.String(),
+		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
+		Robust:        r.RobustAddress.String(),
+		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
+		ActorType:     "evm",
+		CreationTxCid: msgCid.String(),
 	}
 	return metadata, createdEvmActor, nil
 }
@@ -165,11 +165,11 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 	metadata[parser.EthHashKey] = ethHash.String()
 	r := eam.Return(createExternalReturn)
 	createdEvmActor := &types.AddressInfo{
-		Short:          parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
-		Robust:         r.RobustAddress.String(),
-		EthAddress:     parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:      "evm",
-		CreationTxHash: msgCid.String(),
+		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
+		Robust:        r.RobustAddress.String(),
+		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
+		ActorType:     "evm",
+		CreationTxCid: msgCid.String(),
 	}
 	return metadata, createdEvmActor, nil
 }
