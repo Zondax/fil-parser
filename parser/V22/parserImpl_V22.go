@@ -71,7 +71,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 			if err != nil {
 				zap.S().Errorf("Error when trying to get block cid from message,txType '%s': %v", txType, err)
 			}
-			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.Msg.Cid().String(), uuid.Nil.String())
+			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
 
 			badTx := &types.Transaction{
 				BasicBlockData: types.BasicBlockData{
@@ -219,7 +219,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
-	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.Msg.Cid().String(), parentId)
+	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{

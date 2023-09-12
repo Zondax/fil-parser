@@ -140,7 +140,7 @@ func (p *Parser) parseSubTxs(subTxs []typesv23.ExecutionTraceV23, mainMsgCid cid
 	return
 }
 
-func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -148,20 +148,20 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 	}, int64(tipset.Height()), tipset.Key())
 
 	if err != nil {
-		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", msgCid.String(), err)
+		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	}
 	if err == nil && txType == parser.UnknownStr {
-		zap.S().Errorf("Could not get method name in transaction '%s'", msgCid.String())
+		zap.S().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
 	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
-		Cid:    msgCid,
+		Cid:    mainMsgCid,
 		Params: trace.Msg.Params,
-	}, msgCid, &parser.LotusMessageReceipt{
+	}, mainMsgCid, &parser.LotusMessageReceipt{
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key(), ethLogs)
@@ -182,22 +182,22 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
-		Cid:    msgCid,
+		Cid:    mainMsgCid,
 		Params: trace.Msg.Params,
 	}, tipset.Key())
 
-	blockCid, err := tools.GetBlockCidFromMsgCid(msgCid.String(), txType, metadata, tipset)
+	blockCid, err := tools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
 		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
-	messageCid, err := tools.BuildCidFromMessageTrace(&trace.Msg, msgCid.String())
+	msgCid, err := tools.BuildCidFromMessageTrace(&trace.Msg, mainMsgCid.String())
 	if err != nil {
-		zap.S().Errorf("Error when trying to build message cid in tx cid'%s': %v", msgCid.String(), err)
+		zap.S().Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
 	tipsetCid := tipset.GetCidString()
-	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, messageCid, parentId)
+	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
 	return &types.Transaction{
 		BasicBlockData: types.BasicBlockData{
@@ -208,7 +208,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, msgCid cid.Cid, ti
 		ParentId:    parentId,
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
-		TxCid:       msgCid.String(),
+		TxCid:       mainMsgCid.String(),
 		TxFrom:      trace.Msg.From.String(),
 		TxTo:        trace.Msg.To.String(),
 		Amount:      trace.Msg.Value.Int,
