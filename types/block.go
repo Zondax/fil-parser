@@ -6,7 +6,7 @@ type BasicBlockData struct {
 	// TipsetHash contains the tipset hash
 	TipsetCid string `json:"tipset_cid" gorm:"index:idx_tipset_cid"`
 	// Blocks Cid
-	BlocksCid []string `json:"blocks_cid" gorm:"index:idx_blocks_cid"`
+	BlocksCid []string `json:"blocks_cid" gorm:"type:Array(String);index:idx_blocks_cid"`
 }
 
 type BlockMetadata struct {
