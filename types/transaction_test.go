@@ -19,7 +19,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -38,7 +38,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -61,7 +61,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    500,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -80,7 +80,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -103,7 +103,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -122,7 +122,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0001",
 				ParentId:    "",
@@ -145,7 +145,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "01",
@@ -164,7 +164,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -187,7 +187,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -206,7 +206,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -229,7 +229,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -248,7 +248,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -271,7 +271,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -290,7 +290,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -313,7 +313,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -332,7 +332,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -355,7 +355,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -374,7 +374,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -397,7 +397,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -416,7 +416,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -439,7 +439,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -458,7 +458,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -481,7 +481,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -500,7 +500,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -523,7 +523,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -542,7 +542,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -565,7 +565,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -584,7 +584,7 @@ func TestTransaction_Equal(t1 *testing.T) {
 				BasicBlockData: BasicBlockData{
 					Height:    1000,
 					TipsetCid: "test",
-					BlockCid:  "test",
+					BlocksCid: []string{"test"},
 				},
 				Id:          "0000",
 				ParentId:    "",

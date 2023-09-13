@@ -77,7 +77,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 				BasicBlockData: types.BasicBlockData{
 					Height:    uint64(tipset.Height()),
 					TipsetCid: tipsetCid,
-					BlockCid:  blockCid,
+					BlocksCid: []string{blockCid},
 				},
 				Id:          messageUuid,
 				ParentId:    uuid.Nil.String(),
@@ -225,7 +225,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 		BasicBlockData: types.BasicBlockData{
 			Height:    uint64(tipset.Height()),
 			TipsetCid: tipsetCid,
-			BlockCid:  blockCid,
+			BlocksCid: []string{blockCid},
 		},
 		ParentId:    parentId,
 		Id:          messageUuid,
@@ -275,7 +275,7 @@ func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.Ex
 		BasicBlockData: types.BasicBlockData{
 			Height:    uint64(tipset.Height()),
 			TipsetCid: tipset.GetCidString(),
-			BlockCid:  blockCid,
+			BlocksCid: []string{blockCid},
 		},
 		Id:          feeID,
 		ParentId:    parentTxId,
