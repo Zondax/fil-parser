@@ -16,10 +16,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "equal txs",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -35,10 +37,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -58,10 +62,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "Different BlockData",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    500,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    500,
+						TipsetCid: "test",
+					},
+					BlockCid: "test",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -77,10 +83,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -100,10 +108,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "Different Id",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -119,10 +129,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0001",
 				ParentId:    "",
@@ -142,10 +154,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different ParendId",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "01",
@@ -161,10 +175,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -184,10 +200,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different Level",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -203,10 +221,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -226,10 +246,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different TxTimestamp",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -245,10 +267,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -268,10 +292,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different txCid",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -287,10 +313,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -310,10 +338,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different txFrom",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -329,10 +359,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -352,10 +384,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different txTo",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -371,10 +405,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -394,10 +430,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different Amount",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -413,10 +451,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -436,10 +476,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different GasUsed",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -455,10 +497,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -478,10 +522,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different Status",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -497,10 +543,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -520,10 +568,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different TxType",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -539,10 +589,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -562,10 +614,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 		{
 			name: "different metadata",
 			a: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",
@@ -581,10 +635,12 @@ func TestTransaction_Equal(t1 *testing.T) {
 				TxMetadata:  "{}",
 			},
 			b: Transaction{
-				BasicBlockData: BasicBlockData{
-					Height:    1000,
-					TipsetCid: "test",
-					BlocksCid: []string{"test"},
+				TxBasicBlockData: TxBasicBlockData{
+					BasicBlockData: BasicBlockData{
+						Height:    1000,
+						TipsetCid: "test",
+					},
+					BlockCid: "",
 				},
 				Id:          "0000",
 				ParentId:    "",

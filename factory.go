@@ -146,9 +146,11 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		})
 		amount, _ := big.FromString(balance.Value.Balance)
 		genesisTxs = append(genesisTxs, &types.Transaction{
-			BasicBlockData: types.BasicBlockData{
-				Height:    0,
-				TipsetCid: genesisTipset.Key().String(),
+			TxBasicBlockData: types.TxBasicBlockData{
+				BasicBlockData: types.BasicBlockData{
+					Height:    0,
+					TipsetCid: genesisTipset.Key().String(),
+				},
 			},
 			Id:          tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
 			ParentId:    uuid.Nil.String(),

@@ -9,7 +9,7 @@ import (
 
 // Transaction parses transaction heights into the desired format for reports
 type Transaction struct {
-	BasicBlockData `gorm:"embedded"`
+	TxBasicBlockData `gorm:"embedded"`
 	// Id is the unique identifier for this transaction
 	Id string `json:"id"`
 	// ParentId is the parent transaction id
