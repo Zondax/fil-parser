@@ -8,6 +8,7 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
 const InMemoryImpl = "in-memory"
@@ -19,7 +20,7 @@ type Memory struct {
 	shortRobustMap cmap.ConcurrentMap
 }
 
-func (m *Memory) NewImpl(source common.DataSource) error {
+func (m *Memory) NewImpl(source common.DataSource, _ *zap.Logger) error {
 	m.shortCidMap = cmap.New()
 	m.robustShortMap = cmap.New()
 	m.shortRobustMap = cmap.New()

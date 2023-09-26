@@ -4,6 +4,7 @@ import (
 	"fmt"
 	nats2 "github.com/nats-io/nats.go"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"go.uber.org/zap"
 	"strconv"
 
@@ -31,16 +32,19 @@ type KVStore struct {
 	db     *gorm.DB
 	nats   *znats.ComponentNats
 	Config common.DataSourceConfig
+	logger *zap.Logger
 }
 
 func (m *KVStore) ImplementationType() string {
 	return KvStoreImpl
 }
 
-func (m *KVStore) NewImpl(source common.DataSource) error {
+func (m *KVStore) NewImpl(source common.DataSource, logger *zap.Logger) error {
+	m.logger = logger2.GetSafeLogger(logger)
+
 	// Database is mandatory
 	if source.Db == nil {
-		zap.S().Warn("[ActorsCache] - Database ptr is nil. Database cache is disabled")
+		m.logger.Sugar().Warn("[ActorsCache] - Database ptr is nil. Database cache is disabled")
 		return fmt.Errorf("database ptr is nil")
 	}
 
@@ -49,13 +53,13 @@ func (m *KVStore) NewImpl(source common.DataSource) error {
 
 	// Nats is mandatory
 	if source.Config.Nats == nil {
-		zap.S().Errorf("[ActorsCache] - Nats ptr is nil. Nats cache is disabled")
+		m.logger.Sugar().Errorf("[ActorsCache] - Nats ptr is nil. Nats cache is disabled")
 		return fmt.Errorf("nats ptr is nil")
 	}
 
 	nats, err := znats.NewNatsComponent(*source.Config.Nats)
 	if err != nil {
-		zap.S().Panicf("[ActorsCache] - Error creating nats component: %s", err.Error())
+		m.logger.Sugar().Panicf("[ActorsCache] - Error creating nats component: %s", err.Error())
 	}
 
 	m.nats = nats
@@ -74,7 +78,7 @@ func (m *KVStore) NewImpl(source common.DataSource) error {
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error creating short robust kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error creating short robust kv store: %s", err.Error())
 		return err
 	}
 
@@ -87,7 +91,7 @@ func (m *KVStore) NewImpl(source common.DataSource) error {
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error creating robust short kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error creating robust short kv store: %s", err.Error())
 		return err
 	}
 
@@ -100,7 +104,7 @@ func (m *KVStore) NewImpl(source common.DataSource) error {
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error creating short actor type kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error creating short actor type kv store: %s", err.Error())
 		return err
 	}
 
@@ -113,19 +117,19 @@ func (m *KVStore) NewImpl(source common.DataSource) error {
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error creating state kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error creating state kv store: %s", err.Error())
 		return err
 	}
 
 	_, err = m.nats.MapKVStore[StateStoreName].Store.Put(backFillInProgressKey, []byte("false"))
 	if err != nil {
-		zap.S().Warnf("[ActorsCache] - Error setting backfill in progress key: %s", err)
+		m.logger.Sugar().Warnf("[ActorsCache] - Error setting backfill in progress key: %s", err)
 	}
 
 	if m.isNatsCacheEmpty() {
 		err = m.BackFill()
 		if err != nil {
-			zap.S().Errorf("[ActorsCache] - Error backfilling cache: %s", err.Error())
+			m.logger.Sugar().Errorf("[ActorsCache] - Error backfilling cache: %s", err.Error())
 		}
 	}
 
@@ -144,7 +148,7 @@ func (m *KVStore) isNatsCacheEmpty() bool {
 	for _, store := range stores {
 		keys, err := m.nats.MapKVStore[store].Store.Keys()
 		if err != nil {
-			zap.S().Errorf("[ActorsCache] - Error getting keys from store %s: %s", store, err.Error())
+			m.logger.Sugar().Errorf("[ActorsCache] - Error getting keys from store %s: %s", store, err.Error())
 			continue
 		}
 
@@ -169,32 +173,32 @@ func (m *KVStore) BackFill() error {
 	// Check if backfill is already in progress
 	backfillInProgress, err := m.nats.MapKVStore[StateStoreName].Store.Get(backFillInProgressKey)
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error getting backfill in progress key: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error getting backfill in progress key: %s", err.Error())
 		return err
 	}
 
 	inProgress, err := strconv.ParseBool(string(backfillInProgress.Value()))
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error parsing backfill in progress key: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error parsing backfill in progress key: %s", err.Error())
 		return err
 	}
 
 	if inProgress {
-		zap.S().Info("[ActorsCache] - Backfill already in progress")
+		m.logger.Sugar().Info("[ActorsCache] - Backfill already in progress")
 		return nil
 	}
 
 	// Set backfill in progress
 	_, err = m.nats.MapKVStore[StateStoreName].Store.Put(backFillInProgressKey, []byte("true"))
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error setting backfill in progress key: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error setting backfill in progress key: %s", err.Error())
 		return err
 	}
 
 	// Copy the content of the database into the kv store
 	addresses := make([]types.AddressInfo, 0)
 	m.db.Table(m.Config.InputTableName).Find(&addresses)
-	zap.S().Infof("[ActorsCache] - Backfilling %d addresses", len(addresses))
+	m.logger.Sugar().Infof("[ActorsCache] - Backfilling %d addresses", len(addresses))
 
 	for _, add := range addresses {
 		m.storeShortRobust(add.Short, add.Robust)
@@ -205,11 +209,11 @@ func (m *KVStore) BackFill() error {
 	// Set backfill finished
 	_, err = m.nats.MapKVStore[StateStoreName].Store.Put(backFillInProgressKey, []byte("false"))
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error setting backfill in progress key: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error setting backfill in progress key: %s", err.Error())
 		return err
 	}
 
-	zap.S().Info("[ActorsCache] - Backfill finished")
+	m.logger.Sugar().Info("[ActorsCache] - Backfill finished")
 	return nil
 }
 
@@ -285,7 +289,7 @@ func (m *KVStore) storeRobustShort(robust string, short string) {
 
 	_, err := m.nats.MapKVStore[RobustShortStoreName].Store.Put(robust, []byte(short))
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error storing robust short in kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error storing robust short in kv store: %s", err.Error())
 	}
 }
 
@@ -296,7 +300,7 @@ func (m *KVStore) storeShortRobust(short string, robust string) {
 
 	_, err := m.nats.MapKVStore[ShortRobustStoreName].Store.Put(short, []byte(robust))
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error storing short robust in kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error storing short robust in kv store: %s", err.Error())
 	}
 
 }
@@ -314,6 +318,6 @@ func (m *KVStore) storeActorCode(shortAddress string, cid string) {
 
 	_, err := m.nats.MapKVStore[ShortCidStoreName].Store.Put(shortAddress, []byte(cid))
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Error storing actor code in kv store: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error storing actor code in kv store: %s", err.Error())
 	}
 }
