@@ -220,7 +220,7 @@ func (m *KVStore) BackFill() error {
 func (m *KVStore) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
-		fmt.Printf("[ActorsCache] - Error getting short address: %s\n", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - Error getting short address: %s\n", err.Error())
 		return cid.Undef.String(), err
 	}
 
