@@ -9,6 +9,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/logger"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -34,6 +35,7 @@ func NewParserV22(helper *helper.Helper, logger *zap.Logger) *Parser {
 		actorParser: actors.NewActorParser(helper, logger),
 		addresses:   types.NewAddressInfoMap(),
 		helper:      helper,
+		logger:      logger2.GetSafeLogger(logger),
 	}
 }
 
@@ -178,7 +180,6 @@ func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid
 }
 
 func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
-
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,

@@ -30,6 +30,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*Actors
 	var offlineCache IActorsCache
 	var onChainCache impl.OnChain
 
+	logger = logger2.GetSafeLogger(logger)
 	err := onChainCache.NewImpl(dataSource, logger)
 	if err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*Actors
 		offlineCache: offlineCache,
 		onChainCache: &onChainCache,
 		badAddress:   cmap.New(),
-		logger:       logger2.GetSafeLogger(logger),
+		logger:       logger,
 	}, nil
 }
 
