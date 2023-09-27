@@ -7,6 +7,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
@@ -15,7 +16,8 @@ const OnChainImpl = "on-chain"
 
 // OnChain implementation
 type OnChain struct {
-	Node api.FullNode
+	Node   api.FullNode
+	logger *zap.Logger
 }
 
 func (m *OnChain) StoreAddressInfo(info types.AddressInfo) {
@@ -27,10 +29,11 @@ func (m *OnChain) BackFill() error {
 	return nil
 }
 
-func (m *OnChain) NewImpl(source common.DataSource) error {
+func (m *OnChain) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	// Node datastore is required
+	m.logger = logger2.GetSafeLogger(logger)
 	if source.Node == nil {
-		zap.S().Panic("[ActorsCache] - Node ptr is nil")
+		m.logger.Sugar().Panic("[ActorsCache] - Node ptr is nil")
 	}
 
 	m.Node = source.Node
@@ -95,7 +98,7 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 		// Try again but using the corresponding tipset Key
 		actor, err = m.Node.StateGetActor(context.Background(), add, key)
 		if err != nil {
-			zap.S().Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
+			m.logger.Sugar().Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
 			return cid.Cid{}, err
 		}
 	}
@@ -113,7 +116,7 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	}
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus: %s", err.Error())
+		m.logger.Sugar().Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus: %s", err.Error())
 		return "", common.ErrKeyNotFound
 	}
 

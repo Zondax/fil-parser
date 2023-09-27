@@ -22,6 +22,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache"
+	logger2 "github.com/zondax/fil-parser/logger"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
@@ -50,10 +51,11 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
 	actorCache *cache.ActorsCache
+	logger     *zap.Logger
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache) *Helper {
-	return &Helper{lib: lib, actorCache: actorsCache}
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, logger *zap.Logger) *Helper {
+	return &Helper{lib: lib, actorCache: actorsCache, logger: logger2.GetSafeLogger(logger)}
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
@@ -70,18 +72,18 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key)
 	if err != nil {
-		zap.S().Errorf("could not get actor code from address. Err: %s", err)
+		h.logger.Sugar().Errorf("could not get actor code from address. Err: %s", err)
 	} else {
 		c, err := cid.Parse(addInfo.ActorCid)
 		if err != nil {
-			zap.S().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+			h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		}
 		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
-		zap.S().Errorf("could not get short address for %s. Err: %v", add.String(), err)
+		h.logger.Sugar().Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	// Ignore searching robust addresses for Msig and miners
@@ -91,7 +93,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
-		zap.S().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
+		h.logger.Sugar().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
 	return addInfo
@@ -106,7 +108,7 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 
 	c, err := cid.Parse(actorCode)
 	if err != nil {
-		zap.S().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+		h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		return actors.UnknownStr
 	}
 

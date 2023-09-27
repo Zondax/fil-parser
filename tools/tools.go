@@ -14,6 +14,10 @@ import (
 	"go.uber.org/zap"
 )
 
+type Tools struct {
+	Logger *zap.Logger
+}
+
 func BuildId(input ...string) string {
 	h := sha256.New()
 	a := make([]byte, 0)
@@ -43,7 +47,7 @@ func BuildTipsetId(tipsetCid string) string {
 	return id.String()
 }
 
-func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet) (string, error) {
+func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet) (string, error) {
 	// Default value
 	blockCid := ""
 

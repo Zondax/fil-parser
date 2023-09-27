@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -12,11 +13,13 @@ import (
 
 type ActorParser struct {
 	helper *helper.Helper
+	logger *zap.Logger
 }
 
-func NewActorParser(helper *helper.Helper) *ActorParser {
+func NewActorParser(helper *helper.Helper, logger *zap.Logger) *ActorParser {
 	return &ActorParser{
 		helper: helper,
+		logger: logger2.GetSafeLogger(logger),
 	}
 }
 
@@ -34,7 +37,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 
 	c, err := cid.Parse(actorCode)
 	if err != nil {
-		zap.S().Errorf("Could not parse actor code: %v", err)
+		p.logger.Sugar().Errorf("Could not parse actor code: %v", err)
 		return metadata, nil, err
 	}
 

@@ -38,18 +38,16 @@ func getActorParser() *ActorParser {
 	}
 	actorsCache, err := cache.SetupActorsCache(common.DataSource{
 		Node: lotusClient,
-	})
+	}, nil)
 
 	if err != nil {
 		return nil
 	}
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-	helper := helper2.NewHelper(lib, actorsCache)
+	helper := helper2.NewHelper(lib, actorsCache, nil)
 
-	return &ActorParser{
-		helper: helper,
-	}
+	return NewActorParser(helper, nil)
 }
 
 func getParmasAndReturn(actor, txType string) ([]byte, []byte, error) {

@@ -11,8 +11,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
-
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -47,7 +45,7 @@ func (p *ActorParser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err
 	err = p.validateEamReturn(&cr)
 	if err != nil {
 		rawString := hex.EncodeToString(rawReturn)
-		zap.S().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
+		p.logger.Sugar().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
 	}
 
 	return cr, nil

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -25,13 +26,15 @@ type Parser struct {
 	actorParser *actors.ActorParser
 	addresses   *types.AddressInfoMap
 	helper      *helper.Helper
+	logger      *zap.Logger
 }
 
-func NewParserV22(helper *helper.Helper) *Parser {
+func NewParserV22(helper *helper.Helper, logger *zap.Logger) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(helper),
+		actorParser: actors.NewActorParser(helper, logger),
 		addresses:   types.NewAddressInfoMap(),
 		helper:      helper,
+		logger:      logger2.GetSafeLogger(logger),
 	}
 }
 
@@ -44,10 +47,11 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	computeState := &typesv22.ComputeStateOutputV22{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
 	if err != nil {
-		zap.S().Error(err)
+		p.logger.Sugar().Error(err)
 		return nil, nil, errors.New("could not decode")
 	}
 
+	appTools := tools.Tools{Logger: p.logger}
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipset.Key()
@@ -67,9 +71,9 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 				Method: trace.Msg.Method,
 			}, int64(tipset.Height()), tipsetKey)
 
-			blockCid, err := tools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, tipset)
+			blockCid, err := appTools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, tipset)
 			if err != nil {
-				zap.S().Errorf("Error when trying to get block cid from message,txType '%s': %v", txType, err)
+				p.logger.Sugar().Errorf("Error when trying to get block cid from message,txType '%s': %v", txType, err)
 			}
 			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
 
@@ -133,7 +137,7 @@ func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 	computeState := &typesv22.ComputeStateOutputV22{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
 	if err != nil {
-		zap.S().Error(err)
+		p.logger.Sugar().Error(err)
 		return 0, errors.New("could not decode")
 	}
 
@@ -175,7 +179,6 @@ func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid
 }
 
 func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
-
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -183,11 +186,11 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 	}, int64(tipset.Height()), tipset.Key())
 
 	if err != nil {
-		zap.S().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	}
 	if err == nil && txType == parser.UnknownStr {
-		zap.S().Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
+		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
 	}
 
 	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
@@ -202,7 +205,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 	}, int64(tipset.Height()), tipset.Key(), ethLogs)
 
 	if mErr != nil {
-		zap.S().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
@@ -216,9 +219,10 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 
 	p.appendAddressInfo(trace.Msg, tipset.Key())
 
-	blockCid, err := tools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
+	appTools := tools.Tools{Logger: p.logger}
+	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
-		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
@@ -246,14 +250,15 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 
 func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	blockCid, err := tools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
+	appTools := tools.Tools{Logger: p.logger}
+	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
-		zap.S().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
-		zap.S().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
 	feesMetadata := parser.FeesMetadata{

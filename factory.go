@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/V22"
 	"github.com/zondax/fil-parser/parser/V23"
@@ -28,6 +29,7 @@ type FilecoinParser struct {
 	parserV22 Parser
 	parserV23 Parser
 	Helper    *helper2.Helper
+	logger    *zap.Logger
 }
 
 type Parser interface {
@@ -36,26 +38,28 @@ type Parser interface {
 	GetBaseFee(traces []byte) (uint64, error)
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource) (*FilecoinParser, error) {
-	actorsCache, err := cache.SetupActorsCache(cacheSource)
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+	logger = logger2.GetSafeLogger(logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
 	if err != nil {
-		zap.S().Errorf("could not setup actors cache: %v", err)
+		logger.Sugar().Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
-	helper := helper2.NewHelper(lib, actorsCache)
-	parserV22 := V22.NewParserV22(helper)
-	parserV23 := V23.NewParserV23(helper)
+	helper := helper2.NewHelper(lib, actorsCache, logger)
+	parserV22 := V22.NewParserV22(helper, logger)
+	parserV23 := V23.NewParserV23(helper, logger)
 
 	return &FilecoinParser{
 		parserV22: parserV22,
 		parserV23: parserV23,
 		Helper:    helper,
+		logger:    logger,
 	}, nil
 }
 
 func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata *types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
-	version := detectTraceVersion(*metadata)
+	version := p.detectTraceVersion(*metadata)
 	if version == "" {
 		return nil, nil, errUnknownVersion
 	}
@@ -70,7 +74,7 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	case V23.Version:
 		txs, addrs, err = p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
 	default:
-		zap.S().Errorf("[parser] implementation not supported: %s", version)
+		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", version)
 		return nil, nil, errUnknownImpl
 	}
 
@@ -81,14 +85,14 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	return p.FilterDuplicated(txs), addrs, nil
 }
 
-func detectTraceVersion(metadata types.BlockMetadata) string {
+func (p *FilecoinParser) detectTraceVersion(metadata types.BlockMetadata) string {
 	switch metadata.NodeMajorMinorVersion {
 	case V22.Version, "": // The empty string is for backwards compatibility with older traces versions
 		return V22.Version
 	case V23.Version:
 		return V23.Version
 	default:
-		zap.S().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
+		p.logger.Sugar().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
 		return ""
 	}
 }
@@ -108,7 +112,7 @@ func (p *FilecoinParser) FilterDuplicated(txs []*types.Transaction) []*types.Tra
 }
 
 func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata) (uint64, error) {
-	version := detectTraceVersion(metadata)
+	version := p.detectTraceVersion(metadata)
 	if version == "" {
 		return 0, errUnknownVersion
 	}

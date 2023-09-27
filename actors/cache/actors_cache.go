@@ -7,6 +7,7 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 	"strings"
@@ -25,37 +26,39 @@ var SystemActorsId = map[string]bool{
 	"f099": true,
 }
 
-func SetupActorsCache(dataSource common.DataSource) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*ActorsCache, error) {
 	var offlineCache IActorsCache
 	var onChainCache impl.OnChain
 
-	err := onChainCache.NewImpl(dataSource)
+	logger = logger2.GetSafeLogger(logger)
+	err := onChainCache.NewImpl(dataSource, logger)
 	if err != nil {
 		return nil, err
 	}
 
 	// Try kvStore cache, if it fails, on-memory cache
 	var kvStoreCache impl.KVStore
-	err = kvStoreCache.NewImpl(dataSource)
+	err = kvStoreCache.NewImpl(dataSource, logger)
 	if err == nil {
 		offlineCache = &kvStoreCache
 	} else {
-		zap.S().Warn("[ActorsCache] - Unable to initialize kv store cache. Using on-memory cache")
+		logger.Sugar().Warn("[ActorsCache] - Unable to initialize kv store cache. Using on-memory cache")
 		var inMemoryCache impl.Memory
-		err = inMemoryCache.NewImpl(dataSource)
+		err = inMemoryCache.NewImpl(dataSource, logger)
 		if err != nil {
-			zap.S().Errorf("[ActorsCache] - Unable to initialize on-memory cache: %s", err.Error())
+			logger.Sugar().Errorf("[ActorsCache] - Unable to initialize on-memory cache: %s", err.Error())
 			return nil, err
 		}
 		offlineCache = &inMemoryCache
 	}
 
-	zap.S().Infof("[ActorsCache] - Actors cache initialized. Offline cache implementation: %s", offlineCache.ImplementationType())
+	logger.Sugar().Infof("[ActorsCache] - Actors cache initialized. Offline cache implementation: %s", offlineCache.ImplementationType())
 
 	return &ActorsCache{
 		offlineCache: offlineCache,
 		onChainCache: &onChainCache,
 		badAddress:   cmap.New(),
+		logger:       logger,
 	}, nil
 }
 
@@ -75,11 +78,11 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey) 
 		return actorCode, nil
 	}
 
-	zap.S().Debugf("[ActorsCache] - Unable to retrieve actor code from offline cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve actor code from offline cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
 	actorCode, err = a.onChainCache.GetActorCode(add, key)
 	if err != nil {
-		zap.S().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Sugar().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
 			a.badAddress.Set(add.String(), true)
 		}
@@ -93,7 +96,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey) 
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
+		a.logger.Sugar().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
 		return "", err
 	}
 
@@ -116,12 +119,12 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 		return "", fmt.Errorf("address %s is flagged as bad", add.String())
 	}
 
-	zap.S().Debugf("[ActorsCache] - Unable to retrieve robust address from offline cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve robust address from offline cache for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
 	robust, err = a.onChainCache.GetRobustAddress(add)
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Sugar().Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
@@ -131,7 +134,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
+		a.logger.Sugar().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
 		return "", err
 	}
 
@@ -150,12 +153,12 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 		return "", fmt.Errorf("address %s is flagged as bad", add.String())
 	}
 
-	zap.S().Debugf("[ActorsCache] - Unable to retrieve short address from offline cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve short address from offline cache for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
 	short, err = a.onChainCache.GetShortAddress(add)
 	if err != nil {
-		zap.S().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Sugar().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
@@ -165,7 +168,7 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	})
 
 	if err != nil {
-		zap.S().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
+		a.logger.Sugar().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
 		return "", err
 	}
 
