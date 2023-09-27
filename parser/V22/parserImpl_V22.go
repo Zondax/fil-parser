@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/logger"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
@@ -52,7 +51,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		return nil, nil, errors.New("could not decode")
 	}
 
-	appTools := tools.Tools{Logger: logger.GetSafeLogger(p.logger)}
+	appTools := tools.Tools{Logger: p.logger}
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	tipsetKey := tipset.Key()
@@ -220,7 +219,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 
 	p.appendAddressInfo(trace.Msg, tipset.Key())
 
-	appTools := tools.Tools{Logger: logger.GetSafeLogger(p.logger)}
+	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
@@ -251,7 +250,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 
 func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	appTools := tools.Tools{Logger: logger.GetSafeLogger(p.logger)}
+	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)

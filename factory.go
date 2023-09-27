@@ -54,7 +54,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		parserV22: parserV22,
 		parserV23: parserV23,
 		Helper:    helper,
-		logger:    logger2.GetSafeLogger(logger),
+		logger:    logger,
 	}, nil
 }
 

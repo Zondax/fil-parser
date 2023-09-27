@@ -189,7 +189,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, mainMsgCid cid.Cid
 		Params: trace.Msg.Params,
 	}, tipset.Key())
 
-	appTools := tools.Tools{Logger: logger2.GetSafeLogger(p.logger)}
+	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
@@ -226,7 +226,7 @@ func (p *Parser) parseTrace(trace typesv23.ExecutionTraceV23, mainMsgCid cid.Cid
 
 func (p *Parser) feesTransactions(msg *typesv23.InvocResultV23, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	appTools := tools.Tools{Logger: logger2.GetSafeLogger(p.logger)}
+	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
