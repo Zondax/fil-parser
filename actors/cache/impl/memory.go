@@ -1,12 +1,12 @@
 package impl
 
 import (
-	"fmt"
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
@@ -18,9 +18,11 @@ type Memory struct {
 	shortCidMap    cmap.ConcurrentMap
 	robustShortMap cmap.ConcurrentMap
 	shortRobustMap cmap.ConcurrentMap
+	logger         *zap.Logger
 }
 
-func (m *Memory) NewImpl(source common.DataSource, _ *zap.Logger) error {
+func (m *Memory) NewImpl(source common.DataSource, logger *zap.Logger) error {
+	m.logger = logger2.GetSafeLogger(logger)
 	m.shortCidMap = cmap.New()
 	m.robustShortMap = cmap.New()
 	m.shortRobustMap = cmap.New()
@@ -40,7 +42,7 @@ func (m *Memory) BackFill() error {
 func (m *Memory) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
-		fmt.Printf("[ActorsCache] - Error getting short address: %s\n", err.Error())
+		m.logger.Sugar().Infof("[ActorsCache] - Error getting short address: %s\n", err.Error())
 		return cid.Undef.String(), common.ErrKeyNotFound
 	}
 
