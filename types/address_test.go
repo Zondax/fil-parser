@@ -62,3 +62,24 @@ func (suite *AddressInfoMapSuite) TestRange() {
 		return true
 	})
 }
+
+func (suite *AddressInfoMapSuite) TestCopy() {
+	address1 := &AddressInfo{
+		Short:  "short1",
+		Robust: "robust1",
+	}
+	address2 := &AddressInfo{
+		Short:  "short2",
+		Robust: "robust2",
+	}
+
+	suite.aim.Set("key1", address1)
+	suite.aim.Set("key2", address2)
+
+	copiedMap := suite.aim.Copy()
+
+	suite.Equal(len(copiedMap), suite.aim.Len())
+
+	suite.Equal(address1, copiedMap["key1"])
+	suite.Equal(address2, copiedMap["key2"])
+}

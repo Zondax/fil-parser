@@ -57,3 +57,15 @@ func (a *AddressInfoMap) Range(f func(key string, value *AddressInfo) bool) {
 		}
 	}
 }
+
+func (a *AddressInfoMap) Copy() map[string]*AddressInfo {
+	a.Lock()
+	defer a.Unlock()
+
+	result := make(map[string]*AddressInfo)
+	for k, v := range a.m {
+		result[k] = v
+	}
+
+	return result
+}
