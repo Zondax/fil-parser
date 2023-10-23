@@ -1,6 +1,8 @@
 package types
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"math/big"
 	"reflect"
@@ -45,6 +47,18 @@ func (t Transaction) Equal(b Transaction) bool {
 type EthLog struct {
 	ethtypes.EthLog
 	TransactionCid string `json:"transactionCid"`
+}
+
+func (t EthLog) GetId() (string, error) {
+	h := sha256.New()
+	rawData, err := json.Marshal(t)
+	if err != nil {
+		return "", err
+	}
+
+	h.Write(rawData)
+	hash := h.Sum(nil)
+	return string(hash), nil
 }
 
 type GenesisBalances struct {
