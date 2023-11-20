@@ -140,8 +140,8 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		filAdd, _ := address.NewFromString(balance.Key)
 		shortAdd, _ := p.Helper.GetActorsCache().GetShortAddress(filAdd)
 		robustAdd, _ := p.Helper.GetActorsCache().GetRobustAddress(filAdd)
-		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK)
-		actorName := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
+		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK, false)
+		actorName, _ := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
 
 		addresses.Set(balance.Key, &types.AddressInfo{
 			Short:     shortAdd,

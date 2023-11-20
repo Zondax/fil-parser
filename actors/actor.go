@@ -30,18 +30,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		return metadata, nil, nil
 	}
 
-	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key)
-	if err != nil {
-		return metadata, nil, err
-	}
-
-	c, err := cid.Parse(actorCode)
-	if err != nil {
-		p.logger.Sugar().Errorf("Could not parse actor code: %v", err)
-		return metadata, nil, err
-	}
-
-	actor, err := p.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
+	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		return metadata, nil, err
 	}
