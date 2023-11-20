@@ -32,20 +32,25 @@ import (
 )
 
 var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
-	manifest.InitKey:       filInit.Methods,
-	manifest.CronKey:       cron.Methods,
-	manifest.AccountKey:    account.Methods,
-	manifest.PowerKey:      power.Methods,
-	manifest.MinerKey:      miner.Methods,
-	manifest.MarketKey:     market.Methods,
-	manifest.PaychKey:      paych.Methods,
-	manifest.MultisigKey:   multisig.Methods,
-	manifest.RewardKey:     reward.Methods,
-	manifest.VerifregKey:   verifreg.Methods,
-	manifest.EvmKey:        evm.Methods,
-	manifest.EamKey:        eam.Methods,
-	manifest.DatacapKey:    datacap.Methods,
-	manifest.EthAccountKey: evm.Methods, // investigate this bafy2bzacebj3i5ehw2w6veowqisj2ag4wpp25glmmfsvejbwjj2e7axavonm6
+	manifest.InitKey:     filInit.Methods,
+	manifest.CronKey:     cron.Methods,
+	manifest.AccountKey:  account.Methods,
+	manifest.PowerKey:    power.Methods,
+	manifest.MinerKey:    miner.Methods,
+	manifest.MarketKey:   market.Methods,
+	manifest.PaychKey:    paych.Methods,
+	manifest.MultisigKey: multisig.Methods,
+	manifest.RewardKey:   reward.Methods,
+	manifest.VerifregKey: verifreg.Methods,
+	manifest.EvmKey:      evm.Methods,
+	manifest.EamKey:      eam.Methods,
+	manifest.DatacapKey:  datacap.Methods,
+
+	// EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
+	// We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
+	// this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
+	manifest.PlaceholderKey: evm.Methods,
+	manifest.EthAccountKey:  evm.Methods,
 }
 
 type Helper struct {
