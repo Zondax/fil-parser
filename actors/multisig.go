@@ -168,7 +168,7 @@ func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, height int64, ke
 		return "", err
 	}
 
-	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key)
+	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key, false)
 	if err != nil {
 		return "", err
 	}

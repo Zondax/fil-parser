@@ -30,18 +30,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		return metadata, nil, nil
 	}
 
-	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key)
-	if err != nil {
-		return metadata, nil, err
-	}
-
-	c, err := cid.Parse(actorCode)
-	if err != nil {
-		p.logger.Sugar().Errorf("Could not parse actor code: %v", err)
-		return metadata, nil, err
-	}
-
-	actor, err := p.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
+	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		return metadata, nil, err
 	}
@@ -68,14 +57,15 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		metadata, err = p.ParseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
 		metadata, err = p.ParseVerifiedRegistry(txType, msg, msgRct)
-	case manifest.EvmKey, manifest.EthAccountKey:
+	case manifest.EvmKey:
 		metadata, err = p.ParseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
 	case manifest.EamKey:
 		metadata, addressInfo, err = p.ParseEam(txType, msg, msgRct, mainMsgCid)
 	case manifest.DatacapKey:
 		metadata, err = p.ParseDatacap(txType, msg, msgRct)
-	case manifest.PlaceholderKey:
-		err = nil // placeholder has no methods
+	case manifest.PlaceholderKey, manifest.EthAccountKey:
+		// placeholder and ethaccount can only receive tokens by Send or InvokeEVM methods
+		err = nil
 	default:
 		err = parser.ErrNotValidActor
 	}
