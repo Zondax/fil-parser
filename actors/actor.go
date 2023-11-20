@@ -68,14 +68,15 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		metadata, err = p.ParseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
 		metadata, err = p.ParseVerifiedRegistry(txType, msg, msgRct)
-	case manifest.EvmKey, manifest.EthAccountKey:
+	case manifest.EvmKey:
 		metadata, err = p.ParseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
 	case manifest.EamKey:
 		metadata, addressInfo, err = p.ParseEam(txType, msg, msgRct, mainMsgCid)
 	case manifest.DatacapKey:
 		metadata, err = p.ParseDatacap(txType, msg, msgRct)
-	case manifest.PlaceholderKey:
-		err = nil // placeholder has no methods
+	case manifest.PlaceholderKey, manifest.EthAccountKey:
+		// placeholder and ethaccount can only receive tokens by Send or InvokeEVM methods
+		err = nil
 	default:
 		err = parser.ErrNotValidActor
 	}
