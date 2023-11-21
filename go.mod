@@ -19,7 +19,7 @@ require (
 	github.com/whyrusleeping/cbor-gen v0.0.0-20230126041949-52956bd4c9aa
 	github.com/zondax/rosetta-filecoin-lib v1.2000.0
 	github.com/zondax/znats v0.0.1
-	go.uber.org/zap v1.24.0
+	go.uber.org/zap v1.26.0
 	gorm.io/gorm v1.25.5
 )
 
