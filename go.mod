@@ -15,7 +15,7 @@ require (
 	github.com/ipfs/go-cid v0.4.1
 	github.com/nats-io/nats.go v1.27.0
 	github.com/orcaman/concurrent-map v1.0.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/whyrusleeping/cbor-gen v0.0.0-20230126041949-52956bd4c9aa
 	github.com/zondax/rosetta-filecoin-lib v1.2000.0
 	github.com/zondax/znats v0.0.1
