@@ -33,9 +33,12 @@ type FilecoinParser struct {
 }
 
 type Parser interface {
+	VersionStable() string
+	VersionNext() string
 	Version() string
 	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error)
 	GetBaseFee(traces []byte) (uint64, error)
+	IsVersionCompatible(ver string) bool
 }
 
 func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
@@ -68,10 +71,10 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	var addrs *types.AddressInfoMap
 	var err error
 
-	switch version {
-	case V22.Version:
+	switch {
+	case p.parserV22.IsVersionCompatible(version):
 		txs, addrs, err = p.parserV22.ParseTransactions(traces, tipSet, ethLogs)
-	case V23.Version:
+	case p.parserV23.IsVersionCompatible(version):
 		txs, addrs, err = p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", version)
@@ -86,11 +89,11 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 }
 
 func (p *FilecoinParser) detectTraceVersion(metadata types.BlockMetadata) string {
-	switch metadata.NodeMajorMinorVersion {
-	case V22.Version, "": // The empty string is for backwards compatibility with older traces versions
-		return V22.Version
-	case V23.Version:
-		return V23.Version
+	switch {
+	case p.parserV22.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "": // The empty string is for backwards compatibility with older traces versions
+		return V22.VersionNext
+	case p.parserV23.IsVersionCompatible(metadata.NodeMajorMinorVersion):
+		return V23.VersionNext
 	default:
 		p.logger.Sugar().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
 		return ""
@@ -117,10 +120,10 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 		return 0, errUnknownVersion
 	}
 
-	switch version {
-	case V22.Version:
+	switch {
+	case p.parserV22.IsVersionCompatible(version):
 		return p.parserV22.GetBaseFee(traces)
-	case V23.Version:
+	case p.parserV23.IsVersionCompatible(version):
 		return p.parserV23.GetBaseFee(traces)
 	}
 

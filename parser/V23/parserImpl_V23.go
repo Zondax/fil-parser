@@ -16,10 +16,12 @@ import (
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 	"math/big"
+	"strings"
 )
 
 const (
-	Version = "v1.23"
+	VersionNext   = "v1.23"
+	VersionStable = "v1.24"
 )
 
 type Parser struct {
@@ -38,8 +40,20 @@ func NewParserV23(helper *helper.Helper, logger *zap.Logger) *Parser {
 	}
 }
 
+func (p *Parser) VersionStable() string {
+	return VersionStable
+}
+
+func (p *Parser) VersionNext() string {
+	return VersionNext
+}
+
 func (p *Parser) Version() string {
-	return Version
+	return VersionNext + "/" + VersionStable
+}
+
+func (p *Parser) IsVersionCompatible(ver string) bool {
+	return strings.EqualFold(VersionStable, ver) || strings.EqualFold(VersionNext, ver)
 }
 
 func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
