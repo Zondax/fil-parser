@@ -10,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
-	"github.com/zondax/fil-parser/parser/V22"
+	"github.com/zondax/fil-parser/parser/V21"
 	"github.com/zondax/fil-parser/parser/V23"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
@@ -26,7 +26,7 @@ var (
 )
 
 type FilecoinParser struct {
-	parserV22 Parser
+	parserV21 Parser
 	parserV23 Parser
 	Helper    *helper2.Helper
 	logger    *zap.Logger
@@ -50,11 +50,11 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, logger)
-	parserV22 := V22.NewParserV22(helper, logger)
+	parserV21 := V21.NewParserV21(helper, logger)
 	parserV23 := V23.NewParserV23(helper, logger)
 
 	return &FilecoinParser{
-		parserV22: parserV22,
+		parserV21: parserV21,
 		parserV23: parserV23,
 		Helper:    helper,
 		logger:    logger,
@@ -72,8 +72,8 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	var err error
 
 	switch {
-	case p.parserV22.IsVersionCompatible(version):
-		txs, addrs, err = p.parserV22.ParseTransactions(traces, tipSet, ethLogs)
+	case p.parserV21.IsVersionCompatible(version):
+		txs, addrs, err = p.parserV21.ParseTransactions(traces, tipSet, ethLogs)
 	case p.parserV23.IsVersionCompatible(version):
 		txs, addrs, err = p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
 	default:
@@ -90,8 +90,8 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 
 func (p *FilecoinParser) detectTraceVersion(metadata types.BlockMetadata) string {
 	switch {
-	case p.parserV22.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "": // The empty string is for backwards compatibility with older traces versions
-		return V22.VersionNext
+	case p.parserV21.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "": // The empty string is for backwards compatibility with older traces versions
+		return V21.VersionNext
 	case p.parserV23.IsVersionCompatible(metadata.NodeMajorMinorVersion):
 		return V23.VersionNext
 	default:
@@ -121,8 +121,8 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 	}
 
 	switch {
-	case p.parserV22.IsVersionCompatible(version):
-		return p.parserV22.GetBaseFee(traces)
+	case p.parserV21.IsVersionCompatible(version):
+		return p.parserV21.GetBaseFee(traces)
 	case p.parserV23.IsVersionCompatible(version):
 		return p.parserV23.GetBaseFee(traces)
 	}
