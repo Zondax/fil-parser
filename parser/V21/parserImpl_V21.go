@@ -1,4 +1,4 @@
-package V22
+package V21
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
-	typesv22 "github.com/zondax/fil-parser/parser/V22/types"
+	typesv21 "github.com/zondax/fil-parser/parser/V21/types"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -31,7 +31,7 @@ type Parser struct {
 	logger      *zap.Logger
 }
 
-func NewParserV22(helper *helper.Helper, logger *zap.Logger) *Parser {
+func NewParserV21(helper *helper.Helper, logger *zap.Logger) *Parser {
 	return &Parser{
 		actorParser: actors.NewActorParser(helper, logger),
 		addresses:   types.NewAddressInfoMap(),
@@ -58,7 +58,7 @@ func (p *Parser) IsVersionCompatible(ver string) bool {
 
 func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
 	// Unmarshal into vComputeState
-	computeState := &typesv22.ComputeStateOutputV22{}
+	computeState := &typesv21.ComputeStateOutputV21{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
 	if err != nil {
 		p.logger.Sugar().Error(err)
@@ -148,7 +148,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 	// Unmarshal into vComputeState
-	computeState := &typesv22.ComputeStateOutputV22{}
+	computeState := &typesv21.ComputeStateOutputV21{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
 	if err != nil {
 		p.logger.Sugar().Error(err)
@@ -176,7 +176,7 @@ func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 	return baseFee.Uint64(), nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
+func (p *Parser) parseSubTxs(subTxs []typesv21.ExecutionTraceV21, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
 	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
@@ -192,7 +192,7 @@ func (p *Parser) parseSubTxs(subTxs []typesv22.ExecutionTraceV22, mainMsgCid cid
 	return
 }
 
-func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesv21.ExecutionTraceV21, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -262,7 +262,7 @@ func (p *Parser) parseTrace(trace typesv22.ExecutionTraceV22, mainMsgCid cid.Cid
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesv21.InvocResultV21, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
@@ -314,11 +314,11 @@ func (p *Parser) feesTransactions(msg *typesv22.InvocResultV22, tipset *types.Ex
 	}
 }
 
-func hasMessage(trace *typesv22.InvocResultV22) bool {
+func hasMessage(trace *typesv21.InvocResultV21) bool {
 	return trace.Msg != nil
 }
 
-func hasExecutionTrace(trace *typesv22.InvocResultV22) bool {
+func hasExecutionTrace(trace *typesv21.InvocResultV21) bool {
 	// check if this execution trace is valid
 	if trace.ExecutionTrace.Msg == nil || trace.ExecutionTrace.MsgRct == nil {
 		// this is an invalid message
