@@ -149,7 +149,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			},
 		},
 		{
-			name:    "parser with traces from v23",
+			name:    "parser with traces from v2",
 			version: v2.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907520",
@@ -194,7 +194,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			height: "2907480",
 		},
 		{
-			name:   "height downloaded with v23",
+			name:   "height downloaded with v2",
 			url:    nodeUrl,
 			height: "2907520",
 		},
@@ -217,22 +217,22 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.NotNil(t, v1Txs)
 			require.NotNil(t, v1Adds)
 
-			v23Txs, v23Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
+			v2Txs, v2Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
 			require.NoError(t, err)
-			require.NotNil(t, v23Txs)
-			require.NotNil(t, v23Adds)
+			require.NotNil(t, v2Txs)
+			require.NotNil(t, v2Adds)
 
-			require.Equal(t, len(v1Txs), len(v23Txs))
-			require.Equal(t, v1Adds.Len(), v23Adds.Len())
+			require.Equal(t, len(v1Txs), len(v2Txs))
+			require.Equal(t, v1Adds.Len(), v2Adds.Len())
 
 			for i := range v1Txs {
-				require.True(t, v1Txs[i].Equal(*v23Txs[i]))
+				require.True(t, v1Txs[i].Equal(*v2Txs[i]))
 			}
 
 			v1Adds.Range(func(key string, value *types.AddressInfo) bool {
-				v23Value, ok := v23Adds.Get(key)
+				v2Value, ok := v2Adds.Get(key)
 				require.True(t, ok)
-				require.Equal(t, value, v23Value)
+				require.Equal(t, value, v2Value)
 				return true
 			})
 		})

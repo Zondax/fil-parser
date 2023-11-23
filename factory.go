@@ -27,10 +27,10 @@ var (
 )
 
 type FilecoinParser struct {
-	parserv1  Parser
-	parserV23 Parser
-	Helper    *helper2.Helper
-	logger    *zap.Logger
+	parserV1 Parser
+	parserV2 Parser
+	Helper   *helper2.Helper
+	logger   *zap.Logger
 }
 
 type Parser interface {
@@ -49,14 +49,14 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, logger)
-	parserv1 := v1.NewParserV1(helper, logger)
-	parserV23 := v2.NewParserV2(helper, logger)
+	parserV1 := v1.NewParser(helper, logger)
+	parserV2 := v2.NewParser(helper, logger)
 
 	return &FilecoinParser{
-		parserv1:  parserv1,
-		parserV23: parserV23,
-		Helper:    helper,
-		logger:    logger,
+		parserV1: parserV1,
+		parserV2: parserV2,
+		Helper:   helper,
+		logger:   logger,
 	}, nil
 }
 
@@ -72,9 +72,9 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	p.logger.Sugar().Debugf("node version found on trace files %s to parse transactions", parserVersion)
 	switch parserVersion {
 	case parser.ParserV1:
-		txs, addrs, err = p.parserv1.ParseTransactions(traces, tipSet, ethLogs)
+		txs, addrs, err = p.parserV1.ParseTransactions(traces, tipSet, ethLogs)
 	case parser.ParserV2:
-		txs, addrs, err = p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
+		txs, addrs, err = p.parserV2.ParseTransactions(traces, tipSet, ethLogs)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, nil, errUnknownImpl
@@ -90,9 +90,9 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {
 	switch {
 	// The empty string is for backwards compatibility with older traces versions
-	case p.parserv1.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "":
+	case p.parserV1.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "":
 		return parser.ParserV1, nil
-	case p.parserV23.IsVersionCompatible(metadata.NodeMajorMinorVersion):
+	case p.parserV2.IsVersionCompatible(metadata.NodeMajorMinorVersion):
 		return parser.ParserV2, nil
 	default:
 		p.logger.Sugar().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
@@ -123,9 +123,9 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 	p.logger.Sugar().Debugf("node version found on trace files %s to get base fee", parserVersion)
 	switch parserVersion {
 	case parser.ParserV1:
-		return p.parserv1.GetBaseFee(traces)
+		return p.parserV1.GetBaseFee(traces)
 	case parser.ParserV2:
-		return p.parserV23.GetBaseFee(traces)
+		return p.parserV2.GetBaseFee(traces)
 	}
 
 	return 0, errUnknownImpl
