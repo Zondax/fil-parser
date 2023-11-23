@@ -19,6 +19,8 @@ import (
 	"strings"
 )
 
+const Version = "v1"
+
 var NodeVersionsSupported = []string{"v1.21", "v1.22"}
 
 type Parser struct {
@@ -38,10 +40,14 @@ func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
 }
 
 func (p *Parser) Version() string {
-	return strings.Join(NodeVersionsSupported, "/")
+	return Version
 }
 
-func (p *Parser) IsVersionCompatible(ver string) bool {
+func (p *Parser) NodeVersionsSupported() []string {
+	return NodeVersionsSupported
+}
+
+func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	for _, i := range NodeVersionsSupported {
 		if strings.EqualFold(i, ver) {
 			return true
