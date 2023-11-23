@@ -130,7 +130,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 	}{
 		{
 			name:    "parser with traces from v21",
-			version: V21.VersionStable,
+			version: V21.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
@@ -140,7 +140,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		},
 		{
 			name:    "parser with traces from v21 and the corner case of duplicated fees with level 0",
-			version: V21.VersionStable,
+			version: V21.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "845259",
 			results: expectedResults{
@@ -150,7 +150,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		},
 		{
 			name:    "parser with traces from v23",
-			version: V23.VersionNext,
+			version: V23.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
