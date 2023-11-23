@@ -66,21 +66,23 @@ func (a *ActorsCache) ClearBadAddressCache() {
 	a.badAddress.Clear()
 }
 
-func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey) (string, error) {
+func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error) {
 	// Check if this address is flagged as bad
 	if a.isBadAddress(add) {
 		return "", fmt.Errorf("address %s is flagged as bad", add.String())
 	}
 
-	// Try kv store cache
-	actorCode, err := a.offlineCache.GetActorCode(add, key)
-	if err == nil {
-		return actorCode, nil
+	if !onChainOnly {
+		// Try kv store cache
+		actorCode, err := a.offlineCache.GetActorCode(add, key)
+		if err == nil {
+			return actorCode, nil
+		}
 	}
 
 	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve actor code from offline cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
-	actorCode, err = a.onChainCache.GetActorCode(add, key)
+	actorCode, err := a.onChainCache.GetActorCode(add, key)
 	if err != nil {
 		a.logger.Sugar().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
