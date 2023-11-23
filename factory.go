@@ -70,7 +70,7 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	var txs []*types.Transaction
 	var addrs *types.AddressInfoMap
 
-	p.logger.Sugar().Debugf("node version found on trace files %s to parse transactions", parserVersion)
+	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
 		txs, addrs, err = p.parserV1.ParseTransactions(traces, tipSet, ethLogs)
@@ -121,7 +121,7 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 		return 0, errUnknownVersion
 	}
 
-	p.logger.Sugar().Debugf("node version found on trace files %s to get base fee", parserVersion)
+	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
 		return p.parserV1.GetBaseFee(traces)
