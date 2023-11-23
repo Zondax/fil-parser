@@ -210,7 +210,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
-	msgCid, err := tools.BuildCidFromMessageTrace(&trace.Msg, mainMsgCid.String())
+	msgCid, err := tools.BuildCidFromMessageTrace(trace.Msg, mainMsgCid.String())
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
 	}

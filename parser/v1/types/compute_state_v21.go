@@ -12,8 +12,8 @@ type ComputeStateOutputV1 struct {
 	Trace []*InvocResultV1
 }
 
-// InvocResultV1 This is a copy of native lotus InvocResult type. We need to copy it because
-// we need a modified ExecutionTrace field, and we can't do that in lotus codebase.
+// InvocResultV1 This is a copy of native lotus InvocResult type at version v1.22.
+// We need to copy it because we cannot have more than one
 type InvocResultV1 struct {
 	MsgCid         cid.Cid
 	Msg            *types.Message
