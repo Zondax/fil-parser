@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	"github.com/zondax/fil-parser/parser/V23"
 	v1 "github.com/zondax/fil-parser/parser/v1"
+	v2 "github.com/zondax/fil-parser/parser/v2"
 	"net/http"
 	"os"
 	"testing"
@@ -150,7 +150,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 		},
 		{
 			name:    "parser with traces from v23",
-			version: V23.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{

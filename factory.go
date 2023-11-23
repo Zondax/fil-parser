@@ -11,8 +11,9 @@ import (
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
-	"github.com/zondax/fil-parser/parser/V23"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
+	v1 "github.com/zondax/fil-parser/parser/v1"
+	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
@@ -48,8 +49,8 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, logger)
-	parserv1 := v1.NewParserv1(helper, logger)
-	parserV23 := V23.NewParserV23(helper, logger)
+	parserv1 := v1.NewParserV1(helper, logger)
+	parserV23 := v2.NewParserV2(helper, logger)
 
 	return &FilecoinParser{
 		parserv1:  parserv1,
