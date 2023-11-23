@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	"github.com/zondax/fil-parser/parser/V22"
-	"github.com/zondax/fil-parser/parser/V23"
+	v1 "github.com/zondax/fil-parser/parser/v1"
+	v2 "github.com/zondax/fil-parser/parser/v2"
 	"net/http"
 	"os"
 	"testing"
@@ -129,8 +129,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 		results expectedResults
 	}{
 		{
-			name:    "parser with traces from v22",
-			version: V22.Version,
+			name:    "parser with traces from v1",
+			version: v1.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
@@ -139,8 +139,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			},
 		},
 		{
-			name:    "parser with traces from v22 and the corner case of duplicated fees with level 0",
-			version: V22.Version,
+			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
+			version: v1.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "845259",
 			results: expectedResults{
@@ -149,8 +149,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			},
 		},
 		{
-			name:    "parser with traces from v23",
-			version: V23.Version,
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
@@ -189,12 +189,12 @@ func TestParser_InDepthCompare(t *testing.T) {
 		height string
 	}{
 		{
-			name:   "height downloaded with v22",
+			name:   "height downloaded with v1",
 			url:    nodeUrl,
 			height: "2907480",
 		},
 		{
-			name:   "height downloaded with v23",
+			name:   "height downloaded with v2",
 			url:    nodeUrl,
 			height: "2907520",
 		},
@@ -212,27 +212,27 @@ func TestParser_InDepthCompare(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
 			require.NoError(t, err)
-			v22Txs, v22Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
+			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
-			require.NotNil(t, v22Txs)
-			require.NotNil(t, v22Adds)
+			require.NotNil(t, v1Txs)
+			require.NotNil(t, v1Adds)
 
-			v23Txs, v23Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
+			v2Txs, v2Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
 			require.NoError(t, err)
-			require.NotNil(t, v23Txs)
-			require.NotNil(t, v23Adds)
+			require.NotNil(t, v2Txs)
+			require.NotNil(t, v2Adds)
 
-			require.Equal(t, len(v22Txs), len(v23Txs))
-			require.Equal(t, v22Adds.Len(), v23Adds.Len())
+			require.Equal(t, len(v1Txs), len(v2Txs))
+			require.Equal(t, v1Adds.Len(), v2Adds.Len())
 
-			for i := range v22Txs {
-				require.True(t, v22Txs[i].Equal(*v23Txs[i]))
+			for i := range v1Txs {
+				require.True(t, v1Txs[i].Equal(*v2Txs[i]))
 			}
 
-			v22Adds.Range(func(key string, value *types.AddressInfo) bool {
-				v23Value, ok := v23Adds.Get(key)
+			v1Adds.Range(func(key string, value *types.AddressInfo) bool {
+				v2Value, ok := v2Adds.Get(key)
 				require.True(t, ok)
-				require.Equal(t, value, v23Value)
+				require.Equal(t, value, v2Value)
 				return true
 			})
 		})
