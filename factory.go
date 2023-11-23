@@ -2,6 +2,7 @@ package fil_parser
 
 import (
 	"errors"
+	"fmt"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	types2 "github.com/filecoin-project/lotus/chain/types"
@@ -33,8 +34,6 @@ type FilecoinParser struct {
 }
 
 type Parser interface {
-	VersionStable() string
-	VersionNext() string
 	Version() string
 	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error)
 	GetBaseFee(traces []byte) (uint64, error)
@@ -62,23 +61,22 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 }
 
 func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata *types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
-	version := p.detectTraceVersion(*metadata)
-	if version == "" {
+	parserVersion, err := p.translateParserVersionFromMetadata(*metadata)
+	if err != nil {
 		return nil, nil, errUnknownVersion
 	}
 
 	var txs []*types.Transaction
 	var addrs *types.AddressInfoMap
-	var err error
 
-	p.logger.Sugar().Debugf("node version found on trace files %s to parse transactions", version)
-	switch {
-	case p.parserV21.IsVersionCompatible(version):
+	p.logger.Sugar().Debugf("node version found on trace files %s to parse transactions", parserVersion)
+	switch parserVersion {
+	case parser.ParserV1:
 		txs, addrs, err = p.parserV21.ParseTransactions(traces, tipSet, ethLogs)
-	case p.parserV23.IsVersionCompatible(version):
+	case parser.ParserV2:
 		txs, addrs, err = p.parserV23.ParseTransactions(traces, tipSet, ethLogs)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", version)
+		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, nil, errUnknownImpl
 	}
 
@@ -89,15 +87,16 @@ func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.Extended
 	return p.FilterDuplicated(txs), addrs, nil
 }
 
-func (p *FilecoinParser) detectTraceVersion(metadata types.BlockMetadata) string {
+func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {
 	switch {
-	case p.parserV21.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "": // The empty string is for backwards compatibility with older traces versions
-		return V21.VersionNext
+	// The empty string is for backwards compatibility with older traces versions
+	case p.parserV21.IsVersionCompatible(metadata.NodeMajorMinorVersion), metadata.NodeMajorMinorVersion == "":
+		return parser.ParserV1, nil
 	case p.parserV23.IsVersionCompatible(metadata.NodeMajorMinorVersion):
-		return V23.VersionNext
+		return parser.ParserV2, nil
 	default:
 		p.logger.Sugar().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
-		return ""
+		return "", fmt.Errorf("node version not supported %s", metadata.NodeFullVersion)
 	}
 }
 
@@ -116,16 +115,16 @@ func (p *FilecoinParser) FilterDuplicated(txs []*types.Transaction) []*types.Tra
 }
 
 func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata) (uint64, error) {
-	version := p.detectTraceVersion(metadata)
-	if version == "" {
+	parserVersion, err := p.translateParserVersionFromMetadata(metadata)
+	if err != nil {
 		return 0, errUnknownVersion
 	}
 
-	p.logger.Sugar().Debugf("node version found on trace files %s to get base fee", version)
-	switch {
-	case p.parserV21.IsVersionCompatible(version):
+	p.logger.Sugar().Debugf("node version found on trace files %s to get base fee", parserVersion)
+	switch parserVersion {
+	case parser.ParserV1:
 		return p.parserV21.GetBaseFee(traces)
-	case p.parserV23.IsVersionCompatible(version):
+	case parser.ParserV2:
 		return p.parserV23.GetBaseFee(traces)
 	}
 

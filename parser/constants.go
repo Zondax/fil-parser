@@ -1,6 +1,9 @@
 package parser
 
 const (
+	ParserV1 = "v1"
+	ParserV2 = "v2"
+
 	// Fees
 
 	TotalFeeOp           = "Fee"

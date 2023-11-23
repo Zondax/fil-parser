@@ -19,10 +19,7 @@ import (
 	"strings"
 )
 
-const (
-	VersionNext   = "v1.23"
-	VersionStable = "v1.24"
-)
+var NodeVersionsSupported = []string{"v1.23", "v1.24"}
 
 type Parser struct {
 	actorParser *actors.ActorParser
@@ -40,20 +37,18 @@ func NewParserV23(helper *helper.Helper, logger *zap.Logger) *Parser {
 	}
 }
 
-func (p *Parser) VersionStable() string {
-	return VersionStable
-}
-
-func (p *Parser) VersionNext() string {
-	return VersionNext
-}
-
 func (p *Parser) Version() string {
-	return VersionNext + "/" + VersionStable
+	return strings.Join(NodeVersionsSupported, "/")
 }
 
 func (p *Parser) IsVersionCompatible(ver string) bool {
-	return strings.EqualFold(VersionStable, ver) || strings.EqualFold(VersionNext, ver)
+	for _, i := range NodeVersionsSupported {
+		if strings.EqualFold(i, ver) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
