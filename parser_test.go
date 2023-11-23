@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	"github.com/zondax/fil-parser/parser/V21"
 	"github.com/zondax/fil-parser/parser/V23"
+	v1 "github.com/zondax/fil-parser/parser/v1"
 	"net/http"
 	"os"
 	"testing"
@@ -129,8 +129,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 		results expectedResults
 	}{
 		{
-			name:    "parser with traces from v21",
-			version: V21.NodeVersionsSupported[0],
+			name:    "parser with traces from v1",
+			version: v1.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
@@ -139,8 +139,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			},
 		},
 		{
-			name:    "parser with traces from v21 and the corner case of duplicated fees with level 0",
-			version: V21.NodeVersionsSupported[0],
+			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
+			version: v1.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "845259",
 			results: expectedResults{
@@ -189,7 +189,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 		height string
 	}{
 		{
-			name:   "height downloaded with v21",
+			name:   "height downloaded with v1",
 			url:    nodeUrl,
 			height: "2907480",
 		},
@@ -212,24 +212,24 @@ func TestParser_InDepthCompare(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
 			require.NoError(t, err)
-			v21Txs, v21Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
+			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
-			require.NotNil(t, v21Txs)
-			require.NotNil(t, v21Adds)
+			require.NotNil(t, v1Txs)
+			require.NotNil(t, v1Adds)
 
 			v23Txs, v23Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
 			require.NoError(t, err)
 			require.NotNil(t, v23Txs)
 			require.NotNil(t, v23Adds)
 
-			require.Equal(t, len(v21Txs), len(v23Txs))
-			require.Equal(t, v21Adds.Len(), v23Adds.Len())
+			require.Equal(t, len(v1Txs), len(v23Txs))
+			require.Equal(t, v1Adds.Len(), v23Adds.Len())
 
-			for i := range v21Txs {
-				require.True(t, v21Txs[i].Equal(*v23Txs[i]))
+			for i := range v1Txs {
+				require.True(t, v1Txs[i].Equal(*v23Txs[i]))
 			}
 
-			v21Adds.Range(func(key string, value *types.AddressInfo) bool {
+			v1Adds.Range(func(key string, value *types.AddressInfo) bool {
 				v23Value, ok := v23Adds.Get(key)
 				require.True(t, ok)
 				require.Equal(t, value, v23Value)
