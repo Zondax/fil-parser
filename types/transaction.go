@@ -45,6 +45,9 @@ type Transaction struct {
 func (t Transaction) Equal(b Transaction) bool {
 	b.ParentId = t.ParentId
 	b.Id = t.Id
+	b.ParserVersion = t.ParserVersion
+	b.NodeMajorMinorVersion = t.NodeMajorMinorVersion
+	b.NodeFullVersion = t.NodeFullVersion
 	return reflect.DeepEqual(t, b)
 }
 
