@@ -17,6 +17,8 @@ type TipsetBasicBlockData struct {
 	BasicBlockData
 	// Blocks Cid
 	BlocksCid []string `json:"blocks_cid" gorm:"type:Array(String);index:idx_blocks_cid"`
+
+	NodeInfo
 }
 
 type BlockMetadata struct {
