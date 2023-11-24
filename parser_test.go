@@ -173,7 +173,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
 			require.NoError(t, err)
-			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
+			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
 			require.NoError(t, err)
 			require.NotNil(t, txs)
 			require.NotNil(t, adds)
