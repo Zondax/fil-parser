@@ -64,13 +64,13 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 		// Get the miner that received the reward
 		params, ok := txMetadata["Params"]
 		if !ok {
-			zap.S().Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
+			t.Logger.Sugar().Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
 			return blockCid, nil
 		}
 
 		rewardsParams, ok := params.(reward.AwardBlockRewardParams)
 		if !ok {
-			zap.S().Errorf("Could not parse parameters for tx '%s'", txType)
+			t.Logger.Sugar().Errorf("Could not parse parameters for tx '%s'", txType)
 			return blockCid, nil
 		}
 		// Get the block that this miner mined
