@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -63,13 +64,13 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 		// Get the miner that received the reward
 		params, ok := txMetadata["Params"]
 		if !ok {
-			zap.S().Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
+			t.Logger.Sugar().Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
 			return blockCid, nil
 		}
 
 		rewardsParams, ok := params.(reward.AwardBlockRewardParams)
 		if !ok {
-			zap.S().Errorf("Could not parse parameters for tx '%s'", txType)
+			t.Logger.Sugar().Errorf("Could not parse parameters for tx '%s'", txType)
 			return blockCid, nil
 		}
 		// Get the block that this miner mined
@@ -134,4 +135,24 @@ func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (s
 	}
 
 	return b.Cid().String(), nil
+}
+
+func SetNodeMetadataOnTxs(txs []*types.Transaction, metadata types.BlockMetadata, parserVer string) []*types.Transaction {
+	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
+	if nodeMajorMinorVersion == "" {
+		nodeMajorMinorVersion = "unknown"
+	}
+
+	nodeFullVersion := metadata.NodeFullVersion
+	if nodeFullVersion == "" {
+		nodeFullVersion = "unknown"
+	}
+
+	for _, tx := range txs {
+		tx.NodeMajorMinorVersion = nodeMajorMinorVersion
+		tx.NodeFullVersion = nodeFullVersion
+		tx.ParserVersion = parserVer
+	}
+
+	return txs
 }
