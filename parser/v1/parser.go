@@ -3,6 +3,9 @@ package v1
 import (
 	"encoding/json"
 	"errors"
+	"math/big"
+	"strings"
+
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
@@ -15,8 +18,6 @@ import (
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
-	"math/big"
-	"strings"
 )
 
 const Version = "v1"
@@ -57,7 +58,7 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV1.ComputeStateOutputV1{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
@@ -140,6 +141,8 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 			transactions = append(transactions, feeTx)
 		}
 	}
+
+	transactions = tools.SetNodeMetadataOnTxs(transactions, metadata, Version)
 
 	// Clear this cache when we finish processing a tipset.
 	// Bad addresses in this tipset might be valid in the next one

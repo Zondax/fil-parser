@@ -5,13 +5,14 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"testing"
+
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
-	"net/http"
-	"os"
-	"testing"
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/lotus/api/client"
@@ -172,7 +173,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
 			require.NoError(t, err)
-			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
+			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
 			require.NoError(t, err)
 			require.NotNil(t, txs)
 			require.NotNil(t, adds)
@@ -212,12 +213,12 @@ func TestParser_InDepthCompare(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
 			require.NoError(t, err)
-			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
+			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
 			require.NotNil(t, v1Txs)
 			require.NotNil(t, v1Adds)
 
-			v2Txs, v2Adds, err := p.ParseTransactions(traces, tipset, ethlogs, &types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
+			v2Txs, v2Adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
 			require.NoError(t, err)
 			require.NotNil(t, v2Txs)
 			require.NotNil(t, v2Adds)

@@ -3,10 +3,11 @@ package types
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"math/big"
 	"reflect"
 	"time"
+
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 )
 
 // Transaction parses transaction heights into the desired format for reports
@@ -36,11 +37,17 @@ type Transaction struct {
 	TxType string `json:"tx_type" gorm:"index:idx_tx_type"`
 	// TxMetadata is the message metadata
 	TxMetadata string `json:"tx_metadata"`
+	// ParserVersion is the parser version used to parse this tx
+	ParserVersion string `json:"parser_version"`
+	NodeInfo
 }
 
 func (t Transaction) Equal(b Transaction) bool {
 	b.ParentId = t.ParentId
 	b.Id = t.Id
+	b.ParserVersion = t.ParserVersion
+	b.NodeMajorMinorVersion = t.NodeMajorMinorVersion
+	b.NodeFullVersion = t.NodeFullVersion
 	return reflect.DeepEqual(t, b)
 }
 
