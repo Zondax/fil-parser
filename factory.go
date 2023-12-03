@@ -38,11 +38,11 @@ type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
 	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error)
-	GetBaseFee(traces []byte) (uint64, error)
+	GetBaseFee(traces []byte, height uint64) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, lotusURL string) (*FilecoinParser, error) {
 	logger = logger2.GetSafeLogger(logger)
 	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
 	if err != nil {
@@ -51,8 +51,8 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, logger)
-	parserV1 := v1.NewParser(helper, logger)
-	parserV2 := v2.NewParser(helper, logger)
+	parserV1 := v1.NewParser(helper, logger, lotusURL)
+	parserV2 := v2.NewParser(helper, logger, lotusURL)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -116,7 +116,7 @@ func (p *FilecoinParser) FilterDuplicated(txs []*types.Transaction) []*types.Tra
 	return filteredTxs
 }
 
-func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata) (uint64, error) {
+func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata, height uint64) (uint64, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(metadata)
 	if err != nil {
 		return 0, errUnknownVersion
@@ -125,9 +125,9 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
-		return p.parserV1.GetBaseFee(traces)
+		return p.parserV1.GetBaseFee(traces, height)
 	case v2.Version:
-		return p.parserV2.GetBaseFee(traces)
+		return p.parserV2.GetBaseFee(traces, height)
 	}
 
 	return 0, errUnknownImpl

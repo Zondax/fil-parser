@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
+	"net/http"
 	"strings"
 
 	"github.com/bytedance/sonic"
@@ -25,18 +26,20 @@ const Version = "v2"
 var NodeVersionsSupported = []string{"v1.23", "v1.24"}
 
 type Parser struct {
-	actorParser *actors.ActorParser
-	addresses   *types.AddressInfoMap
-	helper      *helper.Helper
-	logger      *zap.Logger
+	actorParser   *actors.ActorParser
+	addresses     *types.AddressInfoMap
+	helper        *helper.Helper
+	logger        *zap.Logger
+	httpFilClient parser.HTTPFilClient
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
+func NewParser(helper *helper.Helper, logger *zap.Logger, lotusURL string) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(helper, logger),
-		addresses:   types.NewAddressInfoMap(),
-		helper:      helper,
-		logger:      logger2.GetSafeLogger(logger),
+		actorParser:   actors.NewActorParser(helper, logger),
+		addresses:     types.NewAddressInfoMap(),
+		helper:        helper,
+		logger:        logger2.GetSafeLogger(logger),
+		httpFilClient: parser.NewHttpFilClient(&http.Client{}, lotusURL),
 	}
 }
 
@@ -114,11 +117,10 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	return transactions, p.addresses, nil
 }
 
-func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
+func (p *Parser) GetBaseFee(traces []byte, height uint64) (uint64, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
-	err := sonic.UnmarshalString(string(traces), &computeState)
-	if err != nil {
+	if err := sonic.UnmarshalString(string(traces), &computeState); err != nil {
 		p.logger.Sugar().Error(err)
 		return 0, errors.New("could not decode")
 	}
@@ -138,11 +140,14 @@ func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 	}
 
 	if !found {
-		return 0, errors.New("could not find base fee")
+		parentBaseFee, err := parser.GetParentBaseFeeByHeight(height, p.httpFilClient, p.logger)
+		if err != nil {
+			return 0, err
+		}
+		return parentBaseFee, nil
 	}
 
 	return baseFee.Uint64(), nil
-
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
