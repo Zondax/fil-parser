@@ -8,7 +8,6 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -72,26 +71,13 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 	}
 }
 
-func GetParentBaseFeeByHeight(height uint64, httpFilClient HTTPFilClient, logger *zap.Logger) (uint64, error) {
-	response, err := httpFilClient.GetTipsetByHeight(height)
-	if err != nil {
-		logger.Sugar().Errorf("Error fetching Tipset by height: %v", err)
-		return 0, err
-	}
-
-	if len(response.Result.Blocks) == 0 {
-		errMsg := fmt.Sprintf("No blocks found in the Tipset at height %d", height)
+func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *zap.Logger) (uint64, error) {
+	if len(tipset.TipSet.Blocks()) == 0 {
+		errMsg := fmt.Sprintf("No blocks found in the Tipset")
 		logger.Sugar().Error(errMsg)
 		return 0, errors.New(errMsg)
 	}
 
-	parentBaseFee := response.Result.Blocks[0].ParentBaseFee
-
-	result, err := strconv.ParseUint(parentBaseFee, 10, 64)
-	if err != nil {
-		logger.Sugar().Error(err)
-		return 0, errors.New(err.Error())
-	}
-
-	return result, nil
+	parentBaseFee := tipset.TipSet.Blocks()[0].ParentBaseFee
+	return parentBaseFee.Uint64(), nil
 }
