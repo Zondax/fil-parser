@@ -71,10 +71,15 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 }
 
 func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *zap.Logger) (uint64, error) {
+	defaultError := errors.New("could not find base fee")
+	if tipset == nil {
+		logger.Sugar().Error("tipset is nil")
+		return 0, defaultError
+	}
+
 	if len(tipset.TipSet.Blocks()) == 0 {
-		err := errors.New("No blocks found in the Tipset")
-		logger.Sugar().Error(err.Error())
-		return 0, err
+		logger.Sugar().Error("no blocks found in the Tipset")
+		return 0, defaultError
 	}
 
 	parentBaseFee := tipset.TipSet.Blocks()[0].ParentBaseFee
