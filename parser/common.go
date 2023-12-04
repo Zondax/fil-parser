@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/types"
@@ -73,9 +72,9 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 
 func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *zap.Logger) (uint64, error) {
 	if len(tipset.TipSet.Blocks()) == 0 {
-		errMsg := fmt.Sprintf("No blocks found in the Tipset")
-		logger.Sugar().Error(errMsg)
-		return 0, errors.New(errMsg)
+		err := errors.New("No blocks found in the Tipset")
+		logger.Sugar().Error(err.Error())
+		return 0, err
 	}
 
 	parentBaseFee := tipset.TipSet.Blocks()[0].ParentBaseFee
