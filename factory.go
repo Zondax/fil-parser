@@ -38,7 +38,7 @@ type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
 	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error)
-	GetBaseFee(traces []byte) (uint64, error)
+	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
 
@@ -116,7 +116,7 @@ func (p *FilecoinParser) FilterDuplicated(txs []*types.Transaction) []*types.Tra
 	return filteredTxs
 }
 
-func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata) (uint64, error) {
+func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (uint64, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(metadata)
 	if err != nil {
 		return 0, errUnknownVersion
@@ -125,9 +125,9 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata)
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
-		return p.parserV1.GetBaseFee(traces)
+		return p.parserV1.GetBaseFee(traces, tipset)
 	case v2.Version:
-		return p.parserV2.GetBaseFee(traces)
+		return p.parserV2.GetBaseFee(traces, tipset)
 	}
 
 	return 0, errUnknownImpl
