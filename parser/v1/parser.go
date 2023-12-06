@@ -150,11 +150,10 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	return transactions, p.addresses, nil
 }
 
-func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
+func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV1.ComputeStateOutputV1{}
-	err := sonic.UnmarshalString(string(traces), &computeState)
-	if err != nil {
+	if err := sonic.UnmarshalString(string(traces), &computeState); err != nil {
 		p.logger.Sugar().Error(err)
 		return 0, errors.New("could not decode")
 	}
@@ -174,7 +173,7 @@ func (p *Parser) GetBaseFee(traces []byte) (uint64, error) {
 	}
 
 	if !found {
-		return 0, errors.New("could not find base fee")
+		return parser.GetParentBaseFeeByHeight(tipset, p.logger)
 	}
 
 	return baseFee.Uint64(), nil

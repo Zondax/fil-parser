@@ -2,9 +2,11 @@ package parser
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 	"strings"
 	"time"
 )
@@ -66,4 +68,20 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 			}
 		}
 	}
+}
+
+func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *zap.Logger) (uint64, error) {
+	defaultError := errors.New("could not find base fee")
+	if tipset == nil {
+		logger.Sugar().Error("get-parent-base-fee: tipset is nil")
+		return 0, defaultError
+	}
+
+	if len(tipset.TipSet.Blocks()) == 0 {
+		logger.Sugar().Error("get-parent-base-fee: no blocks found in the Tipset")
+		return 0, defaultError
+	}
+
+	parentBaseFee := tipset.TipSet.Blocks()[0].ParentBaseFee
+	return parentBaseFee.Uint64(), nil
 }
