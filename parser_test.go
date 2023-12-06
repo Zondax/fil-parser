@@ -5,9 +5,9 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/filecoin-project/lotus/api"
@@ -187,22 +187,27 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 func TestParser_GetBaseFee(t *testing.T) {
 	tests := []struct {
-		name    string
-		version string
-		url     string
-		height  string
+		name     string
+		version  string
+		url      string
+		height   string
+		baseFee  *big.Int
+		fallback bool
 	}{
 		{
 			name:    "parser with getBaseFee",
 			version: v2.NodeVersionsSupported[0],
 			url:     nodeUrl,
 			height:  "2907480",
+			baseFee: big.NewInt(96036633),
 		},
 		{
-			name:    "parser with getBaseFee fallback",
-			version: v2.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "3140097",
+			name:     "parser with getBaseFee fallback",
+			version:  v2.NodeVersionsSupported[0],
+			url:      nodeUrl,
+			height:   "3450305",
+			baseFee:  big.NewInt(100),
+			fallback: true,
 		},
 	}
 	for _, tt := range tests {
@@ -211,26 +216,17 @@ func TestParser_GetBaseFee(t *testing.T) {
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
-			ethlogs, err := readEthLogs(tt.height)
-			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
 			require.NoError(t, err)
-			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
+			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
-			require.NotNil(t, txs)
-			require.NotNil(t, adds)
-			hasFee := false
-			for _, tx := range txs {
-				if strings.EqualFold(tx.TxType, feeType) {
-					hasFee = true
-					break
-				}
+			require.Equal(t, baseFee, tt.baseFee.Uint64())
+			if tt.fallback {
+				require.Equal(t, baseFee, tipset.Blocks()[0].ParentBaseFee.Uint64())
 			}
-
-			require.True(t, hasFee)
 		})
 	}
 }
