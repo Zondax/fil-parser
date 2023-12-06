@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"os"
 	"testing"
@@ -29,6 +30,7 @@ const (
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
 	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
+	feeType           = "fee"
 )
 
 func getFilename(prefix, height string) string {
@@ -179,6 +181,52 @@ func TestParser_ParseTransactions(t *testing.T) {
 			require.NotNil(t, adds)
 			require.Equal(t, tt.results.totalTraces, len(txs))
 			require.Equal(t, tt.results.totalAddress, adds.Len())
+		})
+	}
+}
+
+func TestParser_GetBaseFee(t *testing.T) {
+	tests := []struct {
+		name     string
+		version  string
+		url      string
+		height   string
+		baseFee  *big.Int
+		fallback bool
+	}{
+		{
+			name:    "parser with getBaseFee",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907480",
+			baseFee: big.NewInt(96036633),
+		},
+		{
+			name:     "parser with getBaseFee fallback",
+			version:  v2.NodeVersionsSupported[0],
+			url:      nodeUrl,
+			height:   "3450305",
+			baseFee:  big.NewInt(100),
+			fallback: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
+
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			traces, err := readGzFile(tracesFilename(tt.height))
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
+			require.NoError(t, err)
+			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
+			require.NoError(t, err)
+			require.Equal(t, baseFee, tt.baseFee.Uint64())
+			if tt.fallback {
+				require.Equal(t, baseFee, tipset.Blocks()[0].ParentBaseFee.Uint64())
+			}
 		})
 	}
 }
