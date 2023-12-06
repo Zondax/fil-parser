@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/filecoin-project/lotus/api"
@@ -29,6 +30,7 @@ const (
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
 	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
+	feeType           = "fee"
 )
 
 func getFilename(prefix, height string) string {
@@ -179,6 +181,56 @@ func TestParser_ParseTransactions(t *testing.T) {
 			require.NotNil(t, adds)
 			require.Equal(t, tt.results.totalTraces, len(txs))
 			require.Equal(t, tt.results.totalAddress, adds.Len())
+		})
+	}
+}
+
+func TestParser_GetBaseFee(t *testing.T) {
+	tests := []struct {
+		name    string
+		version string
+		url     string
+		height  string
+	}{
+		{
+			name:    "parser with getBaseFee",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907480",
+		},
+		{
+			name:    "parser with getBaseFee fallback",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "3140097",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
+
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			ethlogs, err := readEthLogs(tt.height)
+			require.NoError(t, err)
+			traces, err := readGzFile(tracesFilename(tt.height))
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
+			require.NoError(t, err)
+			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
+			require.NoError(t, err)
+			require.NotNil(t, txs)
+			require.NotNil(t, adds)
+			hasFee := false
+			for _, tx := range txs {
+				if strings.EqualFold(tx.TxType, feeType) {
+					hasFee = true
+					break
+				}
+			}
+
+			require.True(t, hasFee)
 		})
 	}
 }
