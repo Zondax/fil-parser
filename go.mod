@@ -7,7 +7,7 @@ require (
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-state-types v0.12.8
-	github.com/filecoin-project/lotus v1.24.0
+	github.com/filecoin-project/lotus v1.24.1
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
 	github.com/google/uuid v1.4.0
@@ -17,7 +17,7 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/stretchr/testify v1.8.4
 	github.com/whyrusleeping/cbor-gen v0.0.0-20230923211252-36a87e1ba72f
-	github.com/zondax/rosetta-filecoin-lib v1.2400.0
+	github.com/zondax/rosetta-filecoin-lib v1.2401.0
 	github.com/zondax/znats v0.0.1
 	go.uber.org/zap v1.26.0
 	gorm.io/gorm v1.25.5
