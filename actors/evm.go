@@ -49,13 +49,21 @@ func (p *ActorParser) resurrect(raw []byte) (map[string]interface{}, error) {
 
 func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
+	reader := bytes.NewReader(rawParams)
+	var params evm.DelegateCallParams
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[parser.ParamsKey] = params
+
 	metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(rawReturn)
 	logs, err := searchEthLogs(ethLogs, msgCid.String())
 	if err != nil {
 		return metadata, err
 	}
 	metadata[parser.EthLogsKey] = logs
+
 	return metadata, nil
 }
 
