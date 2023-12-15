@@ -50,7 +50,7 @@ func (p *ActorParser) resurrect(raw []byte) (map[string]interface{}, error) {
 func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
-	var params evm.DelegateCallParams
+	var params abi.CborBytes
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
