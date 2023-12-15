@@ -110,6 +110,8 @@ func TestActorParser_invokeContract(t *testing.T) {
 	got, err := p.invokeContract(rawParams, rawReturn, msg.Cid, ethLogs)
 	require.NoError(t, err)
 	require.NotNil(t, got)
+	require.Equal(t, got["Params"], "0x8381e182ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000008b21c7d96a349834dcfaddf871accda700b843e1")
+	require.Equal(t, got["Return"], "0x00000000000000000000000000000000000000000000000698b81208dfe49012")
 }
 
 func TestActorParser_invokeContractReadOnly(t *testing.T) {
