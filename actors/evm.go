@@ -55,9 +55,16 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 	if err != nil {
 		return metadata, err
 	}
-	metadata[parser.ParamsKey] = params
+	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
 
-	metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(rawReturn)
+	reader = bytes.NewReader(rawReturn)
+	var returnValue abi.CborBytes
+	err = returnValue.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+
+	metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	logs, err := searchEthLogs(ethLogs, msgCid.String())
 	if err != nil {
 		return metadata, err
