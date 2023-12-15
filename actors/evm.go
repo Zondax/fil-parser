@@ -63,7 +63,6 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 		return metadata, err
 	}
 	metadata[parser.EthLogsKey] = logs
-
 	return metadata, nil
 }
 
