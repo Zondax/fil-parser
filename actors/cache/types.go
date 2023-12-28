@@ -20,8 +20,8 @@ type IActorsCache interface {
 }
 
 type ActorsCache struct {
-	offlineCache IActorsCache
-	onChainCache IActorsCache
-	badAddress   cmap.ConcurrentMap
-	logger       *zap.Logger
+	offChainCache IActorsCache
+	onChainCache  IActorsCache
+	badAddress    cmap.ConcurrentMap
+	logger        *zap.Logger
 }
