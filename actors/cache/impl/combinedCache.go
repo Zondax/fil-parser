@@ -45,8 +45,8 @@ func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	}
 
 	prefix := ""
-	if source.Config.Cache.GlobalPrefix != "" {
-		prefix = fmt.Sprintf("%s/", source.Config.Cache.GlobalPrefix)
+	if cacheConfig.GlobalPrefix != "" {
+		prefix = fmt.Sprintf("%s/", cacheConfig.GlobalPrefix)
 	}
 	if source.Config.NetworkName != "" {
 		prefix = fmt.Sprintf("%s%s/", prefix, source.Config.NetworkName)
@@ -54,26 +54,26 @@ func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
 
 	shortCidMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2CidMapPrefix),
-		GlobalTtlSeconds:   source.Config.Cache.GlobalTtlSeconds,
-		IsRemoteBestEffort: source.Config.Cache.IsRemoteBestEffort,
-		Local:              source.Config.Cache.Local,
-		Remote:             source.Config.Cache.Remote,
+		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
 	}
 
 	robustShortMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
 		GlobalTtlSeconds:   -1,
-		IsRemoteBestEffort: source.Config.Cache.IsRemoteBestEffort,
-		Local:              source.Config.Cache.Local,
-		Remote:             source.Config.Cache.Remote,
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
 	}
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
 		GlobalTtlSeconds:   -1,
-		IsRemoteBestEffort: source.Config.Cache.IsRemoteBestEffort,
-		Local:              source.Config.Cache.Local,
-		Remote:             source.Config.Cache.Remote,
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
 	}
 
 	var err error
