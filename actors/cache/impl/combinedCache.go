@@ -32,13 +32,28 @@ type Combined struct {
 func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	m.logger = logger2.GetSafeLogger(logger)
 
+	// If no config was provided, the combined cache is configured as
+	// remote best effort, as the remote cache will fail. However, the cache will
+	// work anyway
+	cacheConfig := source.Config.Cache
+	if cacheConfig == nil {
+		cacheConfig = &zcache.CombinedConfig{
+			IsRemoteBestEffort: true,
+			Local:              &zcache.LocalConfig{},
+			Remote:             &zcache.RemoteConfig{},
+		}
+	}
+
 	prefix := ""
 	if source.Config.Cache.GlobalPrefix != "" {
 		prefix = fmt.Sprintf("%s/", source.Config.Cache.GlobalPrefix)
 	}
+	if source.Config.NetworkName != "" {
+		prefix = fmt.Sprintf("%s%s/", prefix, source.Config.NetworkName)
+	}
 
 	shortCidMapConfig := &zcache.CombinedConfig{
-		GlobalPrefix:       fmt.Sprintf("%s%s/%s", prefix, source.Config.NetworkName, Short2CidMapPrefix),
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2CidMapPrefix),
 		GlobalTtlSeconds:   source.Config.Cache.GlobalTtlSeconds,
 		IsRemoteBestEffort: source.Config.Cache.IsRemoteBestEffort,
 		Local:              source.Config.Cache.Local,
@@ -46,7 +61,7 @@ func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	}
 
 	robustShortMapConfig := &zcache.CombinedConfig{
-		GlobalPrefix:       fmt.Sprintf("%s%s/%s", prefix, source.Config.NetworkName, Robust2ShortMapPrefix),
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
 		GlobalTtlSeconds:   -1,
 		IsRemoteBestEffort: source.Config.Cache.IsRemoteBestEffort,
 		Local:              source.Config.Cache.Local,
@@ -54,7 +69,7 @@ func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	}
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
-		GlobalPrefix:       fmt.Sprintf("%s%s/%s", prefix, source.Config.NetworkName, Short2RobustMapPrefix),
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
 		GlobalTtlSeconds:   -1,
 		IsRemoteBestEffort: source.Config.Cache.IsRemoteBestEffort,
 		Local:              source.Config.Cache.Local,
