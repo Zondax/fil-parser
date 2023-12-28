@@ -37,13 +37,13 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	cacheConfig := source.Config.Cache
 	if cacheConfig == nil {
 		m.cacheType = "in-memory"
-		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix}); err != nil {
+		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: -1}); err != nil {
 			return err
 		}
-		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix}); err != nil {
+		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: -1}); err != nil {
 			return err
 		}
-		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix}); err != nil {
+		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, EvictionInSeconds: -1}); err != nil {
 			return err
 		}
 	} else {
