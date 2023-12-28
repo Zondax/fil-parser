@@ -38,7 +38,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*Actors
 		return nil, err
 	}
 
-	var combinedCache impl.Combined
+	var combinedCache impl.ZCache
 	if err = combinedCache.NewImpl(dataSource, logger); err != nil {
 		logger.Sugar().Errorf("[ActorsCache] - Unable to initialize combined cache: %s", err.Error())
 		return nil, err

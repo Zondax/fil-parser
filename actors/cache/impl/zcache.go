@@ -15,21 +15,20 @@ import (
 )
 
 const (
-	CombinedCacheImpl     = "combined-cache"
-	Short2CidMapPrefix    = "short2Cid"
-	Robust2ShortMapPrefix = "robust2Short"
-	Short2RobustMapPrefix = "short2Robust"
+	ZCacheImpl = "zcache"
 )
 
-// Combined In-Memory + Distributed Combined database
-type Combined struct {
-	shortCidMap    zcache.CombinedCache
-	robustShortMap zcache.CombinedCache
-	shortRobustMap zcache.CombinedCache
+// ZCache In-Memory database
+type ZCache struct {
+	shortCidMap    zcache.ZCache
+	robustShortMap zcache.ZCache
+	shortRobustMap zcache.ZCache
 	logger         *zap.Logger
+	cacheType      string
 }
 
-func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
+	var err error
 	m.logger = logger2.GetSafeLogger(logger)
 
 	// If no config was provided, the combined cache is configured as
@@ -37,69 +36,74 @@ func (m *Combined) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	// work anyway
 	cacheConfig := source.Config.Cache
 	if cacheConfig == nil {
-		cacheConfig = &zcache.CombinedConfig{
-			IsRemoteBestEffort: true,
-			Local:              &zcache.LocalConfig{},
-			Remote:             &zcache.RemoteConfig{},
+		m.cacheType = "in-memory"
+		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix}); err != nil {
+			return err
+		}
+		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix}); err != nil {
+			return err
+		}
+		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix}); err != nil {
+			return err
+		}
+	} else {
+		m.cacheType = "combined"
+
+		prefix := ""
+		if cacheConfig.GlobalPrefix != "" {
+			prefix = fmt.Sprintf("%s/", cacheConfig.GlobalPrefix)
+		}
+		if source.Config.NetworkName != "" {
+			prefix = fmt.Sprintf("%s%s/", prefix, source.Config.NetworkName)
+		}
+
+		shortCidMapConfig := &zcache.CombinedConfig{
+			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2CidMapPrefix),
+			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
+			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+			Local:              cacheConfig.Local,
+			Remote:             cacheConfig.Remote,
+		}
+
+		robustShortMapConfig := &zcache.CombinedConfig{
+			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
+			GlobalTtlSeconds:   -1,
+			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+			Local:              cacheConfig.Local,
+			Remote:             cacheConfig.Remote,
+		}
+
+		shortRobustMapConfig := &zcache.CombinedConfig{
+			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
+			GlobalTtlSeconds:   -1,
+			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+			Local:              cacheConfig.Local,
+			Remote:             cacheConfig.Remote,
+		}
+
+		if m.shortCidMap, err = zcache.NewCombinedCache(shortCidMapConfig); err != nil {
+			return err
+		}
+		if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
+			return err
+		}
+		if m.shortRobustMap, err = zcache.NewCombinedCache(shortRobustMapConfig); err != nil {
+			return err
 		}
 	}
-
-	prefix := ""
-	if cacheConfig.GlobalPrefix != "" {
-		prefix = fmt.Sprintf("%s/", cacheConfig.GlobalPrefix)
-	}
-	if source.Config.NetworkName != "" {
-		prefix = fmt.Sprintf("%s%s/", prefix, source.Config.NetworkName)
-	}
-
-	shortCidMapConfig := &zcache.CombinedConfig{
-		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2CidMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
-		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-		Local:              cacheConfig.Local,
-		Remote:             cacheConfig.Remote,
-	}
-
-	robustShortMapConfig := &zcache.CombinedConfig{
-		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
-		GlobalTtlSeconds:   -1,
-		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-		Local:              cacheConfig.Local,
-		Remote:             cacheConfig.Remote,
-	}
-
-	shortRobustMapConfig := &zcache.CombinedConfig{
-		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
-		GlobalTtlSeconds:   -1,
-		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-		Local:              cacheConfig.Local,
-		Remote:             cacheConfig.Remote,
-	}
-
-	var err error
-	if m.shortCidMap, err = zcache.NewCombinedCache(shortCidMapConfig); err != nil {
-		return err
-	}
-	if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
-		return err
-	}
-	if m.shortRobustMap, err = zcache.NewCombinedCache(shortRobustMapConfig); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (m *Combined) ImplementationType() string {
-	return CombinedCacheImpl
+func (m *ZCache) ImplementationType() string {
+	return ZCacheImpl + "/" + m.cacheType
 }
 
-func (m *Combined) BackFill() error {
+func (m *ZCache) BackFill() error {
 	// Nothing to do
 	return nil
 }
 
-func (m *Combined) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
+func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
 		m.logger.Sugar().Infof("[ActorsCache] - Error getting short address: %s\n", err.Error())
@@ -119,7 +123,7 @@ func (m *Combined) GetActorCode(address address.Address, key filTypes.TipSetKey)
 	return code, nil
 }
 
-func (m *Combined) GetRobustAddress(address address.Address) (string, error) {
+func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -144,7 +148,7 @@ func (m *Combined) GetRobustAddress(address address.Address) (string, error) {
 	return robustAdd, nil
 }
 
-func (m *Combined) GetShortAddress(address address.Address) (string, error) {
+func (m *ZCache) GetShortAddress(address address.Address) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -170,7 +174,7 @@ func (m *Combined) GetShortAddress(address address.Address) (string, error) {
 	return shortAdd, nil
 }
 
-func (m *Combined) storeRobustShort(robust string, short string) {
+func (m *ZCache) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
 		// zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
 		return
@@ -180,7 +184,7 @@ func (m *Combined) storeRobustShort(robust string, short string) {
 	_ = m.robustShortMap.Set(ctx, robust, short, -1)
 }
 
-func (m *Combined) storeShortRobust(short string, robust string) {
+func (m *ZCache) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
 		// zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
 		return
@@ -190,13 +194,13 @@ func (m *Combined) storeShortRobust(short string, robust string) {
 	_ = m.shortRobustMap.Set(ctx, short, robust, -1)
 }
 
-func (m *Combined) StoreAddressInfo(info types.AddressInfo) {
+func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 	m.storeRobustShort(info.Robust, info.Short)
 	m.storeShortRobust(info.Short, info.Robust)
 	m.storeActorCode(info.Short, info.ActorCid)
 }
 
-func (m *Combined) storeActorCode(shortAddress string, cid string) {
+func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
 		// zap.S().Warn("[ActorsCache] - Trying to store empty cid or short address")
 		return
