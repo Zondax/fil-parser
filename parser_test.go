@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v1 "github.com/zondax/fil-parser/parser/v1"
@@ -173,7 +175,10 @@ func TestParser_ParseTransactions(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
 			require.NoError(t, err)
@@ -219,7 +224,10 @@ func TestParser_GetBaseFee(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
@@ -259,7 +267,10 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), nil)
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
