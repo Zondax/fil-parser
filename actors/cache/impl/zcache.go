@@ -19,7 +19,8 @@ const (
 	ZCacheLocalOnly = "in-memory"
 	ZCacheCombined  = "combined"
 	NoTtl           = -1
-	DummyTtl        = -2
+	DummyTtl        = -1
+	PrefixSplitter  = "/"
 )
 
 // ZCache In-Memory database
@@ -45,13 +46,13 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		m.ttl = NoTtl
 
 		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: m.ttl}); err != nil {
-			return err
+			return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
 		}
 		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: m.ttl}); err != nil {
-			return err
+			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
 		}
 		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, EvictionInSeconds: m.ttl}); err != nil {
-			return err
+			return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
 		}
 	} else {
 		m.cacheType = ZCacheCombined
@@ -59,10 +60,10 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
-			prefix = fmt.Sprintf("%s/", cacheConfig.GlobalPrefix)
+			prefix = fmt.Sprintf("%s%s", cacheConfig.GlobalPrefix, PrefixSplitter)
 		}
 		if source.Config.NetworkName != "" {
-			prefix = fmt.Sprintf("%s%s/", prefix, source.Config.NetworkName)
+			prefix = fmt.Sprintf("%s%s%s", prefix, source.Config.NetworkName, PrefixSplitter)
 		}
 
 		shortCidMapConfig := &zcache.CombinedConfig{
@@ -90,13 +91,13 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 
 		if m.shortCidMap, err = zcache.NewCombinedCache(shortCidMapConfig); err != nil {
-			return err
+			return fmt.Errorf("error creating shortCidMap for combined zcache, err: %s", err)
 		}
 		if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
-			return err
+			return fmt.Errorf("error creating robustShortMap for combined zcache, err: %s", err)
 		}
 		if m.shortRobustMap, err = zcache.NewCombinedCache(shortRobustMapConfig); err != nil {
-			return err
+			return fmt.Errorf("error creating shortRobustMap for combined zcache, err: %s", err)
 		}
 	}
 	return nil
