@@ -15,7 +15,11 @@ import (
 )
 
 const (
-	ZCacheImpl = "zcache"
+	ZCacheImpl      = "zcache"
+	ZCacheLocalOnly = "in-memory"
+	ZCacheCombined  = "combined"
+	NoTtl           = -1
+	DummyTtl        = -2
 )
 
 // ZCache In-Memory database
@@ -25,6 +29,7 @@ type ZCache struct {
 	shortRobustMap zcache.ZCache
 	logger         *zap.Logger
 	cacheType      string
+	ttl            int
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
@@ -36,18 +41,21 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	// work anyway
 	cacheConfig := source.Config.Cache
 	if cacheConfig == nil {
-		m.cacheType = "in-memory"
-		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: -1}); err != nil {
+		m.cacheType = ZCacheLocalOnly
+		m.ttl = NoTtl
+
+		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: m.ttl}); err != nil {
 			return err
 		}
-		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: -1}); err != nil {
+		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: m.ttl}); err != nil {
 			return err
 		}
-		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, EvictionInSeconds: -1}); err != nil {
+		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, EvictionInSeconds: m.ttl}); err != nil {
 			return err
 		}
 	} else {
-		m.cacheType = "combined"
+		m.cacheType = ZCacheCombined
+		m.ttl = cacheConfig.GlobalTtlSeconds
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
@@ -67,7 +75,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 
 		robustShortMapConfig := &zcache.CombinedConfig{
 			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
-			GlobalTtlSeconds:   -1,
+			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 			Local:              cacheConfig.Local,
 			Remote:             cacheConfig.Remote,
@@ -75,7 +83,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 
 		shortRobustMapConfig := &zcache.CombinedConfig{
 			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
-			GlobalTtlSeconds:   -1,
+			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 			Local:              cacheConfig.Local,
 			Remote:             cacheConfig.Remote,
@@ -106,7 +114,7 @@ func (m *ZCache) BackFill() error {
 func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
-		m.logger.Sugar().Infof("[ActorsCache] - Error getting short address: %s\n", err.Error())
+		m.logger.Sugar().Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
 		return cid.Undef.String(), common.ErrKeyNotFound
 	}
 
@@ -176,22 +184,26 @@ func (m *ZCache) GetShortAddress(address address.Address) (string, error) {
 
 func (m *ZCache) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
-		// zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
+	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
+	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.robustShortMap.Set(ctx, robust, short, -1)
+	_ = m.robustShortMap.Set(ctx, robust, short, DummyTtl)
 }
 
 func (m *ZCache) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
-		// zap.S().Warn("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
+	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
+	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortRobustMap.Set(ctx, short, robust, -1)
+	_ = m.shortRobustMap.Set(ctx, short, robust, DummyTtl)
 }
 
 func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
@@ -202,10 +214,12 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 
 func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
-		// zap.S().Warn("[ActorsCache] - Trying to store empty cid or short address")
+		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
 
+	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
+	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortCidMap.Set(ctx, shortAddress, cid, -1)
+	_ = m.shortCidMap.Set(ctx, shortAddress, cid, DummyTtl)
 }
