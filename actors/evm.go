@@ -3,6 +3,7 @@ package actors
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -53,18 +54,20 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 	var params abi.CborBytes
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		p.logger.Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
+	} else {
+		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
 	}
-	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
 
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	err = returnValue.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		p.logger.Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
+	} else {
+		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	}
 
-	metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	logs, err := searchEthLogs(ethLogs, msgCid.String())
 	if err != nil {
 		return metadata, err
