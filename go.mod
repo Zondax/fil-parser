@@ -13,7 +13,6 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/ipfs/go-block-format v0.2.0
 	github.com/ipfs/go-cid v0.4.1
-	github.com/nats-io/nats.go v1.32.0
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/stretchr/testify v1.8.4
 	github.com/whyrusleeping/cbor-gen v0.0.0-20230923211252-36a87e1ba72f
@@ -137,6 +136,7 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
+	github.com/nats-io/nats.go v1.32.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nkovacs/streamquote v1.0.0 // indirect

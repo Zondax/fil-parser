@@ -45,9 +45,6 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		m.cacheType = ZCacheLocalOnly
 		m.ttl = NoTtl
 
-		if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
-			return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
-		}
 		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
 		}
@@ -64,15 +61,6 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 		if source.Config.NetworkName != "" {
 			prefix = fmt.Sprintf("%s%s%s", prefix, source.Config.NetworkName, PrefixSplitter)
-		}
-
-		shortCidMapConfig := &zcache.CombinedConfig{
-			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2CidMapPrefix),
-			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
-			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-			Local:              cacheConfig.Local,
-			Remote:             cacheConfig.Remote,
-			GlobalLogger:       m.logger,
 		}
 
 		robustShortMapConfig := &zcache.CombinedConfig{
@@ -93,9 +81,6 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 			GlobalLogger:       m.logger,
 		}
 
-		if m.shortCidMap, err = zcache.NewCombinedCache(shortCidMapConfig); err != nil {
-			return fmt.Errorf("error creating shortCidMap for combined zcache, err: %s", err)
-		}
 		if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
 			return fmt.Errorf("error creating robustShortMap for combined zcache, err: %s", err)
 		}
@@ -103,6 +88,11 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 			return fmt.Errorf("error creating shortRobustMap for combined zcache, err: %s", err)
 		}
 	}
+
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
+	}
+
 	return nil
 }
 
