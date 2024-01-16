@@ -800,8 +800,7 @@ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5t
 github.com/yuin/gopher-lua v1.1.0 h1:BojcDhfyDWgU2f2TOzYK/g5p2gxMrku8oupLDqlnSqE=
 github.com/zondax/golem v0.13.0 h1:wlwnK93yVmTM9LxulqFnYpRnkZjuAIXzdJB4/zXgXTo=
 github.com/zondax/golem v0.13.0/go.mod h1:NP5yp7BfA7ru9HpfgXimP+evWWzknc5tqnAhdDsa3dU=
-github.com/zondax/rosetta-filecoin-lib v1.2501.0-rc1 h1:sQtkBni66TQm2DYuoQHRUacg91SqSOWioqxrDuN2fYY=
-github.com/zondax/rosetta-filecoin-lib v1.2501.0-rc1/go.mod h1:wfyeQOQ5PL9ujNNHXc+40W22OpDSKg0Gk4snh4bMw8s=
+github.com/zondax/rosetta-filecoin-lib v1.2502.0 h1:2ErbiA4kwni3oUTonfewrS3IxozjMIGn8hOFaO3HUAY=
 github.com/zondax/rosetta-filecoin-lib v1.2502.0/go.mod h1:IbYbwU+3OZPKeOqnmK7LkKojn9bUhkT0yE2C6wFNoGw=
 github.com/zondax/znats v0.0.1 h1:x7KnTiwauROKc9DtAPQWxFwsQ0ffX2MXYc4KvWu0k3A=
 github.com/zondax/znats v0.0.1/go.mod h1:kEVeK//qkeEfsV06+lVh2P/n4mk9HilWCP9NeNgFtRE=
