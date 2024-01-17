@@ -52,20 +52,22 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	var params abi.CborBytes
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
+
+	if err := params.UnmarshalCBOR(reader); err != nil {
 		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
-	} else {
 		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
+	} else {
+		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
 	}
 
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
-	err = returnValue.UnmarshalCBOR(reader)
-	if err != nil {
+
+	if err := returnValue.UnmarshalCBOR(reader); err != nil {
 		p.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
-	} else {
 		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(rawReturn)
+	} else {
+		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	}
 
 	logs, err := searchEthLogs(ethLogs, msgCid.String())
