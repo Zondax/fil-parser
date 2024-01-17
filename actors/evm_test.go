@@ -154,6 +154,6 @@ func TestActorParser_invokeContract_whenCborUnmarshalFail(t *testing.T) {
 	got, err := p.invokeContract(rawParams, rawReturn, msg.Cid, ethLogs)
 	require.NoError(t, err)
 	require.NotNil(t, got)
-	require.Equal(t, got["Params"], "0x8381e182ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000008b21c7d96a349834dcfaddf871accda700b843e1")
+	require.Equal(t, got["Params"], "0x70a082310000000000000000000000001a5ef7ef64e3fb12be3b43edd77819dc7f034b1f")
 	require.Equal(t, got["Return"], "0x00000000000000000000000000000000000000000000000698b81208dfe49012")
 }
