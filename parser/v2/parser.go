@@ -174,6 +174,10 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
+	if trace.Msg.From.String() == "f02237552" && trace.Msg.To.String() == "f410f74s7vn5esqhmglfszihjkztjj3m3wkfbacg26oi" && tipset.Height() == 3573257 && strings.EqualFold(txType, "InvokeContract") {
+		println("debug")
+	}
+
 	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -218,6 +222,10 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
+
+	if messageUuid == "645594c4-d8e5-5732-bea5-1bd0b685b90c" {
+		print("debug")
+	}
 
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
