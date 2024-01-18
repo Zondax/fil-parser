@@ -59,7 +59,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
-	if reader.Len() == 0 {
+	if reader.Len() == 0 { // This means that the reader has processed all the bytes
 		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
 	}
 
@@ -69,7 +69,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 		p.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 
-	if reader.Len() == 0 {
+	if reader.Len() == 0 { // This means that the reader has processed all the bytes
 		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	}
 
