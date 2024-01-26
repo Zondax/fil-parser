@@ -267,6 +267,9 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 			BurnAddress: parser.BurnAddress,
 			Amount:      msg.GasCost.BaseFeeBurn.String(),
 		},
+		GasLimit:   msg.Msg.GasLimit,
+		GasFeeCap:  msg.Msg.GasFeeCap,
+		GasPremium: msg.Msg.GasPremium,
 	}
 
 	metadata, _ := json.Marshal(feesMetadata)

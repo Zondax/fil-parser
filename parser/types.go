@@ -83,6 +83,9 @@ type FeesMetadata struct {
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee
+	GasLimit              int64
+	GasFeeCap             abi.TokenAmount
+	GasPremium            abi.TokenAmount
 }
 
 type LotusMessage struct {
