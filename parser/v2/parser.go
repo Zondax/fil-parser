@@ -3,7 +3,9 @@ package v2
 import (
 	"encoding/json"
 	"errors"
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/api"
+	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"math/big"
 	"strings"
 
@@ -216,6 +218,9 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 
 	feesMetadataJson := p.feesTransactions(gasCost, tipset, blockCid)
 
+	txFromRobust := p.ensureRobustAddress(trace.Msg.From)
+	txToRobust := p.ensureRobustAddress(trace.Msg.To)
+
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
@@ -228,8 +233,8 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		Id:           messageUuid,
 		TxTimestamp:  parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:        mainMsgCid.String(),
-		TxFrom:       trace.Msg.From.String(),
-		TxTo:         trace.Msg.To.String(),
+		TxFrom:       txFromRobust,
+		TxTo:         txToRobust,
 		Amount:       trace.Msg.Value.Int,
 		Status:       parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:       txType,
@@ -272,4 +277,17 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
 	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
+}
+
+func (p *Parser) ensureRobustAddress(address address.Address) string {
+	if isRobust, _ := common.IsRobustAddress(address); isRobust {
+		return address.String()
+	}
+
+	robustAddress, err := p.helper.GetActorsCache().GetRobustAddress(address)
+	if err != nil {
+		p.logger.Sugar().Errorf("Error converting address to robust format: %v", err)
+		return address.String() // Fallback
+	}
+	return robustAddress
 }
