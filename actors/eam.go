@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/zondax/fil-parser/parser"
 	"strconv"
 
@@ -142,13 +143,17 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 
 func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawParams)
+	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
 
-	params := parser.EthPrefix
-	if len(rawParams) > 3 {
-		// TODO as go-state-type package has no CreateExternalParams type, we are just stripping out the cbor header manually. We should use that lib to parse this instead
-		params += hex.EncodeToString(rawParams[3:])
+	var params abi.CborBytes
+	if err := params.UnmarshalCBOR(reader); err != nil {
+		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
-	metadata[parser.ParamsKey] = params
+
+	if reader.Len() == 0 { // This means that the reader has processed all the bytes
+		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
+	}
 
 	createExternalReturn, err := p.parseEamReturn(rawReturn)
 	if err != nil {
