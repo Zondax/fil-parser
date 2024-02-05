@@ -286,7 +286,7 @@ func (p *Parser) ensureRobustAddress(address address.Address) string {
 
 	robustAddress, err := p.helper.GetActorsCache().GetRobustAddress(address)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error converting address to robust format: %v", err)
+		p.logger.Sugar().Warnf("Error converting address to robust format: %v", err)
 		return address.String() // Fallback
 	}
 	return robustAddress
