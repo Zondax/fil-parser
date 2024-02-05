@@ -3,6 +3,7 @@ package v2
 import (
 	"encoding/json"
 	"errors"
+	"github.com/filecoin-project/lotus/api"
 	"math/big"
 	"strings"
 
@@ -79,7 +80,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, uuid.Nil.String())
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, trace.GasCost, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -93,16 +94,10 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs,
-				trace.Msg.Cid().String(), transaction.Id, 0)
+				trace.Msg.Cid().String(), transaction.Id, 0, trace.GasCost)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
-		}
-
-		// Fees
-		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipset, transaction.TxType, transaction.Id)
-			transactions = append(transactions, feeTx)
 		}
 	}
 
@@ -144,22 +139,22 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
-	parentId string, level uint16) (txs []*types.Transaction) {
+	parentId string, level uint16, gasCost api.MsgGasCost) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, parentId)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, gasCost, parentId)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, gasCost)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, gasCost api.MsgGasCost, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -219,6 +214,8 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
+	feesMetadataJson := p.feesTransactions(gasCost, tipset, blockCid)
+
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
@@ -227,69 +224,45 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 			},
 			BlockCid: blockCid,
 		},
-		ParentId:    parentId,
-		Id:          messageUuid,
-		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
-		TxCid:       mainMsgCid.String(),
-		TxFrom:      trace.Msg.From.String(),
-		TxTo:        trace.Msg.To.String(),
-		Amount:      trace.Msg.Value.Int,
-		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
-		TxType:      txType,
-		TxMetadata:  string(jsonMetadata),
+		ParentId:     parentId,
+		Id:           messageUuid,
+		TxTimestamp:  parser.GetTimestamp(tipset.MinTimestamp()),
+		TxCid:        mainMsgCid.String(),
+		TxFrom:       trace.Msg.From.String(),
+		TxTo:         trace.Msg.To.String(),
+		Amount:       trace.Msg.Value.Int,
+		Status:       parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
+		TxType:       txType,
+		TxMetadata:   string(jsonMetadata),
+		FeesMetadata: string(feesMetadataJson),
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
-	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	appTools := tools.Tools{Logger: p.logger}
-	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
-	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
-	}
-
+func (p *Parser) feesTransactions(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
 	feesMetadata := parser.FeesMetadata{
-		TxType: txType,
 		MinerFee: parser.MinerFee{
 			MinerAddress: minerAddress,
-			Amount:       msg.GasCost.MinerTip.String(),
+			Amount:       gasCost.MinerTip.String(),
 		},
 		OverEstimationBurnFee: parser.OverEstimationBurnFee{
 			BurnAddress: parser.BurnAddress,
-			Amount:      msg.GasCost.OverEstimationBurn.String(),
+			Amount:      gasCost.OverEstimationBurn.String(),
 		},
 		BurnFee: parser.BurnFee{
 			BurnAddress: parser.BurnAddress,
-			Amount:      msg.GasCost.BaseFeeBurn.String(),
+			Amount:      gasCost.BaseFeeBurn.String(),
 		},
+		Amount: gasCost.TotalCost.Int,
 	}
 
 	metadata, _ := json.Marshal(feesMetadata)
-	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
-	return &types.Transaction{
-		TxBasicBlockData: types.TxBasicBlockData{
-			BasicBlockData: types.BasicBlockData{
-				Height:    uint64(tipset.Height()),
-				TipsetCid: tipset.GetCidString(),
-			},
-			BlockCid: blockCid,
-		},
-		Id:          feeID,
-		ParentId:    parentTxId,
-		TxTimestamp: timestamp,
-		TxCid:       msg.MsgCid.String(),
-		TxFrom:      msg.Msg.From.String(),
-		Amount:      msg.GasCost.TotalCost.Int,
-		Status:      "Ok",
-		TxType:      parser.TotalFeeOp,
-		TxMetadata:  string(metadata),
-	}
+	return metadata
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {

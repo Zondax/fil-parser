@@ -39,6 +39,8 @@ type Transaction struct {
 	TxMetadata string `json:"tx_metadata"`
 	// ParserVersion is the parser version used to parse this tx
 	ParserVersion string `json:"parser_version"`
+	// FeesMetadata is the fees metadata
+	FeesMetadata string `json:"fees_metadata"`
 	NodeInfo
 }
 
