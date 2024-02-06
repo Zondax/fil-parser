@@ -94,11 +94,10 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		transactions = append(transactions, transaction)
 
-		gasCost := api.MsgGasCost{TotalCost: abi.NewTokenAmount(0)}
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs,
-				trace.Msg.Cid().String(), transaction.Id, 0, gasCost)
+				trace.Msg.Cid().String(), transaction.Id, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
