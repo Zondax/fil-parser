@@ -235,7 +235,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		TxCid:       mainMsgCid.String(),
 		TxFrom:      txFromRobust,
 		TxTo:        txToRobust,
-		Amount:      trace.Msg.Value.Int,
+		Amount:      trace.Msg.Value.Int.String(),
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
@@ -249,25 +249,27 @@ func (p *Parser) feesTransactions(gasCost api.MsgGasCost, tipset *types.Extended
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
-	feesMetadata := parser.FeesMetadata{
-		MinerFee: parser.MinerFee{
-			MinerAddress: minerAddress,
-			Amount:       gasCost.MinerTip.String(),
+	feeData := parser.FeeData{
+		FeesMetadata: parser.FeesMetadata{
+			MinerFee: parser.MinerFee{
+				MinerAddress: minerAddress,
+				Amount:       gasCost.MinerTip.String(),
+			},
+			OverEstimationBurnFee: parser.OverEstimationBurnFee{
+				BurnAddress: parser.BurnAddress,
+				Amount:      gasCost.OverEstimationBurn.String(),
+			},
+			BurnFee: parser.BurnFee{
+				BurnAddress: parser.BurnAddress,
+				Amount:      gasCost.BaseFeeBurn.String(),
+			},
 		},
-		OverEstimationBurnFee: parser.OverEstimationBurnFee{
-			BurnAddress: parser.BurnAddress,
-			Amount:      gasCost.OverEstimationBurn.String(),
-		},
-		BurnFee: parser.BurnFee{
-			BurnAddress: parser.BurnAddress,
-			Amount:      gasCost.BaseFeeBurn.String(),
-		},
-		Amount: gasCost.TotalCost.Int,
+		Amount: gasCost.TotalCost.Int.String(),
 	}
 
-	metadata, _ := json.Marshal(feesMetadata)
+	data, _ := json.Marshal(feeData)
 
-	return metadata
+	return data
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {
