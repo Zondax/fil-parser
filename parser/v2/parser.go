@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"math/big"
@@ -93,10 +94,11 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		transactions = append(transactions, transaction)
 
+		gasCost := api.MsgGasCost{TotalCost: abi.NewTokenAmount(0)}
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs,
-				trace.Msg.Cid().String(), transaction.Id, 0, trace.GasCost)
+				trace.Msg.Cid().String(), transaction.Id, 0, gasCost)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -141,8 +143,10 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 }
 
 func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
-	parentId string, level uint16, gasCost api.MsgGasCost) (txs []*types.Transaction) {
+	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
+	gasCost := api.MsgGasCost{TotalCost: abi.NewTokenAmount(0)} // It is necessary to avoid adding fees to transactions with level != 0
+
 	for _, subTx := range subTxs {
 		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, gasCost, parentId)
 		if err != nil {
@@ -151,7 +155,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.C
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, gasCost)...)
+		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
 	}
 	return
 }
