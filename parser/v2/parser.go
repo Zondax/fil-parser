@@ -235,7 +235,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		TxCid:       mainMsgCid.String(),
 		TxFrom:      txFromRobust,
 		TxTo:        txToRobust,
-		Amount:      trace.Msg.Value.Int.String(),
+		Amount:      trace.Msg.Value.Int,
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
@@ -264,7 +264,7 @@ func (p *Parser) feesTransactions(gasCost api.MsgGasCost, tipset *types.Extended
 				Amount:      gasCost.BaseFeeBurn.String(),
 			},
 		},
-		Amount: gasCost.TotalCost.Int.String(),
+		Amount: gasCost.TotalCost.Int,
 	}
 
 	data, _ := json.Marshal(feeData)

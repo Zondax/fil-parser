@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/ipfs/go-cid"
+	"math/big"
 )
 
 type ControlAddress struct {
@@ -80,11 +81,11 @@ type BurnFee struct {
 
 type FeeData struct {
 	FeesMetadata
-	Amount string `json:"amount"`
+	Amount *big.Int `json:"amount"`
 }
 
 type FeesMetadata struct {
-	TxType                string `json:"tx_type"`
+	TxType                string
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee

@@ -3,6 +3,7 @@ package types
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"math/big"
 	"reflect"
 	"time"
 
@@ -27,7 +28,7 @@ type Transaction struct {
 	// TxTo is the receiver address
 	TxTo string `json:"tx_to" gorm:"index:idx_transactions_tx_to"`
 	// Amount is the amount of the tx in attoFil
-	Amount string `json:"amount"`
+	Amount *big.Int `json:"amount" gorm:"type:numeric"`
 	// GasUsed is the total gas used amount in attoFil
 	GasUsed uint64 `json:"gas_used"`
 	// Status

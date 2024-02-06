@@ -173,7 +173,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			Level:       0,
 			TxTimestamp: genesisTimestamp,
 			TxTo:        balance.Key,
-			Amount:      amount.Int.String(),
+			Amount:      amount.Int,
 			Status:      "Ok",
 			TxType:      "Genesis",
 		})
