@@ -216,12 +216,9 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
-	feesMetadataJson := p.feesTransactions(gasCost, tipset, blockCid)
-
 	txFromRobust := p.ensureRobustAddress(trace.Msg.From)
 	txToRobust := p.ensureRobustAddress(trace.Msg.To)
-
-	return &types.Transaction{
+	tx := &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
 				Height:    uint64(tipset.Height()),
@@ -239,8 +236,13 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
-		FeeData:     string(feesMetadataJson),
-	}, nil
+	}
+
+	if gasCost.TotalCost.Uint64() > 0 {
+		feeDataJson := p.feesTransactions(gasCost, tipset, blockCid)
+		tx.FeeData = string(feeDataJson)
+	}
+	return tx, nil
 }
 
 func (p *Parser) feesTransactions(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
