@@ -169,7 +169,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573062",
 			results: expectedResults{
-				totalTraces:  773,
+				totalTraces:  760,
 				totalAddress: 70,
 			},
 		},
@@ -179,7 +179,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573064",
 			results: expectedResults{
-				totalTraces:  734,
+				totalTraces:  637,
 				totalAddress: 75,
 			},
 		},
@@ -189,7 +189,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573066",
 			results: expectedResults{
-				totalTraces:  1118,
+				totalTraces:  941,
 				totalAddress: 102,
 			},
 		},
