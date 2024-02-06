@@ -27,7 +27,7 @@ func TestActorParser_accountWithParamsAndReturn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.AccountKey, tt.txType)
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.AccountKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)

@@ -294,7 +294,7 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.MinerKey, tt.txType)
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.MinerKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)

@@ -34,7 +34,7 @@ func TestActorParser_eamCreates(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.EamKey, tt.txType)
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.EamKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
