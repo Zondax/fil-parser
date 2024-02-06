@@ -238,13 +238,13 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}
 
 	if gasCost.TotalCost.Uint64() > 0 {
-		feeDataJson := p.feesTransactions(gasCost, tipset, blockCid)
-		tx.FeeData = string(feeDataJson)
+		transactionFeesJson := p.calculateTransactionFees(gasCost, tipset, blockCid)
+		tx.FeeData = string(transactionFeesJson)
 	}
 	return tx, nil
 }
 
-func (p *Parser) feesTransactions(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
+func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
