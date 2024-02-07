@@ -45,10 +45,10 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		m.cacheType = ZCacheLocalOnly
 		m.ttl = NoTtl
 
-		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
 		}
-		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
 		}
 	} else {
@@ -89,7 +89,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 	}
 
-	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, Logger: m.logger}); err != nil {
 		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
 	}
 
