@@ -312,12 +312,12 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.NotNil(t, v2Txs)
 			require.NotNil(t, v2Adds)
 
-			//require.Equal(t, len(v1Txs), len(v2Txs))
+			require.Equal(t, len(v1Txs), len(v2Txs))
 			require.Equal(t, v1Adds.Len(), v2Adds.Len())
 
-			//for i := range v1Txs {
-			//	require.True(t, v1Txs[i].Equal(*v2Txs[i]))
-			//}
+			for i := range v1Txs {
+				require.True(t, v1Txs[i].Equal(*v2Txs[i]))
+			}
 
 			v1Adds.Range(func(key string, value *types.AddressInfo) bool {
 				v2Value, ok := v2Adds.Get(key)

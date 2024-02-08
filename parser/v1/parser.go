@@ -3,6 +3,8 @@ package v1
 import (
 	"encoding/json"
 	"errors"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/lotus/api"
 	"math/big"
 	"strings"
 
@@ -119,7 +121,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, uuid.Nil.String())
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, trace.GasCost, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -133,12 +135,6 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
-		}
-
-		// Fees
-		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipset, transaction.TxType, transaction.Id)
-			transactions = append(transactions, feeTx)
 		}
 	}
 
@@ -182,8 +178,10 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 func (p *Parser) parseSubTxs(subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
 	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
+	gasCost := api.MsgGasCost{TotalCost: abi.NewTokenAmount(0)} // It is necessary to avoid adding fees to transactions with level != 0
+
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, parentId)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, gasCost, parentId)
 		if err != nil {
 			continue
 		}
@@ -195,7 +193,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.C
 	return
 }
 
-func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, gasCost api.MsgGasCost, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -244,7 +242,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
 
-	return &types.Transaction{
+	tx := &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
 				Height:    uint64(tipset.Height()),
@@ -262,7 +260,13 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
 		TxMetadata:  string(jsonMetadata),
-	}, nil
+	}
+
+	if gasCost.TotalCost.Uint64() > 0 {
+		transactionFeesJson := p.calculateTransactionFees(gasCost, tipset, blockCid)
+		tx.FeeData = string(transactionFeesJson)
+	}
+	return tx, nil
 }
 
 func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
@@ -337,4 +341,33 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey
 	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
 	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
+}
+
+func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
+	minerAddress, err := tipset.GetBlockMiner(blockCid)
+	if err != nil {
+		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+	}
+
+	feeData := parser.FeeData{
+		FeesMetadata: parser.FeesMetadata{
+			MinerFee: parser.MinerFee{
+				MinerAddress: minerAddress,
+				Amount:       gasCost.MinerTip.String(),
+			},
+			OverEstimationBurnFee: parser.OverEstimationBurnFee{
+				BurnAddress: parser.BurnAddress,
+				Amount:      gasCost.OverEstimationBurn.String(),
+			},
+			BurnFee: parser.BurnFee{
+				BurnAddress: parser.BurnAddress,
+				Amount:      gasCost.BaseFeeBurn.String(),
+			},
+		},
+		Amount: gasCost.TotalCost.Int,
+	}
+
+	data, _ := json.Marshal(feeData)
+
+	return data
 }
