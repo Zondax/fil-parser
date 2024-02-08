@@ -269,58 +269,6 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	return tx, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
-	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	appTools := tools.Tools{Logger: p.logger}
-	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
-	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
-	}
-
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
-	}
-
-	feesMetadata := parser.FeesMetadata{
-		TxType: txType,
-		MinerFee: parser.MinerFee{
-			MinerAddress: minerAddress,
-			Amount:       msg.GasCost.MinerTip.String(),
-		},
-		OverEstimationBurnFee: parser.OverEstimationBurnFee{
-			BurnAddress: parser.BurnAddress,
-			Amount:      msg.GasCost.OverEstimationBurn.String(),
-		},
-		BurnFee: parser.BurnFee{
-			BurnAddress: parser.BurnAddress,
-			Amount:      msg.GasCost.BaseFeeBurn.String(),
-		},
-	}
-
-	metadata, _ := json.Marshal(feesMetadata)
-	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
-
-	return &types.Transaction{
-		TxBasicBlockData: types.TxBasicBlockData{
-			BasicBlockData: types.BasicBlockData{
-				Height:    uint64(tipset.Height()),
-				TipsetCid: tipset.GetCidString(),
-			},
-			BlockCid: blockCid,
-		},
-		Id:          feeID,
-		ParentId:    parentTxId,
-		TxTimestamp: timestamp,
-		TxCid:       msg.MsgCid.String(),
-		TxFrom:      msg.Msg.From.String(),
-		Amount:      msg.GasCost.TotalCost.Int,
-		Status:      "Ok",
-		TxType:      parser.TotalFeeOp,
-		TxMetadata:  string(metadata),
-	}
-}
-
 func hasMessage(trace *typesV1.InvocResultV1) bool {
 	return trace.Msg != nil
 }
