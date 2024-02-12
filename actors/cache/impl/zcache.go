@@ -59,6 +59,9 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
 		}
+		if m.evmAddressesMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: EVMAddressMapPrefix, Logger: m.logger}); err != nil {
+			return fmt.Errorf("error creating evmAddressesMap for local zcache, err: %s", err)
+		}
 	} else {
 		m.cacheType = ZCacheCombined
 		m.ttl = cacheConfig.GlobalTtlSeconds
@@ -89,11 +92,23 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 			GlobalLogger:       m.logger,
 		}
 
+		evmAddressesMapConfig := &zcache.CombinedConfig{
+			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, EVMAddressMapPrefix),
+			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
+			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+			Local:              cacheConfig.Local,
+			Remote:             cacheConfig.Remote,
+			GlobalLogger:       m.logger,
+		}
+
 		if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
 			return fmt.Errorf("error creating robustShortMap for combined zcache, err: %s", err)
 		}
 		if m.shortRobustMap, err = zcache.NewCombinedCache(shortRobustMapConfig); err != nil {
 			return fmt.Errorf("error creating shortRobustMap for combined zcache, err: %s", err)
+		}
+		if m.evmAddressesMap, err = zcache.NewCombinedCache(evmAddressesMapConfig); err != nil {
+			return fmt.Errorf("error creating evmAddressesMap for combined zcache, err: %s", err)
 		}
 	}
 
