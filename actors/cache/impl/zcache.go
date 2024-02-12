@@ -31,7 +31,6 @@ type ZCache struct {
 	robustShortMap  zcache.ZCache
 	shortRobustMap  zcache.ZCache
 	evmShortToF4Map zcache.ZCache
-	evmF2ToF4Map    zcache.ZCache
 	logger          *zap.Logger
 	cacheType       string
 	ttl             int
@@ -57,9 +56,6 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 		if m.evmShortToF4Map, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: EVMShortToF4Prefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating evmShortToF4Map for local zcache, err: %s", err)
-		}
-		if m.evmF2ToF4Map, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: EVMF2ToF4MapPrefix, Logger: m.logger}); err != nil {
-			return fmt.Errorf("error creating evmF2ToF4Map for local zcache, err: %s", err)
 		}
 	} else {
 		m.cacheType = ZCacheCombined
@@ -100,15 +96,6 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 			GlobalLogger:       m.logger,
 		}
 
-		evmF2ToF4MapConfig := &zcache.CombinedConfig{
-			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, EVMF2ToF4MapPrefix),
-			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
-			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-			Local:              cacheConfig.Local,
-			Remote:             cacheConfig.Remote,
-			GlobalLogger:       m.logger,
-		}
-
 		if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
 			return fmt.Errorf("error creating robustShortMap for combined zcache, err: %s", err)
 		}
@@ -117,9 +104,6 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 		if m.evmShortToF4Map, err = zcache.NewCombinedCache(evmShortToF4MapConfig); err != nil {
 			return fmt.Errorf("error creating evmShortToF4Map for combined zcache, err: %s", err)
-		}
-		if m.evmF2ToF4Map, err = zcache.NewCombinedCache(evmF2ToF4MapConfig); err != nil {
-			return fmt.Errorf("error creating evmF2ToF4Map for combined zcache, err: %s", err)
 		}
 	}
 
@@ -169,7 +153,6 @@ func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 
 	if isRobustAddress {
 		if f4Address := m.tryToGetF4Address(address); f4Address != "" {
-			m.storeEVMF2ToF4Map(address.String(), f4Address)
 			return f4Address, nil
 		}
 
@@ -278,28 +261,21 @@ func (m *ZCache) storeEVMShortToF4Map(f0, f4 string) {
 	_ = m.evmShortToF4Map.Set(ctx, f0, f4, NotExpiringTtl)
 }
 
-func (m *ZCache) storeEVMF2ToF4Map(f2, f4 string) {
-	if f2 == "" || f4 == "" {
-		m.logger.Sugar().Debugf("[storeEvmAddressMapping] - Erorr trying to store mapping with empty f2/f4 address")
-		return
-	}
-
-	ctx := context.Background()
-	_ = m.evmF2ToF4Map.Set(ctx, f2, f4, NotExpiringTtl)
-}
-
 func (m *ZCache) tryToGetF4Address(address address.Address) string {
 	ctx := context.Background()
+	if strings.HasPrefix(address.String(), constants.AddressTypePrefixF4) {
+		return address.String()
+	}
+
 	if strings.HasPrefix(address.String(), constants.AddressTypePrefixF2) {
-		// Try to get f4 directly associated with f2
-		var f4Address string
-		err := m.evmF2ToF4Map.Get(ctx, address.String(), &f4Address)
-		if err == nil && f4Address != "" {
-			return f4Address
+		// Try to get f0 directly associated with f2
+		f0Address, err := m.GetShortAddress(address)
+		if err != nil {
+			m.logger.Sugar().Errorf("error getting short address %s", err.Error())
+			return ""
 		}
 
-		// If f4 not found, find the corresponding f0 and then f4
-		var f0Address string
+		var f4Address string
 		err = m.robustShortMap.Get(ctx, address.String(), &f0Address)
 
 		// If no f4 is found, it implies the address might not be an EVM actor type
