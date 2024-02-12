@@ -3,6 +3,8 @@ package impl
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/actors/constants"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -23,14 +25,20 @@ const (
 	PrefixSplitter  = "/"
 )
 
+type EvmAddressMapping struct {
+	F2 string
+	F4 string
+}
+
 // ZCache In-Memory database
 type ZCache struct {
-	shortCidMap    zcache.ZCache
-	robustShortMap zcache.ZCache
-	shortRobustMap zcache.ZCache
-	logger         *zap.Logger
-	cacheType      string
-	ttl            int
+	shortCidMap     zcache.ZCache
+	robustShortMap  zcache.ZCache
+	shortRobustMap  zcache.ZCache
+	evmAddressesMap zcache.ZCache
+	logger          *zap.Logger
+	cacheType       string
+	ttl             int
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
@@ -136,9 +144,18 @@ func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 		return address.String(), nil
 	}
 
-	// This is a short address, get the robust one
-	var robustAdd string
+	// If it's a short address, try to get the associated f4
 	ctx := context.Background()
+	mapping := &EvmAddressMapping{}
+	err = m.evmAddressesMap.Get(ctx, address.String(), mapping)
+
+	if err == nil && mapping.F4 != "" {
+		// If an associated f4 is found, return this address
+		return mapping.F4, nil
+	}
+
+	// If no f4 is found, then the address is not an EVM actor type
+	var robustAdd string
 	if err = m.shortRobustMap.Get(ctx, address.String(), &robustAdd); err != nil {
 		return "", common.ErrKeyNotFound
 	}
@@ -201,6 +218,20 @@ func (m *ZCache) storeShortRobust(short string, robust string) {
 }
 
 func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
+	if strings.EqualFold(info.ActorType, constants.ActorTypeEVM) {
+		mapping := &EvmAddressMapping{}
+		ctx := context.Background()
+		_ = m.evmAddressesMap.Get(ctx, info.Short, mapping)
+
+		if strings.HasPrefix(info.Robust, constants.AddressTypePrefixF2) {
+			mapping.F2 = info.Robust
+		} else if strings.HasPrefix(info.Robust, constants.AddressTypePrefixF4) {
+			mapping.F4 = info.Robust
+		}
+
+		m.storeEvmAddressMapping(info.Short, mapping)
+	}
+
 	m.storeRobustShort(info.Robust, info.Short)
 	m.storeShortRobust(info.Short, info.Robust)
 	m.storeActorCode(info.Short, info.ActorCid)
@@ -216,4 +247,18 @@ func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	// The ttl here is pointless
 	ctx := context.Background()
 	_ = m.shortCidMap.Set(ctx, shortAddress, cid, DummyTtl)
+}
+
+func (m *ZCache) storeEvmAddressMapping(f0 string, mapping *EvmAddressMapping) {
+	if f0 == "" {
+		m.logger.Sugar().Debugf("[storeEvmAddressMapping] - Trying to store mapping with empty f0 address")
+		return
+	}
+
+	ctx := context.Background()
+
+	err := m.evmAddressesMap.Set(ctx, f0, mapping, DummyTtl)
+	if err != nil {
+		m.logger.Sugar().Errorf("[storeEvmAddressMapping] - Error storing f0 to f2/f4 mapping: %s", err)
+	}
 }
