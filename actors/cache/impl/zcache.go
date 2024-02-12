@@ -263,29 +263,28 @@ func (m *ZCache) storeEVMShortToF4Map(f0, f4 string) {
 
 func (m *ZCache) tryToGetF4Address(address address.Address) string {
 	ctx := context.Background()
+
+	// Return the address if it's already a f4 address
 	if strings.HasPrefix(address.String(), constants.AddressTypePrefixF4) {
 		return address.String()
 	}
 
-	if strings.HasPrefix(address.String(), constants.AddressTypePrefixF2) {
-		// Try to get f0 directly associated with f2
-		f0Address, err := m.GetShortAddress(address)
-		if err != nil {
-			m.logger.Sugar().Errorf("error getting short address %s", err.Error())
-			return ""
-		}
-
-		var f4Address string
-		err = m.robustShortMap.Get(ctx, address.String(), &f0Address)
-
-		// If no f4 is found, it implies the address might not be an EVM actor type
-		if err == nil && f0Address != "" {
-			err = m.evmShortToF4Map.Get(ctx, f0Address, &f4Address)
-			if err == nil && f4Address != "" {
-				return f4Address
-			}
-		}
+	// If the robust address is not f4, it should be f2
+	// Try to get the corresponding f0 for the f2 address
+	f0Address, err := m.GetShortAddress(address)
+	if err != nil {
+		m.logger.Sugar().Errorf("error getting short address for %s: %s", address.String(), err)
+		return ""
 	}
 
+	// Try to get the f4 address associated with the f0 address
+	// If no f4 is found, it implies the address might not be an EVM actor type
+	var f4Address string
+	err = m.evmShortToF4Map.Get(ctx, f0Address, &f4Address)
+	if err == nil && f4Address != "" {
+		return f4Address
+	}
+
+	m.logger.Sugar().Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
 	return ""
 }
