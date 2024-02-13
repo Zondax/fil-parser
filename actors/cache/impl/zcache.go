@@ -136,6 +136,9 @@ func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 	ctx := context.Background()
 
 	if isRobustAddress {
+		// If already a robust address, we attempt to get a f4 address.
+		// This is particularly useful in the case of EVM actors, where a robust f2 address
+		// may need to be converted as a f4 address.
 		if f4Address := m.tryToGetF4Address(address); f4Address != "" {
 			return f4Address, nil
 		}
@@ -211,6 +214,10 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 
 	isEvm := strings.EqualFold(info.ActorType, constants.ActorTypeEVM)
 	isEvmAndAddressIsF4 := isEvm && strings.HasPrefix(info.Robust, constants.AddressTypePrefixF4)
+
+	// Only store the mapping for addresses that are not related to EVM actors,
+	// or are associated with EVM actors but use an f4 prefix. We skip storing
+	// addresses when they are f2 for EVM actors because only f4 addresses are of interest.
 	if !isEvm || isEvmAndAddressIsF4 {
 		m.storeShortRobust(info.Short, info.Robust)
 	}
