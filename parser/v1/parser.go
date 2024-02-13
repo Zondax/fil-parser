@@ -3,10 +3,8 @@ package v1
 import (
 	"encoding/json"
 	"errors"
-	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/api"
-	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"math/big"
 	"strings"
 
@@ -244,8 +242,8 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
 
-	txFromRobust := p.ensureRobustAddress(trace.Msg.From)
-	txToRobust := p.ensureRobustAddress(trace.Msg.To)
+	txFromRobust := actors.EnsureRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger)
+	txToRobust := actors.EnsureRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger)
 
 	tx := &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
@@ -323,17 +321,4 @@ func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.
 	data, _ := json.Marshal(feeData)
 
 	return data
-}
-
-func (p *Parser) ensureRobustAddress(address address.Address) string {
-	if isRobust, _ := common.IsRobustAddress(address); isRobust {
-		return address.String()
-	}
-
-	robustAddress, err := p.helper.GetActorsCache().GetRobustAddress(address)
-	if err != nil {
-		p.logger.Sugar().Warnf("Error converting address to robust format: %v", err)
-		return address.String() // Fallback
-	}
-	return robustAddress
 }
