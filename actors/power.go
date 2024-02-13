@@ -2,6 +2,7 @@ package actors
 
 import (
 	"bytes"
+	"github.com/zondax/fil-parser/actors/constants"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/power"
@@ -105,10 +106,11 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 	createdActor := &types.AddressInfo{
 		Short:         r.IDAddress.String(),
 		Robust:        r.RobustAddress.String(),
-		ActorType:     "miner",
+		ActorType:     constants.ActorTypeMiner,
 		CreationTxCid: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdActor)
 	return metadata, createdActor, nil
 }
 
