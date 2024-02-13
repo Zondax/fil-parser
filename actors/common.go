@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"github.com/filecoin-project/go-address"
+	"github.com/zondax/fil-parser/actors/cache"
+	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/parser"
+	"go.uber.org/zap"
 )
 
 func (p *ActorParser) parseSend(msg *parser.LotusMessage) map[string]interface{} {
@@ -39,4 +42,17 @@ func (p *ActorParser) unknownMetadata(msgParams, msgReturn []byte) (map[string]i
 
 func (p *ActorParser) emptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
+}
+
+func EnsureRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *zap.Logger) string {
+	if isRobust, _ := common.IsRobustAddress(address); isRobust {
+		return address.String()
+	}
+
+	robustAddress, err := actorCache.GetRobustAddress(address)
+	if err != nil {
+		logger.Sugar().Warnf("Error converting address to robust format: %v", err)
+		return address.String() // Fallback
+	}
+	return robustAddress
 }
