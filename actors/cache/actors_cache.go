@@ -259,6 +259,10 @@ func (a *ActorsCache) storeRobustAddress(add address.Address, info types.Address
 	return nil
 }
 
+func (a *ActorsCache) StoreAddressInfoAddress(addInfo types.AddressInfo) {
+	a.offChainCache.StoreAddressInfo(addInfo)
+}
+
 func (a *ActorsCache) isBadAddress(add address.Address) bool {
 	_, bad := a.badAddress.Get(add.String())
 	return bad

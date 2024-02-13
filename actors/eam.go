@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/zondax/fil-parser/actors/constants"
 	"github.com/zondax/fil-parser/parser"
 	"strconv"
 
@@ -102,9 +103,10 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:        r.RobustAddress.String(),
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:     "evm",
+		ActorType:     constants.ActorTypeEVM,
 		CreationTxCid: msgCid.String(),
 	}
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
 	return metadata, createdEvmActor, nil
 }
 
@@ -135,9 +137,10 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:        r.RobustAddress.String(),
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:     "evm",
+		ActorType:     constants.ActorTypeEVM,
 		CreationTxCid: msgCid.String(),
 	}
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
 	return metadata, createdEvmActor, nil
 }
 
@@ -171,8 +174,9 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:        r.RobustAddress.String(),
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:     "evm",
+		ActorType:     constants.ActorTypeEVM,
 		CreationTxCid: msgCid.String(),
 	}
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
 	return metadata, createdEvmActor, nil
 }
