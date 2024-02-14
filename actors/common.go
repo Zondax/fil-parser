@@ -46,6 +46,22 @@ func (p *ActorParser) emptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
 
+func ConsolidateRobustAddresses(from, to address.Address, actorCache *cache.ActorsCache, logger *zap.Logger, config *parser.ConsolidateAddressesToRobust) (string, string, error) {
+	var err error
+	txFrom := from.String()
+	txTo := to.String()
+	if config != nil && config.Enable {
+		if txFrom, err = EnsureRobustAddress(from, actorCache, logger); err != nil && !config.BestEffort {
+			return "", "", err
+		}
+		if txTo, err = EnsureRobustAddress(to, actorCache, logger); err != nil && !config.BestEffort {
+			return "", "", err
+		}
+	}
+
+	return txFrom, txTo, nil
+}
+
 func EnsureRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *zap.Logger) (string, error) {
 	if isRobust, _ := common.IsRobustAddress(address); isRobust {
 		return address.String(), nil

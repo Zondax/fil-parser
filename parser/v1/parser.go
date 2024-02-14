@@ -245,15 +245,14 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
 
-	txFrom := trace.Msg.From.String()
-	txTo := trace.Msg.To.String()
-	if p.config != nil && p.config.ConsolidateAddressesToRobust.Enable {
-		if txFrom, err = actors.EnsureRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger); err != nil && !p.config.ConsolidateAddressesToRobust.BestEffort {
-			return nil, err
-		}
-		if txTo, err = actors.EnsureRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger); err != nil && !p.config.ConsolidateAddressesToRobust.BestEffort {
-			return nil, err
-		}
+	config := &parser.ConsolidateAddressesToRobust{}
+	if p.config != nil {
+		config = &p.config.ConsolidateAddressesToRobust
+	}
+
+	txFrom, txTo, err := actors.ConsolidateRobustAddresses(trace.Msg.From, trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	if err != nil {
+		return nil, err
 	}
 
 	tx := &types.Transaction{
