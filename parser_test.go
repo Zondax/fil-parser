@@ -10,6 +10,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/zondax/fil-parser/parser"
+
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/lotus/api"
@@ -208,7 +210,13 @@ func TestParser_ParseTransactions(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
 			require.NoError(t, err)
@@ -257,7 +265,13 @@ func TestParser_GetBaseFee(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
@@ -300,7 +314,13 @@ func TestParser_InDepthCompare(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
