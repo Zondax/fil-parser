@@ -3,6 +3,8 @@ package actors
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
@@ -44,15 +46,15 @@ func (p *ActorParser) emptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
 
-func EnsureRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *zap.Logger) string {
+func EnsureRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *zap.Logger) (string, error) {
 	if isRobust, _ := common.IsRobustAddress(address); isRobust {
-		return address.String()
+		return address.String(), nil
 	}
 
 	robustAddress, err := actorCache.GetRobustAddress(address)
 	if err != nil {
 		logger.Sugar().Warnf("Error converting address to robust format: %v", err)
-		return address.String() // Fallback
+		return address.String(), fmt.Errorf("error converting address to robust format: %v", err) // Fallback
 	}
-	return robustAddress
+	return robustAddress, nil
 }
