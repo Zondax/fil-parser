@@ -23,6 +23,7 @@ const (
 	ZCacheLocalOnly = "in-memory"
 	ZCacheCombined  = "combined"
 	PrefixSplitter  = "/"
+	NotExpiringTtl  = -1
 )
 
 // ZCache In-Memory database
@@ -44,10 +45,9 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	// work anyway
 	cacheConfig := source.Config.Cache
 
-	m.ttl = time.Second * time.Duration(cacheConfig.GlobalTtlSeconds)
-
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
+		m.ttl = NotExpiringTtl
 
 		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
@@ -57,6 +57,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 	} else {
 		m.cacheType = ZCacheCombined
+		m.ttl = time.Second * time.Duration(cacheConfig.GlobalTtlSeconds)
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
