@@ -3,6 +3,8 @@ package impl
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/actors/constants"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -19,7 +21,7 @@ const (
 	ZCacheLocalOnly = "in-memory"
 	ZCacheCombined  = "combined"
 	NoTtl           = -1
-	DummyTtl        = -1
+	NotExpiringTtl  = -1
 	PrefixSplitter  = "/"
 )
 
@@ -45,10 +47,10 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		m.cacheType = ZCacheLocalOnly
 		m.ttl = NoTtl
 
-		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
 		}
-		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
 		}
 	} else {
@@ -89,7 +91,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 	}
 
-	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, EvictionInSeconds: m.ttl, Logger: m.logger}); err != nil {
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, Logger: m.logger}); err != nil {
 		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
 	}
 
@@ -131,14 +133,20 @@ func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 		return "", err
 	}
 
+	ctx := context.Background()
+
 	if isRobustAddress {
-		// Already a robust address
+		// If already a robust address, we attempt to get a f4 address.
+		// This is particularly useful in the case of EVM actors, where a robust f2 address
+		// may need to be converted as a f4 address.
+		if f4Address := m.tryToGetF4Address(address); f4Address != "" {
+			return f4Address, nil
+		}
+
 		return address.String(), nil
 	}
 
-	// This is a short address, get the robust one
 	var robustAdd string
-	ctx := context.Background()
 	if err = m.shortRobustMap.Get(ctx, address.String(), &robustAdd); err != nil {
 		return "", common.ErrKeyNotFound
 	}
@@ -185,7 +193,7 @@ func (m *ZCache) storeRobustShort(robust string, short string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.robustShortMap.Set(ctx, robust, short, DummyTtl)
+	_ = m.robustShortMap.Set(ctx, robust, short, NotExpiringTtl)
 }
 
 func (m *ZCache) storeShortRobust(short string, robust string) {
@@ -197,13 +205,22 @@ func (m *ZCache) storeShortRobust(short string, robust string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortRobustMap.Set(ctx, short, robust, DummyTtl)
+	_ = m.shortRobustMap.Set(ctx, short, robust, NotExpiringTtl)
 }
 
 func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 	m.storeRobustShort(info.Robust, info.Short)
-	m.storeShortRobust(info.Short, info.Robust)
 	m.storeActorCode(info.Short, info.ActorCid)
+
+	isEvm := strings.EqualFold(info.ActorType, constants.ActorTypeEVM)
+	isEvmAndAddressIsF4 := isEvm && strings.HasPrefix(info.Robust, constants.AddressTypePrefixF4)
+
+	// Only store the mapping for addresses that are not related to EVM actors,
+	// or are associated with EVM actors but use an f4 prefix. We skip storing
+	// addresses when they are f2 for EVM actors because only f4 addresses are of interest.
+	if !isEvm || isEvmAndAddressIsF4 {
+		m.storeShortRobust(info.Short, info.Robust)
+	}
 }
 
 func (m *ZCache) storeActorCode(shortAddress string, cid string) {
@@ -215,5 +232,33 @@ func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortCidMap.Set(ctx, shortAddress, cid, DummyTtl)
+	_ = m.shortCidMap.Set(ctx, shortAddress, cid, NotExpiringTtl)
+}
+
+func (m *ZCache) tryToGetF4Address(address address.Address) string {
+	ctx := context.Background()
+
+	// Return the address if it's already a f4 address
+	if strings.HasPrefix(address.String(), constants.AddressTypePrefixF4) {
+		return address.String()
+	}
+
+	// If the robust address is not f4, it should be f2
+	// Try to get the corresponding f0 for the f2 address
+	f0Address, err := m.GetShortAddress(address)
+	if err != nil {
+		m.logger.Sugar().Errorf("error getting short address for %s: %s", address.String(), err)
+		return ""
+	}
+
+	// Try to get the f4 address associated with the f0 address
+	// If no f4 is found, it implies the address might not be an EVM actor type
+	var f4Address string
+	err = m.shortRobustMap.Get(ctx, f0Address, &f4Address)
+	if err == nil && f4Address != "" {
+		return f4Address
+	}
+
+	m.logger.Sugar().Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
+	return ""
 }
