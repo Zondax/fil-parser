@@ -98,6 +98,16 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 			}
 			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
 
+			config := &parser.ConsolidateAddressesToRobust{}
+			if p.config != nil {
+				config = &p.config.ConsolidateAddressesToRobust
+			}
+
+			txFrom, txTo, err := actors.ConsolidateRobustAddresses(trace.Msg.From, trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+			if err != nil {
+				return nil, nil, err
+			}
+
 			badTx := &types.Transaction{
 				TxBasicBlockData: types.TxBasicBlockData{
 					BasicBlockData: types.BasicBlockData{
@@ -109,8 +119,8 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 				Id:          messageUuid,
 				ParentId:    uuid.Nil.String(),
 				TxCid:       trace.MsgCid.String(),
-				TxFrom:      trace.Msg.From.String(),
-				TxTo:        trace.Msg.To.String(),
+				TxFrom:      txFrom,
+				TxTo:        txTo,
 				TxType:      txType,
 				Amount:      trace.Msg.Value.Int,
 				GasUsed:     uint64(trace.MsgRct.GasUsed),
