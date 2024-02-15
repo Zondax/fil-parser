@@ -23,6 +23,8 @@ import (
 	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/zondax/fil-parser/parser"
+
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
@@ -264,7 +266,13 @@ func TestParser_ParseTransactions(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -322,7 +330,13 @@ func TestParser_GetBaseFee(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
@@ -365,7 +379,13 @@ func TestParser_InDepthCompare(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
