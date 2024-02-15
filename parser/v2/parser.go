@@ -6,8 +6,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/filecoin-project/go-address"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/api"
 
@@ -257,52 +255,10 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}
 
 	if gasCost.TotalCost.Uint64() > 0 {
-		transactionFeesJson := p.calculateTransactionFees(gasCost, tipset, blockCid)
+		transactionFeesJson := actors.CalculateTransactionFees(gasCost, tipset, blockCid, p.helper.GetActorsCache(), p.logger, p.config)
 		tx.FeeData = string(transactionFeesJson)
 	}
 	return tx, nil
-}
-
-func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
-	minerAddressStr, err := tipset.GetBlockMiner(blockCid)
-	if err == nil {
-		minerAddress, err := address.NewFromString(minerAddressStr)
-		if err != nil {
-			p.logger.Sugar().Errorf("Error when trying to parse miner address: %v", err)
-		}
-
-		minerAddressStr, err = actors.ConsolidateRobustAddress(minerAddress, p.helper.GetActorsCache(), p.logger, &p.config.ConsolidateAddressesToRobust)
-		if err != nil {
-			p.logger.Sugar().Errorf("Error when trying to consolidate miner address to robust: %v", err)
-		}
-	} else {
-		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
-	}
-
-	feeData := parser.FeeData{
-		FeesMetadata: parser.FeesMetadata{
-			MinerFee: parser.MinerFee{
-				MinerAddress: minerAddressStr,
-				Amount:       gasCost.MinerTip.String(),
-			},
-			OverEstimationBurnFee: parser.OverEstimationBurnFee{
-				BurnAddress: parser.BurnAddress,
-				Amount:      gasCost.OverEstimationBurn.String(),
-			},
-			BurnFee: parser.BurnFee{
-				BurnAddress: parser.BurnAddress,
-				Amount:      gasCost.BaseFeeBurn.String(),
-			},
-		},
-		Amount: gasCost.TotalCost.Int.String(),
-	}
-
-	data, err := json.Marshal(feeData)
-	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to marshal fees data: %v", err)
-	}
-
-	return data
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {

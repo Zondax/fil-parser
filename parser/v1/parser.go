@@ -296,7 +296,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	}
 
 	if gasCost.TotalCost.Uint64() > 0 {
-		transactionFeesJson := p.calculateTransactionFees(gasCost, tipset, blockCid)
+		transactionFeesJson := actors.CalculateTransactionFees(gasCost, tipset, blockCid, p.helper.GetActorsCache(), p.logger, p.config)
 		tx.FeeData = string(transactionFeesJson)
 	}
 	return tx, nil

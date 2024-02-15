@@ -3,7 +3,11 @@ package actors
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+
+	"github.com/filecoin-project/lotus/api"
+	"github.com/zondax/fil-parser/types"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/zondax/fil-parser/actors/cache"
@@ -69,4 +73,46 @@ func EnsureRobustAddress(address address.Address, actorCache *cache.ActorsCache,
 		return address.String(), fmt.Errorf("error converting address to robust format: %v", err) // Fallback
 	}
 	return robustAddress, nil
+}
+
+func CalculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string, actorCache *cache.ActorsCache, logger *zap.Logger, config *parser.FilecoinParserConfig) []byte {
+	minerAddressStr, err := tipset.GetBlockMiner(blockCid)
+	if err == nil {
+		minerAddress, err := address.NewFromString(minerAddressStr)
+		if err != nil {
+			logger.Sugar().Errorf("Error when trying to parse miner address: %v", err)
+		}
+
+		minerAddressStr, err = ConsolidateRobustAddress(minerAddress, actorCache, logger, &config.ConsolidateAddressesToRobust)
+		if err != nil {
+			logger.Sugar().Errorf("Error when trying to consolidate miner address to robust: %v", err)
+		}
+	} else {
+		logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+	}
+
+	feeData := parser.FeeData{
+		FeesMetadata: parser.FeesMetadata{
+			MinerFee: parser.MinerFee{
+				MinerAddress: minerAddressStr,
+				Amount:       gasCost.MinerTip.String(),
+			},
+			OverEstimationBurnFee: parser.OverEstimationBurnFee{
+				BurnAddress: parser.BurnAddress,
+				Amount:      gasCost.OverEstimationBurn.String(),
+			},
+			BurnFee: parser.BurnFee{
+				BurnAddress: parser.BurnAddress,
+				Amount:      gasCost.BaseFeeBurn.String(),
+			},
+		},
+		Amount: gasCost.TotalCost.Int.String(),
+	}
+
+	data, err := json.Marshal(feeData)
+	if err != nil {
+		logger.Sugar().Errorf("Error when trying to marshal fees data: %v", err)
+	}
+
+	return data
 }
