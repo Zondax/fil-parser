@@ -282,10 +282,13 @@ func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.
 				Amount:      gasCost.BaseFeeBurn.String(),
 			},
 		},
-		Amount: gasCost.TotalCost.Int,
+		Amount: gasCost.TotalCost.Int.String(),
 	}
 
-	data, _ := json.Marshal(feeData)
+	data, err := json.Marshal(feeData)
+	if err != nil {
+		p.logger.Sugar().Errorf("Error when trying to marshal fees data: %v", err)
+	}
 
 	return data
 }
