@@ -3,11 +3,16 @@ package v2
 import (
 	"encoding/json"
 	"errors"
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/lotus/api"
 	"math/big"
 	"strings"
 
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/lotus/api"
+
+	"github.com/bytedance/sonic"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -32,14 +37,16 @@ type Parser struct {
 	addresses   *types.AddressInfoMap
 	helper      *helper.Helper
 	logger      *zap.Logger
+	config      *parser.FilecoinParserConfig
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
+func NewParser(helper *helper.Helper, logger *zap.Logger, config *parser.FilecoinParserConfig) *Parser {
 	return &Parser{
 		actorParser: actors.NewActorParser(helper, logger),
 		addresses:   types.NewAddressInfoMap(),
 		helper:      helper,
 		logger:      logger2.GetSafeLogger(logger),
+		config:      config,
 	}
 }
 
@@ -217,8 +224,16 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
-	txFromRobust := actors.EnsureRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger)
-	txToRobust := actors.EnsureRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger)
+
+	config := &parser.ConsolidateAddressesToRobust{}
+	if p.config != nil {
+		config = &p.config.ConsolidateAddressesToRobust
+	}
+
+	txFrom, txTo, err := actors.ConsolidateRobustAddresses(trace.Msg.From, trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	if err != nil {
+		return nil, err
+	}
 
 	tx := &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
@@ -232,8 +247,8 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:       mainMsgCid.String(),
-		TxFrom:      txFromRobust,
-		TxTo:        txToRobust,
+		TxFrom:      txFrom,
+		TxTo:        txTo,
 		Amount:      trace.Msg.Value.Int,
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
