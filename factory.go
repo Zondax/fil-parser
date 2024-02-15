@@ -49,7 +49,7 @@ type Parser interface {
 	IsNodeVersionSupported(ver string) bool
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, config *parser.FilecoinParserConfig) (*FilecoinParser, error) {
 	logger = logger2.GetSafeLogger(logger)
 	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
 	if err != nil {

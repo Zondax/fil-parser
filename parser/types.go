@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/json"
+	"math/big"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -9,8 +10,16 @@ import (
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/ipfs/go-cid"
-	"math/big"
 )
+
+type FilecoinParserConfig struct {
+	ConsolidateAddressesToRobust ConsolidateAddressesToRobust
+}
+
+type ConsolidateAddressesToRobust struct {
+	Enable     bool
+	BestEffort bool
+}
 
 type ControlAddress struct {
 	Owner        string   `json:"owner"`
