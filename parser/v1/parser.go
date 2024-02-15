@@ -110,7 +110,11 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 				config = &p.config.ConsolidateAddressesToRobust
 			}
 
-			txFrom, txTo, err := actors.ConsolidateRobustAddresses(trace.Msg.From, trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+			txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+			if err != nil {
+				return nil, nil, err
+			}
+			txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -289,7 +293,11 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 		config = &p.config.ConsolidateAddressesToRobust
 	}
 
-	txFrom, txTo, err := actors.ConsolidateRobustAddresses(trace.Msg.From, trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+	if err != nil {
+		return nil, err
+	}
+	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +323,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	}
 
 	if gasCost.TotalCost.Uint64() > 0 {
-		transactionFeesJson := p.calculateTransactionFees(gasCost, tipset, blockCid)
+		transactionFeesJson := actors.CalculateTransactionFees(gasCost, tipset, blockCid, p.helper.GetActorsCache(), p.logger, p.config)
 		tx.FeeData = string(transactionFeesJson)
 	}
 	return tx, nil
@@ -341,33 +349,4 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey
 	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
 	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
-}
-
-func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
-	}
-
-	feeData := parser.FeeData{
-		FeesMetadata: parser.FeesMetadata{
-			MinerFee: parser.MinerFee{
-				MinerAddress: minerAddress,
-				Amount:       gasCost.MinerTip.String(),
-			},
-			OverEstimationBurnFee: parser.OverEstimationBurnFee{
-				BurnAddress: parser.BurnAddress,
-				Amount:      gasCost.OverEstimationBurn.String(),
-			},
-			BurnFee: parser.BurnFee{
-				BurnAddress: parser.BurnAddress,
-				Amount:      gasCost.BaseFeeBurn.String(),
-			},
-		},
-		Amount: gasCost.TotalCost.Int,
-	}
-
-	data, _ := json.Marshal(feeData)
-
-	return data
 }
