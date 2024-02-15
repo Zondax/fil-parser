@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/filecoin-project/go-address"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/api"
 
@@ -323,15 +325,25 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey
 }
 
 func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
+	minerAddressStr, err := tipset.GetBlockMiner(blockCid)
+	if err == nil {
+		minerAddress, err := address.NewFromString(minerAddressStr)
+		if err != nil {
+			p.logger.Sugar().Errorf("Error when trying to parse miner address: %v", err)
+		}
+
+		minerAddressStr, err = actors.ConsolidateRobustAddress(minerAddress, p.helper.GetActorsCache(), p.logger, &p.config.ConsolidateAddressesToRobust)
+		if err != nil {
+			p.logger.Sugar().Errorf("Error when trying to consolidate miner address to robust: %v", err)
+		}
+	} else {
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
 	feeData := parser.FeeData{
 		FeesMetadata: parser.FeesMetadata{
 			MinerFee: parser.MinerFee{
-				MinerAddress: minerAddress,
+				MinerAddress: minerAddressStr,
 				Amount:       gasCost.MinerTip.String(),
 			},
 			OverEstimationBurnFee: parser.OverEstimationBurnFee{
