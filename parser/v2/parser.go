@@ -225,7 +225,11 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		config = &p.config.ConsolidateAddressesToRobust
 	}
 
-	txFrom, txTo, err := actors.ConsolidateRobustAddresses(trace.Msg.From, trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+	if err != nil {
+		return nil, err
+	}
+	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
 	if err != nil {
 		return nil, err
 	}
