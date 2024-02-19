@@ -20,7 +20,7 @@ require (
 	github.com/whyrusleeping/cbor-gen v0.1.0
 	github.com/zondax/golem v0.14.1
 	github.com/zondax/rosetta-filecoin-lib v1.2600.0
-	github.com/zondax/znats v0.0.1
+	github.com/zondax/znats v0.1.0
 	go.uber.org/zap v1.27.0
 	gorm.io/gorm v1.25.7
 )
@@ -146,12 +146,12 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
-	github.com/nats-io/nats.go v1.32.0 // indirect
+	github.com/nats-io/nats.go v1.33.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nkovacs/streamquote v1.0.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
+	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polydawn/refmt v0.89.0 // indirect
