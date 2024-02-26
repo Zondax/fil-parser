@@ -3,8 +3,10 @@ package impl
 import (
 	"context"
 	"fmt"
-	"github.com/zondax/fil-parser/actors/constants"
 	"strings"
+	"time"
+
+	"github.com/zondax/fil-parser/actors/constants"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -20,9 +22,8 @@ const (
 	ZCacheImpl      = "zcache"
 	ZCacheLocalOnly = "in-memory"
 	ZCacheCombined  = "combined"
-	NoTtl           = -1
-	NotExpiringTtl  = -1
 	PrefixSplitter  = "/"
+	NotExpiringTtl  = -1
 )
 
 // ZCache In-Memory database
@@ -32,7 +33,7 @@ type ZCache struct {
 	shortRobustMap zcache.ZCache
 	logger         *zap.Logger
 	cacheType      string
-	ttl            int
+	ttl            time.Duration
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
@@ -43,9 +44,10 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	// remote best effort, as the remote cache will fail. However, the cache will
 	// work anyway
 	cacheConfig := source.Config.Cache
+
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
-		m.ttl = NoTtl
+		m.ttl = NotExpiringTtl
 
 		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
 			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
@@ -55,7 +57,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 	} else {
 		m.cacheType = ZCacheCombined
-		m.ttl = cacheConfig.GlobalTtlSeconds
+		m.ttl = time.Second * time.Duration(cacheConfig.GlobalTtlSeconds)
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
@@ -193,7 +195,7 @@ func (m *ZCache) storeRobustShort(robust string, short string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.robustShortMap.Set(ctx, robust, short, NotExpiringTtl)
+	_ = m.robustShortMap.Set(ctx, robust, short, m.ttl)
 }
 
 func (m *ZCache) storeShortRobust(short string, robust string) {
@@ -205,7 +207,7 @@ func (m *ZCache) storeShortRobust(short string, robust string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortRobustMap.Set(ctx, short, robust, NotExpiringTtl)
+	_ = m.shortRobustMap.Set(ctx, short, robust, m.ttl)
 }
 
 func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
@@ -232,7 +234,7 @@ func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortCidMap.Set(ctx, shortAddress, cid, NotExpiringTtl)
+	_ = m.shortCidMap.Set(ctx, shortAddress, cid, m.ttl)
 }
 
 func (m *ZCache) tryToGetF4Address(address address.Address) string {

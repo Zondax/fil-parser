@@ -40,7 +40,7 @@ type Transaction struct {
 	// ParserVersion is the parser version used to parse this tx
 	ParserVersion string `json:"parser_version"`
 	// FeeData is the fee data
-	FeeData string `json:"fee_data"`
+	FeeData string `json:"fee_data,omitempty"`
 	NodeInfo
 }
 

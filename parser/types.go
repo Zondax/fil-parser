@@ -2,14 +2,23 @@ package parser
 
 import (
 	"encoding/json"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/ipfs/go-cid"
-	"math/big"
 )
+
+type FilecoinParserConfig struct {
+	ConsolidateAddressesToRobust ConsolidateAddressesToRobust
+}
+
+type ConsolidateAddressesToRobust struct {
+	Enable     bool
+	BestEffort bool
+}
 
 type ControlAddress struct {
 	Owner        string   `json:"owner"`
@@ -81,11 +90,10 @@ type BurnFee struct {
 
 type FeeData struct {
 	FeesMetadata
-	Amount *big.Int `json:"amount"`
+	Amount string `json:"amount"`
 }
 
 type FeesMetadata struct {
-	TxType                string
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee

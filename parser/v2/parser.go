@@ -3,10 +3,11 @@ package v2
 import (
 	"encoding/json"
 	"errors"
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/lotus/api"
 	"math/big"
 	"strings"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/lotus/api"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -31,14 +32,16 @@ type Parser struct {
 	addresses   *types.AddressInfoMap
 	helper      *helper.Helper
 	logger      *zap.Logger
+	config      *parser.FilecoinParserConfig
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
+func NewParser(helper *helper.Helper, logger *zap.Logger, config *parser.FilecoinParserConfig) *Parser {
 	return &Parser{
 		actorParser: actors.NewActorParser(helper, logger),
 		addresses:   types.NewAddressInfoMap(),
 		helper:      helper,
 		logger:      logger2.GetSafeLogger(logger),
+		config:      config,
 	}
 }
 
@@ -216,8 +219,20 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
-	txFromRobust := actors.EnsureRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger)
-	txToRobust := actors.EnsureRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger)
+
+	config := &parser.ConsolidateAddressesToRobust{}
+	if p.config != nil {
+		config = &p.config.ConsolidateAddressesToRobust
+	}
+
+	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+	if err != nil {
+		return nil, err
+	}
+	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	if err != nil {
+		return nil, err
+	}
 
 	tx := &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
@@ -231,8 +246,8 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:       mainMsgCid.String(),
-		TxFrom:      txFromRobust,
-		TxTo:        txToRobust,
+		TxFrom:      txFrom,
+		TxTo:        txTo,
 		Amount:      trace.Msg.Value.Int,
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
@@ -240,39 +255,10 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}
 
 	if gasCost.TotalCost.Uint64() > 0 {
-		transactionFeesJson := p.calculateTransactionFees(gasCost, tipset, blockCid)
+		transactionFeesJson := actors.CalculateTransactionFees(gasCost, tipset, blockCid, p.helper.GetActorsCache(), p.logger, p.config)
 		tx.FeeData = string(transactionFeesJson)
 	}
 	return tx, nil
-}
-
-func (p *Parser) calculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipSet, blockCid string) []byte {
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
-	}
-
-	feeData := parser.FeeData{
-		FeesMetadata: parser.FeesMetadata{
-			MinerFee: parser.MinerFee{
-				MinerAddress: minerAddress,
-				Amount:       gasCost.MinerTip.String(),
-			},
-			OverEstimationBurnFee: parser.OverEstimationBurnFee{
-				BurnAddress: parser.BurnAddress,
-				Amount:      gasCost.OverEstimationBurn.String(),
-			},
-			BurnFee: parser.BurnFee{
-				BurnAddress: parser.BurnAddress,
-				Amount:      gasCost.BaseFeeBurn.String(),
-			},
-		},
-		Amount: gasCost.TotalCost.Int,
-	}
-
-	data, _ := json.Marshal(feeData)
-
-	return data
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {
