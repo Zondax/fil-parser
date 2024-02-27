@@ -16,7 +16,7 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/stretchr/testify v1.8.4
 	github.com/whyrusleeping/cbor-gen v0.1.0
-	github.com/zondax/golem v0.14.4
+	github.com/zondax/golem v0.15.3
 	github.com/zondax/rosetta-filecoin-lib v1.2502.0
 	github.com/zondax/znats v0.1.0
 	go.uber.org/zap v1.27.0
@@ -69,7 +69,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
-	github.com/go-redsync/redsync/v4 v4.12.0 // indirect
+	github.com/go-redsync/redsync/v4 v4.12.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
