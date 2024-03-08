@@ -10,13 +10,10 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
-	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
-
-const defaultCodeCid = "bafy2bzaceab3xcn7qkcuj5oyifa6dn3ihke55bdmerphef4r6aorjdhk3uriq"
 
 type Tools struct {
 	Logger *zap.Logger
@@ -102,18 +99,6 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 }
 
 func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (string, error) {
-	// v1.23 has not CodeCid field. It was introduced on v1.24.
-	// In order to make the parser v2 backward compatible to v1.23 files (avoid to create a new parser)
-	// we set a default value for this field as constant.
-	if !msg.CodeCid.Defined() {
-		defaultCodeCid, err := cid.Parse(defaultCodeCid)
-		if err != nil {
-			return "", err
-		}
-
-		msg.CodeCid = defaultCodeCid
-	}
-
 	// Serialize
 	buf := new(bytes.Buffer)
 	if err := msg.MarshalCBOR(buf); err != nil {
