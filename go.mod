@@ -6,8 +6,8 @@ require (
 	github.com/bytedance/sonic v1.10.2
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-bitfield v0.2.4
-	github.com/filecoin-project/go-state-types v0.12.8
-	github.com/filecoin-project/lotus v1.25.2
+	github.com/filecoin-project/go-state-types v0.13.0-rc.2
+	github.com/filecoin-project/lotus v1.26.0-rc1
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
 	github.com/google/uuid v1.6.0
@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/whyrusleeping/cbor-gen v0.1.0
 	github.com/zondax/golem v0.14.1
-	github.com/zondax/rosetta-filecoin-lib v1.2502.0
+	github.com/zondax/rosetta-filecoin-lib v1.2600.0-rc1
 	github.com/zondax/znats v0.0.1
 	go.uber.org/zap v1.26.0
 	gorm.io/gorm v1.25.7
@@ -111,7 +111,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.31.1 // indirect
@@ -129,7 +129,7 @@ require (
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
-	github.com/multiformats/go-multiaddr v0.12.1 // indirect
+	github.com/multiformats/go-multiaddr v0.12.2 // indirect
 	github.com/multiformats/go-multiaddr-dns v0.3.1 // indirect
 	github.com/multiformats/go-multibase v0.2.0 // indirect
 	github.com/multiformats/go-multicodec v0.9.0 // indirect
