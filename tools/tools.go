@@ -5,6 +5,9 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -101,7 +104,8 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (string, error) {
 	// Serialize
 	buf := new(bytes.Buffer)
-	if err := msg.MarshalCBOR(buf); err != nil {
+
+	if err := actor.State.MarshalCBOR(buf); err != nil {
 		return "", err
 	}
 

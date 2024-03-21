@@ -6,10 +6,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/bytedance/sonic"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/google/uuid"
-	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -17,6 +13,13 @@ import (
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+
+	"github.com/bytedance/sonic"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/lotus/api"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
+	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
 )
 
@@ -211,7 +214,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
 	}
 
-	msgCid, err := tools.BuildCidFromMessageTrace(trace.Msg, mainMsgCid.String())
+	msgCid, err := tools.BuildCidFromMessageTrace(trace.InvokedActor, mainMsgCid.String())
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
