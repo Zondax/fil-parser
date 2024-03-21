@@ -5,14 +5,15 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/parser"
-	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
 
@@ -101,22 +102,27 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 	return blockCid, nil
 }
 
-func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (string, error) {
+func BuildCidFromMessageTrace(actor filTypes.ActorTrace, parentMsgCid string) (string, error) {
+
 	// v1.23 has not CodeCid field. It was introduced on v1.24.
 	// In order to make the parser v2 backward compatible to v1.23 files (avoid to create a new parser)
 	// we set a default value for this field as constant.
-	if !msg.CodeCid.Defined() {
+	//
+	// v1.26 removed the CodeCid from the trace.Msg object and added a new InvokedActor field in the Execution Trace.
+	// The InvokedActor State containes the the actor's code CID
+	if !actor.State.Code.Defined() {
 		defaultCodeCid, err := cid.Parse(defaultCodeCid)
 		if err != nil {
 			return "", err
 		}
 
-		msg.CodeCid = defaultCodeCid
+		actor.State.Code = defaultCodeCid
 	}
 
 	// Serialize
 	buf := new(bytes.Buffer)
-	if err := msg.MarshalCBOR(buf); err != nil {
+
+	if err := actor.State.MarshalCBOR(buf); err != nil {
 		return "", err
 	}
 
