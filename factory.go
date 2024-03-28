@@ -18,6 +18,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
+	"strings"
 )
 
 var (
@@ -158,7 +159,8 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		tipsetCid := genesisTipset.GetCidString()
 		txType := "Genesis"
 		blockCid := genesisTipset.Key().String()
-
+		blockCid = strings.ReplaceAll(blockCid, "{", "")
+		blockCid = strings.ReplaceAll(blockCid, "}", "")
 		genesisTxs = append(genesisTxs, &types.Transaction{
 			TxBasicBlockData: types.TxBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
