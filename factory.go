@@ -3,8 +3,6 @@ package fil_parser
 import (
 	"errors"
 	"fmt"
-	"strings"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	types2 "github.com/filecoin-project/lotus/chain/types"
@@ -20,6 +18,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
+	"strings"
 )
 
 var (
@@ -157,16 +156,18 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		})
 		amount, _ := big.FromString(balance.Value.Balance)
 
-		tipsetCid := genesisTipset.Key().String()
-		tipsetCid = strings.ReplaceAll(tipsetCid, "{", "")
-		tipsetCid = strings.ReplaceAll(tipsetCid, "}", "")
-
+		tipsetCid := genesisTipset.GetCidString()
+		txType := "Genesis"
+		blockCid := genesisTipset.Key().String()
+		blockCid = strings.ReplaceAll(blockCid, "{", "")
+		blockCid = strings.ReplaceAll(blockCid, "}", "")
 		genesisTxs = append(genesisTxs, &types.Transaction{
 			TxBasicBlockData: types.TxBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
 					Height:    0,
 					TipsetCid: tipsetCid,
 				},
+				BlockCid: blockCid,
 			},
 			Id:          tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
 			ParentId:    uuid.Nil.String(),
@@ -175,7 +176,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			TxTo:        balance.Key,
 			Amount:      amount.Int,
 			Status:      "Ok",
-			TxType:      "Genesis",
+			TxType:      txType,
 		})
 	}
 
