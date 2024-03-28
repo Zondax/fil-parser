@@ -3,8 +3,6 @@ package fil_parser
 import (
 	"errors"
 	"fmt"
-	"strings"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	types2 "github.com/filecoin-project/lotus/chain/types"
@@ -157,9 +155,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		})
 		amount, _ := big.FromString(balance.Value.Balance)
 
-		tipsetCid := genesisTipset.Key().String()
-		tipsetCid = strings.ReplaceAll(tipsetCid, "{", "")
-		tipsetCid = strings.ReplaceAll(tipsetCid, "}", "")
+		tipsetCid := genesisTipset.GetCidString()
 
 		genesisTxs = append(genesisTxs, &types.Transaction{
 			TxBasicBlockData: types.TxBasicBlockData{
