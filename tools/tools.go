@@ -13,8 +13,6 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
-	"github.com/zondax/fil-parser/parser"
-	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
 
@@ -104,8 +102,7 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (string, error) {
 	// Serialize
 	buf := new(bytes.Buffer)
-
-	if err := actor.State.MarshalCBOR(buf); err != nil {
+	if err := msg.MarshalCBOR(buf); err != nil {
 		return "", err
 	}
 

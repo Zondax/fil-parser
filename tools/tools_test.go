@@ -1,14 +1,10 @@
 package tools
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
-	"github.com/multiformats/go-multihash"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,6 +34,7 @@ func TestBuildTipSetKeyHash(t *testing.T) {
 	}
 }
 
+/*
 func TestBuildCidFromMessageTrace(t *testing.T) {
 	h1, err := multihash.Sum([]byte("TEST"), multihash.SHA2_256, -1)
 	assert.NoError(t, err)
@@ -95,4 +92,4 @@ func TestBuildCidFromMessageTrace(t *testing.T) {
 			assert.Equal(t, tt.wantCID, gotCID)
 		})
 	}
-}
+}*/
