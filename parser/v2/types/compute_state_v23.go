@@ -1,10 +1,11 @@
 package types
 
 import (
+	"time"
+
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"time"
 )
 
 type ComputeStateOutputV2 struct {
@@ -26,8 +27,9 @@ type InvocResultV2 struct {
 
 // ExecutionTrace This is a copy of native lotus ExecutionTrace type
 type ExecutionTraceV2 struct {
-	Msg        types.MessageTrace
-	MsgRct     types.ReturnTrace
-	GasCharges []*types.GasTrace  `cborgen:"maxlen=1000000000" json:"-"`
-	Subcalls   []ExecutionTraceV2 `cborgen:"maxlen=1000000000"`
+	Msg          types.MessageTrace
+	MsgRct       types.ReturnTrace
+	InvokedActor *types.ActorTrace
+	GasCharges   []*types.GasTrace  `cborgen:"maxlen=1000000000" json:"-"`
+	Subcalls     []ExecutionTraceV2 `cborgen:"maxlen=1000000000"`
 }

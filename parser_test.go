@@ -32,6 +32,7 @@ const (
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
 	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
+	calibNextNodeUrl  = "https://node-fil-calibration-next.zondax.ch/rpc/v1"
 	feeType           = "fee"
 )
 
@@ -191,6 +192,16 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  941,
 				totalAddress: 102,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:  37,
+				totalAddress: 11,
 			},
 		},
 	}
