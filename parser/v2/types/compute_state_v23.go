@@ -29,7 +29,7 @@ type InvocResultV2 struct {
 type ExecutionTraceV2 struct {
 	Msg          types.MessageTrace
 	MsgRct       types.ReturnTrace
-	InvokedActor types.ActorTrace
+	InvokedActor *types.ActorTrace
 	GasCharges   []*types.GasTrace  `cborgen:"maxlen=1000000000" json:"-"`
 	Subcalls     []ExecutionTraceV2 `cborgen:"maxlen=1000000000"`
 }
