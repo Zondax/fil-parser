@@ -8,10 +8,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/bytedance/sonic"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/google/uuid"
-	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -19,6 +15,11 @@ import (
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+
+	"github.com/bytedance/sonic"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/uuid"
+	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
 )
 

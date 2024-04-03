@@ -5,13 +5,14 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
-	"github.com/zondax/fil-parser/parser"
-	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
 
