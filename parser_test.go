@@ -6,12 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/zondax/fil-parser/parser"
 
@@ -362,7 +363,13 @@ func TestParseGenesis(t *testing.T) {
 	logger, err := zap.NewDevelopment()
 	require.NoError(t, err)
 	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
+	config := &parser.FilecoinParserConfig{
+		ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+			Enable:     true,
+			BestEffort: true,
+		},
+	}
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger, config)
 	assert.NoError(t, err)
 	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
 
