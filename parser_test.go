@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"go.uber.org/zap"
 
@@ -338,4 +342,57 @@ func TestParser_InDepthCompare(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestParseGenesis(t *testing.T) {
+	network := "mainnet"
+	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+	if err != nil {
+		t.Fatalf("Error getting genesis data: %s", err)
+	}
+
+	logger, err := zap.NewDevelopment()
+	require.NoError(t, err)
+	lib := getLib(t, nodeUrl)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
+	assert.NoError(t, err)
+	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+
+	assert.Equal(t, len(actualTxs), 21)
+	assert.Equal(t, actualTxs[0].BlockCid, "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2")
+	assert.Equal(t, actualTxs[0].TipsetCid, "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6")
+}
+
+func getStoredGenesisData(network string) (*types.GenesisBalances, *types.ExtendedTipSet, error) {
+	balancesFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_balances.json", network))
+	tipsetFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_tipset.json", network))
+
+	var balances types.GenesisBalances
+	var tipset types.ExtendedTipSet
+
+	balancesFileContent, err := os.ReadFile(balancesFilePath)
+	if err != nil {
+		zap.S().Errorf("Error reading file '%s': %s", balancesFilePath, err.Error())
+		return nil, nil, err
+	}
+
+	err = json.Unmarshal(balancesFileContent, &balances)
+	if err != nil {
+		zap.S().Errorf("Error unmarshalling genesis balances: %s", err.Error())
+		return nil, nil, err
+	}
+
+	tipsetFileContent, err := os.ReadFile(tipsetFilePath)
+	if err != nil {
+		zap.S().Errorf("Error reading file '%s': %s", tipsetFilePath, err.Error())
+		return nil, nil, err
+	}
+
+	err = json.Unmarshal(tipsetFileContent, &tipset)
+	if err != nil {
+		zap.S().Errorf("Error unmarshalling genesis tipset: %s", err.Error())
+		return nil, nil, err
+	}
+
+	return &balances, &tipset, nil
 }
