@@ -14,8 +14,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/zondax/fil-parser/parser"
-
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/lotus/api"
@@ -356,13 +354,7 @@ func TestParseGenesis(t *testing.T) {
 	logger, err := zap.NewDevelopment()
 	require.NoError(t, err)
 	lib := getLib(t, nodeUrl)
-	config := &parser.FilecoinParserConfig{
-		ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
-			Enable:     true,
-			BestEffort: true,
-		},
-	}
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger, config)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
 	assert.NoError(t, err)
 	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
 

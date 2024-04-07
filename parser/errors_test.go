@@ -1,8 +1,9 @@
 package parser
 
 import (
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"testing"
+
+	"github.com/filecoin-project/go-state-types/exitcode"
 )
 
 func TestCheckExitCodeCommonError(t *testing.T) {
@@ -14,52 +15,52 @@ func TestCheckExitCodeCommonError(t *testing.T) {
 		{
 			name: "ErrIllegalArgument",
 			code: exitcode.ErrIllegalArgument,
-			want: "ErrIllegalArgument",
+			want: "ErrIllegalArgument(16)",
 		},
 		{
 			name: "ErrNotFound",
 			code: exitcode.ErrNotFound,
-			want: "ErrNotFound",
+			want: "ErrNotFound(17)",
 		},
 		{
 			name: "ErrForbidden",
 			code: exitcode.ErrForbidden,
-			want: "ErrForbidden",
+			want: "ErrForbidden(18)",
 		},
 		{
 			name: "ErrInsufficientFunds",
 			code: exitcode.ErrInsufficientFunds,
-			want: "ErrInsufficientFunds",
+			want: "ErrInsufficientFunds(19)",
 		},
 		{
 			name: "ErrIllegalState",
 			code: exitcode.ErrIllegalState,
-			want: "ErrIllegalState",
+			want: "ErrIllegalState(20)",
 		},
 		{
 			name: "ErrSerialization",
 			code: exitcode.ErrSerialization,
-			want: "ErrSerialization",
+			want: "ErrSerialization(21)",
 		},
 		{
 			name: "ErrUnhandledMessage",
 			code: exitcode.ErrUnhandledMessage,
-			want: "ErrUnhandledMessage",
+			want: "ErrUnhandledMessage(22)",
 		},
 		{
 			name: "ErrUnspecified",
 			code: exitcode.ErrUnspecified,
-			want: "ErrUnspecified",
+			want: "ErrUnspecified(23)",
 		},
 		{
 			name: "ErrAssertionFailed",
 			code: exitcode.ErrAssertionFailed,
-			want: "ErrAssertionFailed",
+			want: "ErrAssertionFailed(24)",
 		},
 		{
 			name: "ErrReadOnly",
 			code: exitcode.ErrReadOnly,
-			want: "ErrReadOnly",
+			want: "ErrReadOnly(25)",
 		},
 	}
 	for _, tt := range tests {
