@@ -26,7 +26,7 @@ func TestActorParser_approve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.MultisigKey, tt.method)
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.MultisigKey, tt.method)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
@@ -63,7 +63,7 @@ func TestActorParser_multisigWithParamsAndReturn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.MultisigKey, tt.txType)
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.MultisigKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)

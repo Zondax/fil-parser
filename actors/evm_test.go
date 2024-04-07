@@ -77,7 +77,7 @@ func TestActorParser_evmWithParamsAndReturn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rawParams, rawReturn, err := getParmasAndReturn(manifest.EvmKey, tt.txType)
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.EvmKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
@@ -95,7 +95,7 @@ func TestActorParser_evmWithParamsAndReturn(t *testing.T) {
 
 func TestActorParser_invokeContract(t *testing.T) {
 	p := getActorParser()
-	rawParams, rawReturn, err := getParmasAndReturn(manifest.EvmKey, parser.MethodInvokeContract)
+	rawParams, rawReturn, err := getParamsAndReturn(manifest.EvmKey, parser.MethodInvokeContract)
 	require.NoError(t, err)
 	require.NotNil(t, rawParams)
 	require.NotNil(t, rawReturn)
@@ -117,7 +117,7 @@ func TestActorParser_invokeContract(t *testing.T) {
 
 func TestActorParser_invokeContractReadOnly(t *testing.T) {
 	p := getActorParser()
-	rawParams, rawReturn, err := getParmasAndReturn(manifest.EvmKey, parser.MethodInvokeContractReadOnly)
+	rawParams, rawReturn, err := getParamsAndReturn(manifest.EvmKey, parser.MethodInvokeContractReadOnly)
 	require.NoError(t, err)
 	require.NotNil(t, rawParams)
 	require.NotNil(t, rawReturn)
@@ -137,7 +137,7 @@ func TestActorParser_invokeContractReadOnly(t *testing.T) {
 
 func TestActorParser_invokeContract_whenCborUnmarshalFail(t *testing.T) {
 	p := getActorParser()
-	_, rawReturn, err := getParmasAndReturn(manifest.EvmKey, parser.MethodInvokeContract)
+	_, rawReturn, err := getParamsAndReturn(manifest.EvmKey, parser.MethodInvokeContract)
 	require.NoError(t, err)
 	require.NotNil(t, rawReturn)
 

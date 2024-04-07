@@ -50,7 +50,7 @@ func getActorParser() *ActorParser {
 	return NewActorParser(helper, nil)
 }
 
-func getParmasAndReturn(actor, txType string) ([]byte, []byte, error) {
+func getParamsAndReturn(actor, txType string) ([]byte, []byte, error) {
 	rawParams, err := loadFile(actor, txType, parser.ParamsKey)
 	if err != nil {
 		return nil, nil, err
