@@ -22,7 +22,6 @@ import (
 	"github.com/ipld/go-ipld-prime/datamodel"
 	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/zondax/fil-parser/parser"
 
 	"go.uber.org/zap"
