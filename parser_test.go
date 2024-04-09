@@ -36,8 +36,8 @@ const (
 	tracesPrefix      = "traces"
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
-	nodeUrl           = "https://api.zondax.ch/fil/node/mainnet/rpc/v1"
-	calibNextNodeUrl  = "https://api.zondax.ch/fil/node/calibration/rpc/v1"
+	nodeUrl           = "https://node-fil-mainnet-next.zondax.ch/rpc/v1"
+	calibNextNodeUrl  = "https://node-fil-calibration-next.zondax.ch/rpc/v1"
 	feeType           = "fee"
 )
 
