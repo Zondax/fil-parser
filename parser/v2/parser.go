@@ -1,10 +1,13 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
 	"strings"
+
+	"github.com/filecoin-project/lotus/api"
 
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
@@ -26,10 +29,11 @@ const Version = "v2"
 var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26"}
 
 type Parser struct {
-	actorParser *actors.ActorParser
-	addresses   *types.AddressInfoMap
-	helper      *helper.Helper
-	logger      *zap.Logger
+	actorParser      *actors.ActorParser
+	addresses        *types.AddressInfoMap
+	txCidEquivalents []types.TxCidTranslation
+	helper           *helper.Helper
+	logger           *zap.Logger
 }
 
 func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
@@ -59,20 +63,21 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, []types.TxCidTranslation, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
 	err := sonic.UnmarshalString(string(traces), &computeState)
 	if err != nil {
 		p.logger.Sugar().Error(err)
-		return nil, nil, errors.New("could not decode")
+		return nil, nil, nil, errors.New("could not decode")
 	}
 
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
+	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
 	if err != nil {
-		return nil, nil, parser.ErrBlockHash
+		return nil, nil, nil, parser.ErrBlockHash
 	}
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
@@ -105,6 +110,12 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 			feeTx := p.feesTransactions(trace, tipset, transaction.TxType, transaction.Id)
 			transactions = append(transactions, feeTx)
 		}
+
+		// TxCid <-> TxHash
+		txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid)
+		if err == nil && txHash != "" {
+			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
+		}
 	}
 
 	transactions = tools.SetNodeMetadataOnTxs(transactions, metadata, Version)
@@ -112,7 +123,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	// Clear this cache when we finish processing a tipset.
 	// Bad addresses in this tipset might be valid in the next one
 	p.helper.GetActorsCache().ClearBadAddressCache()
-	return transactions, p.addresses, nil
+	return transactions, p.addresses, p.txCidEquivalents, nil
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
@@ -291,6 +302,16 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		TxType:      parser.TotalFeeOp,
 		TxMetadata:  string(metadata),
 	}
+}
+
+func (p *Parser) translateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
+	ctx := context.Background()
+	ethHash, err := p.helper.GetFilecoinNodeClient().EthGetTransactionHashByCid(ctx, mainMsgCid)
+	if err != nil {
+		return "", nil
+	}
+
+	return ethHash.String(), nil
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {

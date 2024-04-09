@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -130,6 +131,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 	type expectedResults struct {
 		totalTraces  int
 		totalAddress int
+		totalTxCids  int
 	}
 	tests := []struct {
 		name    string
@@ -146,6 +148,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  650,
 				totalAddress: 98,
+				totalTxCids:  0,
 			},
 		},
 		{
@@ -156,6 +159,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  31,
 				totalAddress: 3,
+				totalTxCids:  0,
 			},
 		},
 		{
@@ -166,6 +170,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  907,
 				totalAddress: 88,
+				totalTxCids:  0,
 			},
 		},
 		{
@@ -176,6 +181,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  773,
 				totalAddress: 70,
+				totalTxCids:  0,
 			},
 		},
 		{
@@ -186,6 +192,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  734,
 				totalAddress: 75,
+				totalTxCids:  0,
 			},
 		},
 		{
@@ -196,6 +203,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  1118,
 				totalAddress: 102,
+				totalTxCids:  0,
 			},
 		},
 		{
@@ -206,6 +214,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  37,
 				totalAddress: 11,
+				totalTxCids:  0,
 			},
 		},
 	}
@@ -225,12 +234,13 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
-			txs, adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
+			txs, adds, txCids, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
 			require.NoError(t, err)
 			require.NotNil(t, txs)
 			require.NotNil(t, adds)
 			require.Equal(t, tt.results.totalTraces, len(txs))
 			require.Equal(t, tt.results.totalAddress, adds.Len())
+			require.Equal(t, tt.results.totalTxCids, len(txCids))
 		})
 	}
 }
@@ -317,21 +327,26 @@ func TestParser_InDepthCompare(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
-			v1Txs, v1Adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
+			v1Txs, v1Adds, v1TxCids, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
 			require.NoError(t, err)
 			require.NotNil(t, v1Txs)
 			require.NotNil(t, v1Adds)
 
-			v2Txs, v2Adds, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
+			v2Txs, v2Adds, v2TxCids, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
 			require.NoError(t, err)
 			require.NotNil(t, v2Txs)
 			require.NotNil(t, v2Adds)
 
 			require.Equal(t, len(v1Txs), len(v2Txs))
 			require.Equal(t, v1Adds.Len(), v2Adds.Len())
+			require.Equal(t, len(v1TxCids), len(v2TxCids))
 
 			for i := range v1Txs {
 				require.True(t, v1Txs[i].Equal(*v2Txs[i]))
+			}
+
+			for i := range v1TxCids {
+				require.True(t, reflect.DeepEqual(v1TxCids[i], v2TxCids[i]))
 			}
 
 			v1Adds.Range(func(key string, value *types.AddressInfo) bool {

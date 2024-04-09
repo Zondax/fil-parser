@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -19,6 +20,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v12/reward"
 	"github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache"
@@ -55,12 +57,13 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
+	node       api.FullNode
 	actorCache *cache.ActorsCache
 	logger     *zap.Logger
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, logger *zap.Logger) *Helper {
-	return &Helper{lib: lib, actorCache: actorsCache, logger: logger2.GetSafeLogger(logger)}
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger) *Helper {
+	return &Helper{lib: lib, actorCache: actorsCache, node: node, logger: logger2.GetSafeLogger(logger)}
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
@@ -69,6 +72,10 @@ func (h *Helper) GetActorsCache() *cache.ActorsCache {
 
 func (h *Helper) GetFilecoinLib() *rosettaFilecoinLib.RosettaConstructionFilecoin {
 	return h.lib
+}
+
+func (h *Helper) GetFilecoinNodeClient() api.FullNode {
+	return h.node
 }
 
 func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey) *types.AddressInfo {
