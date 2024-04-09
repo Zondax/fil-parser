@@ -1,13 +1,10 @@
 package v2
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
 	"strings"
-
-	"github.com/filecoin-project/lotus/api"
 
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
@@ -302,16 +299,6 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		TxType:      parser.TotalFeeOp,
 		TxMetadata:  string(metadata),
 	}
-}
-
-func (p *Parser) translateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
-	ctx := context.Background()
-	ethHash, err := p.helper.GetFilecoinNodeClient().EthGetTransactionHashByCid(ctx, mainMsgCid)
-	if err != nil {
-		return "", nil
-	}
-
-	return ethHash.String(), nil
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {
