@@ -41,7 +41,9 @@ jobs:
         with:
           go-version: '1.21'
       - name: ModTidy check
-        run: make check-modtidy
+        run: |
+          git config --global --add safe.directory "*"
+          make check-modtidy
       - name: Lint check
         run: |
           make install_lint
@@ -62,4 +64,6 @@ jobs:
         with:
           go-version: '1.21'
       - name: test
-        run: make test
+        run: |
+          git config --global --add safe.directory "*"
+          make test
