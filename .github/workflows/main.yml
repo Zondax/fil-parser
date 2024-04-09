@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: zondax-runners
+    container:
+      image: golang:1.21
+      options: --tty
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -19,12 +22,16 @@ jobs:
           go-version: '1.21'
       - name: Build
         run: |
+          git config --global --add safe.directory "*"
           make build
         env:
           TOKEN: ${{ secrets.PECORINO_READ_TOKEN }}
 
   checks:
-    runs-on: ubuntu-latest
+    runs-on: zondax-runners
+    container:
+      image: golang:1.21
+      options: --tty
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -41,7 +48,10 @@ jobs:
           make lint
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: zondax-runners
+    container:
+      image: golang:1.21
+      options: --tty
     timeout-minutes: 50
     steps:
       - name: Checkout
