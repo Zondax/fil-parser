@@ -148,7 +148,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  650,
 				totalAddress: 98,
-				totalTxCids:  0,
+				totalTxCids:  99,
 			},
 		},
 		{
@@ -170,7 +170,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  907,
 				totalAddress: 88,
-				totalTxCids:  0,
+				totalTxCids:  147,
 			},
 		},
 		{
@@ -181,7 +181,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  773,
 				totalAddress: 70,
-				totalTxCids:  0,
+				totalTxCids:  118,
 			},
 		},
 		{
@@ -192,7 +192,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  734,
 				totalAddress: 75,
-				totalTxCids:  0,
+				totalTxCids:  97,
 			},
 		},
 		{
@@ -203,7 +203,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  1118,
 				totalAddress: 102,
-				totalTxCids:  0,
+				totalTxCids:  177,
 			},
 		},
 		{
@@ -214,7 +214,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  37,
 				totalAddress: 11,
-				totalTxCids:  0,
+				totalTxCids:  2,
 			},
 		},
 	}
