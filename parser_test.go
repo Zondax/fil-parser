@@ -234,13 +234,21 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
-			txs, adds, txCids, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}})
+
+			txsData := TxsData{
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Traces:   traces,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+			}
+
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
-			require.NotNil(t, txs)
-			require.NotNil(t, adds)
-			require.Equal(t, tt.results.totalTraces, len(txs))
-			require.Equal(t, tt.results.totalAddress, adds.Len())
-			require.Equal(t, tt.results.totalTxCids, len(txCids))
+			require.NotNil(t, parsedResult.Txs)
+			require.NotNil(t, parsedResult.Addresses)
+			require.Equal(t, tt.results.totalTraces, len(parsedResult.Txs))
+			require.Equal(t, tt.results.totalAddress, parsedResult.Addresses.Len())
+			require.Equal(t, tt.results.totalTxCids, len(parsedResult.TxCids))
 		})
 	}
 }
@@ -327,30 +335,38 @@ func TestParser_InDepthCompare(t *testing.T) {
 
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
-			v1Txs, v1Adds, v1TxCids, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}})
+
+			txsData := TxsData{
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Traces:   traces,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
+			}
+			parsedResultV1, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
-			require.NotNil(t, v1Txs)
-			require.NotNil(t, v1Adds)
+			require.NotNil(t, parsedResultV1.Txs)
+			require.NotNil(t, parsedResultV1.Addresses)
 
-			v2Txs, v2Adds, v2TxCids, err := p.ParseTransactions(traces, tipset, ethlogs, types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}})
+			txsData.Metadata = types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}}
+			parsedResultV2, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
-			require.NotNil(t, v2Txs)
-			require.NotNil(t, v2Adds)
+			require.NotNil(t, parsedResultV2.Txs)
+			require.NotNil(t, parsedResultV2.Addresses)
 
-			require.Equal(t, len(v1Txs), len(v2Txs))
-			require.Equal(t, v1Adds.Len(), v2Adds.Len())
-			require.Equal(t, len(v1TxCids), len(v2TxCids))
+			require.Equal(t, len(parsedResultV1.Txs), len(parsedResultV2.Txs))
+			require.Equal(t, parsedResultV1.Addresses.Len(), parsedResultV2.Addresses.Len())
+			require.Equal(t, len(parsedResultV1.TxCids), len(parsedResultV2.TxCids))
 
-			for i := range v1Txs {
-				require.True(t, v1Txs[i].Equal(*v2Txs[i]))
+			for i := range parsedResultV1.Txs {
+				require.True(t, parsedResultV1.Txs[i].Equal(*parsedResultV2.Txs[i]))
 			}
 
-			for i := range v1TxCids {
-				require.True(t, reflect.DeepEqual(v1TxCids[i], v2TxCids[i]))
+			for i := range parsedResultV1.TxCids {
+				require.True(t, reflect.DeepEqual(parsedResultV1.TxCids[i], parsedResultV2.TxCids[i]))
 			}
 
-			v1Adds.Range(func(key string, value *types.AddressInfo) bool {
-				v2Value, ok := v2Adds.Get(key)
+			parsedResultV1.Addresses.Range(func(key string, value *types.AddressInfo) bool {
+				v2Value, ok := parsedResultV2.Addresses.Get(key)
 				require.True(t, ok)
 				require.Equal(t, value, v2Value)
 				return true

@@ -1,10 +1,13 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
 	"strings"
+
+	fil_parser "github.com/zondax/fil-parser"
 
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
@@ -60,13 +63,13 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, []types.TxCidTranslation, error) {
+func (p *Parser) ParseTransactions(_ context.Context, txsData fil_parser.TxsData) (*fil_parser.TxsParsedResult, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
-	err := sonic.UnmarshalString(string(traces), &computeState)
+	err := sonic.UnmarshalString(string(txsData.Traces), &computeState)
 	if err != nil {
 		p.logger.Sugar().Error(err)
-		return nil, nil, nil, errors.New("could not decode")
+		return nil, errors.New("could not decode")
 	}
 
 	var transactions []*types.Transaction
@@ -74,7 +77,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
 	if err != nil {
-		return nil, nil, nil, parser.ErrBlockHash
+		return nil, parser.ErrBlockHash
 	}
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
@@ -82,7 +85,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, uuid.Nil.String())
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, txsData.EthLogs, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -95,7 +98,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs,
+			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
 				trace.Msg.Cid().String(), transaction.Id, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
@@ -104,7 +107,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipset, transaction.TxType, transaction.Id)
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
 			transactions = append(transactions, feeTx)
 		}
 
@@ -115,12 +118,17 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 	}
 
-	transactions = tools.SetNodeMetadataOnTxs(transactions, metadata, Version)
+	transactions = tools.SetNodeMetadataOnTxs(transactions, txsData.Metadata, Version)
 
 	// Clear this cache when we finish processing a tipset.
 	// Bad addresses in this tipset might be valid in the next one
 	p.helper.GetActorsCache().ClearBadAddressCache()
-	return transactions, p.addresses, p.txCidEquivalents, nil
+
+	return &fil_parser.TxsParsedResult{
+		Txs:       transactions,
+		Addresses: p.addresses,
+		TxCids:    p.txCidEquivalents,
+	}, nil
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
