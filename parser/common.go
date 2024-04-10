@@ -1,14 +1,18 @@
 package parser
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/filecoin-project/go-state-types/exitcode"
-	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 	"strings"
 	"time"
+
+	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
+	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
 func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
@@ -84,4 +88,14 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *zap.Logger) 
 
 	parentBaseFee := tipset.TipSet.Blocks()[0].ParentBaseFee
 	return parentBaseFee.Uint64(), nil
+}
+
+func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
+	ctx := context.Background()
+	ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+	if err != nil || ethHash == nil {
+		return "", nil
+	}
+
+	return ethHash.String(), nil
 }

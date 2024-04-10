@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
@@ -25,10 +26,11 @@ const Version = "v1"
 var NodeVersionsSupported = []string{"v1.21", "v1.22"}
 
 type Parser struct {
-	actorParser *actors.ActorParser
-	addresses   *types.AddressInfoMap
-	helper      *helper.Helper
-	logger      *zap.Logger
+	actorParser      *actors.ActorParser
+	addresses        *types.AddressInfoMap
+	txCidEquivalents []types.TxCidTranslation
+	helper           *helper.Helper
+	logger           *zap.Logger
 }
 
 func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
@@ -58,20 +60,22 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
+func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV1.ComputeStateOutputV1{}
-	err := sonic.UnmarshalString(string(traces), &computeState)
+	err := sonic.UnmarshalString(string(txsData.Traces), &computeState)
 	if err != nil {
 		p.logger.Sugar().Error(err)
-		return nil, nil, errors.New("could not decode")
+		return nil, errors.New("could not decode")
 	}
 
 	appTools := tools.Tools{Logger: p.logger}
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
-	tipsetKey := tipset.Key()
-	tipsetCid := tipset.GetCidString()
+	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
+
+	tipsetKey := txsData.Tipset.Key()
+	tipsetCid := txsData.Tipset.GetCidString()
 
 	for _, trace := range computeState.Trace {
 		if !hasMessage(trace) {
@@ -85,9 +89,9 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 				To:     trace.Msg.To,
 				From:   trace.Msg.From,
 				Method: trace.Msg.Method,
-			}, int64(tipset.Height()), tipsetKey)
+			}, int64(txsData.Tipset.Height()), tipsetKey)
 
-			blockCid, err := appTools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, tipset)
+			blockCid, err := appTools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset)
 			if err != nil {
 				p.logger.Sugar().Errorf("Error when trying to get block cid from message,txType '%s': %v", txType, err)
 			}
@@ -96,7 +100,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 			badTx := &types.Transaction{
 				TxBasicBlockData: types.TxBasicBlockData{
 					BasicBlockData: types.BasicBlockData{
-						Height:    uint64(tipset.Height()),
+						Height:    uint64(txsData.Tipset.Height()),
 						TipsetCid: tipsetCid,
 					},
 					BlockCid: blockCid,
@@ -111,7 +115,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 				GasUsed:     uint64(trace.MsgRct.GasUsed),
 				Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 				TxMetadata:  trace.Error,
-				TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
+				TxTimestamp: parser.GetTimestamp(txsData.Tipset.MinTimestamp()),
 			}
 
 			transactions = append(transactions, badTx)
@@ -119,7 +123,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, tipset, ethLogs, uuid.Nil.String())
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, txsData.EthLogs, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -128,7 +132,7 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, tipset, ethLogs,
+			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
 				trace.Msg.Cid().String(), transaction.Id, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
@@ -137,17 +141,28 @@ func (p *Parser) ParseTransactions(traces []byte, tipset *types.ExtendedTipSet, 
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, tipset, transaction.TxType, transaction.Id)
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
 			transactions = append(transactions, feeTx)
+		}
+
+		// TxCid <-> TxHash
+		txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid)
+		if err == nil && txHash != "" {
+			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 		}
 	}
 
-	transactions = tools.SetNodeMetadataOnTxs(transactions, metadata, Version)
+	transactions = tools.SetNodeMetadataOnTxs(transactions, txsData.Metadata, Version)
 
 	// Clear this cache when we finish processing a tipset.
 	// Bad addresses in this tipset might be valid in the next one
 	p.helper.GetActorsCache().ClearBadAddressCache()
-	return transactions, p.addresses, nil
+
+	return &types.TxsParsedResult{
+		Txs:       transactions,
+		Addresses: p.addresses,
+		TxCids:    p.txCidEquivalents,
+	}, nil
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {

@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: zondax-runners
+    container:
+      image: golang:1.21
+      options: --tty
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -19,12 +22,16 @@ jobs:
           go-version: '1.21'
       - name: Build
         run: |
+          git config --global --add safe.directory "*"
           make build
         env:
           TOKEN: ${{ secrets.PECORINO_READ_TOKEN }}
 
   checks:
-    runs-on: ubuntu-latest
+    runs-on: zondax-runners
+    container:
+      image: golang:1.21
+      options: --tty
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -34,14 +41,19 @@ jobs:
         with:
           go-version: '1.21'
       - name: ModTidy check
-        run: make check-modtidy
+        run: |
+          git config --global --add safe.directory "*"
+          make check-modtidy
       - name: Lint check
         run: |
           make install_lint
           make lint
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: zondax-runners
+    container:
+      image: golang:1.21
+      options: --tty
     timeout-minutes: 50
     steps:
       - name: Checkout
@@ -52,4 +64,6 @@ jobs:
         with:
           go-version: '1.21'
       - name: test
-        run: make test
+        run: |
+          git config --global --add safe.directory "*"
+          make test
