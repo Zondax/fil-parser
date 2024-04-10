@@ -1,8 +1,11 @@
 package fil_parser
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	types2 "github.com/filecoin-project/lotus/chain/types"
@@ -18,7 +21,6 @@ import (
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
-	"strings"
 )
 
 var (
@@ -36,7 +38,7 @@ type FilecoinParser struct {
 type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
-	ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error)
+	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
@@ -49,7 +51,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		return nil, err
 	}
 
-	helper := helper2.NewHelper(lib, actorsCache, logger)
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
 	parserV1 := v1.NewParser(helper, logger)
 	parserV2 := v2.NewParser(helper, logger)
 
@@ -61,31 +63,32 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func (p *FilecoinParser) ParseTransactions(traces []byte, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, metadata types.BlockMetadata) ([]*types.Transaction, *types.AddressInfoMap, error) {
-	parserVersion, err := p.translateParserVersionFromMetadata(metadata)
+func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
+	parserVersion, err := p.translateParserVersionFromMetadata(txsData.Metadata)
 	if err != nil {
-		return nil, nil, errUnknownVersion
+		return nil, errUnknownVersion
 	}
 
-	var txs []*types.Transaction
-	var addrs *types.AddressInfoMap
+	var parsedResult *types.TxsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
-		txs, addrs, err = p.parserV1.ParseTransactions(traces, tipSet, ethLogs, metadata)
+		parsedResult, err = p.parserV1.ParseTransactions(ctx, txsData)
 	case v2.Version:
-		txs, addrs, err = p.parserV2.ParseTransactions(traces, tipSet, ethLogs, metadata)
+		parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
-		return nil, nil, errUnknownImpl
+		return nil, errUnknownImpl
 	}
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return p.FilterDuplicated(txs), addrs, nil
+	parsedResult.Txs = p.FilterDuplicated(parsedResult.Txs)
+
+	return parsedResult, nil
 }
 
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {
