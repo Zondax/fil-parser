@@ -7,8 +7,6 @@ import (
 	"math/big"
 	"strings"
 
-	fil_parser "github.com/zondax/fil-parser"
-
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -63,7 +61,7 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(_ context.Context, txsData fil_parser.TxsData) (*fil_parser.TxsParsedResult, error) {
+func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
 	err := sonic.UnmarshalString(string(txsData.Traces), &computeState)
@@ -124,7 +122,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData fil_parser.TxsData
 	// Bad addresses in this tipset might be valid in the next one
 	p.helper.GetActorsCache().ClearBadAddressCache()
 
-	return &fil_parser.TxsParsedResult{
+	return &types.TxsParsedResult{
 		Txs:       transactions,
 		Addresses: p.addresses,
 		TxCids:    p.txCidEquivalents,

@@ -235,7 +235,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 
-			txsData := TxsData{
+			txsData := types.TxsData{
 				EthLogs:  ethlogs,
 				Tipset:   tipset,
 				Traces:   traces,
@@ -336,7 +336,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 
-			txsData := TxsData{
+			txsData := types.TxsData{
 				EthLogs:  ethlogs,
 				Tipset:   tipset,
 				Traces:   traces,

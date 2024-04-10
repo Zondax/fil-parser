@@ -35,23 +35,10 @@ type FilecoinParser struct {
 	logger   *zap.Logger
 }
 
-type TxsData struct {
-	Traces   []byte
-	Tipset   *types.ExtendedTipSet
-	EthLogs  []types.EthLog
-	Metadata types.BlockMetadata
-}
-
-type TxsParsedResult struct {
-	Txs       []*types.Transaction
-	Addresses *types.AddressInfoMap
-	TxCids    []types.TxCidTranslation
-}
-
 type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
-	ParseTransactions(ctx context.Context, txsData TxsData) (*TxsParsedResult, error)
+	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
@@ -76,13 +63,13 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData TxsData) (*TxsParsedResult, error) {
+func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(txsData.Metadata)
 	if err != nil {
 		return nil, errUnknownVersion
 	}
 
-	var parsedResult *TxsParsedResult
+	var parsedResult *types.TxsParsedResult
 
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
