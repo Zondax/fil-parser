@@ -39,6 +39,8 @@ type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
 	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
+	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
+	ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
@@ -87,6 +89,58 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 	}
 
 	parsedResult.Txs = p.FilterDuplicated(parsedResult.Txs)
+
+	return parsedResult, nil
+}
+
+func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+	parserVersion, err := p.translateParserVersionFromMetadata(eventsData.Metadata)
+	if err != nil {
+		return nil, errUnknownVersion
+	}
+
+	var parsedResult *types.EventsParsedResult
+
+	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	switch parserVersion {
+	case v1.Version:
+		parsedResult, err = p.parserV1.ParseNativeEvents(ctx, eventsData)
+	case v2.Version:
+		parsedResult, err = p.parserV2.ParseNativeEvents(ctx, eventsData)
+	default:
+		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		return nil, errUnknownImpl
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return parsedResult, nil
+}
+
+func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+	parserVersion, err := p.translateParserVersionFromMetadata(eventsData.Metadata)
+	if err != nil {
+		return nil, errUnknownVersion
+	}
+
+	var parsedResult *types.EventsParsedResult
+
+	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	switch parserVersion {
+	case v1.Version:
+		parsedResult, err = p.parserV1.ParseEthLogs(ctx, eventsData)
+	case v2.Version:
+		parsedResult, err = p.parserV2.ParseEthLogs(ctx, eventsData)
+	default:
+		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		return nil, errUnknownImpl
+	}
+
+	if err != nil {
+		return nil, err
+	}
 
 	return parsedResult, nil
 }

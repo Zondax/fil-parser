@@ -165,6 +165,13 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	}, nil
 }
 
+func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
+	return nil, errors.New("unimplimented")
+}
+func (p *Parser) ParseEthLogs(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
+	return nil, errors.New("unimplimented")
+}
+
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV1.ComputeStateOutputV1{}

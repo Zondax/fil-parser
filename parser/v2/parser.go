@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"strings"
 
+	"github.com/ipld/go-ipld-prime/datamodel"
 	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -16,7 +18,9 @@ import (
 	"github.com/zondax/fil-parser/types"
 
 	"github.com/bytedance/sonic"
+	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
@@ -127,6 +131,138 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		Addresses: p.addresses,
 		TxCids:    p.txCidEquivalents,
 	}, nil
+}
+
+func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+	var parsed []types.Event
+	nativeEventsTotal, evmEventsTotal := 0, 0
+	for idx, native := range eventsData.NativeLog {
+		event := types.Event{}
+		event.TxCid = native.MsgCid.String()
+		event.LogIndex = uint64(idx)
+		event.Height = eventsData.Height
+		event.TipsetCid = eventsData.TipsetCID
+		event.Reverted = native.Reverted
+		event.Emitter = native.Emitter.String()
+		addr, err := address.NewFromString(event.Emitter)
+		if err != nil {
+			return nil, err
+		}
+		var metaData string
+		if addr.Protocol() == address.Delegated {
+			evmEventsTotal++
+			// this is an evm compatible address
+			event.Type = types.EventTypeEVM
+			// if the native event is of type evm, the topics are encoded as entries with keys=t1..t4 ( topics ) and key=d ( data )
+			parsedEntries, err := parseNativeEventEntry(event.Type, native.Entries)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing native evm event entries: %w", err)
+			}
+			// the first item, t1 contains the selector_hash
+			var selectorHash string
+			if parsedEntries[0] != nil {
+				var ok bool
+				selectorHash, ok = parsedEntries[0][parsedEntryValue].(string)
+				if !ok {
+					return nil, fmt.Errorf("unable to retrieve %s from event entries", EVMTopic0EventEntryKey)
+				}
+			}
+			event.SelectorID = selectorHash
+			// retrieve the EVM topics and data to build the metadata object
+			var (
+				data   []byte
+				topics []string
+			)
+			// maintain the order of topics
+			for i := 0; i < len(parsedEntries); i++ {
+				k, _ := parsedEntries[i][parsedEntryKey].(string)
+				v := parsedEntries[i][parsedEntryValue]
+				if strings.HasPrefix(k, EVMTopicPrefixEventEntryKey) { // topic
+					val, _ := v.(string)
+					topics = append(topics, val)
+				}
+				if k == EVMDataEventEntryKey { // data
+					data, _ = v.([]byte)
+				}
+			}
+
+			// we store the evm event metadata in the same format as if the event was parsed from an ethLog
+			metaDataBytes, err := buildEVMEventMetaData[string](data, topics)
+			if err != nil {
+				return nil, fmt.Errorf("error building native evm event metadata %w", err)
+			}
+			metaData = string(metaDataBytes)
+
+		} else {
+			nativeEventsTotal++
+			event.Type = types.EventTypeNative
+			parsedEntries, err := parseNativeEventEntry(event.Type, native.Entries)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing native event entries: %w", err)
+			}
+
+			var eventType datamodel.Node
+			if parsedEntries[0] != nil {
+				var ok bool
+				eventType, ok = parsedEntries[0][parsedEntryValue].(datamodel.Node)
+				if !ok {
+					return nil, fmt.Errorf("unable to retrieve %s from event entries", NativeTypeEventEntryKey)
+				}
+			}
+
+			metaDataBytes, err := json.Marshal(parsedEntries)
+			if err != nil {
+				return nil, fmt.Errorf("error marshalling parsedEntries to JSON: %w", err)
+			}
+			metaData = string(metaDataBytes)
+
+			if eventType != nil {
+				event.SelectorID, err = eventType.AsString()
+				if err != nil {
+					return nil, fmt.Errorf("error converting %s to string: %w", NativeTypeEventEntryKey, err)
+				}
+			}
+
+		}
+
+		event.Metadata = metaData
+		event.SelectorSig = genFVMSelectorSig(native)
+		event.ID = tools.BuildId(event.TipsetCid, event.TxCid, fmt.Sprint(event.LogIndex), event.Type)
+		parsed = append(parsed, event)
+	}
+	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
+}
+
+func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+	var parsed []types.Event
+	for _, ethLog := range eventsData.EthLogs {
+		event := types.Event{}
+		event.TxCid = ethLog.TransactionCid
+		event.Emitter = ethLog.Address.String()
+		event.LogIndex = uint64(ethLog.LogIndex)
+		event.Height = eventsData.Height
+		event.TipsetCid = eventsData.TipsetCID
+		event.SelectorID = extractSigFromTopics(ethLog.Topics)
+
+		var err error
+		event.SelectorSig, err = p.helper.GetEVMSelectorSig(event.SelectorID)
+		if err != nil {
+			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+		}
+
+		metaDataBytes, err := buildEVMEventMetaData[ethtypes.EthHash](ethLog.Data, ethLog.Topics)
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling ethLog metadata: %w", err)
+		}
+
+		event.Metadata = string(metaDataBytes)
+		event.Reverted = ethLog.Removed
+		event.Type = types.EventTypeEVM
+
+		event.ID = tools.BuildId(event.TipsetCid, event.TxCid, fmt.Sprint(event.LogIndex), event.Type)
+		parsed = append(parsed, event)
+	}
+	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {

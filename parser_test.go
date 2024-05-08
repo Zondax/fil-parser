@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -13,14 +14,22 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/ipfs/go-cid"
+	"github.com/ipld/go-ipld-prime"
+	"github.com/ipld/go-ipld-prime/codec/dagcbor"
+	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
 
 	"go.uber.org/zap"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/api"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
+	"github.com/zondax/fil-parser/tools"
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/lotus/api/client"
@@ -375,6 +384,161 @@ func TestParser_InDepthCompare(t *testing.T) {
 	}
 }
 
+func TestParser_ParseNativeEvents(t *testing.T) {
+	height := uint64(8)
+	// we need any random number for the test
+	//nolint:gosec
+	filAddress, err := address.NewIDAddress(uint64(rand.Int()))
+	assert.NoError(t, err)
+	tipsetCID := uuid.NewString()
+
+	lib := getLib(t, tt.url)
+
+	tipset, err := readTipset("3573066")
+	require.NoError(t, err)
+	ethlogs, err := readEthLogs("3573066")
+	require.NoError(t, err)
+	traces, err := readGzFile(tracesFilename("3573066"))
+	require.NoError(t, err)
+
+	logger, err := zap.NewDevelopment()
+	require.NoError(t, err)
+
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, calibNextNodeUrl), logger)
+	require.NoError(t, err)
+
+	ipldNodeBuilder := basicnode.Prototype.String.NewBuilder()
+	err = ipldNodeBuilder.AssignString("market_deals_event")
+	assert.NoError(t, err)
+	eventType, err := ipld.Encode(ipldNodeBuilder.Build(), dagcbor.Encode)
+	assert.NoError(t, err)
+
+	ipldNodeBuilder = basicnode.Prototype.Bytes.NewBuilder()
+	err = ipldNodeBuilder.AssignBytes([]byte("test data"))
+	assert.NoError(t, err)
+	eventData, err := ipld.Encode(ipldNodeBuilder.Build(), dagcbor.Encode)
+	assert.NoError(t, err)
+
+	tb := []struct {
+		name         string
+		entries      []filTypes.EventEntry
+		emitter      address.Address
+		wantMetadata map[int]map[string]any
+		wantErr      bool
+	}{
+		{
+			name:    "error ipld decode",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: []byte("invalid"), // invalid format for provided codec
+				},
+				{
+					Flags: 0x03,
+					Key:   "data",
+					Codec: 0x51,
+					Value: eventData,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:    "error retreiving $type from entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x52, // wrong codec
+					Value: []byte("invalid"),
+				},
+				{
+					Flags: 0x03,
+					Key:   "data",
+					Codec: 0x51,
+					Value: eventData,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:    "success no entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{},
+		},
+		{
+			name:    "succes native fvm events",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "data",
+					Codec: 0x51,
+					Value: eventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "data",
+					"value": "dGVzdCBkYXRh",
+				},
+			},
+		},
+	}
+
+	for i := range tb {
+		tt := tb[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, _, events, err := p.ParseNativeEvents(tipsetCID, height, []*filTypes.ActorEvent{
+				{
+					Emitter: tt.emitter,
+					Entries: tt.entries,
+				},
+			})
+			if tt.wantErr {
+				assert.Error(t, err)
+				fmt.Println(err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.NotEmpty(t, events)
+
+			gotMetadata := map[int]map[string]any{}
+			err = json.Unmarshal([]byte(events[0].Metadata), &gotMetadata)
+			assert.NoError(t, err)
+
+			for idx, v := range tt.wantMetadata {
+				for entryKey, entryValue := range v {
+					assert.EqualValues(t, entryValue, gotMetadata[idx][entryKey])
+				}
+			}
+			assert.EqualValues(t, tipsetCID, events[0].TipsetCid)
+			assert.EqualValues(t, tt.emitter.String(), events[0].Emitter)
+			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case
+				assert.EqualValues(t, "market_deals_event", events[0].SelectorID)
+			}
+			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeNative), events[0].ID)
+		})
+	}
+
+}
 func TestParseGenesis(t *testing.T) {
 	network := "mainnet"
 	genesisBalances, genesisTipset, err := getStoredGenesisData(network)

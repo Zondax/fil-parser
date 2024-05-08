@@ -1,7 +1,11 @@
 package helper
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -22,9 +26,11 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/go-resty/resty/v2"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/golem/pkg/zcache"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
@@ -60,10 +66,12 @@ type Helper struct {
 	node       api.FullNode
 	actorCache *cache.ActorsCache
 	logger     *zap.Logger
+	httpClient *resty.Client
+	cache      zcache.ZCache
 }
 
 func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger) *Helper {
-	return &Helper{lib: lib, actorCache: actorsCache, node: node, logger: logger2.GetSafeLogger(logger)}
+	return &Helper{lib: lib, actorCache: actorsCache, node: node, logger: logger2.GetSafeLogger(logger), httpClient: resty.New().SetTimeout(30 * time.Second)}
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
@@ -166,4 +174,50 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.UnknownStr, nil
 	}
 	return method.Name, nil
+}
+
+// GetEVMSelectorSig attempts to get the selector_signature from SignatureDBURL and utilizes a combined cache.
+func (h *Helper) GetEVMSelectorSig(selectorID string) (string, error) {
+	ctx := context.Background()
+
+	var selectorSig string
+	if err := h.cache.Get(ctx, selectorID, &selectorSig); err != nil {
+		if !h.cache.IsNotFoundError(err) {
+			return "", err
+		}
+	}
+
+	if selectorSig != "" {
+		return selectorSig, nil
+	}
+
+	// not found in cache
+	resp, err := h.httpClient.NewRequest().
+		SetQueryParam("hex_signature", selectorID).
+		SetContext(ctx).
+		SetResult(&SignatureResult{}).
+		Get(SignatureDBURL)
+	if err != nil {
+		return selectorSig, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return selectorSig, fmt.Errorf("error from 4bytes: %v", resp.Error())
+	}
+
+	signatureData, ok := resp.Result().(*SignatureResult)
+	if !ok {
+		return selectorSig, errors.New("error asserting result to SignatureResult")
+	}
+
+	if len(signatureData.Results) == 0 {
+		return selectorSig, fmt.Errorf("signature not found: %s", selectorID)
+	}
+
+	sig := signatureData.Results[0].TextSignature
+
+	if err := h.cache.Set(ctx, selectorID, sig, 0); err != nil {
+		return selectorSig, fmt.Errorf("error adding selector_sig to cache: %w", err)
+	}
+	return sig, nil
 }
