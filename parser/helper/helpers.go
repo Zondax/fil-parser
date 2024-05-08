@@ -30,12 +30,12 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/golem/pkg/zcache"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
-	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
