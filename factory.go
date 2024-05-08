@@ -104,9 +104,7 @@ func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types
 
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
-	case v1.Version:
-		parsedResult, err = p.parserV1.ParseNativeEvents(ctx, eventsData)
-	case v2.Version:
+	case v1.Version, v2.Version:
 		parsedResult, err = p.parserV2.ParseNativeEvents(ctx, eventsData)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
@@ -130,9 +128,7 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, cache zcache.ZCache, 
 
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
-	case v1.Version:
-		parsedResult, err = p.parserV1.ParseEthLogs(ctx, cache, eventsData)
-	case v2.Version:
+	case v1.Version, v2.Version:
 		parsedResult, err = p.parserV2.ParseEthLogs(ctx, cache, eventsData)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
