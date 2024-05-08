@@ -67,7 +67,6 @@ type Helper struct {
 	actorCache *cache.ActorsCache
 	logger     *zap.Logger
 	httpClient *resty.Client
-	cache      zcache.ZCache
 }
 
 func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger) *Helper {
@@ -177,12 +176,12 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 }
 
 // GetEVMSelectorSig attempts to get the selector_signature from SignatureDBURL and utilizes a combined cache.
-func (h *Helper) GetEVMSelectorSig(selectorID string) (string, error) {
+func (h *Helper) GetEVMSelectorSig(selectorID string, cache zcache.ZCache) (string, error) {
 	ctx := context.Background()
 
 	var selectorSig string
-	if err := h.cache.Get(ctx, selectorID, &selectorSig); err != nil {
-		if !h.cache.IsNotFoundError(err) {
+	if err := cache.Get(ctx, selectorID, &selectorSig); err != nil {
+		if !cache.IsNotFoundError(err) {
 			return "", err
 		}
 	}
@@ -216,7 +215,7 @@ func (h *Helper) GetEVMSelectorSig(selectorID string) (string, error) {
 
 	sig := signatureData.Results[0].TextSignature
 
-	if err := h.cache.Set(ctx, selectorID, sig, 0); err != nil {
+	if err := cache.Set(ctx, selectorID, sig, 0); err != nil {
 		return selectorSig, fmt.Errorf("error adding selector_sig to cache: %w", err)
 	}
 	return sig, nil
