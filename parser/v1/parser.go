@@ -18,6 +18,7 @@ import (
 	typesV1 "github.com/zondax/fil-parser/parser/v1/types"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/zcache"
 	"go.uber.org/zap"
 )
 
@@ -168,7 +169,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
 	return nil, errors.New("unimplimented")
 }
-func (p *Parser) ParseEthLogs(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseEthLogs(_ context.Context, _ zcache.ZCache, _ types.EventsData) (*types.EventsParsedResult, error) {
 	return nil, errors.New("unimplimented")
 }
 

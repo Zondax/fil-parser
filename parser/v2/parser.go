@@ -16,6 +16,7 @@ import (
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/zcache"
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/go-address"
@@ -233,7 +234,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
-func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseEthLogs(_ context.Context, cache zcache.ZCache, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
 	for _, ethLog := range eventsData.EthLogs {
 		event := types.Event{}
@@ -245,7 +246,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 		event.SelectorID = extractSigFromTopics(ethLog.Topics)
 
 		var err error
-		event.SelectorSig, err = p.helper.GetEVMSelectorSig(event.SelectorID)
+		event.SelectorSig, err = p.helper.GetEVMSelectorSig(event.SelectorID, cache)
 		if err != nil {
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}

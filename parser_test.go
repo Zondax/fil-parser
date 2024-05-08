@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,10 +27,12 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/golem/pkg/zcache"
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/lotus/api/client"
@@ -384,7 +387,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 	}
 }
 
-func TestParser_ParseNativeEvents(t *testing.T) {
+func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	height := uint64(8)
 	// we need any random number for the test
 	//nolint:gosec
@@ -392,19 +395,10 @@ func TestParser_ParseNativeEvents(t *testing.T) {
 	assert.NoError(t, err)
 	tipsetCID := uuid.NewString()
 
-	lib := getLib(t, tt.url)
-
-	tipset, err := readTipset("3573066")
-	require.NoError(t, err)
-	ethlogs, err := readEthLogs("3573066")
-	require.NoError(t, err)
-	traces, err := readGzFile(tracesFilename("3573066"))
-	require.NoError(t, err)
-
 	logger, err := zap.NewDevelopment()
 	require.NoError(t, err)
 
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, calibNextNodeUrl), logger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
 	require.NoError(t, err)
 
 	ipldNodeBuilder := basicnode.Prototype.String.NewBuilder()
@@ -505,23 +499,29 @@ func TestParser_ParseNativeEvents(t *testing.T) {
 		tt := tb[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			_, _, events, err := p.ParseNativeEvents(tipsetCID, height, []*filTypes.ActorEvent{
-				{
-					Emitter: tt.emitter,
-					Entries: tt.entries,
+			ctx := context.Background()
+			eventsData := types.EventsData{
+				Height:    height,
+				TipsetCID: tipsetCID,
+				NativeLog: []*filTypes.ActorEvent{
+					{
+						Emitter: tt.emitter,
+						Entries: tt.entries,
+					},
 				},
-			})
+			}
+			events, err := parser.ParseNativeEvents(ctx, eventsData)
 			if tt.wantErr {
 				assert.Error(t, err)
 				fmt.Println(err)
 				return
 			}
 			assert.NoError(t, err)
-			assert.NotEmpty(t, events)
+			assert.NotNil(t, events)
+			assert.NotEmpty(t, events.ParsedEvents)
 
 			gotMetadata := map[int]map[string]any{}
-			err = json.Unmarshal([]byte(events[0].Metadata), &gotMetadata)
+			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
 			assert.NoError(t, err)
 
 			for idx, v := range tt.wantMetadata {
@@ -529,16 +529,315 @@ func TestParser_ParseNativeEvents(t *testing.T) {
 					assert.EqualValues(t, entryValue, gotMetadata[idx][entryKey])
 				}
 			}
-			assert.EqualValues(t, tipsetCID, events[0].TipsetCid)
-			assert.EqualValues(t, tt.emitter.String(), events[0].Emitter)
+			assert.EqualValues(t, tipsetCID, events.ParsedEvents[0].TipsetCid)
+			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
 			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case
-				assert.EqualValues(t, "market_deals_event", events[0].SelectorID)
+				assert.EqualValues(t, "market_deals_event", events.ParsedEvents[0].SelectorID)
 			}
-			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeNative), events[0].ID)
+			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeNative), events.ParsedEvents[0].ID)
 		})
 	}
 
 }
+func TestParser_ParseNativeEvents_EVM(t *testing.T) {
+	height := uint64(8)
+	ethAddress, err := address.NewDelegatedAddress(32, []byte{})
+	assert.NoError(t, err)
+
+	tipsetCID := uuid.NewString()
+
+	var topic ethtypes.EthHash
+	err = topic.UnmarshalJSON([]byte(`"0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184"`))
+	assert.NoError(t, err)
+
+	topicBytes := make([]byte, ethtypes.EthHashLength)
+	n := copy(topicBytes, topic[:ethtypes.EthHashLength])
+	assert.Equal(t, ethtypes.EthHashLength, n)
+
+	eventData, err := json.Marshal(map[string]any{
+		"x": "y",
+		"a": "b",
+	})
+	assert.NoError(t, err)
+	eventDataHex := hex.EncodeToString(eventData)
+
+	logger, err := zap.NewDevelopment()
+	require.NoError(t, err)
+
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	require.NoError(t, err)
+
+	tb := []struct {
+		name         string
+		entries      []filTypes.EventEntry
+		emitter      address.Address
+		wantMetadata map[string]any
+		wantErr      bool
+	}{
+		{
+			name:    "error retrieving topic from entry",
+			emitter: ethAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "t1",
+					Codec: 0x52, // wrong codec
+					Value: []byte{},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:    "error parsing ethHash",
+			emitter: ethAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "t1",
+					Codec: 0x55,
+					Value: []byte{}, // empty hash
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:    "succes native evm events no entries",
+			emitter: ethAddress,
+			entries: []filTypes.EventEntry{},
+			wantMetadata: map[string]any{
+				"topics": []string{},
+				"data":   "",
+			},
+		},
+		{
+			name:    "succes native evm events",
+			emitter: ethAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "t1",
+					Codec: 0x55,
+					Value: createTopic(t, "0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184"),
+				},
+				{
+					Flags: 0x03,
+					Key:   "t2",
+					Codec: 0x55,
+					Value: createTopic(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+				},
+				{
+					Flags: 0x03,
+					Key:   "t3",
+					Codec: 0x55,
+					Value: createTopic(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+				},
+				{
+					Flags: 0x03,
+					Key:   "d",
+					Codec: 0x55,
+					Value: eventData,
+				},
+			},
+			wantMetadata: map[string]any{
+				"data": eventDataHex,
+				"topics": []string{
+					"0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184",
+					"0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738",
+					"0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738",
+				},
+			},
+		},
+	}
+
+	for i := range tb {
+		tt := tb[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			eventsData := types.EventsData{
+				Height:    height,
+				TipsetCID: tipsetCID,
+				NativeLog: []*filTypes.ActorEvent{
+					{
+						Emitter: tt.emitter,
+						Entries: tt.entries,
+					},
+				},
+			}
+
+			events, err := parser.ParseNativeEvents(ctx, eventsData)
+			if tt.wantErr {
+				assert.Error(t, err)
+				fmt.Println(err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, events)
+			assert.NotEmpty(t, events.ParsedEvents)
+
+			gotMetadata := map[string]any{}
+			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
+			assert.NoError(t, err)
+
+			assert.EqualValues(t, tt.wantMetadata["data"], gotMetadata["data"])
+			assert.ElementsMatch(t, tt.wantMetadata["topics"], gotMetadata["topics"])
+			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeEVM), events.ParsedEvents[0].ID)
+			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
+			if len(tt.entries) > 0 { // only check the selector_id if there are entries in the test case
+				assert.EqualValues(t, "0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184", events.ParsedEvents[0].SelectorID)
+			}
+		})
+	}
+
+}
+
+func TestParser_ParseEthLogs(t *testing.T) {
+	logger, err := zap.NewDevelopment()
+	require.NoError(t, err)
+
+	cache, err := zcache.NewLocalCache(&zcache.LocalConfig{
+		Logger: logger,
+	})
+	assert.NoError(t, err)
+
+	var emitter ethtypes.EthAddress
+	err = emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
+	assert.NoError(t, err)
+
+	tipsetCID := cid.Cid{}.String()
+	txCID := cid.Cid{}.String()
+	height := uint64(8)
+
+	eventData, err := json.Marshal(map[string]any{
+		"x": "y",
+		"a": "b",
+	})
+	assert.NoError(t, err)
+	eventDataHex := hex.EncodeToString(eventData)
+
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	require.NoError(t, err)
+
+	tb := []struct {
+		name         string
+		ethLogs      []types.EthLog
+		wantMetadata map[string]any
+		wantErr      bool
+		wantSig      bool
+	}{
+		{
+			name:    "success when signature not found",
+			wantSig: false,
+			ethLogs: []types.EthLog{
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						Address: emitter,
+						Data:    eventData,
+						Topics: []ethtypes.EthHash{
+							createEthHash(t, "0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184"),
+							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+							createEthHash(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+						},
+					},
+				},
+			},
+			wantMetadata: map[string]any{
+				"data": eventDataHex,
+				"topics": []string{
+					"0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184",
+					"0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738",
+					"0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738",
+				},
+			},
+		},
+		{
+			name: "success no topics",
+			ethLogs: []types.EthLog{
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						Address: emitter,
+						Data:    eventData,
+						Topics:  []ethtypes.EthHash{},
+					},
+				},
+			},
+			wantMetadata: map[string]any{
+				"topics": []string{},
+				"data":   eventDataHex,
+			},
+		},
+		{
+			name:    "success",
+			wantSig: true,
+			ethLogs: []types.EthLog{
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						Address: emitter,
+						Data:    eventData,
+						Topics: []ethtypes.EthHash{
+							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
+							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+							createEthHash(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+						},
+					},
+				},
+			},
+			wantMetadata: map[string]any{
+				"data": eventDataHex,
+				"topics": []string{
+					"0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0",
+					"0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738",
+					"0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738",
+				},
+			},
+		},
+	}
+
+	for i := range tb {
+		tt := tb[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			eventsData := types.EventsData{
+				Height:    height,
+				TipsetCID: tipsetCID,
+				EthLogs:   tt.ethLogs,
+			}
+
+			events, err := parser.ParseEthLogs(ctx, cache, eventsData)
+			if tt.wantErr {
+				assert.Error(t, err)
+				fmt.Println(err)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.NotNil(t, events)
+			assert.NotEmpty(t, events.ParsedEvents)
+
+			gotMetadata := map[string]any{}
+			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
+			assert.NoError(t, err)
+
+			if len(tt.ethLogs[0].Topics) > 0 && tt.wantSig {
+				// manually chosen signature of hash: 0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0
+				assert.EqualValues(t, "l1InfoLeafMap(uint256)", events.ParsedEvents[0].SelectorSig)
+			}
+
+			assert.EqualValues(t, tt.wantMetadata["data"], gotMetadata["data"])
+			assert.ElementsMatch(t, tt.wantMetadata["topics"], gotMetadata["topics"])
+
+			assert.EqualValues(t, tools.BuildId(tipsetCID, txCID, fmt.Sprint(0), types.EventTypeEVM), events.ParsedEvents[0].ID)
+			assert.EqualValues(t, emitter.String(), events.ParsedEvents[0].Emitter)
+		})
+	}
+}
+
 func TestParseGenesis(t *testing.T) {
 	network := "mainnet"
 	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
@@ -590,4 +889,21 @@ func getStoredGenesisData(network string) (*types.GenesisBalances, *types.Extend
 	}
 
 	return &balances, &tipset, nil
+}
+
+func createEthHash(t *testing.T, hash string) ethtypes.EthHash {
+	var ethHash ethtypes.EthHash
+	err := ethHash.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, hash)))
+	assert.NoError(t, err)
+	return ethHash
+}
+
+func createTopic(t *testing.T, hash string) []byte {
+	topic := createEthHash(t, hash)
+
+	topicBytes := make([]byte, ethtypes.EthHashLength)
+	n := copy(topicBytes, topic[:ethtypes.EthHashLength])
+	assert.Equal(t, ethtypes.EthHashLength, n)
+
+	return topicBytes
 }
