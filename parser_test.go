@@ -32,7 +32,6 @@ import (
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
-	"github.com/zondax/golem/pkg/zcache"
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/lotus/api/client"
@@ -48,6 +47,7 @@ const (
 	tracesPrefix      = "traces"
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
+	nativeLogPrefix   = "nativelog"
 	nodeUrl           = "https://node-fil-mainnet-next.zondax.ch/rpc/v1"
 	calibNextNodeUrl  = "https://node-fil-calibration-next.zondax.ch/rpc/v1"
 	feeType           = "fee"
@@ -62,6 +62,10 @@ func tracesFilename(height string) string {
 }
 
 func ehtlogFilename(height string) string {
+	return getFilename(ethLogPrefix, height)
+}
+
+func nativeLogFilename(height string) string {
 	return getFilename(ethLogPrefix, height)
 }
 
@@ -108,6 +112,19 @@ func readEthLogs(height string) ([]types.EthLog, error) {
 		return nil, err
 	}
 	var logs []types.EthLog
+	err = sonic.Unmarshal(rawLogs, &logs)
+	if err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func readNativeLogs(height string) ([]*filTypes.ActorEvent, error) {
+	rawLogs, err := readGzFile(nativeLogFilename(height))
+	if err != nil {
+		return nil, err
+	}
+	var logs []*filTypes.ActorEvent
 	err = sonic.Unmarshal(rawLogs, &logs)
 	if err != nil {
 		return nil, err
@@ -383,6 +400,233 @@ func TestParser_InDepthCompare(t *testing.T) {
 				require.Equal(t, value, v2Value)
 				return true
 			})
+		})
+	}
+}
+
+func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
+	// expectedResults are from previous runs. This assures backward compatibility. (Worst case would be fewer traces
+	// or address than previous versions)
+	type expectedResults struct {
+		totalTraces       int
+		totalNativeEvents int
+		totalEVMEvents    int
+	}
+	tests := []struct {
+		name    string
+		version string
+		url     string
+		height  string
+		results expectedResults
+	}{
+		{
+			name:    "parser with traces from v1",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907480",
+			results: expectedResults{
+				totalTraces:       104,
+				totalNativeEvents: 0,
+				totalEVMEvents:    104,
+			},
+		},
+		{
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907520",
+			results: expectedResults{
+				totalTraces:       11,
+				totalNativeEvents: 0,
+				totalEVMEvents:    11,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573062",
+			results: expectedResults{
+				totalTraces:       1,
+				totalNativeEvents: 0,
+				totalEVMEvents:    1,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573064",
+			results: expectedResults{
+				totalTraces:       4,
+				totalNativeEvents: 0,
+				totalEVMEvents:    4,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573066",
+			results: expectedResults{
+				totalTraces:       1,
+				totalNativeEvents: 0,
+				totalEVMEvents:    1,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:       2,
+				totalNativeEvents: 0,
+				totalEVMEvents:    2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
+
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			ethlogs, err := readEthLogs(tt.height)
+			require.NoError(t, err)
+
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+
+			eventsData := types.EventsData{
+				EthLogs:   ethlogs,
+				TipsetCID: tipset.GetCidString(),
+				Height:    uint64(tipset.Height()),
+				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+			}
+
+			parsedResult, err := p.ParseEthLogs(context.Background(), eventsData)
+			require.NoError(t, err)
+			require.NotNil(t, parsedResult.ParsedEvents)
+			require.Equal(t, tt.results.totalTraces, len(parsedResult.ParsedEvents))
+			require.Equal(t, tt.results.totalNativeEvents, parsedResult.NativeEvents)
+			require.Equal(t, tt.results.totalEVMEvents, parsedResult.EVMEvents)
+		})
+	}
+}
+func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
+	// expectedResults are from previous runs. This assures backward compatibility. (Worst case would be fewer traces
+	// or address than previous versions)
+	type expectedResults struct {
+		totalTraces       int
+		totalNativeEvents int
+		totalEVMEvents    int
+	}
+	tests := []struct {
+		name    string
+		version string
+		url     string
+		height  string
+		results expectedResults
+	}{
+		{
+			name:    "parser with traces from v1",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907480",
+			results: expectedResults{
+				totalTraces:       104,
+				totalNativeEvents: 104,
+				totalEVMEvents:    0,
+			},
+		},
+		{
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907520",
+			results: expectedResults{
+				totalTraces:       11,
+				totalNativeEvents: 11,
+				totalEVMEvents:    0,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573062",
+			results: expectedResults{
+				totalTraces:       1,
+				totalNativeEvents: 1,
+				totalEVMEvents:    0,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573064",
+			results: expectedResults{
+				totalTraces:       4,
+				totalNativeEvents: 4,
+				totalEVMEvents:    0,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573066",
+			results: expectedResults{
+				totalTraces:       1,
+				totalNativeEvents: 1,
+				totalEVMEvents:    0,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:       2,
+				totalNativeEvents: 2,
+				totalEVMEvents:    0,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
+
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			nativeLogs, err := readNativeLogs(tt.height)
+			require.NoError(t, err)
+
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+
+			eventsData := types.EventsData{
+				NativeLog: nativeLogs,
+				TipsetCID: tipset.GetCidString(),
+				Height:    uint64(tipset.Height()),
+				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+			}
+
+			parsedResult, err := p.ParseNativeEvents(context.Background(), eventsData)
+			require.NoError(t, err)
+			require.NotNil(t, parsedResult.ParsedEvents)
+			require.Equal(t, tt.results.totalTraces, len(parsedResult.ParsedEvents))
+			require.Equal(t, tt.results.totalNativeEvents, parsedResult.NativeEvents)
+			require.Equal(t, tt.results.totalEVMEvents, parsedResult.EVMEvents)
 		})
 	}
 }
@@ -696,11 +940,6 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	logger, err := zap.NewDevelopment()
 	require.NoError(t, err)
 
-	cache, err := zcache.NewLocalCache(&zcache.LocalConfig{
-		Logger: logger,
-	})
-	assert.NoError(t, err)
-
 	var emitter ethtypes.EthAddress
 	err = emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
 	assert.NoError(t, err)
@@ -809,7 +1048,7 @@ func TestParser_ParseEthLogs(t *testing.T) {
 				EthLogs:   tt.ethLogs,
 			}
 
-			events, err := parser.ParseEthLogs(ctx, cache, eventsData)
+			events, err := parser.ParseEthLogs(ctx, eventsData)
 			if tt.wantErr {
 				assert.Error(t, err)
 				fmt.Println(err)
