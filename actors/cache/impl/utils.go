@@ -1,7 +1,8 @@
 package impl
 
 const (
-	Short2CidMapPrefix    = "short2Cid"
-	Robust2ShortMapPrefix = "robust2Short"
-	Short2RobustMapPrefix = "short2Robust"
+	Short2CidMapPrefix        = "short2Cid"
+	Robust2ShortMapPrefix     = "robust2Short"
+	Short2RobustMapPrefix     = "short2Robust"
+	SelectorHash2SigMapPrefix = "hash2Sig"
 )

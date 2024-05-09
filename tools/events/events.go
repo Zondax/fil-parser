@@ -1,6 +1,7 @@
 package event_tools
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -17,7 +18,6 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"github.com/zondax/golem/pkg/zcache"
 	"go.uber.org/zap"
 )
 
@@ -124,7 +124,7 @@ func ParseNativeLog(height uint64, tipsetCID string, actorEvent *filTypes.ActorE
 	return event, nil
 }
 
-func ParseEthLog(height uint64, tipsetCID string, ethLog types.EthLog, cache zcache.ZCache, helper *helper.Helper) (*types.Event, error) {
+func ParseEthLog(height uint64, tipsetCID string, ethLog types.EthLog, helper *helper.Helper) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = ethLog.TransactionCid
 	event.Emitter = ethLog.Address.String()
@@ -134,7 +134,7 @@ func ParseEthLog(height uint64, tipsetCID string, ethLog types.EthLog, cache zca
 	event.SelectorID = extractSigFromTopics(ethLog.Topics)
 
 	var err error
-	event.SelectorSig, err = helper.GetEVMSelectorSig(event.SelectorID, cache)
+	event.SelectorSig, err = helper.GetEVMSelectorSig(context.Background(), event.SelectorID)
 	if err != nil {
 		zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 	}

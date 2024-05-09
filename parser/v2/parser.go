@@ -15,7 +15,6 @@ import (
 	"github.com/zondax/fil-parser/tools"
 	eventTools "github.com/zondax/fil-parser/tools/events"
 	"github.com/zondax/fil-parser/types"
-	"github.com/zondax/golem/pkg/zcache"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -151,10 +150,10 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
-func (p *Parser) ParseEthLogs(_ context.Context, cache zcache.ZCache, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
 	for _, ethLog := range eventsData.EthLogs {
-		event, err := eventTools.ParseEthLog(eventsData.Height, eventsData.TipsetCID, ethLog, cache, p.helper)
+		event, err := eventTools.ParseEthLog(eventsData.Height, eventsData.TipsetCID, ethLog, p.helper)
 
 		if err != nil {
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)

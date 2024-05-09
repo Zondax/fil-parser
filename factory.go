@@ -19,7 +19,6 @@ import (
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"github.com/zondax/golem/pkg/zcache"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 )
@@ -41,7 +40,7 @@ type Parser interface {
 	NodeVersionsSupported() []string
 	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
-	ParseEthLogs(ctx context.Context, cache zcache.ZCache, eventsData types.EventsData) (*types.EventsParsedResult, error)
+	ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
@@ -118,7 +117,7 @@ func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types
 	return parsedResult, nil
 }
 
-func (p *FilecoinParser) ParseEthLogs(ctx context.Context, cache zcache.ZCache, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(eventsData.Metadata)
 	if err != nil {
 		return nil, errUnknownVersion
@@ -129,7 +128,7 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, cache zcache.ZCache, 
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
-		parsedResult, err = p.parserV2.ParseEthLogs(ctx, cache, eventsData)
+		parsedResult, err = p.parserV2.ParseEthLogs(ctx, eventsData)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl

@@ -2,6 +2,8 @@ package impl
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -126,4 +128,12 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	}
 
 	return key.String(), nil
+}
+
+func (m *OnChain) GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error) {
+	return "", fmt.Errorf("unimplimented")
+}
+
+func (m *OnChain) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error {
+	return fmt.Errorf("unimplimented")
 }
