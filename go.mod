@@ -18,7 +18,7 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
-	github.com/whyrusleeping/cbor-gen v0.1.0
+	github.com/whyrusleeping/cbor-gen v0.1.1
 	github.com/zondax/golem v0.14.1
 	github.com/zondax/rosetta-filecoin-lib v1.2600.0
 	github.com/zondax/znats v0.1.0
