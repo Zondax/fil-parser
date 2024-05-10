@@ -46,15 +46,14 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error 
 	// work anyway
 	cacheConfig := source.Config.Cache
 
+	m.ttl = NotExpiringTtl
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
-		m.ttl = NotExpiringTtl
 		if err := m.initMapsLocalCache(); err != nil {
 			return err
 		}
 	} else {
 		m.cacheType = ZCacheCombined
-		m.ttl = NotExpiringTtl
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
