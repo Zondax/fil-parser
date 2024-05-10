@@ -54,7 +54,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]in
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
-		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
+		p.logger.Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
@@ -64,7 +64,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]in
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
-		p.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
+		p.logger.Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes

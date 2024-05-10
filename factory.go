@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zondax/golem/pkg/logger"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -14,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
 	v1 "github.com/zondax/fil-parser/parser/v1"
@@ -23,7 +24,6 @@ import (
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
 )
 
 var (
@@ -35,7 +35,7 @@ type FilecoinParser struct {
 	parserV1 Parser
 	parserV2 Parser
 	Helper   *helper2.Helper
-	logger   *zap.Logger
+	logger   *logger.Logger
 }
 
 type Parser interface {
@@ -49,17 +49,16 @@ type Parser interface {
 	IsNodeVersionSupported(ver string) bool
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, config *parser.FilecoinParserConfig) (*FilecoinParser, error) {
-	logger = logger2.GetSafeLogger(logger)
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *logger.Logger, config *parser.FilecoinParserConfig) (*FilecoinParser, error) {
 	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
 	if err != nil {
-		logger.Sugar().Errorf("could not setup actors cache: %v", err)
+		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
-	parserV1 := v1.NewParser(helper, logger)
-	parserV2 := v2.NewParser(helper, logger)
+	parserV1 := v1.NewParser(helper, logger, config)
+	parserV2 := v2.NewParser(helper, logger, config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -77,14 +76,14 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 
 	var parsedResult *types.TxsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
 		parsedResult, err = p.parserV1.ParseTransactions(ctx, txsData)
 	case v2.Version:
 		parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
 	}
 
@@ -105,12 +104,12 @@ func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types
 
 	var parsedResult *types.EventsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
 		parsedResult, err = p.parserV2.ParseNativeEvents(ctx, eventsData)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
 	}
 
@@ -129,12 +128,12 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.Even
 
 	var parsedResult *types.EventsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
 		parsedResult, err = p.parserV2.ParseEthLogs(ctx, eventsData)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
 	}
 
@@ -161,7 +160,7 @@ func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.Block
 	case p.parserV2.IsNodeVersionSupported(metadata.NodeMajorMinorVersion):
 		return v2.Version, nil
 	default:
-		p.logger.Sugar().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
+		p.logger.Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
 		return "", fmt.Errorf("node version not supported %s", metadata.NodeFullVersion)
 	}
 }
@@ -186,7 +185,7 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata,
 		return 0, errUnknownVersion
 	}
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
 		return p.parserV1.GetBaseFee(traces, tipset)
