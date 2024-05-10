@@ -49,7 +49,7 @@ const (
 	ethLogPrefix      = "ethlog"
 	nativeLogPrefix   = "nativelog"
 	nodeUrl           = "https://node-fil-mainnet-next.zondax.ch/rpc/v1"
-	calibNextNodeUrl  = "https://node-fil-calibration-next.zondax.ch/rpc/v1"
+	calibNextNodeUrl  = "https://hel1-node-fil-calibration-stable.zondax.ch/rpc/v1"
 	feeType           = "fee"
 )
 
