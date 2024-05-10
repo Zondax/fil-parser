@@ -13,6 +13,7 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
+	eventTools "github.com/zondax/fil-parser/tools/events"
 	"github.com/zondax/fil-parser/types"
 
 	"github.com/bytedance/sonic"
@@ -127,6 +128,40 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		Addresses: p.addresses,
 		TxCids:    p.txCidEquivalents,
 	}, nil
+}
+
+func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+	var parsed []types.Event
+	nativeEventsTotal, evmEventsTotal := 0, 0
+	for idx, native := range eventsData.NativeLog {
+		event, err := eventTools.ParseNativeLog(eventsData.Height, eventsData.TipsetCID, native)
+		if err != nil {
+			return nil, err
+		}
+		event.LogIndex = uint64(idx)
+		if event.Type == types.EventTypeEVM {
+			evmEventsTotal++
+		} else if event.Type == types.EventTypeNative {
+			nativeEventsTotal++
+		}
+
+		parsed = append(parsed, *event)
+	}
+	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
+}
+
+func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+	var parsed []types.Event
+	for _, ethLog := range eventsData.EthLogs {
+		event, err := eventTools.ParseEthLog(eventsData.Height, eventsData.TipsetCID, ethLog, p.helper)
+
+		if err != nil {
+			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+		}
+
+		parsed = append(parsed, *event)
+	}
+	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {

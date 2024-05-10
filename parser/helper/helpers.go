@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"context"
 	"errors"
 
 	"github.com/filecoin-project/go-address"
@@ -25,11 +26,11 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/parser"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
-	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -166,4 +167,8 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.UnknownStr, nil
 	}
 	return method.Name, nil
+}
+
+func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
+	return h.actorCache.GetEVMSelectorSig(ctx, selectorID)
 }
