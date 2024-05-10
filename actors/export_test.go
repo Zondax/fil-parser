@@ -8,12 +8,16 @@ import (
 	"net/http"
 	"os"
 
+	logger2 "github.com/zondax/golem/pkg/logger"
+
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/parser"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/metrics"
+	"github.com/zondax/golem/pkg/zcache"
 
 	"github.com/filecoin-project/lotus/api/client"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
@@ -37,18 +41,27 @@ func getActorParser() *ActorParser {
 	if err != nil {
 		return nil
 	}
+	logger := logger2.NewLogger()
+
 	actorsCache, err := cache.SetupActorsCache(common.DataSource{
 		Node: lotusClient,
-	}, nil)
+		Config: common.DataSourceConfig{
+			Cache: &zcache.CombinedConfig{
+				IsRemoteBestEffort: true,
+				GlobalLogger:       logger,
+				GlobalMetricServer: metrics.NewTaskMetrics("", "3000", "test"),
+			},
+		},
+	}, logger)
 
 	if err != nil {
 		return nil
 	}
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil)
+	helper := helper2.NewHelper(lib, actorsCache, lotusClient, logger)
 
-	return NewActorParser(helper, nil)
+	return NewActorParser(helper, logger)
 }
 
 func getParamsAndReturn(actor, txType string) ([]byte, []byte, error) {

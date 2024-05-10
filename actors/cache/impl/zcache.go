@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zondax/golem/pkg/metrics"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/zondax/fil-parser/actors/constants"
@@ -45,15 +47,17 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error 
 	// remote best effort, as the remote cache will fail. However, the cache will
 	// work anyway
 	cacheConfig := source.Config.Cache
+	metricsServer := metrics.NewTaskMetrics("", "0", "-")
 
 	m.ttl = NotExpiringTtl
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
-		if err := m.initMapsLocalCache(); err != nil {
+		if err := m.initMapsLocalCache(metricsServer); err != nil {
 			return err
 		}
 	} else {
 		m.cacheType = ZCacheCombined
+		metricsServer = cacheConfig.GlobalMetricServer
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
@@ -68,7 +72,7 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error 
 		}
 	}
 
-	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, Logger: m.logger}); err != nil {
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, Logger: m.logger, MetricServer: metricsServer}); err != nil {
 		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
 	}
 
@@ -79,26 +83,32 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 	var err error
 	robustShortMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
+		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
+		GlobalStatsMetrics: cacheConfig.GlobalStatsMetrics,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
-		GlobalLogger:       m.logger,
 	}
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
+		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
+		GlobalStatsMetrics: cacheConfig.GlobalStatsMetrics,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
-		GlobalLogger:       m.logger,
 	}
 
 	selectorHashSigMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, SelectorHash2SigMapPrefix),
+		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
+		GlobalStatsMetrics: cacheConfig.GlobalStatsMetrics,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
-		GlobalLogger:       m.logger,
 	}
 
 	if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
@@ -113,16 +123,16 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 	return nil
 }
 
-func (m *ZCache) initMapsLocalCache() error {
+func (m *ZCache) initMapsLocalCache(metricsServer metrics.TaskMetrics) error {
 	var err error
 
-	if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
+	if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger, MetricServer: metricsServer}); err != nil {
 		return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
 	}
-	if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
+	if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger, MetricServer: metricsServer}); err != nil {
 		return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
 	}
-	if m.selectorHashSigMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: SelectorHash2SigMapPrefix, Logger: m.logger}); err != nil {
+	if m.selectorHashSigMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: SelectorHash2SigMapPrefix, Logger: m.logger, MetricServer: metricsServer}); err != nil {
 		return fmt.Errorf("error creating selectorHashSigMap for local zcache, err: %s", err)
 	}
 	return nil
