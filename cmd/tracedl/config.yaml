@@ -1,0 +1,4 @@
+  network_name: "mainnet"
+  symbol: "fil"
+  node_url: "wss://node-fil-mainnet-next.zondax.ch/rpc/v1"
+  node_token: ""
