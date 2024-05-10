@@ -1,5 +1,9 @@
 package types
 
+import (
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+)
+
 type TxsData struct {
 	Traces   []byte
 	Tipset   *ExtendedTipSet
@@ -11,4 +15,17 @@ type TxsParsedResult struct {
 	Txs       []*Transaction
 	Addresses *AddressInfoMap
 	TxCids    []TxCidTranslation
+}
+
+type EventsData struct {
+	Height    uint64
+	TipsetCID string
+	NativeLog []*filTypes.ActorEvent
+	EthLogs   []EthLog
+	Metadata  BlockMetadata
+}
+type EventsParsedResult struct {
+	EVMEvents    int
+	NativeEvents int
+	ParsedEvents []Event
 }

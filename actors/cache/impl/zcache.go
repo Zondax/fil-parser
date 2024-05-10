@@ -25,12 +25,13 @@ const (
 
 // ZCache In-Memory database
 type ZCache struct {
-	shortCidMap    zcache.ZCache
-	robustShortMap zcache.ZCache
-	shortRobustMap zcache.ZCache
-	logger         *zap.Logger
-	cacheType      string
-	ttl            int
+	shortCidMap        zcache.ZCache
+	robustShortMap     zcache.ZCache
+	shortRobustMap     zcache.ZCache
+	selectorHashSigMap zcache.ZCache
+	logger             *zap.Logger
+	cacheType          string
+	ttl                int
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
@@ -44,12 +45,8 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
 		m.ttl = NoTtl
-
-		if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
-			return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
-		}
-		if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
-			return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
+		if err := m.initMapsLocalCache(); err != nil {
+			return err
 		}
 	} else {
 		m.cacheType = ZCacheCombined
@@ -63,29 +60,8 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 			prefix = fmt.Sprintf("%s%s%s", prefix, source.Config.NetworkName, PrefixSplitter)
 		}
 
-		robustShortMapConfig := &zcache.CombinedConfig{
-			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
-			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
-			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-			Local:              cacheConfig.Local,
-			Remote:             cacheConfig.Remote,
-			GlobalLogger:       m.logger,
-		}
-
-		shortRobustMapConfig := &zcache.CombinedConfig{
-			GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
-			GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
-			IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
-			Local:              cacheConfig.Local,
-			Remote:             cacheConfig.Remote,
-			GlobalLogger:       m.logger,
-		}
-
-		if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
-			return fmt.Errorf("error creating robustShortMap for combined zcache, err: %s", err)
-		}
-		if m.shortRobustMap, err = zcache.NewCombinedCache(shortRobustMapConfig); err != nil {
-			return fmt.Errorf("error creating shortRobustMap for combined zcache, err: %s", err)
+		if err := m.initMapsCombinedCache(prefix, cacheConfig); err != nil {
+			return err
 		}
 	}
 
@@ -93,6 +69,62 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
 	}
 
+	return nil
+}
+
+func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.CombinedConfig) error {
+	var err error
+	robustShortMapConfig := &zcache.CombinedConfig{
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
+		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
+		GlobalLogger:       m.logger,
+	}
+
+	shortRobustMapConfig := &zcache.CombinedConfig{
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
+		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
+		GlobalLogger:       m.logger,
+	}
+
+	selectorHashSigMapConfig := &zcache.CombinedConfig{
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, SelectorHash2SigMapPrefix),
+		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
+		GlobalLogger:       m.logger,
+	}
+
+	if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
+		return fmt.Errorf("error creating robustShortMap for combined zcache, err: %s", err)
+	}
+	if m.shortRobustMap, err = zcache.NewCombinedCache(shortRobustMapConfig); err != nil {
+		return fmt.Errorf("error creating shortRobustMap for combined zcache, err: %s", err)
+	}
+	if m.selectorHashSigMap, err = zcache.NewCombinedCache(selectorHashSigMapConfig); err != nil {
+		return fmt.Errorf("error creating selectorHashSigMap for combined zcache, err: %s", err)
+	}
+	return nil
+}
+
+func (m *ZCache) initMapsLocalCache() error {
+	var err error
+
+	if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
+		return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
+	}
+	if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
+		return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
+	}
+	if m.selectorHashSigMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: SelectorHash2SigMapPrefix, Logger: m.logger}); err != nil {
+		return fmt.Errorf("error creating selectorHashSigMap for local zcache, err: %s", err)
+	}
 	return nil
 }
 
@@ -174,6 +206,23 @@ func (m *ZCache) GetShortAddress(address address.Address) (string, error) {
 	}
 
 	return shortAdd, nil
+}
+
+func (m *ZCache) GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error) {
+	var selectorSig string
+	if err := m.selectorHashSigMap.Get(ctx, selectorHash, &selectorSig); err != nil {
+		if !m.selectorHashSigMap.IsNotFoundError(err) {
+			return "", err
+		}
+	}
+	return selectorSig, nil
+}
+
+func (m *ZCache) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error {
+	if err := m.selectorHashSigMap.Set(ctx, selectorHash, selectorSig, 0); err != nil {
+		return fmt.Errorf("error adding selector_sig to cache: %w", err)
+	}
+	return nil
 }
 
 func (m *ZCache) storeRobustShort(robust string, short string) {
