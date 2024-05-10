@@ -16,6 +16,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/zondax/golem/pkg/metrics"
+	"github.com/zondax/golem/pkg/zcache"
+
 	logger2 "github.com/zondax/golem/pkg/logger"
 
 	"github.com/google/uuid"
@@ -158,6 +161,11 @@ func getLib(t *testing.T, nodeURL string) *rosettaFilecoinLib.RosettaConstructio
 func getCacheDataSource(t *testing.T, nodeURL string) common.DataSource {
 	return common.DataSource{
 		Node: getLotusClient(t, nodeURL),
+		Config: common.DataSourceConfig{
+			Cache: &zcache.CombinedConfig{
+				GlobalMetricServer: metrics.NewTaskMetrics("", "3000", "test"),
+			},
+		},
 	}
 }
 
