@@ -66,7 +66,7 @@ func ehtlogFilename(height string) string {
 }
 
 func nativeLogFilename(height string) string {
-	return getFilename(ethLogPrefix, height)
+	return getFilename(nativeLogPrefix, height)
 }
 
 func tipsetFilename(height string) string {
@@ -536,10 +536,10 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			name:    "parser with traces from v1",
 			version: v1.NodeVersionsSupported[0],
 			url:     nodeUrl,
-			height:  "2907480",
+			height:  "3897964",
 			results: expectedResults{
-				totalTraces:       104,
-				totalNativeEvents: 104,
+				totalTraces:       808,
+				totalNativeEvents: 808,
 				totalEVMEvents:    0,
 			},
 		},
@@ -547,10 +547,10 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			name:    "parser with traces from v2",
 			version: v2.NodeVersionsSupported[0],
 			url:     nodeUrl,
-			height:  "2907520",
+			height:  "3897964",
 			results: expectedResults{
-				totalTraces:       11,
-				totalNativeEvents: 11,
+				totalTraces:       808,
+				totalNativeEvents: 808,
 				totalEVMEvents:    0,
 			},
 		},
@@ -558,10 +558,10 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			name:    "parser with traces from v2 and lotus 1.25",
 			version: v2.NodeVersionsSupported[2],
 			url:     nodeUrl,
-			height:  "3573062",
+			height:  "3897964",
 			results: expectedResults{
-				totalTraces:       1,
-				totalNativeEvents: 1,
+				totalTraces:       808,
+				totalNativeEvents: 808,
 				totalEVMEvents:    0,
 			},
 		},
@@ -569,10 +569,10 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			name:    "parser with traces from v2 and lotus 1.25",
 			version: v2.NodeVersionsSupported[2],
 			url:     nodeUrl,
-			height:  "3573064",
+			height:  "3897964",
 			results: expectedResults{
-				totalTraces:       4,
-				totalNativeEvents: 4,
+				totalTraces:       808,
+				totalNativeEvents: 808,
 				totalEVMEvents:    0,
 			},
 		},
@@ -580,10 +580,10 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			name:    "parser with traces from v2 and lotus 1.25",
 			version: v2.NodeVersionsSupported[2],
 			url:     nodeUrl,
-			height:  "3573066",
+			height:  "3897964",
 			results: expectedResults{
-				totalTraces:       1,
-				totalNativeEvents: 1,
+				totalTraces:       808,
+				totalNativeEvents: 808,
 				totalEVMEvents:    0,
 			},
 		},
@@ -591,10 +591,10 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			name:    "parser with traces from v2 and lotus 1.26 (calib)",
 			version: v2.NodeVersionsSupported[2],
 			url:     calibNextNodeUrl,
-			height:  "1419335",
+			height:  "3897964",
 			results: expectedResults{
-				totalTraces:       2,
-				totalNativeEvents: 2,
+				totalTraces:       808,
+				totalNativeEvents: 808,
 				totalEVMEvents:    0,
 			},
 		},
