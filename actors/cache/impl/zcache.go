@@ -6,16 +6,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zondax/golem/pkg/logger"
+
 	"github.com/zondax/fil-parser/actors/constants"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/zcache"
-	"go.uber.org/zap"
 )
 
 const (
@@ -32,14 +32,14 @@ type ZCache struct {
 	robustShortMap     zcache.ZCache
 	shortRobustMap     zcache.ZCache
 	selectorHashSigMap zcache.ZCache
-	logger             *zap.Logger
+	logger             *logger.Logger
 	cacheType          string
-	ttl                int
+	ttl                time.Duration
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
 	var err error
-	m.logger = logger2.GetSafeLogger(logger)
+	m.logger = logger
 
 	// If no config was provided, the combined cache is configured as
 	// remote best effort, as the remote cache will fail. However, the cache will
@@ -48,13 +48,13 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
-		m.ttl = NoTtl
+		m.ttl = NotExpiringTtl
 		if err := m.initMapsLocalCache(); err != nil {
 			return err
 		}
 	} else {
 		m.cacheType = ZCacheCombined
-		m.ttl = time.Second * time.Duration(cacheConfig.GlobalTtlSeconds)
+		m.ttl = NotExpiringTtl
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
@@ -80,7 +80,6 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 	var err error
 	robustShortMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
@@ -89,7 +88,6 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
@@ -98,7 +96,6 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 
 	selectorHashSigMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, SelectorHash2SigMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
@@ -144,7 +141,7 @@ func (m *ZCache) BackFill() error {
 func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
-		m.logger.Sugar().Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
+		m.logger.Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
 		return cid.Undef.String(), common.ErrKeyNotFound
 	}
 
@@ -237,7 +234,7 @@ func (m *ZCache) StoreEVMSelectorSig(ctx context.Context, selectorHash, selector
 
 func (m *ZCache) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -249,7 +246,7 @@ func (m *ZCache) storeRobustShort(robust string, short string) {
 
 func (m *ZCache) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -276,7 +273,7 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 
 func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty cid or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
 
@@ -298,7 +295,7 @@ func (m *ZCache) tryToGetF4Address(address address.Address) string {
 	// Try to get the corresponding f0 for the f2 address
 	f0Address, err := m.GetShortAddress(address)
 	if err != nil {
-		m.logger.Sugar().Errorf("error getting short address for %s: %s", address.String(), err)
+		m.logger.Errorf("error getting short address for %s: %s", address.String(), err)
 		return ""
 	}
 
@@ -310,6 +307,6 @@ func (m *ZCache) tryToGetF4Address(address address.Address) string {
 		return f4Address
 	}
 
-	m.logger.Sugar().Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
+	m.logger.Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
 	return ""
 }

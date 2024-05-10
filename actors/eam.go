@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/zondax/fil-parser/actors/constants"
 	"github.com/zondax/fil-parser/parser"
-	"strconv"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
@@ -47,7 +48,7 @@ func (p *ActorParser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err
 	err = p.validateEamReturn(&cr)
 	if err != nil {
 		rawString := hex.EncodeToString(rawReturn)
-		p.logger.Sugar().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
+		p.logger.Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
 	}
 
 	return cr, nil
@@ -151,7 +152,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
-		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
+		p.logger.Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
