@@ -1343,6 +1343,7 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	eventDataHex := hex.EncodeToString(eventData)
 
 	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger, config)
+	assert.NoError(t, err)
 
 	tb := []struct {
 		name         string
