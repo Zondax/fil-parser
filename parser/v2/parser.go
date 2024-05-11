@@ -169,11 +169,17 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 			cmp.Compare(a.LogIndex, b.LogIndex),
 		)
 	})
+		if err != nil {
+			p.logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+		}
 
 	for idx, ethLog := range eventsData.EthLogs {
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
+		emitter, err := ethLog.Address.ToFilecoinAddress()
 		if err != nil {
-			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+			if event.Emitter, err = actors.ConsolidateRobustAddress(emitter, p.helper.GetActorsCache(), p.logger, p.config); err != nil {
+				return nil, err
+			}
 		}
 
 		parsed = append(parsed, event)
