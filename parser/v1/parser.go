@@ -105,16 +105,11 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			}
 			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
 
-			config := &parser.ConsolidateAddressesToRobust{}
-			if p.config != nil {
-				config = &p.config.ConsolidateAddressesToRobust
-			}
-
-			txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+			txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, p.config)
 			if err != nil {
 				return nil, err
 			}
-			txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+			txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, p.config)
 			if err != nil {
 				return nil, err
 			}
@@ -288,16 +283,11 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
 
-	config := &parser.ConsolidateAddressesToRobust{}
-	if p.config != nil {
-		config = &p.config.ConsolidateAddressesToRobust
-	}
-
-	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, p.config)
 	if err != nil {
 		return nil, err
 	}
-	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, p.config)
 	if err != nil {
 		return nil, err
 	}

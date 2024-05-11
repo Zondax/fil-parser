@@ -26,8 +26,6 @@ import (
 	eventTools "github.com/zondax/fil-parser/tools/events"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
-
-	"go.uber.org/zap"
 )
 
 const Version = "v2"
@@ -150,7 +148,11 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 			nativeEventsTotal++
 		}
 
-		parsed = append(parsed, event)
+		if event.Emitter, err = actors.ConsolidateRobustAddress(native.Emitter, p.helper.GetActorsCache(), p.logger, p.config); err != nil {
+			return nil, err
+		}
+
+		parsed = append(parsed, *event)
 	}
 
 	parsed = tools.SetNodeMetadata(parsed, eventsData.Metadata, Version)
@@ -293,16 +295,11 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
-	config := &parser.ConsolidateAddressesToRobust{}
-	if p.config != nil {
-		config = &p.config.ConsolidateAddressesToRobust
-	}
-
-	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, config)
+	txFrom, err := actors.ConsolidateRobustAddress(trace.Msg.From, p.helper.GetActorsCache(), p.logger, p.config)
 	if err != nil {
 		return nil, err
 	}
-	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, config)
+	txTo, err := actors.ConsolidateRobustAddress(trace.Msg.To, p.helper.GetActorsCache(), p.logger, p.config)
 	if err != nil {
 		return nil, err
 	}

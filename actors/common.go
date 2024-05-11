@@ -51,11 +51,11 @@ func (p *ActorParser) emptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
 
-func ConsolidateRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *logger.Logger, config *parser.ConsolidateAddressesToRobust) (string, error) {
+func ConsolidateRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *logger.Logger, config *parser.FilecoinParserConfig) (string, error) {
 	var err error
 	addressStr := address.String()
-	if config != nil && config.Enable {
-		if addressStr, err = EnsureRobustAddress(address, actorCache, logger); err != nil && !config.BestEffort {
+	if config != nil && config.ConsolidateAddressesToRobust.Enable {
+		if addressStr, err = EnsureRobustAddress(address, actorCache, logger); err != nil && !config.ConsolidateAddressesToRobust.BestEffort {
 			return "", err
 		}
 	}
@@ -84,7 +84,7 @@ func CalculateTransactionFees(gasCost api.MsgGasCost, tipset *types.ExtendedTipS
 			logger.Errorf("Error when trying to parse miner address: %v", err)
 		}
 
-		minerAddressStr, err = ConsolidateRobustAddress(minerAddress, actorCache, logger, &config.ConsolidateAddressesToRobust)
+		minerAddressStr, err = ConsolidateRobustAddress(minerAddress, actorCache, logger, config)
 		if err != nil {
 			logger.Errorf("Error when trying to consolidate miner address to robust: %v", err)
 		}
