@@ -23,7 +23,7 @@ require (
 	github.com/zondax/rosetta-filecoin-lib v1.2600.0
 	github.com/zondax/znats v0.1.0
 	go.uber.org/zap v1.27.0
-	gorm.io/gorm v1.25.9
+	gorm.io/gorm v1.25.10
 )
 
 require (
