@@ -1,11 +1,16 @@
 package cache
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/go-resty/resty/v2"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
@@ -53,6 +58,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*Actors
 		onChainCache:  &onChainCache,
 		badAddress:    cmap.New(),
 		logger:        logger,
+		httpClient:    resty.New().SetTimeout(30 * time.Second),
 	}, nil
 }
 
@@ -168,6 +174,47 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	}
 
 	return short, nil
+}
+
+func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
+	selectorSig, err := a.offChainCache.GetEVMSelectorSig(ctx, selectorID)
+	if err != nil {
+		return "", err
+	}
+
+	if selectorSig != "" {
+		return selectorSig, nil
+	}
+
+	// not found in cache
+	resp, err := a.httpClient.NewRequest().
+		SetQueryParam("hex_signature", selectorID).
+		SetContext(ctx).
+		SetResult(&FourBytesSignatureResult{}).
+		Get(SignatureDBURL)
+	if err != nil {
+		return selectorSig, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return selectorSig, fmt.Errorf("error from 4bytes: %v", resp.Error())
+	}
+
+	signatureData, ok := resp.Result().(*FourBytesSignatureResult)
+	if !ok {
+		return selectorSig, errors.New("error asserting result to SignatureResult")
+	}
+
+	if len(signatureData.Results) == 0 {
+		return selectorSig, fmt.Errorf("signature not found: %s", selectorID)
+	}
+
+	sig := signatureData.Results[0].TextSignature
+
+	if err := a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig); err != nil {
+		return selectorSig, fmt.Errorf("error adding selector_sig to cache: %w", err)
+	}
+	return sig, nil
 }
 
 func (a *ActorsCache) storeActorCode(add address.Address, info types.AddressInfo) error {
