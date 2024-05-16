@@ -1,11 +1,16 @@
 package actors
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -202,5 +207,103 @@ func TestActorParser_multisigWithParamsOrReturn(t *testing.T) {
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
 			require.NotNil(t, got[tt.key])
 		})
+	}
+}
+
+func TestParseMultisigMetadata(t *testing.T) {
+	filePath := filepath.Join("..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		t.Fatalf("Error opening CSV file: %v", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("Error reading CSV file: %v", err)
+	}
+
+	for _, record := range records {
+		if len(record) < 3 {
+			t.Fatalf("Invalid record: %v", record)
+		}
+		txType := record[0]
+		txMetadata := record[1]
+		expectedStr := record[2]
+
+		result, err := ParseMultisigMetadata(txType, txMetadata)
+		if err != nil {
+			t.Errorf("Error parsing metadata for txType %s: %v", txType, err)
+			continue
+		}
+
+		expected, err := unmarshalExpected(txType, expectedStr)
+		if err != nil {
+			t.Errorf("Error unmarshaling expected for txType %s: %v", txType, err)
+			continue
+		}
+
+		if diff := cmp.Diff(dereference(expected), dereference(result)); diff != "" {
+			t.Errorf("Mismatch for txType %s (-expected +result):\n%s", txType, diff)
+		}
+	}
+}
+
+func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
+	var v interface{}
+	switch txType {
+	case parser.MethodAddSigner:
+		v = &AddSignerValue{}
+	case parser.MethodApprove:
+		v = &ApproveValue{}
+	case parser.MethodCancel:
+		v = &CancelValue{}
+	case parser.MethodChangeNumApprovalsThreshold:
+		v = &ChangeNumApprovalsThresholdValue{}
+	case parser.MethodConstructor:
+		v = &ConstructorValue{}
+	case parser.MethodLockBalance:
+		v = &LockBalanceValue{}
+	case parser.MethodRemoveSigner:
+		v = &RemoveSignerValue{}
+	case parser.MethodSend:
+		v = &SendValue{}
+	case parser.MethodSwapSigner:
+		v = &SwapSignerValue{}
+	case parser.MethodMsigUniversalReceiverHook:
+		v = &UniversalReceiverHookValue{}
+	default:
+		return nil, fmt.Errorf("unknown txType: %s", txType)
+	}
+	err := json.Unmarshal([]byte(jsonStr), v)
+	return v, err
+}
+
+// TODO: Better this
+func dereference(v interface{}) interface{} {
+	switch val := v.(type) {
+	case *AddSignerValue:
+		return *val
+	case *ApproveValue:
+		return *val
+	case *CancelValue:
+		return *val
+	case *ChangeNumApprovalsThresholdValue:
+		return *val
+	case *ConstructorValue:
+		return *val
+	case *LockBalanceValue:
+		return *val
+	case *RemoveSignerValue:
+		return *val
+	case *SendValue:
+		return *val
+	case *SwapSignerValue:
+		return *val
+	case *UniversalReceiverHookValue:
+		return *val
+	default:
+		return v
 	}
 }

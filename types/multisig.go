@@ -1,0 +1,25 @@
+package types
+
+type MultisigInfo struct {
+	MultisigAddress string      `json:"multisig_address"`
+	Height          uint64      `json:"height"`
+	TxCid           string      `json:"tx_cid"`
+	Signer          string      `json:"signer"`
+	ActionType      string      `json:"action_type"`
+	Value           interface{} `json:"value"`
+}
+
+type MultisigProposal struct {
+	MultisigAddress string `json:"multisig_address"`
+	ProposalID      int64  `json:"proposal_id"`
+	Height          uint64 `json:"height"`
+	TxCid           string `json:"tx_cid"`
+	Signer          string `json:"signer"`
+	ActionType      string `json:"action_type"`
+	Value           string `json:"value"`
+}
+
+type MultisigEvents struct {
+	Proposals    []*MultisigProposal
+	MultisigInfo []*MultisigInfo
+}
