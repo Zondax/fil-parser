@@ -280,7 +280,6 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 	return v, err
 }
 
-// TODO: Better this
 func dereference(v interface{}) interface{} {
 	switch val := v.(type) {
 	case *AddSignerValue:
