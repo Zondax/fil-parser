@@ -131,12 +131,16 @@ func ParseEthLog(height uint64, tipsetCID string, ethLog types.EthLog, helper *h
 	event.LogIndex = uint64(ethLog.LogIndex)
 	event.Height = height
 	event.TipsetCid = tipsetCID
-	event.SelectorID = extractSigFromTopics(ethLog.Topics)
+	event.SelectorID = extractSelectorIDFromTopics(ethLog.Topics)
 
-	var err error
-	event.SelectorSig, err = helper.GetEVMSelectorSig(context.Background(), event.SelectorID)
-	if err != nil {
-		zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+	if event.SelectorID != "" {
+		var err error
+		event.SelectorSig, err = helper.GetEVMSelectorSig(context.Background(), event.SelectorID)
+		if err != nil {
+			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+		}
+	} else {
+		zap.S().Debugf("empty selector_id for event: %v", *event)
 	}
 
 	metaDataBytes, err := buildEVMEventMetaData[ethtypes.EthHash](ethLog.Data, ethLog.Topics)
@@ -158,8 +162,8 @@ func genFVMSelectorSig(event *filTypes.ActorEvent) string {
 	return ""
 }
 
-// extractSigFromTopics extracts the selector_hash from a list of topics of an event.
-func extractSigFromTopics(topics []ethtypes.EthHash) string {
+// extractSelectorIDFromTopics extracts the selector_hash from a list of topics of an event.
+func extractSelectorIDFromTopics(topics []ethtypes.EthHash) string {
 	if len(topics) > 0 {
 		return topics[0].String()
 	}
