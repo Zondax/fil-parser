@@ -778,7 +778,17 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case
 				assert.EqualValues(t, "market_deals_event", events.ParsedEvents[0].SelectorID)
 			}
-			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeNative), events.ParsedEvents[0].ID)
+
+			// check if IDs are unique for all events
+			foundIDs := map[string]bool{}
+			for idx, evt := range events.ParsedEvents {
+				wantID := tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(idx), types.EventTypeNative)
+				gotID := evt.ID
+
+				assert.EqualValues(t, wantID, gotID)
+				assert.NotContains(t, foundIDs, gotID)
+				foundIDs[gotID] = true
+			}
 		})
 	}
 
@@ -907,6 +917,10 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 						Emitter: tt.emitter,
 						Entries: tt.entries,
 					},
+					{
+						Emitter: tt.emitter,
+						Entries: tt.entries,
+					},
 				},
 			}
 
@@ -926,7 +940,18 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 
 			assert.EqualValues(t, tt.wantMetadata["data"], gotMetadata["data"])
 			assert.ElementsMatch(t, tt.wantMetadata["topics"], gotMetadata["topics"])
-			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeEVM), events.ParsedEvents[0].ID)
+
+			// check if IDs are unique for all events
+			foundIDs := map[string]bool{}
+			for idx, evt := range events.ParsedEvents {
+				wantID := tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(idx), types.EventTypeEVM)
+				gotID := evt.ID
+
+				assert.EqualValues(t, wantID, gotID)
+				assert.NotContains(t, foundIDs, gotID)
+				foundIDs[gotID] = true
+			}
+
 			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
 			if len(tt.entries) > 0 { // only check the selector_id if there are entries in the test case
 				assert.EqualValues(t, "0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184", events.ParsedEvents[0].SelectorID)
@@ -1024,6 +1049,19 @@ func TestParser_ParseEthLogs(t *testing.T) {
 						},
 					},
 				},
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						LogIndex: 1,
+						Address:  emitter,
+						Data:     eventData,
+						Topics: []ethtypes.EthHash{
+							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
+							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+							createEthHash(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+						},
+					},
+				},
 			},
 			wantMetadata: map[string]any{
 				"data": eventDataHex,
@@ -1071,7 +1109,17 @@ func TestParser_ParseEthLogs(t *testing.T) {
 			assert.EqualValues(t, tt.wantMetadata["data"], gotMetadata["data"])
 			assert.ElementsMatch(t, tt.wantMetadata["topics"], gotMetadata["topics"])
 
-			assert.EqualValues(t, tools.BuildId(tipsetCID, txCID, fmt.Sprint(0), types.EventTypeEVM), events.ParsedEvents[0].ID)
+			// check if IDs are unique for all events
+			foundIDs := map[string]bool{}
+			for idx, evt := range events.ParsedEvents {
+				wantID := tools.BuildId(tipsetCID, txCID, fmt.Sprint(idx), types.EventTypeEVM)
+				gotID := evt.ID
+
+				assert.EqualValues(t, wantID, gotID)
+				assert.NotContains(t, foundIDs, gotID)
+				foundIDs[gotID] = true
+			}
+
 			assert.EqualValues(t, emitter.String(), events.ParsedEvents[0].Emitter)
 		})
 	}
