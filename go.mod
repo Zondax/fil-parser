@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.22.1
 
 require (
-	github.com/bytedance/sonic v1.11.6
+	github.com/bytedance/sonic v1.11.7
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-state-types v0.13.3
