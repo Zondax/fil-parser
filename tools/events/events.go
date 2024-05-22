@@ -32,7 +32,7 @@ const (
 	parsedEntryFlags = "flags"
 )
 
-func ParseNativeLog(height uint64, tipsetCID string, actorEvent *filTypes.ActorEvent) (*types.Event, error) {
+func ParseNativeLog(logIndex, height uint64, tipsetCID string, actorEvent *filTypes.ActorEvent) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = actorEvent.MsgCid.String()
 	event.Height = height
@@ -120,6 +120,7 @@ func ParseNativeLog(height uint64, tipsetCID string, actorEvent *filTypes.ActorE
 
 	event.Metadata = metaData
 	event.SelectorSig = genFVMSelectorSig(actorEvent)
+	event.LogIndex = logIndex
 	event.ID = tools.BuildId(event.TipsetCid, event.TxCid, fmt.Sprint(event.LogIndex), event.Type)
 	return event, nil
 }
