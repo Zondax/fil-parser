@@ -4,9 +4,10 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
 	"os"
@@ -213,39 +214,37 @@ func TestActorParser_multisigWithParamsOrReturn(t *testing.T) {
 func TestParseMultisigMetadata(t *testing.T) {
 	filePath := filepath.Join("..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
 	file, err := os.Open(filePath)
-	if err != nil {
-		t.Fatalf("Error opening CSV file: %v", err)
-	}
+	require.NoError(t, err, "Error opening CSV file")
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
-	if err != nil {
-		t.Fatalf("Error reading CSV file: %v", err)
-	}
+	require.NoError(t, err, "Error reading CSV file")
 
 	for _, record := range records {
-		if len(record) < 3 {
-			t.Fatalf("Invalid record: %v", record)
-		}
+		require.Len(t, record, 3, "Invalid record")
+
 		txType := record[0]
 		txMetadata := record[1]
 		expectedStr := record[2]
 
 		result, err := ParseMultisigMetadata(txType, txMetadata)
-		if err != nil {
-			t.Errorf("Error parsing metadata for txType %s: %v", txType, err)
-			continue
-		}
+		require.NoError(t, err, "Error parsing metadata for txType %s", txType)
 
 		expected, err := unmarshalExpected(txType, expectedStr)
-		if err != nil {
-			t.Errorf("Error unmarshaling expected for txType %s: %v", txType, err)
-			continue
-		}
+		require.NoError(t, err, "Error unmarshaling expected for txType %s", txType)
 
-		if diff := cmp.Diff(dereference(expected), dereference(result)); diff != "" {
-			t.Errorf("Mismatch for txType %s (-expected +result):\n%s", txType, diff)
+		// Convert both expected and result to JSON
+		resultJSON, err := json.Marshal(result)
+		require.NoError(t, err, "Error marshaling result to JSON")
+
+		expectedJSON, err := json.Marshal(expected)
+		require.NoError(t, err, "Error marshaling expected to JSON")
+
+		// Compare the JSON strings
+		if !assert.JSONEq(t, string(expectedJSON), string(resultJSON), "Mismatch for txType %s", txType) {
+			t.Logf("Expected: %s", expectedJSON)
+			t.Logf("Got: %s", resultJSON)
 		}
 	}
 }
@@ -254,23 +253,23 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 	var v interface{}
 	switch txType {
 	case parser.MethodAddSigner:
-		v = &AddSignerValue{}
+		v = &multisig2.AddSignerParams{}
 	case parser.MethodApprove:
 		v = &ApproveValue{}
 	case parser.MethodCancel:
 		v = &CancelValue{}
 	case parser.MethodChangeNumApprovalsThreshold:
-		v = &ChangeNumApprovalsThresholdValue{}
+		v = &multisig2.ChangeNumApprovalsThresholdParams{}
 	case parser.MethodConstructor:
-		v = &ConstructorValue{}
+		v = &multisig2.ConstructorParams{}
 	case parser.MethodLockBalance:
-		v = &LockBalanceValue{}
+		v = &multisig2.LockBalanceParams{}
 	case parser.MethodRemoveSigner:
-		v = &RemoveSignerValue{}
+		v = &multisig2.RemoveSignerParams{}
 	case parser.MethodSend:
 		v = &SendValue{}
 	case parser.MethodSwapSigner:
-		v = &SwapSignerValue{}
+		v = &multisig2.SwapSignerParams{}
 	case parser.MethodMsigUniversalReceiverHook:
 		v = &UniversalReceiverHookValue{}
 	default:
@@ -278,31 +277,4 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 	}
 	err := json.Unmarshal([]byte(jsonStr), v)
 	return v, err
-}
-
-func dereference(v interface{}) interface{} {
-	switch val := v.(type) {
-	case *AddSignerValue:
-		return *val
-	case *ApproveValue:
-		return *val
-	case *CancelValue:
-		return *val
-	case *ChangeNumApprovalsThresholdValue:
-		return *val
-	case *ConstructorValue:
-		return *val
-	case *LockBalanceValue:
-		return *val
-	case *RemoveSignerValue:
-		return *val
-	case *SendValue:
-		return *val
-	case *SwapSignerValue:
-		return *val
-	case *UniversalReceiverHookValue:
-		return *val
-	default:
-		return v
-	}
 }

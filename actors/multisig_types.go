@@ -1,20 +1,11 @@
 package actors
 
-type AddSignerValue struct {
-	Increase bool   `json:"Increase"`
-	Signer   string `json:"Signer"`
-}
-
-type ApproveReturn struct {
-	Applied bool   `json:"Applied"`
-	Code    int    `json:"Code"`
-	Ret     string `json:"Ret"`
-}
+import multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 
 type ApproveValue struct {
-	ID           int           `json:"ID"`
-	ProposalHash string        `json:"ProposalHash"`
-	Return       ApproveReturn `json:"Return"`
+	ID           int                     `json:"ID"`
+	ProposalHash string                  `json:"ProposalHash"`
+	Return       multisig2.ApproveReturn `json:"Return"`
 }
 
 type CancelValue struct {
@@ -22,35 +13,8 @@ type CancelValue struct {
 	ProposalHash string `json:"ProposalHash"`
 }
 
-type ChangeNumApprovalsThresholdValue struct {
-	NewThreshold int `json:"NewThreshold"`
-}
-
-type ConstructorValue struct {
-	Signers               []string `json:"Signers"`
-	NumApprovalsThreshold int      `json:"NumApprovalsThreshold"`
-	UnlockDuration        int      `json:"UnlockDuration"`
-	StartEpoch            int      `json:"StartEpoch"`
-}
-
-type LockBalanceValue struct {
-	StartEpoch     int    `json:"StartEpoch"`
-	UnlockDuration int    `json:"UnlockDuration"`
-	Amount         string `json:"Amount"`
-}
-
-type RemoveSignerValue struct {
-	Signer   string `json:"Signer"`
-	Decrease bool   `json:"Decrease"`
-}
-
 type SendValue struct {
 	Params interface{} `json:"Params"`
-}
-
-type SwapSignerValue struct {
-	From string `json:"From"`
-	To   string `json:"To"`
 }
 
 type UniversalReceiverHookReturnValue struct {
@@ -65,7 +29,7 @@ type UniversalReceiverHookResults struct {
 }
 
 type UniversalReceiverHookValue struct {
-	Type    int                              `json:"Type"`
+	Type    uint64                           `json:"Type"`
 	Payload string                           `json:"Payload"`
 	Return  UniversalReceiverHookReturnValue `json:"Return"`
 }

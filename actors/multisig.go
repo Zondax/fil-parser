@@ -9,7 +9,9 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v11/multisig"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/cbor"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
@@ -278,7 +280,7 @@ func ParseMultisigMetadata(txType string, txMetadata string) (interface{}, error
 }
 
 func parseAddSignerValue(txMetadata string) (interface{}, error) {
-	var v AddSignerValue
+	var v multisig2.AddSignerParams
 	err := json.Unmarshal([]byte(txMetadata), &v)
 	return v, err
 }
@@ -321,10 +323,10 @@ func parseApproveValue(txMetadata string) (interface{}, error) {
 		return nil, fmt.Errorf("Ret not found or not a string")
 	}
 
-	params.Return = ApproveReturn{
+	params.Return = multisig2.ApproveReturn{
 		Applied: applied,
-		Code:    int(code),
-		Ret:     ret,
+		Code:    exitcode.ExitCode(code),
+		Ret:     []byte(ret),
 	}
 
 	return params, nil
@@ -369,9 +371,9 @@ func parseChangeNumApprovalsThresholdValue(txMetadata string) (interface{}, erro
 		return nil, fmt.Errorf("params not found or not a map")
 	}
 
-	var v ChangeNumApprovalsThresholdValue
+	var v multisig2.ChangeNumApprovalsThresholdParams
 	if newThreshold, ok := paramsRaw["NewThreshold"].(float64); ok {
-		v.NewThreshold = int(newThreshold)
+		v.NewThreshold = uint64(newThreshold)
 	} else {
 		return nil, fmt.Errorf("NewThreshold not found or not a number")
 	}
@@ -391,7 +393,7 @@ func parseConstructorValue(txMetadata string) (interface{}, error) {
 		return nil, fmt.Errorf("params not found or not a map")
 	}
 
-	var v ConstructorValue
+	var v multisig2.ConstructorParams
 	err = mapToStruct(paramsRaw, &v)
 	if err != nil {
 		return nil, err
@@ -412,7 +414,7 @@ func parseLockBalanceValue(txMetadata string) (interface{}, error) {
 		return nil, fmt.Errorf("params not found or not a map")
 	}
 
-	var v LockBalanceValue
+	var v multisig2.LockBalanceParams
 	err = mapToStruct(paramsRaw, &v)
 	if err != nil {
 		return nil, err
@@ -431,7 +433,7 @@ func parseRemoveSignerValue(txMetadata string) (interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("Params not found or not a string")
 	}
-	var params RemoveSignerValue
+	var params multisig2.RemoveSignerParams
 	err = json.Unmarshal([]byte(paramsRaw), &params)
 	if err != nil {
 		return nil, err
@@ -446,7 +448,7 @@ func parseSendValue(txMetadata string) (interface{}, error) {
 }
 
 func parseSwapSignerValue(txMetadata string) (interface{}, error) {
-	var v SwapSignerValue
+	var v multisig2.SwapSignerParams
 	err := json.Unmarshal([]byte(txMetadata), &v)
 	return v, err
 }
@@ -465,7 +467,7 @@ func parseUniversalReceiverHookValue(txMetadata string) (interface{}, error) {
 	}
 
 	result := UniversalReceiverHookValue{
-		Type:    params.Type_,
+		Type:    uint64(params.Type_),
 		Payload: params.Payload,
 		Return:  tx.Return,
 	}
