@@ -138,7 +138,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 		if err != nil {
 			return nil, err
 		}
-		event.LogIndex = uint64(idx)
+
 		if event.Type == types.EventTypeEVM {
 			evmEventsTotal++
 		} else if event.Type == types.EventTypeNative {
