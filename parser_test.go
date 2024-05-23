@@ -502,10 +502,9 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
-				EthLogs:   ethlogs,
-				TipsetCID: tipset.GetCidString(),
-				Height:    uint64(tipset.Height()),
-				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
 			parsedResult, err := p.ParseEthLogs(context.Background(), eventsData)
@@ -616,8 +615,7 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 
 			eventsData := types.EventsData{
 				NativeLog: nativeLogs,
-				TipsetCID: tipset.GetCidString(),
-				Height:    uint64(tipset.Height()),
+				Tipset:    tipset,
 				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
@@ -637,6 +635,11 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	//nolint:gosec
 	filAddress, err := address.NewIDAddress(uint64(rand.Int()))
 	assert.NoError(t, err)
+
+	tipset := types.ExtendedTipSet{
+		TipSet:        filTypes.TipSet{},
+		BlockMessages: nil,
+	}
 	tipsetCID := uuid.NewString()
 
 	logger, err := zap.NewDevelopment()
