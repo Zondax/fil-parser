@@ -124,6 +124,8 @@ func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (s
 }
 
 func SetNodeMetadataOnTxs(txs []*types.Transaction, metadata types.BlockMetadata, parserVer string) []*types.Transaction {
+	// TODO refactor this fn to make it generic for events and txs alike
+
 	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
 	if nodeMajorMinorVersion == "" {
 		nodeMajorMinorVersion = "unknown"
@@ -141,4 +143,26 @@ func SetNodeMetadataOnTxs(txs []*types.Transaction, metadata types.BlockMetadata
 	}
 
 	return txs
+}
+
+func SetNodeMetadataOnEvents(events []types.Event, metadata types.BlockMetadata, parserVer string) []types.Event {
+	// TODO refactor this fn to make it generic for events and txs alike
+
+	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
+	if nodeMajorMinorVersion == "" {
+		nodeMajorMinorVersion = "unknown"
+	}
+
+	nodeFullVersion := metadata.NodeFullVersion
+	if nodeFullVersion == "" {
+		nodeFullVersion = "unknown"
+	}
+
+	for _, event := range events {
+		event.NodeMajorMinorVersion = nodeMajorMinorVersion
+		event.NodeFullVersion = nodeFullVersion
+		event.ParserVersion = parserVer
+	}
+
+	return events
 }

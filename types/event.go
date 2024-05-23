@@ -19,4 +19,7 @@ type Event struct {
 	Reverted       bool      `json:"reverted"`
 	Metadata       string    `json:"metadata"`
 	EventTimestamp time.Time `json:"event_timestamp"`
+	// ParserVersion is the parser version used to parse this event
+	ParserVersion string `json:"parser_version"`
+	NodeInfo
 }

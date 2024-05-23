@@ -147,6 +147,9 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 
 		parsed = append(parsed, *event)
 	}
+
+	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
+
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
@@ -161,6 +164,9 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 
 		parsed = append(parsed, *event)
 	}
+
+	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
+
 	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
 }
 
