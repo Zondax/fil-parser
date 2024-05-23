@@ -160,11 +160,13 @@ func SetNodeMetadataOnEvents(events []types.Event, metadata types.BlockMetadata,
 		nodeFullVersion = UnknownParserVersion
 	}
 
+	var newEvents []types.Event
 	for _, event := range events {
 		event.NodeMajorMinorVersion = nodeMajorMinorVersion
 		event.NodeFullVersion = nodeFullVersion
 		event.ParserVersion = parserVer
+		newEvents = append(newEvents, event)
 	}
 
-	return events
+	return newEvents
 }
