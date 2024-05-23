@@ -133,8 +133,8 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
 	nativeEventsTotal, evmEventsTotal := 0, 0
-	for idx, native := range eventsData.NativeLog {
-		event, err := eventTools.ParseNativeLog(uint64(idx), eventsData.Height, eventsData.TipsetCID, native)
+	for idx, nativeLog := range eventsData.NativeLog {
+		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
 		if err != nil {
 			return nil, err
 		}
@@ -147,13 +147,16 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 
 		parsed = append(parsed, *event)
 	}
+
+	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
+
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
 func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
 	for _, ethLog := range eventsData.EthLogs {
-		event, err := eventTools.ParseEthLog(eventsData.Height, eventsData.TipsetCID, ethLog, p.helper)
+		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper)
 
 		if err != nil {
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
@@ -161,6 +164,9 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 
 		parsed = append(parsed, *event)
 	}
+
+	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
+
 	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
 }
 

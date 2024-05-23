@@ -18,12 +18,12 @@ type TxsParsedResult struct {
 }
 
 type EventsData struct {
-	Height    uint64
-	TipsetCID string
+	Tipset    *ExtendedTipSet
 	NativeLog []*filTypes.ActorEvent
 	EthLogs   []EthLog
 	Metadata  BlockMetadata
 }
+
 type EventsParsedResult struct {
 	EVMEvents    int
 	NativeEvents int
