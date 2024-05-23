@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/zondax/fil-parser/parser"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
@@ -32,13 +33,14 @@ const (
 	parsedEntryFlags = "flags"
 )
 
-func ParseNativeLog(height uint64, tipsetCID string, actorEvent *filTypes.ActorEvent) (*types.Event, error) {
+func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEvent, logIndex uint64) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = actorEvent.MsgCid.String()
-	event.Height = height
-	event.TipsetCid = tipsetCID
+	event.Height = uint64(tipset.Height())
+	event.TipsetCid = tipset.GetCidString()
 	event.Reverted = actorEvent.Reverted
 	event.Emitter = actorEvent.Emitter.String()
+	event.EventTimestamp = parser.GetTimestamp(tipset.MinTimestamp())
 	addr, err := address.NewFromString(event.Emitter)
 	if err != nil {
 		return nil, err
@@ -120,17 +122,19 @@ func ParseNativeLog(height uint64, tipsetCID string, actorEvent *filTypes.ActorE
 
 	event.Metadata = metaData
 	event.SelectorSig = genFVMSelectorSig(actorEvent)
+	event.LogIndex = logIndex
 	event.ID = tools.BuildId(event.TipsetCid, event.TxCid, fmt.Sprint(event.LogIndex), event.Type)
 	return event, nil
 }
 
-func ParseEthLog(height uint64, tipsetCID string, ethLog types.EthLog, helper *helper.Helper) (*types.Event, error) {
+func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = ethLog.TransactionCid
 	event.Emitter = ethLog.Address.String()
 	event.LogIndex = uint64(ethLog.LogIndex)
-	event.Height = height
-	event.TipsetCid = tipsetCID
+	event.Height = uint64(tipset.Height())
+	event.TipsetCid = tipset.GetCidString()
+	event.EventTimestamp = parser.GetTimestamp(tipset.MinTimestamp())
 	event.SelectorID = extractSelectorIDFromTopics(ethLog.Topics)
 
 	if event.SelectorID != "" {

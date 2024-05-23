@@ -15,7 +15,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
@@ -502,10 +501,9 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
-				EthLogs:   ethlogs,
-				TipsetCID: tipset.GetCidString(),
-				Height:    uint64(tipset.Height()),
-				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
 			parsedResult, err := p.ParseEthLogs(context.Background(), eventsData)
@@ -616,8 +614,7 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 
 			eventsData := types.EventsData{
 				NativeLog: nativeLogs,
-				TipsetCID: tipset.GetCidString(),
-				Height:    uint64(tipset.Height()),
+				Tipset:    tipset,
 				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
@@ -632,12 +629,15 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 }
 
 func TestParser_ParseNativeEvents_FVM(t *testing.T) {
-	height := uint64(8)
 	// we need any random number for the test
 	//nolint:gosec
 	filAddress, err := address.NewIDAddress(uint64(rand.Int()))
 	assert.NoError(t, err)
-	tipsetCID := uuid.NewString()
+
+	tipset := &types.ExtendedTipSet{
+		TipSet:        filTypes.TipSet{},
+		BlockMessages: nil,
+	}
 
 	logger, err := zap.NewDevelopment()
 	require.NoError(t, err)
@@ -745,8 +745,7 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 			eventsData := types.EventsData{
-				Height:    height,
-				TipsetCID: tipsetCID,
+				Tipset: tipset,
 				NativeLog: []*filTypes.ActorEvent{
 					{
 						Emitter: tt.emitter,
@@ -773,22 +772,34 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 					assert.EqualValues(t, entryValue, gotMetadata[idx][entryKey])
 				}
 			}
-			assert.EqualValues(t, tipsetCID, events.ParsedEvents[0].TipsetCid)
+			assert.EqualValues(t, tipset.GetCidString(), events.ParsedEvents[0].TipsetCid)
 			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
 			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case
 				assert.EqualValues(t, "market_deals_event", events.ParsedEvents[0].SelectorID)
 			}
-			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeNative), events.ParsedEvents[0].ID)
+
+			// check if IDs are unique for all events
+			foundIDs := map[string]bool{}
+			for idx, evt := range events.ParsedEvents {
+				wantID := tools.BuildId(tipset.GetCidString(), cid.Cid{}.String(), fmt.Sprint(idx), types.EventTypeNative)
+				gotID := evt.ID
+
+				assert.EqualValues(t, wantID, gotID)
+				assert.NotContains(t, foundIDs, gotID)
+				foundIDs[gotID] = true
+			}
 		})
 	}
 
 }
 func TestParser_ParseNativeEvents_EVM(t *testing.T) {
-	height := uint64(8)
 	ethAddress, err := address.NewDelegatedAddress(32, []byte{})
 	assert.NoError(t, err)
 
-	tipsetCID := uuid.NewString()
+	tipset := &types.ExtendedTipSet{
+		TipSet:        filTypes.TipSet{},
+		BlockMessages: nil,
+	}
 
 	var topic ethtypes.EthHash
 	err = topic.UnmarshalJSON([]byte(`"0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184"`))
@@ -900,9 +911,12 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 
 			ctx := context.Background()
 			eventsData := types.EventsData{
-				Height:    height,
-				TipsetCID: tipsetCID,
+				Tipset: tipset,
 				NativeLog: []*filTypes.ActorEvent{
+					{
+						Emitter: tt.emitter,
+						Entries: tt.entries,
+					},
 					{
 						Emitter: tt.emitter,
 						Entries: tt.entries,
@@ -926,7 +940,18 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 
 			assert.EqualValues(t, tt.wantMetadata["data"], gotMetadata["data"])
 			assert.ElementsMatch(t, tt.wantMetadata["topics"], gotMetadata["topics"])
-			assert.EqualValues(t, tools.BuildId(tipsetCID, cid.Cid{}.String(), fmt.Sprint(0), types.EventTypeEVM), events.ParsedEvents[0].ID)
+
+			// check if IDs are unique for all events
+			foundIDs := map[string]bool{}
+			for idx, evt := range events.ParsedEvents {
+				wantID := tools.BuildId(tipset.GetCidString(), cid.Cid{}.String(), fmt.Sprint(idx), types.EventTypeEVM)
+				gotID := evt.ID
+
+				assert.EqualValues(t, wantID, gotID)
+				assert.NotContains(t, foundIDs, gotID)
+				foundIDs[gotID] = true
+			}
+
 			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
 			if len(tt.entries) > 0 { // only check the selector_id if there are entries in the test case
 				assert.EqualValues(t, "0x013dbb9442ca9667baccc6230fcd5c1c4b2d4d2870f4bd20681d4d47cfd15184", events.ParsedEvents[0].SelectorID)
@@ -944,9 +969,12 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	err = emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
 	assert.NoError(t, err)
 
-	tipsetCID := cid.Cid{}.String()
 	txCID := cid.Cid{}.String()
-	height := uint64(8)
+
+	tipset := &types.ExtendedTipSet{
+		TipSet:        filTypes.TipSet{},
+		BlockMessages: nil,
+	}
 
 	eventData, err := json.Marshal(map[string]any{
 		"x": "y",
@@ -1024,6 +1052,19 @@ func TestParser_ParseEthLogs(t *testing.T) {
 						},
 					},
 				},
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						LogIndex: 1,
+						Address:  emitter,
+						Data:     eventData,
+						Topics: []ethtypes.EthHash{
+							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
+							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+							createEthHash(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+						},
+					},
+				},
 			},
 			wantMetadata: map[string]any{
 				"data": eventDataHex,
@@ -1043,9 +1084,8 @@ func TestParser_ParseEthLogs(t *testing.T) {
 
 			ctx := context.Background()
 			eventsData := types.EventsData{
-				Height:    height,
-				TipsetCID: tipsetCID,
-				EthLogs:   tt.ethLogs,
+				Tipset:  tipset,
+				EthLogs: tt.ethLogs,
 			}
 
 			events, err := parser.ParseEthLogs(ctx, eventsData)
@@ -1071,7 +1111,17 @@ func TestParser_ParseEthLogs(t *testing.T) {
 			assert.EqualValues(t, tt.wantMetadata["data"], gotMetadata["data"])
 			assert.ElementsMatch(t, tt.wantMetadata["topics"], gotMetadata["topics"])
 
-			assert.EqualValues(t, tools.BuildId(tipsetCID, txCID, fmt.Sprint(0), types.EventTypeEVM), events.ParsedEvents[0].ID)
+			// check if IDs are unique for all events
+			foundIDs := map[string]bool{}
+			for idx, evt := range events.ParsedEvents {
+				wantID := tools.BuildId(tipset.GetCidString(), txCID, fmt.Sprint(idx), types.EventTypeEVM)
+				gotID := evt.ID
+
+				assert.EqualValues(t, wantID, gotID)
+				assert.NotContains(t, foundIDs, gotID)
+				foundIDs[gotID] = true
+			}
+
 			assert.EqualValues(t, emitter.String(), events.ParsedEvents[0].Emitter)
 		})
 	}
