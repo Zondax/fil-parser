@@ -16,6 +16,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const UnknownParserVersion = "unknown"
+
 type Tools struct {
 	Logger *zap.Logger
 }
@@ -128,12 +130,12 @@ func SetNodeMetadataOnTxs(txs []*types.Transaction, metadata types.BlockMetadata
 
 	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
 	if nodeMajorMinorVersion == "" {
-		nodeMajorMinorVersion = "unknown"
+		nodeMajorMinorVersion = UnknownParserVersion
 	}
 
 	nodeFullVersion := metadata.NodeFullVersion
 	if nodeFullVersion == "" {
-		nodeFullVersion = "unknown"
+		nodeFullVersion = UnknownParserVersion
 	}
 
 	for _, tx := range txs {
@@ -150,12 +152,12 @@ func SetNodeMetadataOnEvents(events []types.Event, metadata types.BlockMetadata,
 
 	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
 	if nodeMajorMinorVersion == "" {
-		nodeMajorMinorVersion = "unknown"
+		nodeMajorMinorVersion = UnknownParserVersion
 	}
 
 	nodeFullVersion := metadata.NodeFullVersion
 	if nodeFullVersion == "" {
-		nodeFullVersion = "unknown"
+		nodeFullVersion = UnknownParserVersion
 	}
 
 	for _, event := range events {
