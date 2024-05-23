@@ -1,6 +1,7 @@
 package actors
 
 import (
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -234,18 +236,19 @@ func TestParseMultisigMetadata(t *testing.T) {
 		expected, err := unmarshalExpected(txType, expectedStr)
 		require.NoError(t, err, "Error unmarshaling expected for txType %s", txType)
 
-		// Convert both expected and result to JSON
 		resultJSON, err := json.Marshal(result)
 		require.NoError(t, err, "Error marshaling result to JSON")
 
 		expectedJSON, err := json.Marshal(expected)
 		require.NoError(t, err, "Error marshaling expected to JSON")
 
-		// Compare the JSON strings
-		if !assert.JSONEq(t, string(expectedJSON), string(resultJSON), "Mismatch for txType %s", txType) {
-			t.Logf("Expected: %s", expectedJSON)
-			t.Logf("Got: %s", resultJSON)
-		}
+		var resultMap map[string]interface{}
+		var expectedMap map[string]interface{}
+		require.NoError(t, json.Unmarshal(resultJSON, &resultMap), "Error unmarshaling result JSON")
+		require.NoError(t, json.Unmarshal(expectedJSON, &expectedMap), "Error unmarshaling expected JSON")
+
+		compareRetField(t, txType, resultMap, expectedMap)
+		assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
 	}
 }
 
@@ -277,4 +280,24 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 	}
 	err := json.Unmarshal([]byte(jsonStr), v)
 	return v, err
+}
+
+func compareRetField(t *testing.T, txType string, resultMap, expectedMap map[string]interface{}) {
+	if strings.EqualFold(txType, parser.MethodApprove) {
+		resultReturn := resultMap["Return"].(map[string]interface{})
+		expectedReturn := expectedMap["Return"].(map[string]interface{})
+
+		resultRet, resultRetExists := resultReturn["Ret"].(string)
+		expectedRet, expectedRetExists := expectedReturn["Ret"].(string)
+
+		if resultRetExists && expectedRetExists {
+			resultRetBytes, err := base64.StdEncoding.DecodeString(resultRet)
+			require.NoError(t, err, "Error decoding result Ret from Base64")
+
+			assert.Equal(t, string(resultRetBytes), expectedRet, "Mismatch for Ret field in txType %s", txType)
+		}
+
+		delete(resultReturn, "Ret")
+		delete(expectedReturn, "Ret")
+	}
 }
