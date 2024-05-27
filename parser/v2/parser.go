@@ -1,10 +1,12 @@
 package v2
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
+	"slices"
 	"strings"
 
 	"github.com/zondax/fil-parser/actors"
@@ -155,9 +157,16 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 
 func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
+	// sort the events by the TransactionIndex ASC and the logIndex ASC
+	slices.SortFunc(eventsData.EthLogs, func(a, b types.EthLog) int {
+		return cmp.Or(
+			cmp.Compare(a.TransactionIndex, b.TransactionIndex),
+			cmp.Compare(a.LogIndex, b.LogIndex),
+		)
+	})
+
 	for idx, ethLog := range eventsData.EthLogs {
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
-
 		if err != nil {
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
