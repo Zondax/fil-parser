@@ -155,8 +155,8 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 
 func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
-	for _, ethLog := range eventsData.EthLogs {
-		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper)
+	for idx, ethLog := range eventsData.EthLogs {
+		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
 
 		if err != nil {
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
