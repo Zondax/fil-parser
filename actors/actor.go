@@ -24,7 +24,7 @@ func NewActorParser(helper *helper.Helper, logger *zap.Logger) *ActorParser {
 }
 
 func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-	height int64, key filTypes.TipSetKey, ethLogs []types.EthLog) (map[string]interface{}, *types.AddressInfo, error) {
+	height int64, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return metadata, nil, nil
@@ -57,8 +57,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		metadata, err = p.ParseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
 		metadata, err = p.ParseVerifiedRegistry(txType, msg, msgRct)
-	case manifest.EvmKey:
-		metadata, err = p.ParseEvm(txType, msg, mainMsgCid, msgRct, ethLogs)
+
 	case manifest.EamKey:
 		metadata, addressInfo, err = p.ParseEam(txType, msg, msgRct, mainMsgCid)
 	case manifest.DatacapKey:
