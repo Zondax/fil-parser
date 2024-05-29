@@ -4,16 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
-	"github.com/ipfs/go-cid"
-
-	"github.com/zondax/fil-parser/types"
 )
 
-func (p *ActorParser) ParseEvm(txType string, msg *parser.LotusMessage, msgCid cid.Cid, msgRct *parser.LotusMessageReceipt, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func (p *ActorParser) ParseEvm(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodConstructor:
@@ -21,7 +19,7 @@ func (p *ActorParser) ParseEvm(txType string, msg *parser.LotusMessage, msgCid c
 	case parser.MethodResurrect: // TODO: not tested
 		return p.resurrect(msg.Params)
 	case parser.MethodInvokeContract, parser.MethodInvokeContractReadOnly:
-		return p.invokeContract(msg.Params, msgRct.Return, msgCid, ethLogs)
+		return p.invokeContract(msg.Params, msgRct.Return)
 	case parser.MethodInvokeContractDelegate:
 		return p.invokeContractDelegate(msg.Params, msgRct.Return)
 	case parser.MethodGetBytecode:
@@ -48,7 +46,7 @@ func (p *ActorParser) resurrect(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid, ethLogs []types.EthLog) (map[string]interface{}, error) {
+func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
@@ -73,11 +71,6 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte, msgCid cid.Cid
 		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	}
 
-	logs, err := searchEthLogs(ethLogs, msgCid.String())
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.EthLogsKey] = logs
 	return metadata, nil
 }
 
@@ -153,14 +146,4 @@ func (p *ActorParser) evmConstructor(raw []byte) (map[string]interface{}, error)
 	}
 	metadata[parser.ParamsKey] = params
 	return metadata, nil
-}
-
-func searchEthLogs(logs []types.EthLog, msgCid string) ([]types.EthLog, error) {
-	res := make([]types.EthLog, 0)
-	for _, log := range logs {
-		if log.TransactionCid == msgCid {
-			res = append(res, log)
-		}
-	}
-	return res, nil
 }

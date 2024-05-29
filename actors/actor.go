@@ -57,7 +57,8 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		metadata, err = p.ParseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
 		metadata, err = p.ParseVerifiedRegistry(txType, msg, msgRct)
-
+	case manifest.EvmKey:
+		metadata, err = p.ParseEvm(txType, msg, msgRct)
 	case manifest.EamKey:
 		metadata, addressInfo, err = p.ParseEam(txType, msg, msgRct, mainMsgCid)
 	case manifest.DatacapKey:
