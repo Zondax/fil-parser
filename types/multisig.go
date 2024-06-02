@@ -1,6 +1,7 @@
 package types
 
 type MultisigInfo struct {
+	ID              string `json:"id"`
 	MultisigAddress string `json:"multisig_address"`
 	Height          uint64 `json:"height"`
 	TxCid           string `json:"tx_cid"`
@@ -10,6 +11,7 @@ type MultisigInfo struct {
 }
 
 type MultisigProposal struct {
+	ID              string `json:"id"`
 	MultisigAddress string `json:"multisig_address"`
 	ProposalID      int64  `json:"proposal_id"`
 	Height          uint64 `json:"height"`
