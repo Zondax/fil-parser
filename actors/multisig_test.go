@@ -5,16 +5,19 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 func TestActorParser_approve(t *testing.T) {
@@ -275,6 +278,14 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 		v = &multisig2.SwapSignerParams{}
 	case parser.MethodMsigUniversalReceiverHook:
 		v = &UniversalReceiverHookValue{}
+	case parser.MethodAddVerifier:
+		v = &verifreg.AddVerifierParams{}
+	case parser.MethodWithdrawBalance:
+		v = &miner.WithdrawBalanceParams{}
+	case parser.MethodChangeOwnerAddress:
+		v = &ChangeOwnerAddressParams{}
+	case parser.MethodInvokeContract:
+		v = &InvokeContractParams{}
 	default:
 		return nil, fmt.Errorf("unknown txType: %s", txType)
 	}

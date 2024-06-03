@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -262,6 +263,10 @@ func ParseMultisigMetadata(txType string, txMetadata string) (interface{}, error
 		parser.MethodRemoveSigner:                        parseRemoveSignerValue,
 		parser.MethodSend:                                parseSendValue,
 		parser.MethodSwapSigner:                          parseSwapSignerValue,
+		parser.MethodAddVerifier:                         parseAddVerifierValue,
+		parser.MethodChangeOwnerAddress:                  parseChangeOwnerAddressValue,
+		parser.MethodWithdrawBalance:                     parseWithdrawBalanceValue,
+		parser.MethodInvokeContract:                      parseInvokeContractValue,
 		parser.MethodApproveExported:                     parseApproveValue,
 		parser.MethodCancelExported:                      parseCancelValue,
 		parser.MethodAddSignerExported:                   parseAddSignerValue,
@@ -270,6 +275,8 @@ func ParseMultisigMetadata(txType string, txMetadata string) (interface{}, error
 		parser.MethodChangeNumApprovalsThresholdExported: parseChangeNumApprovalsThresholdValue,
 		parser.MethodLockBalanceExported:                 parseLockBalanceValue,
 		parser.MethodMsigUniversalReceiverHook:           parseUniversalReceiverHookValue,
+		parser.MethodChangeOwnerAddressExported:          parseChangeOwnerAddressValue,
+		parser.MethodWithdrawBalanceExported:             parseWithdrawBalanceValue,
 	}
 
 	if parseFunc, found := deserializationFuncs[txType]; found {
@@ -277,6 +284,30 @@ func ParseMultisigMetadata(txType string, txMetadata string) (interface{}, error
 	}
 
 	return nil, fmt.Errorf("unknown tx type: %s", txType)
+}
+
+func parseAddVerifierValue(txMetadata string) (interface{}, error) {
+	var v verifreg.AddVerifierParams
+	err := json.Unmarshal([]byte(txMetadata), &v)
+	return v, err
+}
+
+func parseChangeOwnerAddressValue(txMetadata string) (interface{}, error) {
+	var v ChangeOwnerAddressParams
+	err := json.Unmarshal([]byte(txMetadata), &v)
+	return v, err
+}
+
+func parseWithdrawBalanceValue(txMetadata string) (interface{}, error) {
+	var v miner.WithdrawBalanceParams
+	err := json.Unmarshal([]byte(txMetadata), &v)
+	return v, err
+}
+
+func parseInvokeContractValue(txMetadata string) (interface{}, error) {
+	var v InvokeContractParams
+	err := json.Unmarshal([]byte(txMetadata), &v)
+	return v, err
 }
 
 func parseAddSignerValue(txMetadata string) (interface{}, error) {

@@ -43,3 +43,13 @@ type TransactionUniversalReceiverHookMetadata struct {
 	Params string                           `json:"Params"`
 	Return UniversalReceiverHookReturnValue `json:"Return"`
 }
+
+type ChangeOwnerAddressParams struct {
+	Params string `json:"Params"`
+}
+
+// I decided omit ethLog because it's not needed
+type InvokeContractParams struct {
+	Params string `json:"Params"`
+	Return string `json:"Return"`
+}
