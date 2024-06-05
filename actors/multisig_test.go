@@ -1,12 +1,23 @@
 package actors
 
 import (
+	"encoding/base64"
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
-	"testing"
 )
 
 func TestActorParser_approve(t *testing.T) {
@@ -202,5 +213,102 @@ func TestActorParser_multisigWithParamsOrReturn(t *testing.T) {
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
 			require.NotNil(t, got[tt.key])
 		})
+	}
+}
+
+func TestParseMultisigMetadata(t *testing.T) {
+	filePath := filepath.Join("..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
+	file, err := os.Open(filePath)
+	require.NoError(t, err, "Error opening CSV file")
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	require.NoError(t, err, "Error reading CSV file")
+
+	for _, record := range records {
+		require.Len(t, record, 3, "Invalid record")
+
+		txType := record[0]
+		txMetadata := record[1]
+		expectedStr := record[2]
+
+		result, err := ParseMultisigMetadata(txType, txMetadata)
+		require.NoError(t, err, "Error parsing metadata for txType %s", txType)
+
+		expected, err := unmarshalExpected(txType, expectedStr)
+		require.NoError(t, err, "Error unmarshaling expected for txType %s", txType)
+
+		resultJSON, err := json.Marshal(result)
+		require.NoError(t, err, "Error marshaling result to JSON")
+
+		expectedJSON, err := json.Marshal(expected)
+		require.NoError(t, err, "Error marshaling expected to JSON")
+
+		var resultMap map[string]interface{}
+		var expectedMap map[string]interface{}
+		require.NoError(t, json.Unmarshal(resultJSON, &resultMap), "Error unmarshaling result JSON")
+		require.NoError(t, json.Unmarshal(expectedJSON, &expectedMap), "Error unmarshaling expected JSON")
+
+		compareRetField(t, txType, resultMap, expectedMap)
+		assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
+	}
+}
+
+func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
+	var v interface{}
+	switch txType {
+	case parser.MethodAddSigner:
+		v = &multisig2.AddSignerParams{}
+	case parser.MethodApprove:
+		v = &ApproveValue{}
+	case parser.MethodCancel:
+		v = &CancelValue{}
+	case parser.MethodChangeNumApprovalsThreshold:
+		v = &multisig2.ChangeNumApprovalsThresholdParams{}
+	case parser.MethodConstructor:
+		v = &multisig2.ConstructorParams{}
+	case parser.MethodLockBalance:
+		v = &multisig2.LockBalanceParams{}
+	case parser.MethodRemoveSigner:
+		v = &multisig2.RemoveSignerParams{}
+	case parser.MethodSend:
+		v = &SendValue{}
+	case parser.MethodSwapSigner:
+		v = &multisig2.SwapSignerParams{}
+	case parser.MethodMsigUniversalReceiverHook:
+		v = &UniversalReceiverHookValue{}
+	case parser.MethodAddVerifier:
+		v = &verifreg.AddVerifierParams{}
+	case parser.MethodWithdrawBalance:
+		v = &miner.WithdrawBalanceParams{}
+	case parser.MethodChangeOwnerAddress:
+		v = &ChangeOwnerAddressParams{}
+	case parser.MethodInvokeContract:
+		v = &InvokeContractParams{}
+	default:
+		return nil, fmt.Errorf("unknown txType: %s", txType)
+	}
+	err := json.Unmarshal([]byte(jsonStr), v)
+	return v, err
+}
+
+func compareRetField(t *testing.T, txType string, resultMap, expectedMap map[string]interface{}) {
+	if strings.EqualFold(txType, parser.MethodApprove) {
+		resultReturn := resultMap["Return"].(map[string]interface{})
+		expectedReturn := expectedMap["Return"].(map[string]interface{})
+
+		resultRet, resultRetExists := resultReturn["Ret"].(string)
+		expectedRet, expectedRetExists := expectedReturn["Ret"].(string)
+
+		if resultRetExists && expectedRetExists {
+			resultRetBytes, err := base64.StdEncoding.DecodeString(resultRet)
+			require.NoError(t, err, "Error decoding result Ret from Base64")
+
+			assert.Equal(t, string(resultRetBytes), expectedRet, "Mismatch for Ret field in txType %s", txType)
+		}
+
+		delete(resultReturn, "Ret")
+		delete(expectedReturn, "Ret")
 	}
 }
