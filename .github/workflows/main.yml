@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: zondax-runners
     container:
-      image: golang:1.21
+      image: golang:1.22
       options: --tty
     steps:
       - name: Checkout
@@ -19,7 +19,7 @@ jobs:
           submodules: true
       - uses: actions/setup-go@v3
         with:
-          go-version: '1.21'
+          go-version: '1.22'
       - name: Build
         run: |
           git config --global --add safe.directory "*"
@@ -30,7 +30,7 @@ jobs:
   checks:
     runs-on: zondax-runners
     container:
-      image: golang:1.21
+      image: golang:1.22
       options: --tty
     steps:
       - name: Checkout
@@ -39,7 +39,7 @@ jobs:
           submodules: true
       - uses: actions/setup-go@v3
         with:
-          go-version: '1.21'
+          go-version: '1.22'
       - name: ModTidy check
         run: |
           git config --global --add safe.directory "*"
@@ -52,7 +52,7 @@ jobs:
   tests:
     runs-on: zondax-runners
     container:
-      image: golang:1.21
+      image: golang:1.22
       options: --tty
     timeout-minutes: 50
     steps:
@@ -62,7 +62,7 @@ jobs:
           submodules: true
       - uses: actions/setup-go@v3
         with:
-          go-version: '1.21'
+          go-version: '1.22'
       - name: test
         run: |
           git config --global --add safe.directory "*"
