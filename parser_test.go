@@ -1043,8 +1043,10 @@ func TestParser_ParseEthLogs(t *testing.T) {
 				{
 					TransactionCid: txCID,
 					EthLog: ethtypes.EthLog{
-						Address: emitter,
-						Data:    eventData,
+						TransactionIndex: 0,
+						LogIndex:         0,
+						Address:          emitter,
+						Data:             eventData,
 						Topics: []ethtypes.EthHash{
 							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
 							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
@@ -1055,9 +1057,38 @@ func TestParser_ParseEthLogs(t *testing.T) {
 				{
 					TransactionCid: txCID,
 					EthLog: ethtypes.EthLog{
-						LogIndex: 1,
-						Address:  emitter,
-						Data:     eventData,
+						TransactionIndex: 0,
+						LogIndex:         1,
+						Address:          emitter,
+						Data:             eventData,
+						Topics: []ethtypes.EthHash{
+							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
+							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+							createEthHash(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+						},
+					},
+				},
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						TransactionIndex: 1,
+						LogIndex:         0,
+						Address:          emitter,
+						Data:             eventData,
+						Topics: []ethtypes.EthHash{
+							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
+							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+							createEthHash(t, "0xbb8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),
+						},
+					},
+				},
+				{
+					TransactionCid: txCID,
+					EthLog: ethtypes.EthLog{
+						TransactionIndex: 1,
+						LogIndex:         1,
+						Address:          emitter,
+						Data:             eventData,
 						Topics: []ethtypes.EthHash{
 							createEthHash(t, "0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"),
 							createEthHash(t, "0xab8653edf9f51785664a643b47605a7ba3d917b5339a0724e7642c114d0e4738"),

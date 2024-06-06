@@ -1,10 +1,12 @@
 package v2
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
+	"slices"
 	"strings"
 
 	"github.com/zondax/fil-parser/actors"
@@ -84,7 +86,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, txsData.EthLogs, uuid.Nil.String())
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -155,9 +157,16 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 
 func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []types.Event
-	for _, ethLog := range eventsData.EthLogs {
-		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper)
+	// sort the events by the TransactionIndex ASC and the logIndex ASC
+	slices.SortFunc(eventsData.EthLogs, func(a, b types.EthLog) int {
+		return cmp.Or(
+			cmp.Compare(a.TransactionIndex, b.TransactionIndex),
+			cmp.Compare(a.LogIndex, b.LogIndex),
+		)
+	})
 
+	for idx, ethLog := range eventsData.EthLogs {
+		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
 		if err != nil {
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
@@ -203,7 +212,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.C
 	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, parentId)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, parentId)
 		if err != nil {
 			continue
 		}
@@ -215,7 +224,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.C
 	return
 }
 
-func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -239,7 +248,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}, mainMsgCid, &parser.LotusMessageReceipt{
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
-	}, int64(tipset.Height()), tipset.Key(), ethLogs)
+	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())

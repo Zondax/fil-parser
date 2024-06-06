@@ -3,10 +3,11 @@ package actors
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
-	"testing"
 )
 
 func TestActorParser_evmWithParamsOrReturn(t *testing.T) {
@@ -108,7 +109,7 @@ func TestActorParser_invokeContract(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, ethLogs)
 
-	got, err := p.invokeContract(rawParams, rawReturn, msg.Cid, ethLogs)
+	got, err := p.invokeContract(rawParams, rawReturn)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.Equal(t, got["Params"], "0x8381e182ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000008b21c7d96a349834dcfaddf871accda700b843e1")
@@ -130,7 +131,7 @@ func TestActorParser_invokeContractReadOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, ethLogs)
 
-	got, err := p.invokeContract(rawParams, rawReturn, msg.Cid, ethLogs)
+	got, err := p.invokeContract(rawParams, rawReturn)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 }
@@ -151,7 +152,7 @@ func TestActorParser_invokeContract_whenCborUnmarshalFail(t *testing.T) {
 
 	hexParamsString := "70a082310000000000000000000000001a5ef7ef64e3fb12be3b43edd77819dc7f034b1f"
 	rawParams, _ := hex.DecodeString(hexParamsString)
-	got, err := p.invokeContract(rawParams, rawReturn, msg.Cid, ethLogs)
+	got, err := p.invokeContract(rawParams, rawReturn)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.Equal(t, got["Params"], "0x70a082310000000000000000000000001a5ef7ef64e3fb12be3b43edd77819dc7f034b1f")

@@ -5,8 +5,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/fil-parser/parser"
 	"strings"
+
+	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -127,11 +128,14 @@ func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEven
 	return event, nil
 }
 
-func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper) (*types.Event, error) {
+func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper, logIndex uint64) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = ethLog.TransactionCid
 	event.Emitter = ethLog.Address.String()
-	event.LogIndex = uint64(ethLog.LogIndex)
+
+	// we set a custom logIndex to avoid duplicates.
+	// ethLog.LogIndex is only unique within the same ethLog.TransactionIndex.
+	event.LogIndex = logIndex
 	event.Height = uint64(tipset.Height())
 	event.TipsetCid = tipset.GetCidString()
 	event.EventTimestamp = parser.GetTimestamp(tipset.MinTimestamp())
