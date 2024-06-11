@@ -18,7 +18,7 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
-	github.com/whyrusleeping/cbor-gen v0.1.1
+	github.com/whyrusleeping/cbor-gen v0.1.2
 	github.com/zondax/golem v0.14.1
 	github.com/zondax/rosetta-filecoin-lib v1.2603.0
 	github.com/zondax/znats v0.1.1
@@ -60,7 +60,7 @@ require (
 	github.com/filecoin-project/go-hamt-ipld v0.1.5 // indirect
 	github.com/filecoin-project/go-hamt-ipld/v2 v2.0.0 // indirect
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.1.0 // indirect
-	github.com/filecoin-project/go-jsonrpc v0.4.0
+	github.com/filecoin-project/go-jsonrpc v0.5.0
 	github.com/filecoin-project/go-padreader v0.0.1 // indirect
 	github.com/filecoin-project/go-statemachine v1.0.3 // indirect
 	github.com/filecoin-project/go-statestore v0.2.0 // indirect
