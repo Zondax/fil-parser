@@ -174,7 +174,7 @@ func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (stri
 	return h.actorCache.GetEVMSelectorSig(ctx, selectorID)
 }
 
-func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string) ([]*types.Transaction, error) {
+func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey) ([]*types.Transaction, error) {
 	var result []*types.Transaction
 	for _, tx := range txs {
 		addrTo, err := address.NewFromString(tx.TxTo)
@@ -188,8 +188,7 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 			return nil, err
 		}
 
-		// TODO: TipsetKey
-		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), filTypes.EmptyTSK, actorType)
+		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)
 		if err != nil {
 			h.logger.Sugar().Errorf("could not get actor type from address. Err: %s", err)
 			continue

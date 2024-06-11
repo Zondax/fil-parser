@@ -44,7 +44,7 @@ var cancelApproveTranslateMap = map[string]string{
 }
 
 type EventGenerator interface {
-	GenerateMultisigEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string) (*types.MultisigEvents, error)
+	GenerateMultisigEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error)
 }
 
 type eventGenerator struct {
@@ -59,7 +59,7 @@ func NewEventGenerator(helper *helper.Helper, logger *zap.Logger) EventGenerator
 	}
 }
 
-func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string) (*types.MultisigEvents, error) {
+func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
 	events := &types.MultisigEvents{
 		Proposals:    []*types.MultisigProposal{},
 		MultisigInfo: []*types.MultisigInfo{},
@@ -90,7 +90,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 				return nil, err
 			}
 
-			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), filTypes.EmptyTSK)
+			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
 				eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
 				continue

@@ -184,12 +184,35 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 }
 
 func (p *Parser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string) (*types.MultisigEvents, error) {
-	multisigTxs, err := p.helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey)
+	tipsetKey := getTipsetKeyByTxs(txs, p.logger)
+	multisigTxs, err := p.helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey, tipsetKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.multisigEventGenerator.GenerateMultisigEvents(ctx, multisigTxs, tipsetCid)
+	return p.multisigEventGenerator.GenerateMultisigEvents(ctx, multisigTxs, tipsetCid, tipsetKey)
+}
+
+func getTipsetKeyByTxs(txs []*types.Transaction, logger *zap.Logger) filTypes.TipSetKey {
+	cidMap := make(map[string]cid.Cid)
+
+	for _, tx := range txs {
+		if tx.BlockCid != "" {
+			blockCid, err := cid.Parse(tx.BlockCid)
+			if err != nil {
+				logger.Sugar().Errorf("Error parsing BlockCid '%s': %v", tx.BlockCid, err)
+				continue
+			}
+			cidMap[blockCid.String()] = blockCid
+		}
+	}
+
+	var cids []cid.Cid
+	for _, c := range cidMap {
+		cids = append(cids, c)
+	}
+
+	return filTypes.NewTipSetKey(cids...)
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
