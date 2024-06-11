@@ -20,9 +20,6 @@ import (
 const (
 	VERSION       = "V1"
 	MultisigStore = "multisig"
-	selectCatchup = "height,tx_from,tx_to,tx_type,tx_metadata"
-
-	errorRetrievingTxs = "error_retrieving_txs"
 
 	metadataParams     = "Params"
 	metadataReturn     = "Return"
