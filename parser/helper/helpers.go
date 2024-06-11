@@ -192,7 +192,7 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), filTypes.EmptyTSK, actorType)
 		if err != nil {
 			h.logger.Sugar().Errorf("could not get actor type from address. Err: %s", err)
-			return nil, err
+			continue
 		}
 		if !isType {
 			continue

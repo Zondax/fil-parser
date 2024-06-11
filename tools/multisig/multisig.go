@@ -28,7 +28,7 @@ const (
 	metadataMethod     = "Method"
 	metadataValue      = "Value"
 
-	txStatusApproved = "ok"
+	txStatusOk = "ok"
 )
 
 var proposeTranslateMap = map[string]string{
@@ -66,7 +66,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 	}
 
 	for _, tx := range transactions {
-		if strings.EqualFold(tx.Status, txStatusApproved) {
+		if !strings.EqualFold(tx.Status, txStatusOk) {
 			eg.logger.Sugar().Debug("failed tx found, skipping it")
 			continue
 		}
@@ -95,7 +95,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 				eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
 				continue
 			}
-			if strings.EqualFold(actorName, manifest.MultisigKey) {
+			if !strings.EqualFold(actorName, manifest.MultisigKey) {
 				continue
 			}
 
