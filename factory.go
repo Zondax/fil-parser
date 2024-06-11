@@ -40,6 +40,7 @@ type Parser interface {
 	NodeVersionsSupported() []string
 	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
+	ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string) (*types.MultisigEvents, error)
 	ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
@@ -139,6 +140,10 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.Even
 	}
 
 	return parsedResult, nil
+}
+
+func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string) (*types.MultisigEvents, error) {
+	return p.parserV2.ParseMultisigEvents(ctx, txs, tipsetCid)
 }
 
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {

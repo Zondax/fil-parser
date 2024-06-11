@@ -16,9 +16,11 @@ import (
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	eventTools "github.com/zondax/fil-parser/tools/events"
+	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 
 	"github.com/bytedance/sonic"
+	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
@@ -30,19 +32,21 @@ const Version = "v2"
 var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26"}
 
 type Parser struct {
-	actorParser      *actors.ActorParser
-	addresses        *types.AddressInfoMap
-	txCidEquivalents []types.TxCidTranslation
-	helper           *helper.Helper
-	logger           *zap.Logger
+	actorParser            *actors.ActorParser
+	addresses              *types.AddressInfoMap
+	txCidEquivalents       []types.TxCidTranslation
+	helper                 *helper.Helper
+	logger                 *zap.Logger
+	multisigEventGenerator multisigTools.EventGenerator
 }
 
 func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(helper, logger),
-		addresses:   types.NewAddressInfoMap(),
-		helper:      helper,
-		logger:      logger2.GetSafeLogger(logger),
+		actorParser:            actors.NewActorParser(helper, logger),
+		addresses:              types.NewAddressInfoMap(),
+		helper:                 helper,
+		logger:                 logger2.GetSafeLogger(logger),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
 	}
 }
 
@@ -177,6 +181,15 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
 
 	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
+}
+
+func (p *Parser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string) (*types.MultisigEvents, error) {
+	multisigTxs, err := p.helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.multisigEventGenerator.GenerateMultisigEvents(ctx, multisigTxs, tipsetCid)
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
