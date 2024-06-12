@@ -13,10 +13,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
-	"github.com/ipld/go-ipld-prime"
-	"github.com/ipld/go-ipld-prime/codec/dagcbor"
 	"github.com/ipld/go-ipld-prime/datamodel"
-	"github.com/multiformats/go-multicodec"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -223,14 +220,12 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 				}
 				parsedEntry["value"] = selectorHash.String()
 			case types.EventTypeNative:
-				if entry.Codec != uint64(multicodec.Cbor) {
-					break
-				}
-				n, err := ipld.Decode(entry.Value, dagcbor.Decode)
+				parsedValue, err := decode(entry)
 				if err != nil {
-					return nil, fmt.Errorf("error ipld decode native event: %w ", err)
+					zap.S().Error("error ipld decode native event: ", err, entry.Key, entry.Codec, entry.Value)
+					return nil, fmt.Errorf("error decoding native event: %w ", err)
 				}
-				parsedEntry[parsedEntryValue] = n
+				parsedEntry[parsedEntryValue] = parsedValue
 			}
 		}
 		parsedEntry[parsedEntryFlags] = entry.Flags
