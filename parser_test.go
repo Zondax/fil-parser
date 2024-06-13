@@ -18,15 +18,18 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
+	"github.com/ipld/go-ipld-prime/datamodel"
 	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
 
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
+	filBig "github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
+	cidLink "github.com/ipld/go-ipld-prime/linking/cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
@@ -628,6 +631,28 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 	}
 }
 
+func buildCidLink(cid cid.Cid) datamodel.Link {
+	return cidLink.Link{Cid: cid}
+}
+
+func ipldEncode(t *testing.T, builder datamodel.NodeBuilder, data any) []byte {
+	var err error
+
+	switch x := data.(type) {
+	case string:
+		err = builder.AssignString(x)
+	case []byte:
+		err = builder.AssignBytes(x)
+	case datamodel.Link:
+		err = builder.AssignLink(x)
+	}
+
+	require.NoError(t, err)
+	encoded, err := ipld.Encode(builder.Build(), dagcbor.Encode)
+	require.NoError(t, err)
+	return encoded
+}
+
 func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	// we need any random number for the test
 	//nolint:gosec
@@ -645,17 +670,31 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
 	require.NoError(t, err)
 
-	ipldNodeBuilder := basicnode.Prototype.String.NewBuilder()
-	err = ipldNodeBuilder.AssignString("market_deals_event")
-	assert.NoError(t, err)
-	eventType, err := ipld.Encode(ipldNodeBuilder.Build(), dagcbor.Encode)
-	assert.NoError(t, err)
+	eventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "market_deals_event")
+	eventData := ipldEncode(t, basicnode.Prototype.Bytes.NewBuilder(), []byte("test_data"))
 
-	ipldNodeBuilder = basicnode.Prototype.Bytes.NewBuilder()
-	err = ipldNodeBuilder.AssignBytes([]byte("test data"))
-	assert.NoError(t, err)
-	eventData, err := ipld.Encode(ipldNodeBuilder.Build(), dagcbor.Encode)
-	assert.NoError(t, err)
+	// cid event data
+	eventCid, err := cid.Decode("baga6ea4seaqeyz6zikyr2bqbhy6mrocoqwagx45vlbpsbem7euqv5mf3hrvn2fy")
+	require.NoError(t, err)
+	link := buildCidLink(eventCid)
+	cidEventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "sector_activated")
+	cidEventData := ipldEncode(t, basicnode.Prototype.Link.NewBuilder(), link)
+
+	// nullable cid event data
+	nullableCidEventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "sector_activated")
+	b := basicnode.Prototype__Any{}.NewBuilder()
+	err = b.AssignNull()
+	require.NoError(t, err)
+	nullableCidEventData, err := ipld.Encode(b.Build(), dagcbor.Encode)
+	require.NoError(t, err)
+
+	// bigInt event data
+	bigInt, err := filBig.FromString("12345678901234567891234567890123456789012345678901234567890")
+	require.NoError(t, err)
+	bigIntEventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "verifier_balance")
+	tmp, err := bigInt.Bytes()
+	require.NoError(t, err)
+	bigIntEventData := ipldEncode(t, basicnode.Prototype.Bytes.NewBuilder(), tmp)
 
 	tb := []struct {
 		name         string
@@ -733,7 +772,142 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 				1: {
 					"flags": 3,
 					"key":   "data",
-					"value": "dGVzdCBkYXRh",
+					"value": "dGVzdF9kYXRh",
+				},
+			},
+		},
+		{
+			name:    "success native bigInt event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: bigIntEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "balance",
+					Codec: 0x51,
+					Value: bigIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "verifier_balance",
+				},
+				1: {
+					"flags": 3,
+					"key":   "balance",
+					"value": "12345678901234567891234567890123456789012345678901234567890",
+				},
+			},
+		},
+		{
+			name:    "succes native cid event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: cidEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "piece_cid",
+					Codec: 0x51,
+					Value: cidEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "sector_activated",
+				},
+				1: {
+					"flags": 3,
+					"key":   "piece_cid",
+					"value": map[string]any{
+						"/": "baga6ea4seaqeyz6zikyr2bqbhy6mrocoqwagx45vlbpsbem7euqv5mf3hrvn2fy",
+					},
+				},
+			},
+		},
+		{
+			name:    "succes native nullable cid event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: nullableCidEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "unsealed_cid",
+					Codec: 0x51,
+					Value: nullableCidEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "sector_activated",
+				},
+				1: {
+					"flags": 3,
+					"key":   "unsealed_cid",
+					"value": nil,
+				},
+			},
+		},
+		{
+			name:    "succes native nullable cid and valid cid event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: nullableCidEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "unsealed_cid",
+					Codec: 0x51,
+					Value: nullableCidEventData,
+				},
+				{
+					Flags: 0x03,
+					Key:   "piece_cid",
+					Codec: 0x51,
+					Value: cidEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "sector_activated",
+				},
+				1: {
+					"flags": 3,
+					"key":   "unsealed_cid",
+					"value": nil,
+				},
+				2: {
+					"flags": 3,
+					"key":   "piece_cid",
+					"value": map[string]any{
+						"/": "baga6ea4seaqeyz6zikyr2bqbhy6mrocoqwagx45vlbpsbem7euqv5mf3hrvn2fy",
+					},
 				},
 			},
 		},
@@ -759,9 +933,9 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 				fmt.Println(err)
 				return
 			}
-			assert.NoError(t, err)
-			assert.NotNil(t, events)
-			assert.NotEmpty(t, events.ParsedEvents)
+			require.NoError(t, err)
+			require.NotNil(t, events)
+			require.NotEmpty(t, events.ParsedEvents)
 
 			gotMetadata := map[int]map[string]any{}
 			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
@@ -774,8 +948,8 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 			}
 			assert.EqualValues(t, tipset.GetCidString(), events.ParsedEvents[0].TipsetCid)
 			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
-			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case
-				assert.EqualValues(t, "market_deals_event", events.ParsedEvents[0].SelectorID)
+			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case\
+				assert.Regexp(t, "market_deals_event|sector_activated|verifier_balance", events.ParsedEvents[0].SelectorID)
 			}
 
 			// check if IDs are unique for all events
