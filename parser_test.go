@@ -28,7 +28,6 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	"github.com/zondax/fil-parser/parser"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
@@ -1160,118 +1159,105 @@ func TestParser_ParseEthLogs(t *testing.T) {
 }
 
 func TestParser_MultisigEventsFromTxs(t *testing.T) {
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
-	lib := getLib(t, calibNextNodeUrl)
-	filparser, err := NewFilecoinParser(lib, getCacheDataSource(t, calibNextNodeUrl), logger)
-	require.NoError(t, err)
-
-	txs := []*types.Transaction{
-		{
-			TxBasicBlockData: types.TxBasicBlockData{
-				BasicBlockData: types.BasicBlockData{
-					Height: uint64(1),
-				},
-			},
-			TxCid:      "cid1",
-			TxFrom:     "f064773",
-			TxTo:       "f06068",
-			TxType:     parser.MethodPropose,
-			Status:     "ok",
-			TxMetadata: `{"Params": {"ID": 1, "Method": "Send"}, "Return": {"TxnID": 1}}`,
-		},
-		{
-			TxBasicBlockData: types.TxBasicBlockData{
-				BasicBlockData: types.BasicBlockData{
-					Height: uint64(2),
-				},
-			},
-			TxCid:      "cid2",
-			TxFrom:     "f080",
-			TxTo:       "f019764",
-			TxType:     parser.MethodApprove,
-			Status:     "ok",
-			TxMetadata: `{"Params": {"ID": 2, "Method": "Approve"}, "Return": {"TxnID": 2}}`,
-		},
-		{
-			TxBasicBlockData: types.TxBasicBlockData{
-				BasicBlockData: types.BasicBlockData{
-					Height: uint64(3),
-				},
-			},
-			TxCid:      "cid3",
-			TxFrom:     "f2h4xqc7krcpfulaqch6hxphsp6ze5fwobfrpur2i",
-			TxTo:       "f05084",
-			TxType:     parser.MethodCancel,
-			Status:     "ok",
-			TxMetadata: `{"Params": {"ID": 3, "Method": "Cancel"}, "Return": {"TxnID": 3}}`,
-		},
-		{
-			TxBasicBlockData: types.TxBasicBlockData{
-				BasicBlockData: types.BasicBlockData{
-					Height: uint64(4),
-				},
-			},
-			TxCid:      "cid4",
-			TxFrom:     "f018896",
-			TxTo:       "f2kpwyxvbr547eaikwjavx6bs4otae3cqbn5u2t2y",
-			TxType:     parser.MethodAddSigner,
-			Status:     "ok",
-			TxMetadata: `{"Params": {"ID": 4, "Method": "AddSigner"}, "Return": {"TxnID": 4}}`,
-		},
-		{
-			TxBasicBlockData: types.TxBasicBlockData{
-				BasicBlockData: types.BasicBlockData{
-					Height: uint64(5),
-				},
-			},
-			TxCid:      "cid5",
-			TxFrom:     "f2ibmyw65vtny52bm27yszt3jlzz4fkeuiqzdtfqa",
-			TxTo:       "f2ibmyw65vtny52bm27yszt3jlzz4fkeuiqzdtfqa",
-			TxType:     parser.MethodRemoveSigner,
-			Status:     "ok",
-			TxMetadata: `{"Params": {"ID": 5, "Method": "RemoveSigner"}, "Return": {"TxnID": 5}}`,
-		},
+	type expectedResults struct {
+		proposals    []types.MultisigProposal
+		multisigInfo []types.MultisigInfo
 	}
-
-	tipsetCid := "tipsetCid"
-	events, err := filparser.ParseMultisigEvents(context.Background(), txs, tipsetCid, filTypes.EmptyTSK)
-	require.NoError(t, err)
-	require.NotNil(t, events)
-
-	expectedProposals := []struct {
-		MultisigAddress string
-		ProposalID      int64
+	tests := []struct {
+		name    string
+		version string
+		url     string
+		height  string
+		results expectedResults
 	}{
-		{"f06068", 1},
-		{"f019764", 2},
-		{"f05084", 3},
+		{
+			name:    "multisig events height 14107",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "14107",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 14107, MultisigAddress: "f080", ProposalID: 0, Signer: "f0103", ActionType: "Propose", TxTypeToExecute: "AddVerifier", Value: "{\"Address\":\"f1zo7ub42i3s5cutljzjuqwnltt4xxm4y4f7l5s2i\",\"Allowance\":\"100000000000000\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1467665",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "1467665",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1467665, MultisigAddress: "f080", ProposalID: 11, Signer: "f018896", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":11,\"ProposalHash\":\"/jgVZzOjfHFnrI5K514wyJ+WSVNtLQhthbCrDsX+Dmg=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1162295",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "1162295",
+			results: expectedResults{
+				proposals:    []types.MultisigProposal{},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
 	}
 
-	expectedMultisigInfo := []struct {
-		MultisigAddress string
-		TxCid           string
-		Signer          string
-		ActionType      string
-	}{
-		{"f2kpwyxvbr547eaikwjavx6bs4otae3cqbn5u2t2y", "cid4", "f018896", "AddSigner"},
-		{"f2ibmyw65vtny52bm27yszt3jlzz4fkeuiqzdtfqa", "cid5", "f2ibmyw65vtny52bm27yszt3jlzz4fkeuiqzdtfqa", "RemoveSigner"},
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
 
-	// Validate Proposals
-	require.Len(t, events.Proposals, len(expectedProposals))
-	for i, expected := range expectedProposals {
-		assert.Equal(t, expected.MultisigAddress, events.Proposals[i].MultisigAddress)
-		assert.Equal(t, expected.ProposalID, events.Proposals[i].ProposalID)
-	}
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			ethlogs, err := readEthLogs(tt.height)
+			require.NoError(t, err)
+			traces, err := readGzFile(tracesFilename(tt.height))
+			require.NoError(t, err)
 
-	// Validate MultisigInfo
-	require.Len(t, events.MultisigInfo, len(expectedMultisigInfo))
-	for i, expected := range expectedMultisigInfo {
-		assert.Equal(t, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress)
-		assert.Equal(t, expected.TxCid, events.MultisigInfo[i].TxCid)
-		assert.Equal(t, expected.Signer, events.MultisigInfo[i].Signer)
-		assert.Equal(t, expected.ActionType, events.MultisigInfo[i].ActionType)
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+
+			txsData := types.TxsData{
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Traces:   traces,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+			}
+
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
+			require.NoError(t, err)
+			require.NotNil(t, parsedResult.Txs)
+
+			tipsetCid := txsData.Tipset.GetCidString()
+			tipsetKey := txsData.Tipset.Key()
+			events, err := p.ParseMultisigEvents(context.Background(), parsedResult.Txs, tipsetCid, tipsetKey)
+			require.NoError(t, err)
+			require.NotNil(t, events)
+
+			require.Len(t, events.Proposals, len(tt.results.proposals))
+			for i, expected := range tt.results.proposals {
+				assert.Equal(t, expected.MultisigAddress, events.Proposals[i].MultisigAddress)
+				assert.Equal(t, expected.ProposalID, events.Proposals[i].ProposalID)
+				assert.Equal(t, expected.Signer, events.Proposals[i].Signer)
+				assert.Equal(t, expected.ActionType, events.Proposals[i].ActionType)
+				assert.Equal(t, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute)
+				assert.Equal(t, expected.Value, events.Proposals[i].Value)
+			}
+
+			require.Len(t, events.MultisigInfo, len(tt.results.multisigInfo))
+			for i, expected := range tt.results.multisigInfo {
+				assert.Equal(t, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress)
+				assert.Equal(t, expected.TxCid, events.MultisigInfo[i].TxCid)
+				assert.Equal(t, expected.Signer, events.MultisigInfo[i].Signer)
+				assert.Equal(t, expected.ActionType, events.MultisigInfo[i].ActionType)
+			}
+		})
 	}
 }
 
