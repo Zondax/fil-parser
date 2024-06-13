@@ -185,6 +185,9 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 
 func (p *Parser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
 	multisigTxs, err := p.helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey, tipsetKey)
+	if len(txs) > 0 {
+		p.logger.Sugar().Debugf("Height %v, multisigTxs: %v", txs[0].Height, multisigTxs)
+	}
 	if err != nil {
 		return nil, err
 	}
