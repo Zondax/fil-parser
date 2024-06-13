@@ -14,21 +14,9 @@ import (
 )
 
 var (
-	cidRegex    *regexp.Regexp
-	bigintRegex *regexp.Regexp
+	cidRegex    = regexp.MustCompile("cid")
+	bigintRegex = regexp.MustCompile("balance")
 )
-
-func init() {
-	var err error
-	cidRegex, err = regexp.Compile("cid")
-	if err != nil {
-		panic(err)
-	}
-	bigintRegex, err = regexp.Compile("balance")
-	if err != nil {
-		panic(err)
-	}
-}
 
 // decode does an ipld decode of the entry.Value using dagcbor
 func decode(entry types.EventEntry) (datamodel.Node, error) {
