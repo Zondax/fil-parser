@@ -197,6 +197,10 @@ func buildEVMEventMetaData[T interface{ string | ethtypes.EthHash }](data []byte
 func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map[int]map[string]any, error) {
 	parsedEntries := map[int]map[string]any{}
 
+	var (
+		edgeCaseEntries []int
+	)
+
 	for idx, entry := range entries {
 		parsedEntry := map[string]any{
 			parsedEntryKey: entry.Key,
@@ -220,10 +224,19 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 				}
 				parsedEntry["value"] = selectorHash.String()
 			case types.EventTypeNative:
-				parsedValue, err := decode(entry)
+				var (
+					err         error
+					parsedValue datamodel.Node
+				)
+				parsedValue, err = decode(entry)
 				if err != nil {
 					zap.S().Error("error ipld decode native event: ", err, entry.Key, entry.Codec, entry.Value)
 					return nil, fmt.Errorf("error decoding native event: %w ", err)
+				}
+
+				// if the entry key is a CID or a bigInt, we need to decode the parsedValue further
+				if cidRegex.MatchString(entry.Key) || bigintRegex.MatchString(entry.Key) {
+					edgeCaseEntries = append(edgeCaseEntries, idx)
 				}
 				parsedEntry[parsedEntryValue] = parsedValue
 			}
@@ -235,5 +248,30 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 
 		parsedEntries[idx] = parsedEntry
 	}
+
+	// decode the entry values for the CIDs and BigInts
+	for _, idx := range edgeCaseEntries {
+		var (
+			err  error
+			data any
+		)
+
+		key := parsedEntries[idx][parsedEntryKey].(string)
+		value := parsedEntries[idx][parsedEntryValue].(datamodel.Node)
+		switch {
+		case cidRegex.MatchString(key):
+			data, err = parseCid(value)
+		case bigintRegex.MatchString(key):
+			data, err = parseBigInt(value)
+		default:
+			err = fmt.Errorf("unable to retrieve %s from evm event entry", key)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("error parsing native event: %w", err)
+		}
+		parsedEntries[idx][parsedEntryValue] = data
+	}
+
 	return parsedEntries, nil
 }
