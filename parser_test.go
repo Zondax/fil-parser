@@ -1173,7 +1173,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 		{
 			name:    "multisig events height 14107",
 			version: v1.NodeVersionsSupported[0],
-			url:     nodeUrl,
+			url:     calibNextNodeUrl,
 			height:  "14107",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
@@ -1185,7 +1185,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 		{
 			name:    "multisig events height 1467665",
 			version: v2.NodeVersionsSupported[0],
-			url:     nodeUrl,
+			url:     calibNextNodeUrl,
 			height:  "1467665",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
@@ -1195,13 +1195,195 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			},
 		},
 		{
-			name:    "multisig events height 1162295",
+			name:    "multisig events height 197673",
 			version: v2.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "1162295",
+			url:     calibNextNodeUrl,
+			height:  "197673",
 			results: expectedResults{
-				proposals:    []types.MultisigProposal{},
+				proposals: []types.MultisigProposal{
+					{Height: 197673, MultisigAddress: "f03735", ProposalID: 1, Signer: "f01014", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":1,\"ProposalHash\":null}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 197673, MultisigAddress: "f03735", TxCid: "bafy2bzacedr3hke3xt2jvtret2yalvhkpctefwsgddqyziggcfmgurd7igqaq", Signer: "f03735", ActionType: "AddSigner", Value: "{\"Signer\":\"f15xwdubazj7aft6ylmiw54fa27zyyl3rpc6olgcy\",\"Increase\":false}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 78689",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "78689",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 78689, MultisigAddress: "f02412", ProposalID: 0, Signer: "f02252", ActionType: "Propose", TxTypeToExecute: "WithdrawBalance", Value: "{\"AmountRequested\":\"3300000000000000000\"}"},
+				},
 				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 47645",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "47645",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 47645, MultisigAddress: "f22ny34zaozvfsffk445tazmohsvygits3763xpuy", ProposalID: 1, Signer: "f01148", ActionType: "Propose", TxTypeToExecute: "ChangeNumApprovalsThreshold", Value: "{\"NewThreshold\":3}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 39035",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "39035",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 39035, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 1, Signer: "f01717", ActionType: "Propose", TxTypeToExecute: "Unknown", Value: "{\"Params\":{\"Method\":\"\",\"Params\":null,\"To\":\"f01174\",\"Value\":\"0\"},\"Return\":{\"Applied\":false,\"Code\":0,\"Ret\":null,\"TxnID\":1}}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 47635",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "47635",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 47635, MultisigAddress: "f22ny34zaozvfsffk445tazmohsvygits3763xpuy", ProposalID: 0, Signer: "f01148", ActionType: "Propose", TxTypeToExecute: "AddSigner", Value: "{\"Increase\":false,\"Signer\":\"f3vyx6j6jwrpw4dfspselowh6p4sg6cewgykfvnyomtma5eh4exgkkj4my6ki2sax7zdiavi2wbt3dbet3svxq\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 38940",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "38940",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 38940, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 0, Signer: "f01410", ActionType: "Propose", TxTypeToExecute: "Send", Value: "{\"Value\":\"30000000000000000\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1698055",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1698055",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1698055, MultisigAddress: "f0123724", Signer: "f01", ActionType: "Constructor", TxCid: "bafy2bzacednj5rv7pbdgyvq2ztknz5xj3eazfqanxiy5za6dpb4kgv3vtd72w", Value: "{\"Signers\":[\"f1fik4crqpv33laa6gvf23vz3sjpioka4go47e2hi\",\"f1hjvq6aays3ohfzxo7sw353esyscnbzabblxs2pq\",\"f3vwrfmyc6wnomefflu2rcejrbvi4zmczq2pcibf2rl7udbwbf4eyjkpftwyhdigevfprnj5g32h5liaxf56qq\"],\"NumApprovalsThreshold\":2,\"UnlockDuration\":0,\"StartEpoch\":0}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1576593",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1576593",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1576593, MultisigAddress: "f2b3v3bp55krpaqz24fxmlgggbz3gaik6fv5f7ryy", ProposalID: 138, Signer: "f091402", ActionType: "Cancel", TxTypeToExecute: "", Value: "{\"ID\":138,\"ProposalHash\":\"vXH0+s6OtR7wEs0aVsxBgB1/bgOqCSoZ/ImHyBlDVcw=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1572087",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1572087",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1572087, MultisigAddress: "f2b3v3bp55krpaqz24fxmlgggbz3gaik6fv5f7ryy", ProposalID: 105, Signer: "f091402", ActionType: "Propose", TxTypeToExecute: "ChangeNumApprovalsThreshold", Value: "{\"NewThreshold\":2}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1572087, MultisigAddress: "f2b3v3bp55krpaqz24fxmlgggbz3gaik6fv5f7ryy", TxCid: "bafy2bzacec74jgx36mdxmggmoxbjhub3cfnzvfu7dujagdk3il7ttz7emu4q4", Signer: "f0110268", ActionType: "ChangeNumApprovalsThreshold", Value: "{\"NewThreshold\":2}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1552242",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1552242",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1552242, MultisigAddress: "f2t7urdjxp5jf3su5qyf4i25encrozjws6k2uxg2i", ProposalID: 3, Signer: "f06067", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":3,\"ProposalHash\":\"lMtCwZTOT/0X+G4aplxpQN9xyPWvLLwpUObAVRTqUSI=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1552242, MultisigAddress: "f2t7urdjxp5jf3su5qyf4i25encrozjws6k2uxg2i", TxCid: "bafy2bzacecutjnons7vvzlamg6sekcnmo5hbkfobdo52p2minokt2rz6vgsqy", Signer: "f059513", ActionType: "SwapSigner", Value: "{\"From\":\"f1dywbadna5yyf546mloeoc7gxrzj7n5uog6llv5y\",\"To\":\"f16sfr4wmxu7ouxayxqqmacmgdfqfbasm4qr472fq\"}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1352134",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1352134",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1352134, MultisigAddress: "f2kpwyxvbr547eaikwjavx6bs4otae3cqbn5u2t2y", ProposalID: 0, Signer: "f019764", ActionType: "Propose", TxTypeToExecute: "LockBalance", Value: "{\"Amount\":\"1000000000000000000\",\"StartEpoch\":1352039,\"UnlockDuration\":876000}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1352134, MultisigAddress: "f2kpwyxvbr547eaikwjavx6bs4otae3cqbn5u2t2y", Signer: "f066958", ActionType: "LockBalance", TxCid: "bafy2bzacecfvtxvsfkjrj6odvuii7m5bf52vqni66nwk4clwp5j5x6ovothco", Value: "{\"StartEpoch\":1352039,\"UnlockDuration\":876000,\"Amount\":\"1000000000000000000\"}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1334035",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1334035",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1334035, MultisigAddress: "f2h4xqc7krcpfulaqch6hxphsp6ze5fwobfrpur2i", ProposalID: 2, Signer: "f06068", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":2,\"ProposalHash\":\"V5xMhdHMYFd7uwnILnd1BeH6SoksOKTI4KtUyZXOS4k=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1334035, TxCid: "bafy2bzaceasprlgdy4dbb2cxzwo4opofxk26vkpw3fe3qf5oxj2yjsb7scjoq", MultisigAddress: "f2h4xqc7krcpfulaqch6hxphsp6ze5fwobfrpur2i", Signer: "f063654", ActionType: "RemoveSigner", Value: "{\"Signer\":\"f1fbagfbmhk52hhbih2yt2jixkbisoqtrg4k2kn7a\",\"Decrease\":true}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1289201",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1289201",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1289201, MultisigAddress: "f064773", ProposalID: 0, Signer: "f064766", ActionType: "Propose", TxTypeToExecute: "SwapSigner", Value: "{\"From\":\"f3vwq5mw6sagjzqap73q56xayzmnrlqpvlecgcduwqmpsr33cngoszviq4eeet7gc5j3he2kf34hmskecjvqva\",\"To\":\"f3sg5mydbqdszt6wld3sjofhotutji5r2vbi5nvraybulexajcqg2fdas6sq7oiihdeqmw7ii3xdzlx723oeja\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1258459",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1258459",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1258459, MultisigAddress: "f063814", TxCid: "bafy2bzaced6uosdwea2ztyao56umwjza5qzpveg73afohzh3wgoclgtfhtpek", Signer: "f01", ActionType: "Constructor", Value: "{\"Signers\":[\"f16xlkjp3dcfrsb257duoqfgj7glo2uvvgxyy4gmy\",\"f1dywbadna5yyf546mloeoc7gxrzj7n5uog6llv5y\",\"f1fbagfbmhk52hhbih2yt2jixkbisoqtrg4k2kn7a\"],\"NumApprovalsThreshold\":2,\"UnlockDuration\":0,\"StartEpoch\":0}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1256171",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1256171",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1256171, MultisigAddress: "f063719", ProposalID: 1, Signer: "f063720", ActionType: "Propose", TxTypeToExecute: "RemoveSigner", Value: "{\"Decrease\":false,\"Signer\":\"f1bsqp2nixftm5kacppzrsjkv62ot3kckucthu7ca\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1256171, MultisigAddress: "f063719", TxCid: "bafy2bzacecuhvthgttyv7q3q53p4lqhfkkdh2wktaxywtfarofehqvtsgifnw", Signer: "f063719", ActionType: "RemoveSigner", Value: "{\"Signer\":\"f1bsqp2nixftm5kacppzrsjkv62ot3kckucthu7ca\",\"Decrease\":false}"},
+				},
 			},
 		},
 	}
@@ -1240,22 +1422,23 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, events)
 
-			require.Len(t, events.Proposals, len(tt.results.proposals))
+			require.Len(t, events.Proposals, len(tt.results.proposals), fmt.Sprintf("Expected %d proposals, but got %d", len(tt.results.proposals), len(events.Proposals)))
 			for i, expected := range tt.results.proposals {
-				assert.Equal(t, expected.MultisigAddress, events.Proposals[i].MultisigAddress)
-				assert.Equal(t, expected.ProposalID, events.Proposals[i].ProposalID)
-				assert.Equal(t, expected.Signer, events.Proposals[i].Signer)
-				assert.Equal(t, expected.ActionType, events.Proposals[i].ActionType)
-				assert.Equal(t, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute)
-				assert.Equal(t, expected.Value, events.Proposals[i].Value)
+				assert.Equal(t, expected.MultisigAddress, events.Proposals[i].MultisigAddress, fmt.Sprintf("Mismatch in MultisigAddress at proposal index %d: expected %s, got %s", i, expected.MultisigAddress, events.Proposals[i].MultisigAddress))
+				assert.Equal(t, expected.ProposalID, events.Proposals[i].ProposalID, fmt.Sprintf("Mismatch in ProposalID at proposal index %d: expected %d, got %d", i, expected.ProposalID, events.Proposals[i].ProposalID))
+				assert.Equal(t, expected.Signer, events.Proposals[i].Signer, fmt.Sprintf("Mismatch in Signer at proposal index %d: expected %s, got %s", i, expected.Signer, events.Proposals[i].Signer))
+				assert.Equal(t, expected.ActionType, events.Proposals[i].ActionType, fmt.Sprintf("Mismatch in ActionType at proposal index %d: expected %s, got %s", i, expected.ActionType, events.Proposals[i].ActionType))
+				assert.Equal(t, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute, fmt.Sprintf("Mismatch in TxTypeToExecute at proposal index %d: expected %s, got %s", i, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute))
+				assert.Equal(t, expected.Value, events.Proposals[i].Value, fmt.Sprintf("Mismatch in Value at proposal index %d: expected %s, got %s", i, expected.Value, events.Proposals[i].Value))
 			}
 
-			require.Len(t, events.MultisigInfo, len(tt.results.multisigInfo))
+			require.Len(t, events.MultisigInfo, len(tt.results.multisigInfo), fmt.Sprintf("Expected %d multisig info entries, but got %d", len(tt.results.multisigInfo), len(events.MultisigInfo)))
 			for i, expected := range tt.results.multisigInfo {
-				assert.Equal(t, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress)
-				assert.Equal(t, expected.TxCid, events.MultisigInfo[i].TxCid)
-				assert.Equal(t, expected.Signer, events.MultisigInfo[i].Signer)
-				assert.Equal(t, expected.ActionType, events.MultisigInfo[i].ActionType)
+				assert.Equal(t, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress, fmt.Sprintf("Mismatch in MultisigAddress at multisig info index %d: expected %s, got %s", i, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress))
+				assert.Equal(t, expected.TxCid, events.MultisigInfo[i].TxCid, fmt.Sprintf("Mismatch in TxCid at multisig info index %d: expected %s, got %s", i, expected.TxCid, events.MultisigInfo[i].TxCid))
+				assert.Equal(t, expected.Signer, events.MultisigInfo[i].Signer, fmt.Sprintf("Mismatch in Signer at multisig info index %d: expected %s, got %s", i, expected.Signer, events.MultisigInfo[i].Signer))
+				assert.Equal(t, expected.ActionType, events.MultisigInfo[i].ActionType, fmt.Sprintf("Mismatch in ActionType at multisig info index %d: expected %s, got %s", i, expected.ActionType, events.MultisigInfo[i].ActionType))
+				assert.Equal(t, expected.Value, events.MultisigInfo[i].Value, fmt.Sprintf("Mismatch in Value at multisig info index %d: expected %s, got %s", i, expected.Value, events.MultisigInfo[i].Value))
 			}
 		})
 	}

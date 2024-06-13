@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Heights to download traces, native logs, eth logs, and tipsets
-heights=(14107 1467665 1162295)
+heights=(1698055 1576593 1572087 1552242 1352134 1334035 1289201 1258459 1256171)
 
 # Function to download files
 download_files() {
