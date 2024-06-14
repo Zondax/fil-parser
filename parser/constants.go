@@ -177,6 +177,8 @@ const (
 	MethodBurnFromExported                    = "BurnFromExported"                    // MethodsDatacap
 	MethodAllowanceExported                   = "AllowanceExported"                   // MethodsDatacap
 	MethodGranularityExported                 = "GranularityExported"                 // MethodsDatacap
+
+	MethodUnknown = "Unknown" // Common
 )
 
 // SupportedOperations operations that will be parsed

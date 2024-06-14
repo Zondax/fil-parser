@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"net/http"
@@ -18,15 +19,18 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
+	"github.com/ipld/go-ipld-prime/datamodel"
 	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
 
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
+	filBig "github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
+	cidLink "github.com/ipld/go-ipld-prime/linking/cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
@@ -628,6 +632,30 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 	}
 }
 
+func buildCidLink(cid cid.Cid) datamodel.Link {
+	return cidLink.Link{Cid: cid}
+}
+
+func ipldEncode(t *testing.T, builder datamodel.NodeBuilder, data any) []byte {
+	var err error
+
+	switch x := data.(type) {
+	case string:
+		err = builder.AssignString(x)
+	case []byte:
+		err = builder.AssignBytes(x)
+	case datamodel.Link:
+		err = builder.AssignLink(x)
+	case int64:
+		err = builder.AssignInt(x)
+	}
+
+	require.NoError(t, err)
+	encoded, err := ipld.Encode(builder.Build(), dagcbor.Encode)
+	require.NoError(t, err)
+	return encoded
+}
+
 func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	// we need any random number for the test
 	//nolint:gosec
@@ -645,17 +673,43 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
 	require.NoError(t, err)
 
-	ipldNodeBuilder := basicnode.Prototype.String.NewBuilder()
-	err = ipldNodeBuilder.AssignString("market_deals_event")
-	assert.NoError(t, err)
-	eventType, err := ipld.Encode(ipldNodeBuilder.Build(), dagcbor.Encode)
-	assert.NoError(t, err)
+	eventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "market_deals_event")
+	eventData := ipldEncode(t, basicnode.Prototype.Bytes.NewBuilder(), []byte("test_data"))
 
-	ipldNodeBuilder = basicnode.Prototype.Bytes.NewBuilder()
-	err = ipldNodeBuilder.AssignBytes([]byte("test data"))
-	assert.NoError(t, err)
-	eventData, err := ipld.Encode(ipldNodeBuilder.Build(), dagcbor.Encode)
-	assert.NoError(t, err)
+	// cid event data
+	eventCid, err := cid.Decode("baga6ea4seaqeyz6zikyr2bqbhy6mrocoqwagx45vlbpsbem7euqv5mf3hrvn2fy")
+	require.NoError(t, err)
+	link := buildCidLink(eventCid)
+	cidEventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "sector_activated")
+	cidEventData := ipldEncode(t, basicnode.Prototype.Link.NewBuilder(), link)
+
+	// nullable cid event data
+	nullableCidEventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "sector_activated")
+	b := basicnode.Prototype__Any{}.NewBuilder()
+	err = b.AssignNull()
+	require.NoError(t, err)
+	nullableCidEventData, err := ipld.Encode(b.Build(), dagcbor.Encode)
+	require.NoError(t, err)
+
+	// bigInt event data
+	bigInt, err := filBig.FromString("12345678901234567891234567890123456789012345678901234567890")
+	require.NoError(t, err)
+	bigIntEventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "verifier_balance")
+	tmp, err := bigInt.Bytes()
+	require.NoError(t, err)
+	bigIntEventData := ipldEncode(t, basicnode.Prototype.Bytes.NewBuilder(), tmp)
+
+	largeInt := math.MaxInt64
+	largeIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(largeInt))
+
+	smallInt := 10
+	smallIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(smallInt))
+
+	negativeInt := -10
+	negativeIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(negativeInt))
+
+	veryNegativeInt := math.MinInt64
+	veryNegativeIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(veryNegativeInt))
 
 	tb := []struct {
 		name         string
@@ -733,7 +787,262 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 				1: {
 					"flags": 3,
 					"key":   "data",
-					"value": "dGVzdCBkYXRh",
+					"value": "dGVzdF9kYXRh",
+				},
+			},
+		},
+		{
+			name:    "success native negative int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: negativeIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": negativeInt,
+				},
+			},
+		},
+		{
+			name:    "success native very negative int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: veryNegativeIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": fmt.Sprint(veryNegativeInt),
+				},
+			},
+		},
+		{
+			name:    "success native small int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: smallIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": smallInt,
+				},
+			},
+		},
+		{
+			name:    "success native large int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: largeIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": fmt.Sprint(largeInt),
+				},
+			},
+		},
+		{
+			name:    "success native bigInt event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: bigIntEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "balance",
+					Codec: 0x51,
+					Value: bigIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "verifier_balance",
+				},
+				1: {
+					"flags": 3,
+					"key":   "balance",
+					"value": "12345678901234567891234567890123456789012345678901234567890",
+				},
+			},
+		},
+		{
+			name:    "succes native cid event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: cidEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "piece_cid",
+					Codec: 0x51,
+					Value: cidEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "sector_activated",
+				},
+				1: {
+					"flags": 3,
+					"key":   "piece_cid",
+					"value": map[string]any{
+						"/": "baga6ea4seaqeyz6zikyr2bqbhy6mrocoqwagx45vlbpsbem7euqv5mf3hrvn2fy",
+					},
+				},
+			},
+		},
+		{
+			name:    "succes native nullable cid event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: nullableCidEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "unsealed_cid",
+					Codec: 0x51,
+					Value: nullableCidEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "sector_activated",
+				},
+				1: {
+					"flags": 3,
+					"key":   "unsealed_cid",
+					"value": nil,
+				},
+			},
+		},
+		{
+			name:    "succes native nullable cid and valid cid event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: nullableCidEventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "unsealed_cid",
+					Codec: 0x51,
+					Value: nullableCidEventData,
+				},
+				{
+					Flags: 0x03,
+					Key:   "piece_cid",
+					Codec: 0x51,
+					Value: cidEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "sector_activated",
+				},
+				1: {
+					"flags": 3,
+					"key":   "unsealed_cid",
+					"value": nil,
+				},
+				2: {
+					"flags": 3,
+					"key":   "piece_cid",
+					"value": map[string]any{
+						"/": "baga6ea4seaqeyz6zikyr2bqbhy6mrocoqwagx45vlbpsbem7euqv5mf3hrvn2fy",
+					},
 				},
 			},
 		},
@@ -759,9 +1068,9 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 				fmt.Println(err)
 				return
 			}
-			assert.NoError(t, err)
-			assert.NotNil(t, events)
-			assert.NotEmpty(t, events.ParsedEvents)
+			require.NoError(t, err)
+			require.NotNil(t, events)
+			require.NotEmpty(t, events.ParsedEvents)
 
 			gotMetadata := map[int]map[string]any{}
 			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
@@ -774,8 +1083,8 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 			}
 			assert.EqualValues(t, tipset.GetCidString(), events.ParsedEvents[0].TipsetCid)
 			assert.EqualValues(t, tt.emitter.String(), events.ParsedEvents[0].Emitter)
-			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case
-				assert.EqualValues(t, "market_deals_event", events.ParsedEvents[0].SelectorID)
+			if len(tt.entries) > 0 { // only check for the selector_id if we have entries in the test case\
+				assert.Regexp(t, "market_deals_event|sector_activated|verifier_balance", events.ParsedEvents[0].SelectorID)
 			}
 
 			// check if IDs are unique for all events
@@ -1154,6 +1463,292 @@ func TestParser_ParseEthLogs(t *testing.T) {
 			}
 
 			assert.EqualValues(t, emitter.String(), events.ParsedEvents[0].Emitter)
+		})
+	}
+}
+
+func TestParser_MultisigEventsFromTxs(t *testing.T) {
+	type expectedResults struct {
+		proposals    []types.MultisigProposal
+		multisigInfo []types.MultisigInfo
+	}
+	tests := []struct {
+		name    string
+		version string
+		url     string
+		height  string
+		results expectedResults
+	}{
+		{
+			name:    "multisig events height 14107",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "14107",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 14107, MultisigAddress: "f080", ProposalID: 0, Signer: "f0103", ActionType: "Propose", TxTypeToExecute: "AddVerifier", Value: "{\"Address\":\"f1zo7ub42i3s5cutljzjuqwnltt4xxm4y4f7l5s2i\",\"Allowance\":\"100000000000000\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1467665",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1467665",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1467665, MultisigAddress: "f080", ProposalID: 11, Signer: "f018896", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":11,\"ProposalHash\":\"/jgVZzOjfHFnrI5K514wyJ+WSVNtLQhthbCrDsX+Dmg=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 197673",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "197673",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 197673, MultisigAddress: "f03735", ProposalID: 1, Signer: "f01014", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":1,\"ProposalHash\":null}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 197673, MultisigAddress: "f03735", TxCid: "bafy2bzacedr3hke3xt2jvtret2yalvhkpctefwsgddqyziggcfmgurd7igqaq", Signer: "f03735", ActionType: "AddSigner", Value: "{\"Signer\":\"f15xwdubazj7aft6ylmiw54fa27zyyl3rpc6olgcy\",\"Increase\":false}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 78689",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "78689",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 78689, MultisigAddress: "f02412", ProposalID: 0, Signer: "f02252", ActionType: "Propose", TxTypeToExecute: "WithdrawBalance", Value: "{\"AmountRequested\":\"3300000000000000000\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 47645",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "47645",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 47645, MultisigAddress: "f22ny34zaozvfsffk445tazmohsvygits3763xpuy", ProposalID: 1, Signer: "f01148", ActionType: "Propose", TxTypeToExecute: "ChangeNumApprovalsThreshold", Value: "{\"NewThreshold\":3}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 39035",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "39035",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 39035, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 1, Signer: "f01717", ActionType: "Propose", TxTypeToExecute: "Unknown", Value: "{\"Params\":{\"Method\":\"\",\"Params\":null,\"To\":\"f01174\",\"Value\":\"0\"},\"Return\":{\"Applied\":false,\"Code\":0,\"Ret\":null,\"TxnID\":1}}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 47635",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "47635",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 47635, MultisigAddress: "f22ny34zaozvfsffk445tazmohsvygits3763xpuy", ProposalID: 0, Signer: "f01148", ActionType: "Propose", TxTypeToExecute: "AddSigner", Value: "{\"Increase\":false,\"Signer\":\"f3vyx6j6jwrpw4dfspselowh6p4sg6cewgykfvnyomtma5eh4exgkkj4my6ki2sax7zdiavi2wbt3dbet3svxq\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 38940",
+			version: v1.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "38940",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 38940, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 0, Signer: "f01410", ActionType: "Propose", TxTypeToExecute: "Send", Value: "{\"Value\":\"30000000000000000\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1698055",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1698055",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1698055, MultisigAddress: "f0123724", Signer: "f01", ActionType: "Constructor", TxCid: "bafy2bzacednj5rv7pbdgyvq2ztknz5xj3eazfqanxiy5za6dpb4kgv3vtd72w", Value: "{\"Signers\":[\"f1fik4crqpv33laa6gvf23vz3sjpioka4go47e2hi\",\"f1hjvq6aays3ohfzxo7sw353esyscnbzabblxs2pq\",\"f3vwrfmyc6wnomefflu2rcejrbvi4zmczq2pcibf2rl7udbwbf4eyjkpftwyhdigevfprnj5g32h5liaxf56qq\"],\"NumApprovalsThreshold\":2,\"UnlockDuration\":0,\"StartEpoch\":0}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1576593",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1576593",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1576593, MultisigAddress: "f2b3v3bp55krpaqz24fxmlgggbz3gaik6fv5f7ryy", ProposalID: 138, Signer: "f091402", ActionType: "Cancel", TxTypeToExecute: "", Value: "{\"ID\":138,\"ProposalHash\":\"vXH0+s6OtR7wEs0aVsxBgB1/bgOqCSoZ/ImHyBlDVcw=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1572087",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1572087",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1572087, MultisigAddress: "f2b3v3bp55krpaqz24fxmlgggbz3gaik6fv5f7ryy", ProposalID: 105, Signer: "f091402", ActionType: "Propose", TxTypeToExecute: "ChangeNumApprovalsThreshold", Value: "{\"NewThreshold\":2}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1572087, MultisigAddress: "f2b3v3bp55krpaqz24fxmlgggbz3gaik6fv5f7ryy", TxCid: "bafy2bzacec74jgx36mdxmggmoxbjhub3cfnzvfu7dujagdk3il7ttz7emu4q4", Signer: "f0110268", ActionType: "ChangeNumApprovalsThreshold", Value: "{\"NewThreshold\":2}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1552242",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1552242",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1552242, MultisigAddress: "f2t7urdjxp5jf3su5qyf4i25encrozjws6k2uxg2i", ProposalID: 3, Signer: "f06067", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":3,\"ProposalHash\":\"lMtCwZTOT/0X+G4aplxpQN9xyPWvLLwpUObAVRTqUSI=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1552242, MultisigAddress: "f2t7urdjxp5jf3su5qyf4i25encrozjws6k2uxg2i", TxCid: "bafy2bzacecutjnons7vvzlamg6sekcnmo5hbkfobdo52p2minokt2rz6vgsqy", Signer: "f059513", ActionType: "SwapSigner", Value: "{\"From\":\"f1dywbadna5yyf546mloeoc7gxrzj7n5uog6llv5y\",\"To\":\"f16sfr4wmxu7ouxayxqqmacmgdfqfbasm4qr472fq\"}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1352134",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1352134",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1352134, MultisigAddress: "f2kpwyxvbr547eaikwjavx6bs4otae3cqbn5u2t2y", ProposalID: 0, Signer: "f019764", ActionType: "Propose", TxTypeToExecute: "LockBalance", Value: "{\"Amount\":\"1000000000000000000\",\"StartEpoch\":1352039,\"UnlockDuration\":876000}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1352134, MultisigAddress: "f2kpwyxvbr547eaikwjavx6bs4otae3cqbn5u2t2y", Signer: "f066958", ActionType: "LockBalance", TxCid: "bafy2bzacecfvtxvsfkjrj6odvuii7m5bf52vqni66nwk4clwp5j5x6ovothco", Value: "{\"StartEpoch\":1352039,\"UnlockDuration\":876000,\"Amount\":\"1000000000000000000\"}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1334035",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1334035",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1334035, MultisigAddress: "f2h4xqc7krcpfulaqch6hxphsp6ze5fwobfrpur2i", ProposalID: 2, Signer: "f06068", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":2,\"ProposalHash\":\"V5xMhdHMYFd7uwnILnd1BeH6SoksOKTI4KtUyZXOS4k=\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1334035, TxCid: "bafy2bzaceasprlgdy4dbb2cxzwo4opofxk26vkpw3fe3qf5oxj2yjsb7scjoq", MultisigAddress: "f2h4xqc7krcpfulaqch6hxphsp6ze5fwobfrpur2i", Signer: "f063654", ActionType: "RemoveSigner", Value: "{\"Signer\":\"f1fbagfbmhk52hhbih2yt2jixkbisoqtrg4k2kn7a\",\"Decrease\":true}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1289201",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1289201",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1289201, MultisigAddress: "f064773", ProposalID: 0, Signer: "f064766", ActionType: "Propose", TxTypeToExecute: "SwapSigner", Value: "{\"From\":\"f3vwq5mw6sagjzqap73q56xayzmnrlqpvlecgcduwqmpsr33cngoszviq4eeet7gc5j3he2kf34hmskecjvqva\",\"To\":\"f3sg5mydbqdszt6wld3sjofhotutji5r2vbi5nvraybulexajcqg2fdas6sq7oiihdeqmw7ii3xdzlx723oeja\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{},
+			},
+		},
+		{
+			name:    "multisig events height 1258459",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1258459",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1258459, MultisigAddress: "f063814", TxCid: "bafy2bzaced6uosdwea2ztyao56umwjza5qzpveg73afohzh3wgoclgtfhtpek", Signer: "f01", ActionType: "Constructor", Value: "{\"Signers\":[\"f16xlkjp3dcfrsb257duoqfgj7glo2uvvgxyy4gmy\",\"f1dywbadna5yyf546mloeoc7gxrzj7n5uog6llv5y\",\"f1fbagfbmhk52hhbih2yt2jixkbisoqtrg4k2kn7a\"],\"NumApprovalsThreshold\":2,\"UnlockDuration\":0,\"StartEpoch\":0}"},
+				},
+			},
+		},
+		{
+			name:    "multisig events height 1256171",
+			version: v2.NodeVersionsSupported[0],
+			url:     calibNextNodeUrl,
+			height:  "1256171",
+			results: expectedResults{
+				proposals: []types.MultisigProposal{
+					{Height: 1256171, MultisigAddress: "f063719", ProposalID: 1, Signer: "f063720", ActionType: "Propose", TxTypeToExecute: "RemoveSigner", Value: "{\"Decrease\":false,\"Signer\":\"f1bsqp2nixftm5kacppzrsjkv62ot3kckucthu7ca\"}"},
+				},
+				multisigInfo: []types.MultisigInfo{
+					{Height: 1256171, MultisigAddress: "f063719", TxCid: "bafy2bzacecuhvthgttyv7q3q53p4lqhfkkdh2wktaxywtfarofehqvtsgifnw", Signer: "f063719", ActionType: "RemoveSigner", Value: "{\"Signer\":\"f1bsqp2nixftm5kacppzrsjkv62ot3kckucthu7ca\",\"Decrease\":false}"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
+
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			ethlogs, err := readEthLogs(tt.height)
+			require.NoError(t, err)
+			traces, err := readGzFile(tracesFilename(tt.height))
+			require.NoError(t, err)
+
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+
+			txsData := types.TxsData{
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Traces:   traces,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+			}
+
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
+			require.NoError(t, err)
+			require.NotNil(t, parsedResult.Txs)
+
+			tipsetCid := txsData.Tipset.GetCidString()
+			tipsetKey := txsData.Tipset.Key()
+			events, err := p.ParseMultisigEvents(context.Background(), parsedResult.Txs, tipsetCid, tipsetKey)
+			require.NoError(t, err)
+			require.NotNil(t, events)
+
+			require.Len(t, events.Proposals, len(tt.results.proposals), fmt.Sprintf("Expected %d proposals, but got %d", len(tt.results.proposals), len(events.Proposals)))
+			for i, expected := range tt.results.proposals {
+				assert.Equal(t, expected.MultisigAddress, events.Proposals[i].MultisigAddress, fmt.Sprintf("Mismatch in MultisigAddress at proposal index %d: expected %s, got %s", i, expected.MultisigAddress, events.Proposals[i].MultisigAddress))
+				assert.Equal(t, expected.ProposalID, events.Proposals[i].ProposalID, fmt.Sprintf("Mismatch in ProposalID at proposal index %d: expected %d, got %d", i, expected.ProposalID, events.Proposals[i].ProposalID))
+				assert.Equal(t, expected.Signer, events.Proposals[i].Signer, fmt.Sprintf("Mismatch in Signer at proposal index %d: expected %s, got %s", i, expected.Signer, events.Proposals[i].Signer))
+				assert.Equal(t, expected.ActionType, events.Proposals[i].ActionType, fmt.Sprintf("Mismatch in ActionType at proposal index %d: expected %s, got %s", i, expected.ActionType, events.Proposals[i].ActionType))
+				assert.Equal(t, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute, fmt.Sprintf("Mismatch in TxTypeToExecute at proposal index %d: expected %s, got %s", i, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute))
+				assert.Equal(t, expected.Value, events.Proposals[i].Value, fmt.Sprintf("Mismatch in Value at proposal index %d: expected %s, got %s", i, expected.Value, events.Proposals[i].Value))
+			}
+
+			require.Len(t, events.MultisigInfo, len(tt.results.multisigInfo), fmt.Sprintf("Expected %d multisig info entries, but got %d", len(tt.results.multisigInfo), len(events.MultisigInfo)))
+			for i, expected := range tt.results.multisigInfo {
+				assert.Equal(t, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress, fmt.Sprintf("Mismatch in MultisigAddress at multisig info index %d: expected %s, got %s", i, expected.MultisigAddress, events.MultisigInfo[i].MultisigAddress))
+				assert.Equal(t, expected.TxCid, events.MultisigInfo[i].TxCid, fmt.Sprintf("Mismatch in TxCid at multisig info index %d: expected %s, got %s", i, expected.TxCid, events.MultisigInfo[i].TxCid))
+				assert.Equal(t, expected.Signer, events.MultisigInfo[i].Signer, fmt.Sprintf("Mismatch in Signer at multisig info index %d: expected %s, got %s", i, expected.Signer, events.MultisigInfo[i].Signer))
+				assert.Equal(t, expected.ActionType, events.MultisigInfo[i].ActionType, fmt.Sprintf("Mismatch in ActionType at multisig info index %d: expected %s, got %s", i, expected.ActionType, events.MultisigInfo[i].ActionType))
+				assert.Equal(t, expected.Value, events.MultisigInfo[i].Value, fmt.Sprintf("Mismatch in Value at multisig info index %d: expected %s, got %s", i, expected.Value, events.MultisigInfo[i].Value))
+			}
 		})
 	}
 }

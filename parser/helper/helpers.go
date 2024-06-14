@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -171,4 +172,46 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
 	return h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+}
+
+func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey) ([]*types.Transaction, error) {
+	var result []*types.Transaction
+	for _, tx := range txs {
+		addrTo, err := address.NewFromString(tx.TxTo)
+		if err != nil {
+			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			continue
+		}
+		addrFrom, err := address.NewFromString(tx.TxFrom)
+		if err != nil {
+			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			continue
+		}
+
+		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)
+		if err != nil {
+			h.logger.Sugar().Errorf("could not get actor type from address. Err: %s", err)
+			continue
+		}
+		if !isType {
+			continue
+		}
+
+		result = append(result, tx)
+	}
+
+	return result, nil
+}
+
+func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string) (bool, error) {
+	for _, addr := range addresses {
+		actorName, err := h.GetActorNameFromAddress(addr, height, key)
+		if err != nil {
+			return false, err
+		}
+		if strings.EqualFold(actorName, actorType) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
