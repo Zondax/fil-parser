@@ -13,7 +13,9 @@ import (
 )
 
 var (
-	cidRegex    = regexp.MustCompile("cid")
+	// - https://github.com/filecoin-project/lotus/blob/6e13eac5d51f08d964f1338d9fab7cca42014e5c/documentation/en/actor-events-api.md?plain=1#L365
+	cidRegex = regexp.MustCompile("cid")
+	// https://github.com/filecoin-project/lotus/blob/6e13eac5d51f08d964f1338d9fab7cca42014e5c/documentation/en/actor-events-api.md?plain=1#L112
 	bigintRegex = regexp.MustCompile("balance")
 )
 
