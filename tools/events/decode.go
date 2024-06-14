@@ -2,14 +2,19 @@ package event_tools
 
 import (
 	"fmt"
-	"regexp"
-
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
 	"github.com/ipld/go-ipld-prime/datamodel"
+	basicnode "github.com/ipld/go-ipld-prime/node/basic"
+	"math"
+	"regexp"
+)
+
+const (
+	maxJSONNumber = math.MaxUint32
 )
 
 var (
@@ -24,6 +29,16 @@ func decode(entry types.EventEntry) (datamodel.Node, error) {
 	n, err := ipld.Decode(entry.Value, dagcbor.Decode)
 	if err != nil {
 		return nil, fmt.Errorf("error ipld decode entry: %w ", err)
+	}
+
+	if n.Kind() == datamodel.Kind_Int {
+		val, err := n.AsInt()
+		if err != nil {
+			return nil, fmt.Errorf("error ipld node to int : %w ", err)
+		}
+		if val > maxJSONNumber {
+			return basicnode.NewString(fmt.Sprint(val)), nil
+		}
 	}
 
 	return n, nil

@@ -841,7 +841,7 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 				1: {
 					"flags": 3,
 					"key":   "expiry",
-					"value": largeInt,
+					"value": fmt.Sprint(largeInt),
 				},
 			},
 		},
