@@ -180,12 +180,12 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 		addrTo, err := address.NewFromString(tx.TxTo)
 		if err != nil {
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
-			return nil, err
+			continue
 		}
 		addrFrom, err := address.NewFromString(tx.TxFrom)
 		if err != nil {
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
-			return nil, err
+			continue
 		}
 
 		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)

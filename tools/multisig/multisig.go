@@ -87,7 +87,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 			addrTo, err := address.NewFromString(tx.TxTo)
 			if err != nil {
 				eg.logger.Sugar().Errorf("could not parse address. Err: %s", err)
-				return nil, err
+				continue
 			}
 
 			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)

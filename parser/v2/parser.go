@@ -20,7 +20,6 @@ import (
 	"github.com/zondax/fil-parser/types"
 
 	"github.com/bytedance/sonic"
-	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
@@ -183,15 +182,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
 }
 
-func (p *Parser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
-	multisigTxs, err := p.helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey, tipsetKey)
-	if len(txs) > 0 {
-		p.logger.Sugar().Debugf("Height %v, multisigTxs: %v", txs[0].Height, multisigTxs)
-	}
-	if err != nil {
-		return nil, err
-	}
-
+func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
 	return p.multisigEventGenerator.GenerateMultisigEvents(ctx, multisigTxs, tipsetCid, tipsetKey)
 }
 

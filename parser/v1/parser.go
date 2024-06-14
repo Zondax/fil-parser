@@ -168,7 +168,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	}, nil
 }
 
-func (p *Parser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
+func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
 	return nil, errors.New("unimplimented")
 }
 
