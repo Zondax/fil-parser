@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"net/http"
@@ -645,6 +646,8 @@ func ipldEncode(t *testing.T, builder datamodel.NodeBuilder, data any) []byte {
 		err = builder.AssignBytes(x)
 	case datamodel.Link:
 		err = builder.AssignLink(x)
+	case int64:
+		err = builder.AssignInt(x)
 	}
 
 	require.NoError(t, err)
@@ -695,6 +698,12 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	tmp, err := bigInt.Bytes()
 	require.NoError(t, err)
 	bigIntEventData := ipldEncode(t, basicnode.Prototype.Bytes.NewBuilder(), tmp)
+
+	largeInt := math.MaxInt64
+	largeIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(largeInt))
+
+	smallInt := 10
+	smallIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(smallInt))
 
 	tb := []struct {
 		name         string
@@ -773,6 +782,66 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 					"flags": 3,
 					"key":   "data",
 					"value": "dGVzdF9kYXRh",
+				},
+			},
+		},
+		{
+			name:    "success native small int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: smallIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": smallInt,
+				},
+			},
+		},
+		{
+			name:    "success native large int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: largeIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": largeInt,
 				},
 			},
 		},
