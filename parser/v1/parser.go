@@ -17,6 +17,7 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	typesV1 "github.com/zondax/fil-parser/parser/v1/types"
 	"github.com/zondax/fil-parser/tools"
+	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
@@ -26,19 +27,21 @@ const Version = "v1"
 var NodeVersionsSupported = []string{"v1.21", "v1.22"}
 
 type Parser struct {
-	actorParser      *actors.ActorParser
-	addresses        *types.AddressInfoMap
-	txCidEquivalents []types.TxCidTranslation
-	helper           *helper.Helper
-	logger           *zap.Logger
+	actorParser            *actors.ActorParser
+	addresses              *types.AddressInfoMap
+	txCidEquivalents       []types.TxCidTranslation
+	helper                 *helper.Helper
+	logger                 *zap.Logger
+	multisigEventGenerator multisigTools.EventGenerator
 }
 
 func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(helper, logger),
-		addresses:   types.NewAddressInfoMap(),
-		helper:      helper,
-		logger:      logger2.GetSafeLogger(logger),
+		actorParser:            actors.NewActorParser(helper, logger),
+		addresses:              types.NewAddressInfoMap(),
+		helper:                 helper,
+		logger:                 logger2.GetSafeLogger(logger),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
 	}
 }
 
@@ -163,6 +166,10 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		Addresses: p.addresses,
 		TxCids:    p.txCidEquivalents,
 	}, nil
+}
+
+func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
+	return nil, errors.New("unimplimented")
 }
 
 func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
