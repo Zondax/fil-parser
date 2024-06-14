@@ -705,6 +705,12 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 	smallInt := 10
 	smallIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(smallInt))
 
+	negativeInt := -10
+	negativeIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(negativeInt))
+
+	veryNegativeInt := math.MinInt64
+	veryNegativeIntEventData := ipldEncode(t, basicnode.Prototype.Int.NewBuilder(), int64(veryNegativeInt))
+
 	tb := []struct {
 		name         string
 		entries      []filTypes.EventEntry
@@ -782,6 +788,66 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 					"flags": 3,
 					"key":   "data",
 					"value": "dGVzdF9kYXRh",
+				},
+			},
+		},
+		{
+			name:    "success native negative int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: negativeIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": negativeInt,
+				},
+			},
+		},
+		{
+			name:    "success native very negative int event entries",
+			emitter: filAddress,
+			entries: []filTypes.EventEntry{
+				{
+					Flags: 0x03,
+					Key:   "$type",
+					Codec: 0x51,
+					Value: eventType,
+				},
+				{
+					Flags: 0x03,
+					Key:   "expiry",
+					Codec: 0x51,
+					Value: veryNegativeIntEventData,
+				},
+			},
+			wantMetadata: map[int]map[string]any{
+				0: {
+					"flags": 3,
+					"key":   "$type",
+					"value": "market_deals_event",
+				},
+				1: {
+					"flags": 3,
+					"key":   "expiry",
+					"value": fmt.Sprint(veryNegativeInt),
 				},
 			},
 		},

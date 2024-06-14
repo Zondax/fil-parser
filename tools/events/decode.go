@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	maxJSONNumber = math.MaxUint32
+	maxJSONNumber = math.MaxInt32
+	minJSONNumber = math.MinInt32
 )
 
 var (
@@ -36,7 +37,7 @@ func decode(entry types.EventEntry) (datamodel.Node, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error ipld node to int : %w ", err)
 		}
-		if val > maxJSONNumber {
+		if val > maxJSONNumber || val < minJSONNumber {
 			return basicnode.NewString(fmt.Sprint(val)), nil
 		}
 	}
