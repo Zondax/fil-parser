@@ -126,7 +126,7 @@ func (eg *eventGenerator) createProposal(ctx context.Context, tx *types.Transact
 		}
 	}
 
-	proposal.ID = tools.BuildId(tipsetCid, proposal.MultisigAddress, fmt.Sprint(proposal.ProposalID), fmt.Sprint(tx.Height), tx.TxType)
+	proposal.ID = tools.BuildId(tipsetCid, tx.TxCid, proposal.Signer, proposal.MultisigAddress, fmt.Sprint(proposal.ProposalID), fmt.Sprint(tx.Height), tx.TxType)
 	return proposal
 }
 
