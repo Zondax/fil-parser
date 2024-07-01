@@ -122,7 +122,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		}
 	}
 
-	transactions = tools.SetNodeMetadataOnTxs(transactions, txsData.Metadata, Version)
+	transactions = tools.SetNodeMetadata(transactions, txsData.Metadata, Version)
 
 	// Clear this cache when we finish processing a tipset.
 	// Bad addresses in this tipset might be valid in the next one
@@ -136,7 +136,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 }
 
 func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
-	var parsed []types.Event
+	var parsed []*types.Event
 	nativeEventsTotal, evmEventsTotal := 0, 0
 	for idx, nativeLog := range eventsData.NativeLog {
 		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
@@ -150,16 +150,16 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 			nativeEventsTotal++
 		}
 
-		parsed = append(parsed, *event)
+		parsed = append(parsed, event)
 	}
 
-	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
+	parsed = tools.SetNodeMetadata(parsed, eventsData.Metadata, Version)
 
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
 func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
-	var parsed []types.Event
+	var parsed []*types.Event
 	// sort the events by the TransactionIndex ASC and the logIndex ASC
 	slices.SortFunc(eventsData.EthLogs, func(a, b types.EthLog) int {
 		return cmp.Or(
@@ -174,10 +174,10 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
 
-		parsed = append(parsed, *event)
+		parsed = append(parsed, event)
 	}
 
-	parsed = tools.SetNodeMetadataOnEvents(parsed, eventsData.Metadata, Version)
+	parsed = tools.SetNodeMetadata(parsed, eventsData.Metadata, Version)
 
 	return &types.EventsParsedResult{EVMEvents: len(parsed), ParsedEvents: parsed}, nil
 }

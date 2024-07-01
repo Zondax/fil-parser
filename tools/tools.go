@@ -126,9 +126,7 @@ func BuildCidFromMessageTrace(msg filTypes.MessageTrace, parentMsgCid string) (s
 	return b.Cid().String(), nil
 }
 
-func SetNodeMetadataOnTxs(txs []*types.Transaction, metadata types.BlockMetadata, parserVer string) []*types.Transaction {
-	// TODO refactor this fn to make it generic for events and txs alike
-
+func SetNodeMetadata[T types.HasNodeInfo](data []T, metadata types.BlockMetadata, parserVer string) []T {
 	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
 	if nodeMajorMinorVersion == "" {
 		nodeMajorMinorVersion = UnknownParserVersion
@@ -139,37 +137,11 @@ func SetNodeMetadataOnTxs(txs []*types.Transaction, metadata types.BlockMetadata
 		nodeFullVersion = UnknownParserVersion
 	}
 
-	for _, tx := range txs {
-		tx.NodeMajorMinorVersion = nodeMajorMinorVersion
-		tx.NodeFullVersion = nodeFullVersion
-		tx.ParserVersion = parserVer
+	for _, item := range data {
+		item.SetNodeMetadata(nodeMajorMinorVersion, nodeFullVersion, parserVer)
 	}
+	return data
 
-	return txs
-}
-
-func SetNodeMetadataOnEvents(events []types.Event, metadata types.BlockMetadata, parserVer string) []types.Event {
-	// TODO refactor this fn to make it generic for events and txs alike
-
-	nodeMajorMinorVersion := metadata.NodeMajorMinorVersion
-	if nodeMajorMinorVersion == "" {
-		nodeMajorMinorVersion = UnknownParserVersion
-	}
-
-	nodeFullVersion := metadata.NodeFullVersion
-	if nodeFullVersion == "" {
-		nodeFullVersion = UnknownParserVersion
-	}
-
-	var newEvents []types.Event
-	for _, event := range events {
-		event.NodeMajorMinorVersion = nodeMajorMinorVersion
-		event.NodeFullVersion = nodeFullVersion
-		event.ParserVersion = parserVer
-		newEvents = append(newEvents, event)
-	}
-
-	return newEvents
 }
 
 func ParseTxMetadata(txMetadata string) (map[string]interface{}, error) {

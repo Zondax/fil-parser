@@ -27,5 +27,5 @@ type EventsData struct {
 type EventsParsedResult struct {
 	EVMEvents    int
 	NativeEvents int
-	ParsedEvents []Event
+	ParsedEvents []*Event
 }

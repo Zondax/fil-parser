@@ -23,3 +23,9 @@ type Event struct {
 	ParserVersion string `json:"parser_version"`
 	NodeInfo
 }
+
+func (evt *Event) SetNodeMetadata(nodeMajorMinorVersion, nodeFullVersion, parserVer string) {
+	evt.NodeMajorMinorVersion = nodeMajorMinorVersion
+	evt.NodeFullVersion = nodeFullVersion
+	evt.ParserVersion = parserVer
+}

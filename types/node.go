@@ -6,3 +6,7 @@ type NodeInfo struct {
 	// NodeMajorMinorVersion contains the node major.minor version from which this metadata was extracted
 	NodeMajorMinorVersion string `json:"node_major_minor_version,omitempty"`
 }
+
+type HasNodeInfo interface {
+	SetNodeMetadata(nodeMajorMinorVersion, nodeFullVersion, parserVer string)
+}
