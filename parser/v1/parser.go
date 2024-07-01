@@ -152,7 +152,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 	}
 
-	transactions = tools.SetNodeMetadataOnTxs(transactions, txsData.Metadata, Version)
+	transactions = tools.SetNodeMetadata(transactions, txsData.Metadata, Version)
 
 	// Clear this cache when we finish processing a tipset.
 	// Bad addresses in this tipset might be valid in the next one

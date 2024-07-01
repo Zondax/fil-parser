@@ -51,6 +51,12 @@ func (t Transaction) Equal(b Transaction) bool {
 	return reflect.DeepEqual(t, b)
 }
 
+func (tx *Transaction) SetNodeMetadata(nodeMajorMinorVersion, nodeFullVersion, parserVer string) {
+	tx.NodeMajorMinorVersion = nodeMajorMinorVersion
+	tx.NodeFullVersion = nodeFullVersion
+	tx.ParserVersion = parserVer
+}
+
 type EthLog struct {
 	ethtypes.EthLog
 	TransactionCid string `json:"transactionCid"`
