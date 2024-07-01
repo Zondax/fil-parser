@@ -17,6 +17,7 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	typesV1 "github.com/zondax/fil-parser/parser/v1/types"
 	"github.com/zondax/fil-parser/tools"
+	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
@@ -26,19 +27,21 @@ const Version = "v1"
 var NodeVersionsSupported = []string{"v1.21", "v1.22"}
 
 type Parser struct {
-	actorParser      *actors.ActorParser
-	addresses        *types.AddressInfoMap
-	txCidEquivalents []types.TxCidTranslation
-	helper           *helper.Helper
-	logger           *zap.Logger
+	actorParser            *actors.ActorParser
+	addresses              *types.AddressInfoMap
+	txCidEquivalents       []types.TxCidTranslation
+	helper                 *helper.Helper
+	logger                 *zap.Logger
+	multisigEventGenerator multisigTools.EventGenerator
 }
 
 func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
 	return &Parser{
-		actorParser: actors.NewActorParser(helper, logger),
-		addresses:   types.NewAddressInfoMap(),
-		helper:      helper,
-		logger:      logger2.GetSafeLogger(logger),
+		actorParser:            actors.NewActorParser(helper, logger),
+		addresses:              types.NewAddressInfoMap(),
+		helper:                 helper,
+		logger:                 logger2.GetSafeLogger(logger),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
 	}
 }
 
@@ -123,7 +126,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, txsData.EthLogs, uuid.Nil.String())
+		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -163,6 +166,10 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		Addresses: p.addresses,
 		TxCids:    p.txCidEquivalents,
 	}, nil
+}
+
+func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
+	return nil, errors.New("unimplimented")
 }
 
 func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
@@ -206,7 +213,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.C
 	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, ethLogs, parentId)
+		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, parentId)
 		if err != nil {
 			continue
 		}
@@ -218,7 +225,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.C
 	return
 }
 
-func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, ethLogs []types.EthLog, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
@@ -242,7 +249,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	}, mainMsgCid, &parser.LotusMessageReceipt{
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
-	}, int64(tipset.Height()), tipset.Key(), ethLogs)
+	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())

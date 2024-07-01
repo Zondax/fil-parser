@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 
 	"github.com/zondax/fil-parser/parser"
@@ -141,4 +142,13 @@ func SetNodeMetadata[T types.HasNodeInfo](data []T, metadata types.BlockMetadata
 	}
 	return data
 
+}
+
+func ParseTxMetadata(txMetadata string) (map[string]interface{}, error) {
+	var metadata map[string]interface{}
+	err := json.Unmarshal([]byte(txMetadata), &metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal TxMetadata: %v", err)
+	}
+	return metadata, nil
 }

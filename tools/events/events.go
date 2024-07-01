@@ -5,17 +5,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/fil-parser/parser"
 	"strings"
+
+	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
-	"github.com/ipld/go-ipld-prime"
-	"github.com/ipld/go-ipld-prime/codec/dagcbor"
 	"github.com/ipld/go-ipld-prime/datamodel"
-	"github.com/multiformats/go-multicodec"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -127,11 +125,14 @@ func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEven
 	return event, nil
 }
 
-func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper) (*types.Event, error) {
+func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper, logIndex uint64) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = ethLog.TransactionCid
 	event.Emitter = ethLog.Address.String()
-	event.LogIndex = uint64(ethLog.LogIndex)
+
+	// we set a custom logIndex to avoid duplicates.
+	// ethLog.LogIndex is only unique within the same ethLog.TransactionIndex.
+	event.LogIndex = logIndex
 	event.Height = uint64(tipset.Height())
 	event.TipsetCid = tipset.GetCidString()
 	event.EventTimestamp = parser.GetTimestamp(tipset.MinTimestamp())
@@ -196,6 +197,10 @@ func buildEVMEventMetaData[T interface{ string | ethtypes.EthHash }](data []byte
 func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map[int]map[string]any, error) {
 	parsedEntries := map[int]map[string]any{}
 
+	var (
+		edgeCaseEntries []int
+	)
+
 	for idx, entry := range entries {
 		parsedEntry := map[string]any{
 			parsedEntryKey: entry.Key,
@@ -219,14 +224,21 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 				}
 				parsedEntry["value"] = selectorHash.String()
 			case types.EventTypeNative:
-				if entry.Codec != uint64(multicodec.Cbor) {
-					break
-				}
-				n, err := ipld.Decode(entry.Value, dagcbor.Decode)
+				var (
+					err         error
+					parsedValue datamodel.Node
+				)
+				parsedValue, err = decode(entry)
 				if err != nil {
-					return nil, fmt.Errorf("error ipld decode native event: %w ", err)
+					zap.S().Error("error ipld decode native event: ", err, entry.Key, entry.Codec, entry.Value)
+					return nil, fmt.Errorf("error decoding native event: %w ", err)
 				}
-				parsedEntry[parsedEntryValue] = n
+
+				// if the entry key is a CID or a bigInt, we need to decode the parsedValue further
+				if cidRegex.MatchString(entry.Key) || bigintRegex.MatchString(entry.Key) {
+					edgeCaseEntries = append(edgeCaseEntries, idx)
+				}
+				parsedEntry[parsedEntryValue] = parsedValue
 			}
 		}
 		parsedEntry[parsedEntryFlags] = entry.Flags
@@ -236,5 +248,30 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 
 		parsedEntries[idx] = parsedEntry
 	}
+
+	// decode the entry values for the CIDs and BigInts
+	for _, idx := range edgeCaseEntries {
+		var (
+			err  error
+			data any
+		)
+
+		key := parsedEntries[idx][parsedEntryKey].(string)
+		value := parsedEntries[idx][parsedEntryValue].(datamodel.Node)
+		switch {
+		case cidRegex.MatchString(key):
+			data, err = parseCid(value)
+		case bigintRegex.MatchString(key):
+			data, err = parseBigInt(value)
+		default:
+			err = fmt.Errorf("unable to retrieve %s from evm event entry", key)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("error parsing native event: %w", err)
+		}
+		parsedEntries[idx][parsedEntryValue] = data
+	}
+
 	return parsedEntries, nil
 }
