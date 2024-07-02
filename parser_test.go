@@ -16,12 +16,19 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/zondax/golem/pkg/metrics"
+	"github.com/zondax/golem/pkg/zcache"
+
+	logger2 "github.com/zondax/golem/pkg/logger"
+
+	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
 	"github.com/ipld/go-ipld-prime/datamodel"
 	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
+	"github.com/zondax/fil-parser/parser"
 
 	"go.uber.org/zap"
 
@@ -154,6 +161,11 @@ func getLib(t *testing.T, nodeURL string) *rosettaFilecoinLib.RosettaConstructio
 func getCacheDataSource(t *testing.T, nodeURL string) common.DataSource {
 	return common.DataSource{
 		Node: getLotusClient(t, nodeURL),
+		Config: common.DataSourceConfig{
+			Cache: &zcache.CombinedConfig{
+				GlobalMetricServer: metrics.NewTaskMetrics("", "3000", "test"),
+			},
+		},
 	}
 }
 
@@ -178,7 +190,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
-				totalTraces:  650,
+				totalTraces:  551,
 				totalAddress: 98,
 				totalTxCids:  99,
 			},
@@ -189,7 +201,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "845259",
 			results: expectedResults{
-				totalTraces:  31,
+				totalTraces:  26,
 				totalAddress: 3,
 				totalTxCids:  0,
 			},
@@ -200,7 +212,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
-				totalTraces:  907,
+				totalTraces:  760,
 				totalAddress: 88,
 				totalTxCids:  147,
 			},
@@ -211,7 +223,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573062",
 			results: expectedResults{
-				totalTraces:  773,
+				totalTraces:  655,
 				totalAddress: 70,
 				totalTxCids:  118,
 			},
@@ -222,7 +234,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573064",
 			results: expectedResults{
-				totalTraces:  734,
+				totalTraces:  637,
 				totalAddress: 75,
 				totalTxCids:  97,
 			},
@@ -233,7 +245,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573066",
 			results: expectedResults{
-				totalTraces:  1118,
+				totalTraces:  941,
 				totalAddress: 102,
 				totalTxCids:  177,
 			},
@@ -261,10 +273,15 @@ func TestParser_ParseTransactions(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
+			logger := logger2.NewLogger(logger2.Config{Level: "debug"})
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -319,10 +336,15 @@ func TestParser_GetBaseFee(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
+			logger := logger2.NewLogger(logger2.Config{Level: "debug"})
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
@@ -362,10 +384,15 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
+			logger := logger2.NewLogger(logger2.Config{Level: "debug"})
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -498,10 +525,14 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			logger := logger2.NewLogger(logger2.Config{Level: "debug"})
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -610,10 +641,14 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			nativeLogs, err := readNativeLogs(tt.height)
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			logger := logger2.NewLogger(logger2.Config{Level: "debug"})
+			config := &parser.FilecoinParserConfig{
+				ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+					Enable:     true,
+					BestEffort: true,
+				},
+			}
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger, config)
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -667,10 +702,15 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 		BlockMessages: nil,
 	}
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
+	logger := logger2.NewLogger(logger2.Config{Level: "debug"})
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	config := &parser.FilecoinParserConfig{
+		ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+			Enable:     true,
+			BestEffort: true,
+		},
+	}
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger, config)
 	require.NoError(t, err)
 
 	eventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "market_deals_event")
@@ -1125,10 +1165,15 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
+	logger := logger2.NewLogger(logger2.Config{Level: "debug"})
+	config := &parser.FilecoinParserConfig{
+		ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+			Enable:     true,
+			BestEffort: true,
+		},
+	}
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger, config)
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1271,11 +1316,16 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 }
 
 func TestParser_ParseEthLogs(t *testing.T) {
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
+	logger := logger2.NewLogger(logger2.Config{Level: "debug"})
+	config := &parser.FilecoinParserConfig{
+		ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+			Enable:     true,
+			BestEffort: true,
+		},
+	}
 
 	var emitter ethtypes.EthAddress
-	err = emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
+	err := emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
 	assert.NoError(t, err)
 
 	txCID := cid.Cid{}.String()
@@ -1292,8 +1342,8 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
-	require.NoError(t, err)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger, config)
+	assert.NoError(t, err)
 
 	tb := []struct {
 		name         string
@@ -1760,10 +1810,15 @@ func TestParseGenesis(t *testing.T) {
 		t.Fatalf("Error getting genesis data: %s", err)
 	}
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
 	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
+	logger := logger2.NewLogger(logger2.Config{Level: "debug"})
+	config := &parser.FilecoinParserConfig{
+		ConsolidateAddressesToRobust: parser.ConsolidateAddressesToRobust{
+			Enable:     true,
+			BestEffort: true,
+		},
+	}
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger, config)
 	assert.NoError(t, err)
 	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
 

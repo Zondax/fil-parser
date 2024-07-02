@@ -11,6 +11,15 @@ import (
 	"github.com/ipfs/go-cid"
 )
 
+type FilecoinParserConfig struct {
+	ConsolidateAddressesToRobust ConsolidateAddressesToRobust
+}
+
+type ConsolidateAddressesToRobust struct {
+	Enable     bool
+	BestEffort bool
+}
+
 type ControlAddress struct {
 	Owner        string   `json:"owner"`
 	Worker       string   `json:"worker"`
@@ -79,8 +88,12 @@ type BurnFee struct {
 	Amount      string
 }
 
+type FeeData struct {
+	FeesMetadata
+	Amount string `json:"amount"`
+}
+
 type FeesMetadata struct {
-	TxType                string
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee

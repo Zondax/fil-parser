@@ -9,13 +9,13 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 )
 
 const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
 
 type IActorsCache interface {
-	NewImpl(source common.DataSource, logger *zap.Logger) error
+	NewImpl(source common.DataSource, logger *logger.Logger) error
 	GetActorCode(add address.Address, key filTypes.TipSetKey) (string, error)
 	GetRobustAddress(add address.Address) (string, error)
 	GetShortAddress(add address.Address) (string, error)
@@ -30,7 +30,7 @@ type ActorsCache struct {
 	offChainCache IActorsCache
 	onChainCache  IActorsCache
 	badAddress    cmap.ConcurrentMap
-	logger        *zap.Logger
+	logger        *logger.Logger
 	httpClient    *resty.Client
 }
 
