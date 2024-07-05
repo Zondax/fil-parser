@@ -9,7 +9,7 @@ require (
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-state-types v0.14.0-rc5
-	github.com/filecoin-project/lotus v1.28.0-rc1
+	github.com/filecoin-project/lotus v1.28.0-rc4
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
 	github.com/google/uuid v1.6.0
@@ -20,7 +20,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/whyrusleeping/cbor-gen v0.1.2
 	github.com/zondax/golem v0.14.1
-	github.com/zondax/rosetta-filecoin-lib v1.2603.0
+	github.com/zondax/rosetta-filecoin-lib v1.2800.0-rc4
 	github.com/zondax/znats v0.1.1
 	go.uber.org/zap v1.27.0
 	gorm.io/gorm v1.25.10
@@ -32,7 +32,7 @@ require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
-	github.com/filecoin-project/go-f3 v0.0.2 // indirect
+	github.com/filecoin-project/go-f3 v0.0.3-0.20240702063402-d48771055cf4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.12.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
