@@ -28,7 +28,7 @@ import (
 
 const Version = "v2"
 
-var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26", "v1.27"}
+var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26", "v1.27", "v1.28"}
 
 type Parser struct {
 	actorParser            *actors.ActorParser
