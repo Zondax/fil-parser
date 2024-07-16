@@ -8,7 +8,7 @@ require (
 	github.com/bytedance/sonic v1.11.9
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-bitfield v0.2.4
-	github.com/filecoin-project/go-state-types v0.14.0-rc5
+	github.com/filecoin-project/go-state-types v0.14.0-rc6
 	github.com/filecoin-project/lotus v1.28.0-rc4
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
