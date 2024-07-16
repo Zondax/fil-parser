@@ -240,6 +240,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			Amount:      amount.Int,
 			Status:      "Ok",
 			TxType:      txType,
+			TxMetadata:  "{}",
 		})
 	}
 
