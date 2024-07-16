@@ -15,41 +15,38 @@ import (
 	"github.com/filecoin-project/go-state-types/exitcode"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	v11 "github.com/zondax/fil-parser/actors/v11"
 	"github.com/zondax/fil-parser/parser"
 )
+
+var multisigParsers = map[string]func(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error){
+	"v11": v11.ParseMultisig,
+}
+
+func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+	version, err := getVersionFromHeight(height)
+	if err != nil {
+		return nil, err
+	}
+
+	parserFunc, ok := multisigParsers[version]
+	if !ok {
+		return nil, fmt.Errorf("unsupported multisig version: %s", version)
+	}
+
+	metadata, err := parserFunc(txType, msg, msgRct, height, key)
+	if err != nil {
+		return nil, err
+	}
+
+	return metadata, nil
+}
 
 /*
 Still needs to parse:
 
 	Receive
 */
-func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
-	switch txType {
-	case parser.MethodConstructor: // TODO: not tested
-		return p.msigConstructor(msg.Params)
-	case parser.MethodSend:
-		return p.parseSend(msg), nil
-	case parser.MethodPropose, parser.MethodProposeExported:
-		return p.propose(msg.Params, msgRct.Return)
-	case parser.MethodApprove, parser.MethodApproveExported:
-		return p.approve(msg, msgRct.Return, height, key)
-	case parser.MethodCancel, parser.MethodCancelExported:
-		return p.cancel(msg, height, key)
-	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodSwapSigner, parser.MethodSwapSignerExported:
-		return p.msigParams(msg, height, key)
-	case parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
-		return p.removeSigner(msg, height, key)
-	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
-		return p.changeNumApprovalsThreshold(msg.Params)
-	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
-		return p.lockBalance(msg.Params)
-	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
-		return p.universalReceiverHook(msg.Params)
-	case parser.UnknownStr:
-		return p.unknownMetadata(msg.Params, msgRct.Return)
-	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
-}
 
 func (p *ActorParser) msigConstructor(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
