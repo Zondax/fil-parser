@@ -2,6 +2,7 @@ package fil_parser
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
+	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
@@ -251,7 +253,8 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	var multisigInfos []*types.MultisigInfo
 	for _, actor := range genesis.Actors.All {
 		// check if actor.Key is a multisig address
-		addrTo, err := address.NewFromString(actor.Key)
+		addr := actor.Key
+		addrTo, err := address.NewFromString(addr)
 		if err != nil {
 			p.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
@@ -267,21 +270,31 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			continue
 		}
 
+		api := p.Helper.GetFilecoinNodeClient()
+
+		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addrTo, genesisTipset)
+		if err != nil {
+			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(): %s", err)
+		}
+
+		metadataJson, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, fmt.Errorf("json.Marshal(): %s", err)
+		}
+
 		// this is a multisig address
 		multisigInfo := &types.MultisigInfo{
-			// How do we build the id without a txCid
+			// TODO: How do we build the id without a txCid
 			// ID:              tools.BuildId(tipsetCid, tx.TxTo, fmt.Sprint(tx.Height), tx.TxCid, tx.TxType),
 
 			MultisigAddress: actor.Key,
 			Height:          0,
 
+			// TODO: leave as empty ?
 			// TxCid:           tx.TxCid,
-
 			Signer:     actor.Key,
 			ActionType: "Constructor",
-
-			// How do we get the metadata for the multisig address in genesis ?
-			// Value:      string(b),
+			Value:      string(metadataJson),
 		}
 		multisigInfos = append(multisigInfos, multisigInfo)
 
