@@ -252,29 +252,30 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
 	var multisigInfos []*types.MultisigInfo
 	for _, actor := range genesis.Actors.All {
-		// check if actor.Key is a multisig address
-		addr := actor.Key
-		addrTo, err := address.NewFromString(addr)
+		addrStr := actor.Key
+		// parse address
+		addr, err := address.NewFromString(addrStr)
 		if err != nil {
-			p.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			p.logger.Sugar().Errorf("could not parse address: %s. err: %s", addrStr, err)
 			continue
 		}
 
-		actorName, err := p.Helper.GetActorNameFromAddress(addrTo, int64(0), genesisTipset.Key())
+		// get actor name from address
+		actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
 		if err != nil {
-			p.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
+			p.logger.Sugar().Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
 			continue
 		}
 
+		// check if the address is a multisig address
 		if !strings.EqualFold(actorName, manifest.MultisigKey) {
 			continue
 		}
 
 		api := p.Helper.GetFilecoinNodeClient()
-
-		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addrTo, genesisTipset)
+		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)
 		if err != nil {
-			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(): %s", err)
+			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", addrStr, err)
 		}
 
 		metadataJson, err := json.Marshal(metadata)
@@ -282,19 +283,14 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			return nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
-		// this is a multisig address
+		// there are no transactions for the multisig addresses in the genesis block
 		multisigInfo := &types.MultisigInfo{
-			// TODO: How do we build the id without a txCid
-			// ID:              tools.BuildId(tipsetCid, tx.TxTo, fmt.Sprint(tx.Height), tx.TxCid, tx.TxType),
-
-			MultisigAddress: actor.Key,
-			Height:          0,
-
-			// TODO: leave as empty ?
-			// TxCid:           tx.TxCid,
-			Signer:     actor.Key,
-			ActionType: "Constructor",
-			Value:      string(metadataJson),
+			ID:              tools.BuildId(genesisTipset.GetCidString(), addrStr, fmt.Sprint(parser.GenesisHeight), "", parser.TxTypeGenesis),
+			MultisigAddress: addrStr,
+			Height:          parser.GenesisHeight,
+			Signer:          addrStr,
+			ActionType:      parser.MultisigConstructorMethod,
+			Value:           string(metadataJson),
 		}
 		multisigInfos = append(multisigInfos, multisigInfo)
 
