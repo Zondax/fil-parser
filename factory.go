@@ -283,14 +283,17 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			return nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
-		// there are no transactions for the multisig addresses in the genesis block
 		multisigInfo := &types.MultisigInfo{
 			ID:              tools.BuildId(genesisTipset.GetCidString(), addrStr, fmt.Sprint(parser.GenesisHeight), "", parser.TxTypeGenesis),
 			MultisigAddress: addrStr,
 			Height:          parser.GenesisHeight,
-			Signer:          addrStr,
 			ActionType:      parser.MultisigConstructorMethod,
 			Value:           string(metadataJson),
+
+			// there is no signer as this is genesis
+			Signer: "",
+			// there are no transactions for the multisig addresses in the genesis block
+			TxCid: "",
 		}
 		multisigInfos = append(multisigInfos, multisigInfo)
 
