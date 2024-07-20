@@ -12,12 +12,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	multisigTools "github.com/zondax/fil-parser/actors/multisig"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	typesV1 "github.com/zondax/fil-parser/parser/v1/types"
 	"github.com/zondax/fil-parser/tools"
-	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )

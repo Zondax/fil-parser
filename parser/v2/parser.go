@@ -10,13 +10,13 @@ import (
 	"strings"
 
 	"github.com/zondax/fil-parser/actors"
+	multisigTools "github.com/zondax/fil-parser/actors/multisig"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	eventTools "github.com/zondax/fil-parser/tools/events"
-	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 
 	"github.com/bytedance/sonic"
