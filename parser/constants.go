@@ -21,6 +21,11 @@ const (
 
 	UnknownStr = "unknown"
 
+	TxTypeGenesis = "Genesis"
+	GenesisHeight = 0
+
+	MultisigConstructorMethod = "Constructor"
+
 	// Methods
 	MethodSend                                = "Send"                                // Common
 	MethodFee                                 = "Fee"                                 // Common
