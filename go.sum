@@ -803,8 +803,8 @@ github.com/yuin/gopher-lua v1.1.0 h1:BojcDhfyDWgU2f2TOzYK/g5p2gxMrku8oupLDqlnSqE
 github.com/yuin/gopher-lua v1.1.0/go.mod h1:GBR0iDaNXjAgGg9zfCvksxSRnQx76gclCIb7kdAd1Pw=
 github.com/zondax/golem v0.14.1 h1:sf9VYW8b1nurqu1yf9t3PSUci76kP4lzWzywouQSVus=
 github.com/zondax/golem v0.14.1/go.mod h1:AiO0Z8m7D8tuWg1ZmnRjN9T0xbTgSL5t3Z2/IC/wCLU=
-github.com/zondax/rosetta-filecoin-lib v1.2800.0-rc4 h1:vVSnucdl1DnDSpWDYHxVu0vaZdXvLCYnK8XV+nB7jAw=
-github.com/zondax/rosetta-filecoin-lib v1.2800.0-rc4/go.mod h1:2NKWYNIYKKpW+JIa/BHohia9uZYRsDKpQXwdhsbwosI=
+github.com/zondax/rosetta-filecoin-lib v1.2801.0 h1:RzmMU5QGa7BHjhpakvjSVKDwpffIxP7zOBCfuAWKGeU=
+github.com/zondax/rosetta-filecoin-lib v1.2801.0/go.mod h1:EXV3mbOZEJauYMMlx091kZ3UskDpN8LXD9TLoH2aI8w=
 github.com/zondax/znats v0.1.1 h1:dRY5d2BxK1XY2HNm2105pTLjaLUEw2BUxBuQKRSHE8s=
 github.com/zondax/znats v0.1.1/go.mod h1:19u0HlQuURVRkDq2Y+peWKc4OoustFNqWpJVhzCOCm4=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
