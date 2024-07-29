@@ -21,6 +21,11 @@ const (
 
 	UnknownStr = "unknown"
 
+	TxTypeGenesis = "Genesis"
+	GenesisHeight = 0
+
+	MultisigConstructorMethod = "Constructor"
+
 	// Methods
 	MethodSend                                = "Send"                                // Common
 	MethodFee                                 = "Fee"                                 // Common
@@ -66,7 +71,7 @@ const (
 	MethodMinerConsensusCountExported         = "MinerConsensusCountExported"         // MethodsPower
 	MethodOnDeferredCronEvent                 = "OnDeferredCronEvent"                 // MethodsMiner
 	MethodPreCommitSector                     = "PreCommitSector"                     // MethodsMiner
-	MethodProveCommitSector                   = "ProveCommitSector"                   // MethodsMiner
+	MethodProveCommitSector                   = "ProveCommitSector"                   // MethodsMiner - Deprecated
 	MethodSubmitWindowedPoSt                  = "SubmitWindowedPoSt"                  // MethodsMiner
 	MethodApplyRewards                        = "ApplyRewards"                        // MethodsMiner
 	MethodWithdrawBalance                     = "WithdrawBalance"                     // MethodsMiner
@@ -111,6 +116,7 @@ const (
 	MethodGetVestingFunds                     = "GetVestingFundsExported"             // MethodsMiner
 	MethodGetPeerID                           = "GetPeerIDExported"                   // MethodsMiner
 	MethodGetMultiaddrs                       = "GetMultiaddrsExported"               // MethodsMiner
+	MethodProveCommitSectors3                 = "ProveCommitSectors3"                 // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket
@@ -196,6 +202,7 @@ var SupportedOperations = map[string]bool{
 	MethodOnDeferredCronEvent:    true,
 	MethodPreCommitSector:        true,
 	MethodProveCommitSector:      true,
+	MethodProveCommitSectors3:    true,
 	MethodSubmitWindowedPoSt:     true,
 	MethodApplyRewards:           true,
 	MethodWithdrawBalance:        true,

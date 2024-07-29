@@ -8,7 +8,12 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
+	"github.com/filecoin-project/lotus/blockstore"
+	"github.com/filecoin-project/lotus/chain/actors/adt"
+	"github.com/filecoin-project/lotus/chain/actors/builtin/multisig"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	cbor "github.com/ipfs/go-ipld-cbor"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -232,4 +237,66 @@ func isProposalType(txType string) bool {
 
 func isCancelOrApprove(txType string) bool {
 	return cancelApproveTranslateMap[txType] != ""
+}
+
+/*
+GenerateGenesisMultisigData generates the multisig data for an  address in the genesis.
+Ref: https://github.com/filecoin-project/lotus/blob/2714a84248095f877f52ce20e737d9c8843a352a/cli/multisig.go#L188
+
+	{
+		"Signers":["f1tnzpesy6ddygdfymv3iktnd4cshbpbjlm7qgxhq","f12bpw2u2syy7coh67cidpoydcm5ysqjzxuxdog7y"],
+		"NumApprovalsThreshold": 1,
+		"UnlockDuration": 3153600,
+		"StartEpoch":           147120
+	}
+*/
+func GenerateGenesisMultisigData(ctx context.Context, api api.FullNode, addr address.Address, genesisTipset *types.ExtendedTipSet) (map[string]any, error) {
+	store := adt.WrapStore(ctx, cbor.NewCborStore(blockstore.NewAPIBlockstore(api)))
+
+	act, err := api.StateGetActor(ctx, addr, genesisTipset.Key())
+	if err != nil {
+		return nil, fmt.Errorf("api.StateGetActor(): %s", err)
+	}
+
+	mstate, err := multisig.Load(store, act)
+	if err != nil {
+		return nil, fmt.Errorf("multisig.Load(): %s", err)
+	}
+
+	signers, err := mstate.Signers()
+	if err != nil {
+		return nil, err
+	}
+
+	var signerActors []string
+	for _, s := range signers {
+		signerActor, err := api.StateAccountKey(ctx, s, filTypes.EmptyTSK)
+		if err != nil {
+			return nil, fmt.Errorf("api.StateAccountKey(): %s", err)
+		}
+		signerActors = append(signerActors, signerActor.String())
+	}
+
+	threshold, err := mstate.Threshold()
+	if err != nil {
+		return nil, fmt.Errorf("mstate.Threshold(): %s", err)
+	}
+
+	startEpoch, err := mstate.StartEpoch()
+	if err != nil {
+		return nil, fmt.Errorf("mstate.StartEpoch(): %s", err)
+	}
+
+	unlockDuration, err := mstate.UnlockDuration()
+	if err != nil {
+		return nil, fmt.Errorf("mstate.UnlockDuration(): %s", err)
+	}
+
+	metadata := map[string]interface{}{
+		"Signers":               signerActors,
+		"NumApprovalsThreshold": threshold,
+		"UnlockDuration":        unlockDuration,
+		"StartEpoch":            startEpoch,
+	}
+	return metadata, nil
 }

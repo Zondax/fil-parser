@@ -1772,6 +1772,34 @@ func TestParseGenesis(t *testing.T) {
 	assert.Equal(t, actualTxs[0].TipsetCid, "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6")
 }
 
+func TestParseGenesisMultisig(t *testing.T) {
+	network := "mainnet"
+	genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
+	content, err := os.ReadFile(genesisFilePath)
+	require.NoError(t, err)
+
+	var expectedMultisigInfo []*types.MultisigInfo
+	err = json.Unmarshal(content, &expectedMultisigInfo)
+	require.NoError(t, err)
+
+	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+	require.NoError(t, err)
+
+	logger, err := zap.NewDevelopment()
+	require.NoError(t, err)
+	lib := getLib(t, nodeUrl)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+	require.NoError(t, err)
+	require.NotNil(t, gotMultiSigInfo)
+
+	assert.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
+	assert.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+}
+
 func getStoredGenesisData(network string) (*types.GenesisBalances, *types.ExtendedTipSet, error) {
 	balancesFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_balances.json", network))
 	tipsetFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_tipset.json", network))

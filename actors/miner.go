@@ -3,9 +3,11 @@ package actors
 import (
 	"bytes"
 	"encoding/base64"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	"github.com/zondax/fil-parser/parser"
 )
 
@@ -27,6 +29,8 @@ func (p *ActorParser) ParseStorageminer(txType string, msg *parser.LotusMessage,
 		return p.preCommitSector(msg.Params)
 	case parser.MethodProveCommitSector:
 		return p.proveCommitSector(msg.Params)
+	case parser.MethodProveCommitSectors3:
+		return p.proveCommitSectors3(msg.Params, msgRct.Return)
 	case parser.MethodExtendSectorExpiration:
 		return p.extendSectorExpiration(msg.Params)
 	case parser.MethodTerminateSectors:
@@ -420,6 +424,7 @@ func (p *ActorParser) preCommitSector(raw []byte) (map[string]interface{}, error
 	return metadata, nil
 }
 
+// Deprecated
 func (p *ActorParser) proveCommitSector(raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
@@ -429,6 +434,27 @@ func (p *ActorParser) proveCommitSector(raw []byte) (map[string]interface{}, err
 		return metadata, err
 	}
 	metadata[parser.ParamsKey] = params
+	return metadata, nil
+}
+
+func (p *ActorParser) proveCommitSectors3(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(rawParams)
+	var params miner14.ProveCommitSectors3Params
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[parser.ParamsKey] = params
+
+	reader = bytes.NewReader(rawReturn)
+	var returnVal miner14.ProveCommitSectors3Return
+	err = returnVal.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+	metadata[parser.ReturnKey] = returnVal
+
 	return metadata, nil
 }
 

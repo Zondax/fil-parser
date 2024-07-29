@@ -2,6 +2,7 @@ package fil_parser
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
+	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
@@ -240,8 +242,61 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			Amount:      amount.Int,
 			Status:      "Ok",
 			TxType:      txType,
+			TxMetadata:  "{}",
 		})
 	}
 
 	return genesisTxs, addresses
+}
+
+func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
+	var multisigInfos []*types.MultisigInfo
+	for _, actor := range genesis.Actors.All {
+		addrStr := actor.Key
+		// parse address
+		addr, err := address.NewFromString(addrStr)
+		if err != nil {
+			p.logger.Sugar().Errorf("could not parse address: %s. err: %s", addrStr, err)
+			continue
+		}
+
+		// get actor name from address
+		actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
+		if err != nil {
+			p.logger.Sugar().Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
+			continue
+		}
+
+		// check if the address is a multisig address
+		if !strings.EqualFold(actorName, manifest.MultisigKey) {
+			continue
+		}
+
+		api := p.Helper.GetFilecoinNodeClient()
+		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)
+		if err != nil {
+			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", addrStr, err)
+		}
+
+		metadataJson, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, fmt.Errorf("json.Marshal(): %s", err)
+		}
+
+		multisigInfo := &types.MultisigInfo{
+			ID:              tools.BuildId(genesisTipset.GetCidString(), addrStr, fmt.Sprint(parser.GenesisHeight), "", parser.TxTypeGenesis),
+			MultisigAddress: addrStr,
+			Height:          parser.GenesisHeight,
+			ActionType:      parser.MultisigConstructorMethod,
+			Value:           string(metadataJson),
+
+			// there is no signer as this is genesis
+			Signer: "",
+			// there are no transactions for the multisig addresses in the genesis block
+			TxCid: "",
+		}
+		multisigInfos = append(multisigInfos, multisigInfo)
+
+	}
+	return multisigInfos, nil
 }
