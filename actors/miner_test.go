@@ -2,10 +2,11 @@ package actors
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
-	"testing"
 )
 
 func TestActorParser_minerWithParamsOrReturn(t *testing.T) {
@@ -290,6 +291,11 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 			name:   "Get Beneficiary",
 			txType: parser.MethodGetBeneficiary,
 			f:      p.getBeneficiary,
+		},
+		{
+			name:   "Prove Commit Sectors 3",
+			txType: parser.MethodProveCommitSectors3,
+			f:      p.proveCommitSectors3,
 		},
 	}
 	for _, tt := range tests {
