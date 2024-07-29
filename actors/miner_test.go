@@ -292,7 +292,7 @@ func TestActorParser_minerWithParamsAndReturn(t *testing.T) {
 			txType: parser.MethodGetBeneficiary,
 			f:      p.getBeneficiary,
 		},
-		// { TODO: Add test after upgrade
+		// { TODO: Get file
 		//	name:   "Prove Commit Sectors 3",
 		//	txType: parser.MethodProveCommitSectors3,
 		//	f:      p.proveCommitSectors3,
