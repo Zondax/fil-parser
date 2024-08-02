@@ -4,22 +4,21 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 )
 
 type ActorParser struct {
 	helper *helper.Helper
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func NewActorParser(helper *helper.Helper, logger *zap.Logger) *ActorParser {
+func NewActorParser(helper *helper.Helper, logger *logger.Logger) *ActorParser {
 	return &ActorParser{
 		helper: helper,
-		logger: logger2.GetSafeLogger(logger),
+		logger: logger,
 	}
 }
 
