@@ -1,11 +1,11 @@
 module github.com/zondax/fil-parser
 
-go 1.22
+go 1.22.0
 
 toolchain go1.22.1
 
 require (
-	github.com/bytedance/sonic v1.12.0
+	github.com/bytedance/sonic v1.12.2
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-state-types v0.14.0
@@ -148,7 +148,7 @@ require (
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
-	golang.org/x/mod v0.19.0
+	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
