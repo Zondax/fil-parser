@@ -35,6 +35,15 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
+const (
+	unknownActorName = "<unknown>"
+)
+
+var actorNamesByCidMap = map[string]string{
+	"bafk2bzacec24okjqrp7c7rj3hbrs5ez5apvwah2ruka6haesgfngf37mhk6us": "fil/11/storageminer",
+	"bafk2bzacediwh6etwzwmb5pivtclpdplewdjzphouwqpppce6opisjv2fjqfe": "fil/11/evm",
+}
+
 var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.InitKey:     filInit.Methods,
 	manifest.CronKey:     cron.Methods,
@@ -92,7 +101,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		if err != nil {
 			h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		}
-		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
+		addInfo.ActorType, _ = h.GetActorNameFromCid(c)
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
@@ -128,7 +137,7 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 			return actors.UnknownStr, err
 		}
 
-		actorName, err := h.lib.BuiltinActors.GetActorNameFromCid(c)
+		actorName, err := h.GetActorNameFromCid(c)
 		if err != nil {
 			return actors.UnknownStr, err
 		}
@@ -214,4 +223,27 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		}
 	}
 	return false, nil
+}
+
+func (h *Helper) GetActorNameFromCid(actorCode cid.Cid) (string, error) {
+	actorName, err := h.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(actorCode)
+	if err != nil && !strings.EqualFold(actorName, unknownActorName) {
+		return actorName, err
+	}
+
+	if strings.EqualFold(actorName, unknownActorName) {
+		return h.getActorNameFromMap(actorCode), nil
+	}
+
+	return actorName, nil
+}
+
+func (h *Helper) getActorNameFromMap(actorCode cid.Cid) string {
+	actorCid := actorCode.String()
+
+	if name, ok := actorNamesByCidMap[actorCid]; ok {
+		return name
+	}
+
+	return unknownActorName
 }
