@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/manifest"
-	_ "github.com/filecoin-project/lotus/build" // Don't delete, it is so that the init() is executed in lotus and the actors are imported correctly
 	types2 "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/zondax/fil-parser/actors/cache"

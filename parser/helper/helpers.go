@@ -32,6 +32,7 @@ import (
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
+	_ "github.com/filecoin-project/lotus/build" // Don't delete, it is so that the init() is executed in lotus and the actors are imported correctly
 	"github.com/zondax/fil-parser/types"
 )
 
