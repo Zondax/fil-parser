@@ -1,11 +1,8 @@
 package actors
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/chain/actors/builtin"
-	filInit "github.com/filecoin-project/specs-actors/actors/builtin/init"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -113,18 +110,4 @@ func TestActorParser_exec(t *testing.T) {
 			require.NotNil(t, addr)
 		})
 	}
-}
-
-func TestActorNameByCode(t *testing.T) {
-	msg, err := deserializeMessage(manifest.InitKey, parser.MethodExec)
-	require.NoError(t, err)
-	require.NotNil(t, msg)
-
-	reader := bytes.NewReader(msg.Params)
-	var params filInit.ExecParams
-	err = params.UnmarshalCBOR(reader)
-	require.NoError(t, err)
-
-	name := builtin.ActorNameByCode(params.CodeCID)
-	println(fmt.Sprintf("Name: %s", name))
 }
