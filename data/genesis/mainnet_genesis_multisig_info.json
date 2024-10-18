@@ -1,14 +1,5 @@
 [
     {
-        "id": "481d7634-133a-53d9-a016-2f41964eac06",
-        "multisig_address": "f090",
-        "height": 0,
-        "tx_cid": "",
-        "action_type": "Constructor",
-        "value": "{\"NumApprovalsThreshold\":1,\"Signers\":[\"f1ceb34gnsc6qk5dt6n7xg6ycwzasjhbxm3iylkiy\"],\"StartEpoch\":0,\"UnlockDuration\":0}",
-        "signer": ""
-    },
-    {
         "id": "fb888252-136e-51c6-857d-8c50150c300e",
         "multisig_address": "f0117",
         "height": 0,
