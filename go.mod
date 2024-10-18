@@ -20,7 +20,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/whyrusleeping/cbor-gen v0.2.0
 	github.com/zondax/golem v0.14.1
-	github.com/zondax/rosetta-filecoin-lib v1.3000.0-rc2
+	github.com/zondax/rosetta-filecoin-lib v1.3000.1-rc2
 	github.com/zondax/znats v0.1.1
 	go.uber.org/zap v1.27.0
 	gorm.io/gorm v1.25.12
