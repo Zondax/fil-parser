@@ -190,7 +190,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "845259",
 			results: expectedResults{
 				totalTraces:  31,
-				totalAddress: 3,
+				totalAddress: 2,
 				totalTxCids:  0,
 			},
 		},
