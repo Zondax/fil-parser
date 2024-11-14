@@ -8,7 +8,7 @@ require (
 	github.com/bytedance/sonic v1.12.3
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
-	github.com/filecoin-project/go-state-types v0.15.0-rc1
+	github.com/filecoin-project/go-state-types v0.15.0
 	github.com/filecoin-project/lotus v1.30.0-rc2
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
@@ -176,13 +176,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e // indirect
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
