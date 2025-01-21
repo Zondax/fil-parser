@@ -1,10 +1,8 @@
 package init
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
-	"io"
 
 	"github.com/filecoin-project/go-address"
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
@@ -20,14 +18,6 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
-
-type constructorParams interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-type execReturn interface {
-	UnmarshalCBOR(io.Reader) error
-}
 
 func execParams(params constructorParams) parser.ExecParams {
 	setParams := func(codeCid cid.Cid, constructorParams []byte) parser.ExecParams {
@@ -152,39 +142,4 @@ func ParseExec4(height int64, msg *parser.LotusMessage, raw []byte) (map[string]
 		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
-}
-
-func initConstructor[T constructorParams](raw []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var constructor T
-	err := constructor.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ParamsKey] = constructor
-	return metadata, nil
-}
-
-func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(msg.Params)
-	var params T
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, nil, err
-	}
-	tmp := execParams(params)
-	metadata[parser.ParamsKey] = tmp
-
-	reader = bytes.NewReader(rawReturn)
-	var r R
-	err = r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, nil, err
-	}
-
-	createdActor := returnParams(msg, tmp.CodeCid, r)
-	metadata[parser.ReturnKey] = createdActor
-	return metadata, createdActor, nil
 }

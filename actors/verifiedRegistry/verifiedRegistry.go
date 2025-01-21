@@ -1,44 +1,10 @@
 package verifiedregistry
 
 import (
-	"bytes"
-	"io"
-
 	"github.com/filecoin-project/go-address"
 	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-	"github.com/zondax/fil-parser/parser"
 )
-
-type verifiedRegistryParams interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-type verifiedRegistryReturn interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-func parse[T verifiedRegistryParams, R verifiedRegistryReturn](raw, rawReturn []byte, customReturn bool) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var params T
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ParamsKey] = params
-	if customReturn {
-		return metadata, nil
-	}
-	reader = bytes.NewReader(rawReturn)
-	var r R
-	err = r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = r
-	return metadata, nil
-}
 
 func AddVerifier(height int64, raw []byte) (map[string]interface{}, error) {
 	switch height {

@@ -1,7 +1,6 @@
 package paymentchannel
 
 import (
-	"bytes"
 	"io"
 
 	paychv10 "github.com/filecoin-project/go-state-types/builtin/v10/paych"
@@ -12,7 +11,6 @@ import (
 	paychv15 "github.com/filecoin-project/go-state-types/builtin/v15/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
-	"github.com/zondax/fil-parser/parser"
 )
 
 type paymentChannelParams interface {
@@ -61,16 +59,4 @@ func UpdateChannelState(height int64, raw []byte) (map[string]interface{}, error
 		return parse[*paychv15.UpdateChannelStateParams](raw)
 	}
 	return nil, nil
-}
-
-func parse[T paymentChannelParams](raw []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var constructor T
-	err := constructor.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ParamsKey] = constructor
-	return metadata, nil
 }

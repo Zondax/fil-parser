@@ -1,9 +1,7 @@
 package miner
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -13,38 +11,7 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
-	"github.com/zondax/fil-parser/parser"
 )
-
-type minerParam interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-type minerReturn interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-func parseGeneric[T minerParam, R minerReturn](rawParams, rawReturn []byte, customReturn bool) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(rawParams)
-	var params T
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ParamsKey] = params
-	if !customReturn {
-		return metadata, nil
-	}
-	reader = bytes.NewReader(rawReturn)
-	var r R
-	err = r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = r
-	return metadata, nil
-}
 
 func TerminateSectors(height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch height {

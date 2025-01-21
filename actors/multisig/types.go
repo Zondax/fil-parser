@@ -1,20 +1,25 @@
 package multisig
 
 import (
-	"encoding/json"
 	"io"
+
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/zondax/fil-parser/parser"
 )
 
-type WithCBOR struct {
+type multisigParams interface {
+	UnmarshalCBOR(io.Reader) error
 }
 
-func (w *WithCBOR) UnmarshalCBOR(reader io.Reader) error {
-	return nil
+type multisigReturn interface {
+	UnmarshalCBOR(io.Reader) error
 }
 
-func (w *WithCBOR) MarshalCBOR(writer io.Writer) error {
-	return nil
-}
+type parseFn func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error)
+
+type metadataWithCbor map[string]interface{}
+
+type WithCBOR struct{}
 
 type ChangeOwnerAddressParams struct {
 	WithCBOR
@@ -38,14 +43,6 @@ type CancelValue struct {
 	WithCBOR
 	ID           int    `json:"ID"`
 	ProposalHash string `json:"ProposalHash"`
-}
-
-func mapToStruct(m map[string]interface{}, v interface{}) error {
-	data, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, v)
 }
 
 type SendValue struct {
@@ -78,4 +75,16 @@ type UniversalReceiverHookReturnValue struct {
 type UniversalReceiverHookResults struct {
 	SuccessCount int         `json:"SuccessCount"`
 	FailCodes    interface{} `json:"FailCodes"`
+}
+
+func (m metadataWithCbor) UnmarshalCBOR(reader io.Reader) error {
+	return nil
+}
+
+func (w *WithCBOR) UnmarshalCBOR(reader io.Reader) error {
+	return nil
+}
+
+func (w *WithCBOR) MarshalCBOR(writer io.Writer) error {
+	return nil
 }

@@ -14,41 +14,14 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-type (
-	transferParams     = unmarshalCBOR
-	transferReturn     = unmarshalCBOR
-	transferFromParams = unmarshalCBOR
-	transferFromReturn = unmarshalCBOR
-)
-
-type transferParamsInterface interface {
+type transferParams interface {
 	unmarshalCBOR
 }
-type transferReturnInterface interface {
+type transferReturn interface {
 	unmarshalCBOR
 }
 
-func TransferExported(height uint64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	switch height {
-	case 9:
-		return transferExportedv9(raw, rawReturn)
-	case 10:
-		return transferExportedv10(raw, rawReturn)
-	case 11:
-		return transferExportedv11(raw, rawReturn)
-	case 12:
-		return transferExportedv12(raw, rawReturn)
-	case 13:
-		return transferExportedv13(raw, rawReturn)
-	case 14:
-		return transferExportedv14(raw, rawReturn)
-	case 15:
-		return transferExportedv15(raw, rawReturn)
-	}
-	return nil, fmt.Errorf("not supported")
-}
-
-func transferGeneric[P transferParamsInterface, R transferReturnInterface](raw, rawReturn []byte, params P, r R) (map[string]interface{}, error) {
+func transferGeneric[P transferParams, R transferReturn](raw, rawReturn []byte, params P, r R) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	err := params.UnmarshalCBOR(reader)
@@ -66,30 +39,22 @@ func transferGeneric[P transferParamsInterface, R transferReturnInterface](raw, 
 	return metadata, nil
 }
 
-func transferExportedv9(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv9.TransferParams, *datacapv9.TransferReturn](raw, rawReturn, &datacapv9.TransferParams{}, &datacapv9.TransferReturn{})
-}
-
-func transferExportedv10(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv10.TransferParams, *datacapv10.TransferReturn](raw, rawReturn, &datacapv10.TransferParams{}, &datacapv10.TransferReturn{})
-}
-
-func transferExportedv11(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv11.TransferParams, *datacapv11.TransferReturn](raw, rawReturn, &datacapv11.TransferParams{}, &datacapv11.TransferReturn{})
-}
-
-func transferExportedv12(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv12.TransferParams, *datacapv12.TransferReturn](raw, rawReturn, &datacapv12.TransferParams{}, &datacapv12.TransferReturn{})
-}
-
-func transferExportedv13(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv13.TransferParams, *datacapv13.TransferReturn](raw, rawReturn, &datacapv13.TransferParams{}, &datacapv13.TransferReturn{})
-}
-
-func transferExportedv14(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv14.TransferParams, *datacapv14.TransferReturn](raw, rawReturn, &datacapv14.TransferParams{}, &datacapv14.TransferReturn{})
-}
-
-func transferExportedv15(raw, rawReturn []byte) (map[string]interface{}, error) {
-	return transferGeneric[*datacapv15.TransferParams, *datacapv15.TransferReturn](raw, rawReturn, &datacapv15.TransferParams{}, &datacapv15.TransferReturn{})
+func TransferExported(height uint64, raw, rawReturn []byte) (map[string]interface{}, error) {
+	switch height {
+	case 9:
+		return transferGeneric[*datacapv9.TransferParams, *datacapv9.TransferReturn](raw, rawReturn, &datacapv9.TransferParams{}, &datacapv9.TransferReturn{})
+	case 10:
+		return transferGeneric[*datacapv10.TransferParams, *datacapv10.TransferReturn](raw, rawReturn, &datacapv10.TransferParams{}, &datacapv10.TransferReturn{})
+	case 11:
+		return transferGeneric[*datacapv11.TransferParams, *datacapv11.TransferReturn](raw, rawReturn, &datacapv11.TransferParams{}, &datacapv11.TransferReturn{})
+	case 12:
+		return transferGeneric[*datacapv12.TransferParams, *datacapv12.TransferReturn](raw, rawReturn, &datacapv12.TransferParams{}, &datacapv12.TransferReturn{})
+	case 13:
+		return transferGeneric[*datacapv13.TransferParams, *datacapv13.TransferReturn](raw, rawReturn, &datacapv13.TransferParams{}, &datacapv13.TransferReturn{})
+	case 14:
+		return transferGeneric[*datacapv14.TransferParams, *datacapv14.TransferReturn](raw, rawReturn, &datacapv14.TransferParams{}, &datacapv14.TransferReturn{})
+	case 15:
+		return transferGeneric[*datacapv15.TransferParams, *datacapv15.TransferReturn](raw, rawReturn, &datacapv15.TransferParams{}, &datacapv15.TransferReturn{})
+	}
+	return nil, fmt.Errorf("not supported")
 }

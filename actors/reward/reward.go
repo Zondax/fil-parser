@@ -1,30 +1,10 @@
 package reward
 
 import (
-	"bytes"
-	"io"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	rewardv11 "github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
-	"github.com/zondax/fil-parser/parser"
 )
-
-type rewardParams interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-func parse[T rewardParams](raw []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(raw)
-	var params T
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ParamsKey] = params
-	return metadata, nil
-}
 
 func RewardConstructor(height int64, raw []byte) (map[string]interface{}, error) {
 	return parse[*abi.StoragePower](raw)

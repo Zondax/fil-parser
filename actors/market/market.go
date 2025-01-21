@@ -1,9 +1,7 @@
 package market
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 
 	"github.com/filecoin-project/go-address"
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
@@ -14,49 +12,7 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
-
-	"github.com/zondax/fil-parser/parser"
 )
-
-type marketParam interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-type marketReturn interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-func getAddressAsString(addr any) string {
-	if address, ok := addr.(address.Address); ok {
-		return address.String()
-	}
-	return ""
-}
-
-func parseGeneric[T marketParam, R marketReturn](rawParams, rawReturn []byte, returnCustomParam bool) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(rawParams)
-	var params T
-	err := params.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-
-	metadata[parser.ParamsKey] = params
-	if !returnCustomParam {
-		metadata[parser.ParamsKey] = getAddressAsString(params)
-		return metadata, nil
-	}
-
-	reader = bytes.NewReader(rawReturn)
-	var publishReturn R
-	err = publishReturn.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = publishReturn
-	return metadata, nil
-}
 
 func ParseAddBalance(height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch height {
