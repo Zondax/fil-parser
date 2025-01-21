@@ -11,6 +11,7 @@ import (
 	paychv15 "github.com/filecoin-project/go-state-types/builtin/v15/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
+	"github.com/zondax/fil-parser/tools"
 )
 
 type paymentChannelParams interface {
@@ -18,44 +19,44 @@ type paymentChannelParams interface {
 }
 
 func PaymentChannelConstructor(height int64, raw []byte) (map[string]interface{}, error) {
-	switch height {
-	case 8:
+	switch {
+	case tools.V8.IsSupported(height):
 		return parse[*paychv8.ConstructorParams](raw)
-	case 9:
+	case tools.V9.IsSupported(height):
 		return parse[*paychv9.ConstructorParams](raw)
-	case 10:
+	case tools.V10.IsSupported(height):
 		return parse[*paychv10.ConstructorParams](raw)
-	case 11:
+	case tools.V11.IsSupported(height):
 		return parse[*paychv11.ConstructorParams](raw)
-	case 12:
+	case tools.V12.IsSupported(height):
 		return parse[*paychv12.ConstructorParams](raw)
-	case 13:
+	case tools.V13.IsSupported(height):
 		return parse[*paychv13.ConstructorParams](raw)
-	case 14:
+	case tools.V14.IsSupported(height):
 		return parse[*paychv14.ConstructorParams](raw)
-	case 15:
+	case tools.V15.IsSupported(height):
 		return parse[*paychv15.ConstructorParams](raw)
 	}
 	return nil, nil
 }
 
 func UpdateChannelState(height int64, raw []byte) (map[string]interface{}, error) {
-	switch height {
-	case 8:
+	switch {
+	case tools.V8.IsSupported(height):
 		return parse[*paychv8.UpdateChannelStateParams](raw)
-	case 9:
+	case tools.V9.IsSupported(height):
 		return parse[*paychv9.UpdateChannelStateParams](raw)
-	case 10:
+	case tools.V10.IsSupported(height):
 		return parse[*paychv10.UpdateChannelStateParams](raw)
-	case 11:
+	case tools.V11.IsSupported(height):
 		return parse[*paychv11.UpdateChannelStateParams](raw)
-	case 12:
+	case tools.V12.IsSupported(height):
 		return parse[*paychv12.UpdateChannelStateParams](raw)
-	case 13:
+	case tools.V13.IsSupported(height):
 		return parse[*paychv13.UpdateChannelStateParams](raw)
-	case 14:
+	case tools.V14.IsSupported(height):
 		return parse[*paychv14.UpdateChannelStateParams](raw)
-	case 15:
+	case tools.V15.IsSupported(height):
 		return parse[*paychv15.UpdateChannelStateParams](raw)
 	}
 	return nil, nil

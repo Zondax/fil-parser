@@ -12,6 +12,7 @@ import (
 	accountv14 "github.com/filecoin-project/go-state-types/builtin/v14/account"
 	accountv15 "github.com/filecoin-project/go-state-types/builtin/v15/account"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 func PubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -28,19 +29,18 @@ func PubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
 }
 
 func AuthenticateMessage(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	switch height {
-	case 8:
+	switch {
+	case tools.V8.IsSupported(height):
 		return nil, fmt.Errorf("not supported")
-	case 9:
+	case tools.V9.IsSupported(height):
 		return authenticateMessageGeneric[*accountv9.AuthenticateMessageParams, *accountv9.AuthenticateMessageParams](raw, rawReturn, &accountv9.AuthenticateMessageParams{})
-	case 10:
+	case tools.V10.IsSupported(height):
 		return authenticateMessageGeneric[*accountv10.AuthenticateMessageParams, *accountv10.AuthenticateMessageParams](raw, rawReturn, &accountv10.AuthenticateMessageParams{})
-	case 11:
+	case tools.V11.IsSupported(height):
 		return authenticateMessageGeneric[*accountv11.AuthenticateMessageParams, *accountv11.AuthenticateMessageParams](raw, rawReturn, &accountv11.AuthenticateMessageParams{})
-	case 14:
+	case tools.V14.IsSupported(height):
 		return authenticateMessageGeneric[*accountv14.AuthenticateMessageParams, *accountv14.AuthenticateMessageParams](raw, rawReturn, &accountv14.AuthenticateMessageParams{})
-	case 15:
+	default:
 		return authenticateMessageGeneric[*accountv15.AuthenticateMessageParams, *accountv15.AuthenticateMessageParams](raw, rawReturn, &accountv15.AuthenticateMessageParams{})
 	}
-	return nil, nil
 }

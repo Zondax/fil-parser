@@ -1,53 +1,56 @@
 package datacap
 
 import (
-	"bytes"
 	"fmt"
 
 	datacapv10 "github.com/filecoin-project/go-state-types/builtin/v10/datacap"
 	datacapv11 "github.com/filecoin-project/go-state-types/builtin/v11/datacap"
 	datacapv12 "github.com/filecoin-project/go-state-types/builtin/v12/datacap"
-	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
-type granularityReturn = unmarshalCBOR
-
-func granularityGeneric[T granularityReturn](rawReturn []byte, r T) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(rawReturn)
-	err := r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = r
-	return metadata, nil
-}
-
-func GranularityExported(height uint64, rawReturn []byte) (map[string]interface{}, error) {
-	switch height {
-	case 9:
+func GranularityExported(height int64, rawReturn []byte) (map[string]interface{}, error) {
+	switch {
+	case tools.V8.IsSupported(height):
 		return nil, fmt.Errorf("not supported")
-	case 10:
-		var r datacapv10.GranularityReturn
-		return granularityGeneric[*datacapv10.GranularityReturn](rawReturn, &r)
-	case 11:
-		var r datacapv11.GranularityReturn
-		return granularityGeneric[*datacapv11.GranularityReturn](rawReturn, &r)
-	case 12:
-		var r datacapv12.GranularityReturn
-		return granularityGeneric[*datacapv12.GranularityReturn](rawReturn, &r)
-	case 13:
-		var r datacapv13.GranularityReturn
-		return granularityGeneric[*datacapv13.GranularityReturn](rawReturn, &r)
-	case 14:
-		var r datacapv14.GranularityReturn
-		return granularityGeneric[*datacapv14.GranularityReturn](rawReturn, &r)
-	case 15:
-		var r datacapv15.GranularityReturn
-		return granularityGeneric[*datacapv15.GranularityReturn](rawReturn, &r)
+	case tools.V10.IsSupported(height):
+		data, err := parse[*datacapv10.GranularityReturn, *datacapv10.GranularityReturn](rawReturn, nil, false)
+		if err != nil {
+			return nil, err
+		}
+		data[parser.ReturnKey] = data[parser.ParamsKey]
+		return data, nil
+	case tools.V11.IsSupported(height):
+		data, err := parse[*datacapv11.GranularityReturn, *datacapv11.GranularityReturn](rawReturn, nil, false)
+		if err != nil {
+			return nil, err
+		}
+		data[parser.ReturnKey] = data[parser.ParamsKey]
+		return data, nil
+	case tools.V12.IsSupported(height):
+		data, err := parse[*datacapv12.GranularityReturn, *datacapv12.GranularityReturn](rawReturn, nil, false)
+		if err != nil {
+			return nil, err
+		}
+		data[parser.ReturnKey] = data[parser.ParamsKey]
+		return data, nil
+	case tools.V14.IsSupported(height):
+		data, err := parse[*datacapv14.GranularityReturn, *datacapv14.GranularityReturn](rawReturn, nil, false)
+		if err != nil {
+			return nil, err
+		}
+		data[parser.ReturnKey] = data[parser.ParamsKey]
+		return data, nil
+	case tools.V15.IsSupported(height):
+		data, err := parse[*datacapv15.GranularityReturn, *datacapv15.GranularityReturn](rawReturn, nil, false)
+		if err != nil {
+			return nil, err
+		}
+		data[parser.ReturnKey] = data[parser.ParamsKey]
+		return data, nil
 	}
 	return nil, fmt.Errorf("not supported")
 }
