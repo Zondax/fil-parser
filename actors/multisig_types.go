@@ -1,6 +1,10 @@
 package actors
 
-import multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
+import (
+	"io"
+
+	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
+)
 
 type ApproveValue struct {
 	ID           int                     `json:"ID"`
@@ -45,6 +49,7 @@ type TransactionUniversalReceiverHookMetadata struct {
 }
 
 type ChangeOwnerAddressParams struct {
+	WithCBOR
 	Params string `json:"Params"`
 }
 
@@ -52,4 +57,15 @@ type ChangeOwnerAddressParams struct {
 type InvokeContractParams struct {
 	Params string `json:"Params"`
 	Return string `json:"Return"`
+}
+
+type WithCBOR struct {
+}
+
+func (w *WithCBOR) UnmarshalCBOR(reader io.Reader) error {
+	return nil
+}
+
+func (w *WithCBOR) MarshalCBOR(writer io.Writer) error {
+	return nil
 }
