@@ -12,38 +12,26 @@ type unmarshalCBOR interface {
 	UnmarshalCBOR(io.Reader) error
 }
 
-func NameExported(rawReturn []byte) (map[string]interface{}, error) {
+func datacapGeneric[T unmarshalCBOR](rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawReturn)
-	var r abi.CborString
+	var r T
 	err := r.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, err
 	}
 	metadata[parser.ReturnKey] = r
 	return metadata, nil
+}
+
+func NameExported(rawReturn []byte) (map[string]interface{}, error) {
+	return datacapGeneric[*abi.CborString](rawReturn)
 }
 
 func SymbolExported(rawReturn []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(rawReturn)
-	var r abi.CborString
-	err := r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = r
-	return metadata, nil
+	return datacapGeneric[*abi.CborString](rawReturn)
 }
 
 func TotalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
-	metadata := make(map[string]interface{})
-	reader := bytes.NewReader(rawReturn)
-	var r abi.TokenAmount
-	err := r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, err
-	}
-	metadata[parser.ReturnKey] = r // TODO: .uint64()??
-	return metadata, nil
+	return datacapGeneric[*abi.TokenAmount](rawReturn)
 }

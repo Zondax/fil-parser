@@ -3,6 +3,7 @@ package account
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/zondax/fil-parser/parser"
@@ -23,10 +24,18 @@ func PubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
 
 func AuthenticateMessage(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch height {
+	case 8:
+		return nil, fmt.Errorf("not supported")
+	case 9:
+		return authenticateMessagev9(raw, rawReturn)
+	case 10:
+		return authenticateMessagev10(raw, rawReturn)
 	case 11:
 		return authenticateMessagev11(raw, rawReturn)
 	case 14:
 		return authenticateMessagev14(raw, rawReturn)
+	case 15:
+		return authenticateMessagev15(raw, rawReturn)
 	}
 	return nil, nil
 }
