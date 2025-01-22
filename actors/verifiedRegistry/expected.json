@@ -1,0 +1,18 @@
+{
+    "V1": {
+        "AddVerifier": {},
+        "RemoveVerifier": {},
+        "AddVerifiedClient": {},
+        "UseBytes": {},
+        "RestoreBytes": {},
+        "RemoveVerifiedClientDataCap": {},
+        "RemoveExpiredAllocations": {},
+        "Deprecated1": {},
+        "Deprecated2": {},
+        "ClaimAllocations": {},
+        "GetClaims": {},
+        "ExtendClaimTerms": {},
+        "RemoveExpiredClaims": {},
+        "VerifregUniversalReceiverHook": {}
+    }
+}

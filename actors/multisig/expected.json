@@ -1,0 +1,26 @@
+{
+    "V1": {
+        "AddVerifierValue": {},
+        "ChangeOwnerAddressValue": {},
+        "ParseWithdrawBalanceValue": {},
+        "ParseInvokeContractValue": {},
+        "ParseAddSignerValue": {},
+        "ParseApproveValue": {},
+        "ParseCancelValue": {},
+        "ChangeNumApprovalsThresholdValue": {},
+        "ParseConstructorValue": {},
+        "ParseLockBalanceValue": {},
+        "ParseRemoveSignerValue": {},
+        "ParseSendValue": {},
+        "ParseSwapSignerValue": {},
+        "ParseUniversalReceiverHookValue": {},
+        "MsigConstructor": {},
+        "MsigParams": {},
+        "Approve": {},
+        "Cancel": {},
+        "RemoveSigner": {},
+        "ChangeNumApprovalsThreshold": {},
+        "LockBalance": {},
+        "UniversalReceiverHook": {}
+    }
+}

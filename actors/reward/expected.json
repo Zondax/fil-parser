@@ -1,0 +1,8 @@
+{
+    "V1": {
+        "RewardConstructor": {},
+        "AwardBlockReward": {},
+        "UpdateNetworkKPI": {},
+        "ThisEpochReward": {}
+    }
+}

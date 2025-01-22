@@ -1,0 +1,17 @@
+{
+    "V1": {
+        "BurnExported": {},
+        "BurnFromExported": {},
+        "DestroyExported": {},
+        "GranularityExported": {},
+        "IncreaseAllowance": {},
+        "DecreaseAllowance": {},
+        "RevokeAllowance": {},
+        "GetAllowance": {},
+        "MintExported": {},
+        "NameExported": {},
+        "SymbolExported": {},
+        "TotalSupplyExported": {},
+        "TransferExported": {}
+    }
+}

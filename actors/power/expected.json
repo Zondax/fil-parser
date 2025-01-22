@@ -1,0 +1,15 @@
+{
+    "V1": {
+        "CurrentTotalPower": {},
+        "SubmitPoRepForBulkVerify": {},
+        "PowerConstructor": {},
+        "CreateMiner": {},
+        "EnrollCronEvent": {},
+        "UpdateClaimedPower": {},
+        "UpdatePledgeTotal": {},
+        "NetworkRawPower": {},
+        "MinerRawPower": {},
+        "MinerCount": {},
+        "MinerConsensusCount": {}
+    }
+}

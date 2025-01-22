@@ -1,0 +1,22 @@
+{
+    "V1": {
+        "ParseAddBalance": {},
+        "ParseWithdrawBalance": {},
+        "PublishStorageDealsParams": {},
+        "VerifyDealsForActivationParams": {},
+        "ActivateDealsParams": {},
+        "OnMinerSectorsTerminateParams": {},
+        "ComputeDataCommitmentParams": {},
+        "GetBalanceParams": {},
+        "GetDealDataCommitmentParams": {},
+        "GetDealClientParams": {},
+        "GetDealProviderParams": {},
+        "GetDealLabelParams": {},
+        "GetDealTermParams": {},
+        "GetDealTotalPriceParams": {},
+        "GetDealClientCollateralParams": {},
+        "GetDealProviderCollateralParams": {},
+        "GetDealVerifiedParams": {},
+        "GetDealActivationParams": {}
+    }
+}

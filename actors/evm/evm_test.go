@@ -15,7 +15,6 @@ type testFn func(height int64, raw []byte) (map[string]interface{}, error)
 type test struct {
 	name     string
 	version  string
-	url      string
 	height   int64
 	expected map[string]any
 }
