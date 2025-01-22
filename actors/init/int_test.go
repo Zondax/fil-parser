@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-type testFn func(height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error)
+type testFn func(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error)
 
 func TestParseExec(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("ParseExec", expected)
@@ -56,7 +56,7 @@ func TestInitConstructor(t *testing.T) {
 					continue
 				}
 
-				result, err := initActor.InitConstructor(tt.Height, trace.Msg.Params)
+				result, err := initActor.InitConstructor(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
@@ -80,7 +80,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					From:   trace.Msg.From,
 					Method: trace.Msg.Method,
 				}
-				result, address, err := fn(tt.Height, lotusMsg, trace.Msg.Params)
+				result, address, err := fn(tt.Network, tt.Height, lotusMsg, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 				require.Equal(t, address, tt.Address)

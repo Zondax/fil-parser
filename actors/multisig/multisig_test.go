@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-type testFn func(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser multisig.ParseFn) (map[string]interface{}, error)
+type testFn func(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser multisig.ParseFn) (map[string]interface{}, error)
 
 func TestApprove(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("Approve", expected)
@@ -77,7 +77,7 @@ func TestMsigConstructor(t *testing.T) {
 					continue
 				}
 
-				result, err := multisig.MsigConstructor(tt.Height, trace.MsgRct.Return)
+				result, err := multisig.MsigConstructor(tt.Network, tt.Height, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 
@@ -103,7 +103,7 @@ func TestMsigParams(t *testing.T) {
 					From:   trace.Msg.From,
 					Method: trace.Msg.Method,
 				}
-				result, err := multisig.MsigParams(lotusMsg, tt.Height, tt.TipsetKey, func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error) {
+				result, err := multisig.MsigParams(tt.Network, lotusMsg, tt.Height, tt.TipsetKey, func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error) {
 					return "", nil
 				})
 				require.NoError(t, err)
@@ -130,7 +130,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					From:   trace.Msg.From,
 					Method: trace.Msg.Method,
 				}
-				result, err := fn(lotusMsg, tt.Height, tt.TipsetKey, trace.MsgRct.Return, func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error) {
+				result, err := fn(tt.Network, lotusMsg, tt.Height, tt.TipsetKey, trace.MsgRct.Return, func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error) {
 					return "", nil
 				})
 				require.NoError(t, err)

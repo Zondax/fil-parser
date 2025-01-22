@@ -12,39 +12,39 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func GranularityExported(height int64, rawReturn []byte) (map[string]interface{}, error) {
+func GranularityExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		data, err := parse[*datacapv10.GranularityReturn, *datacapv10.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		data, err := parse[*datacapv11.GranularityReturn, *datacapv11.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		data, err := parse[*datacapv12.GranularityReturn, *datacapv12.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		data, err := parse[*datacapv14.GranularityReturn, *datacapv14.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		data, err := parse[*datacapv15.GranularityReturn, *datacapv15.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err

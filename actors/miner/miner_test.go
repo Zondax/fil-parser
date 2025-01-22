@@ -103,7 +103,7 @@ func TestTerminateSectors(t *testing.T) {
 					continue
 				}
 
-				result, err := miner.TerminateSectors(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := miner.TerminateSectors(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 
@@ -126,7 +126,7 @@ func TestProveReplicaUpdates2(t *testing.T) {
 					continue
 				}
 
-				result, err := miner.ProveReplicaUpdates2(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := miner.ProveReplicaUpdates2(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 

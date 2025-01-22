@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-type testFn func(msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
+type testFn func(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
 
 func TestCurrentTotalPower(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("CurrentTotalPower", expected)
@@ -103,7 +103,7 @@ func TestPowerConstructor(t *testing.T) {
 					From:   trace.Msg.From,
 					Method: trace.Msg.Method,
 				}
-				result, err := power.PowerConstructor(tt.Height, lotusMsg, trace.Msg.Params)
+				result, err := power.PowerConstructor(tt.Network, tt.Height, lotusMsg, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
@@ -126,7 +126,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					From:   trace.Msg.From,
 					Method: trace.Msg.Method,
 				}
-				result, err := fn(lotusMsg, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := fn(tt.Network, lotusMsg, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}

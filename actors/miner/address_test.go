@@ -9,7 +9,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-type testFn func(height int64, rawReturn []byte) (map[string]interface{}, error)
+type testFn func(network string, height int64, rawReturn []byte) (map[string]interface{}, error)
 
 func TestChangeMultiaddrs(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("ChangeMultiaddrs", expectedData)
@@ -67,7 +67,7 @@ func TestIsControllingAddressExported(t *testing.T) {
 					continue
 				}
 
-				result, err := miner.IsControllingAddressExported(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := miner.IsControllingAddressExported(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 
@@ -87,7 +87,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					continue
 				}
 
-				result, err := fn(tt.Height, trace.MsgRct.Return)
+				result, err := fn(tt.Network, tt.Height, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 

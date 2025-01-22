@@ -162,6 +162,7 @@ type TestCase[T any] struct {
 	Version   string
 	Url       string
 	Height    int64
+	Network   string
 	TipsetKey filTypes.TipSetKey
 	Expected  T
 	Address   *types.AddressInfo

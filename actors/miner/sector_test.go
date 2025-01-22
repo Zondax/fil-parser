@@ -89,7 +89,7 @@ func TestProveCommitSectors3(t *testing.T) {
 					continue
 				}
 
-				result, err := miner.ProveCommitSectors3(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := miner.ProveCommitSectors3(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 

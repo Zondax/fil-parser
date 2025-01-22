@@ -12,73 +12,73 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func IncreaseAllowance(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func IncreaseAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*datacapv9.IncreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*datacapv10.IncreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*datacapv11.IncreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*datacapv14.IncreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*datacapv15.IncreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
-func DecreaseAllowance(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func DecreaseAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*datacapv9.DecreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*datacapv10.DecreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*datacapv11.DecreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*datacapv14.DecreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*datacapv15.DecreaseAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
-func RevokeAllowance(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func RevokeAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*datacapv9.RevokeAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*datacapv10.RevokeAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*datacapv11.RevokeAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*datacapv14.RevokeAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*datacapv15.RevokeAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
-func GetAllowance(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func GetAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*datacapv9.GetAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*datacapv10.GetAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*datacapv11.GetAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*datacapv14.GetAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*datacapv15.GetAllowanceParams, *abi.TokenAmount](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")

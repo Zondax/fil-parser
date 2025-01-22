@@ -22,8 +22,8 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-type testFn func(height int64, raw []byte) (map[string]interface{}, error)
-type testFn2 func(height int64, raw, rawReturn []byte) (map[string]interface{}, error)
+type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
+type testFn2 func(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
 
 func TestAddVerifier(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("AddVerifier", expected)
@@ -119,7 +119,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					continue
 				}
 
-				result, err := fn(tt.Height, trace.Msg.Params)
+				result, err := fn(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
@@ -138,7 +138,7 @@ func runTest2(t *testing.T, fn testFn2, tests []tools.TestCase[map[string]any]) 
 					continue
 				}
 
-				result, err := fn(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := fn(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}

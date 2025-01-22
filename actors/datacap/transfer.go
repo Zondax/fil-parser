@@ -13,23 +13,23 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func TransferExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func TransferExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*datacapv9.TransferParams, *datacapv9.TransferReturn](raw, rawReturn, true)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*datacapv10.TransferParams, *datacapv10.TransferReturn](raw, rawReturn, true)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*datacapv11.TransferParams, *datacapv11.TransferReturn](raw, rawReturn, true)
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		return parse[*datacapv12.TransferParams, *datacapv12.TransferReturn](raw, rawReturn, true)
-	case tools.V13.IsSupported(height):
+	case tools.V13.IsSupported(network, height):
 		return parse[*datacapv13.TransferParams, *datacapv13.TransferReturn](raw, rawReturn, true)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*datacapv14.TransferParams, *datacapv14.TransferReturn](raw, rawReturn, true)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*datacapv15.TransferParams, *datacapv15.TransferReturn](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")

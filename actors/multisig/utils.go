@@ -35,7 +35,7 @@ func mapToStruct(m map[string]interface{}, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-func getApproveReturn(height int64, raw map[string]interface{}) (interface{}, error) {
+func getApproveReturn(network string, height int64, raw map[string]interface{}) (interface{}, error) {
 	var params ApproveValue
 
 	returnRaw, ok := raw["Return"].(map[string]interface{})
@@ -59,49 +59,49 @@ func getApproveReturn(height int64, raw map[string]interface{}) (interface{}, er
 	}
 
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		params.Return = multisig8.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		params.Return = multisig9.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		params.Return = multisig10.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		params.Return = multisig11.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		params.Return = multisig12.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V13.IsSupported(height):
+	case tools.V13.IsSupported(network, height):
 		params.Return = multisig13.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		params.Return = multisig14.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		params.Return = multisig15.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
@@ -112,7 +112,7 @@ func getApproveReturn(height int64, raw map[string]interface{}) (interface{}, er
 	return params, nil
 }
 
-func getCancelReturn(height int64, raw map[string]interface{}) (interface{}, error) {
+func getCancelReturn(raw map[string]interface{}) (interface{}, error) {
 	paramsStr, ok := raw["Params"].(string)
 	if !ok {
 		return nil, fmt.Errorf("Params not found or not a string")
@@ -133,7 +133,7 @@ func getCancelReturn(height int64, raw map[string]interface{}) (interface{}, err
 	return v, nil
 }
 
-func getChangeNumApprovalsThresholdValue(height int64, raw map[string]interface{}) (interface{}, error) {
+func getChangeNumApprovalsThresholdValue(network string, height int64, raw map[string]interface{}) (interface{}, error) {
 	paramsStr, ok := raw["Params"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("Params not found or not a map")
@@ -147,35 +147,35 @@ func getChangeNumApprovalsThresholdValue(height int64, raw map[string]interface{
 	}
 	var v any
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		v = multisig8.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		v = multisig9.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		v = multisig10.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		v = multisig11.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		v = multisig12.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V13.IsSupported(height):
+	case tools.V13.IsSupported(network, height):
 		v = multisig13.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		v = multisig14.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		v = multisig15.ChangeNumApprovalsThresholdParams{
 			NewThreshold: newValue,
 		}

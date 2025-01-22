@@ -22,7 +22,7 @@ func TestGranularityExported(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
-				result, err := datacap.GranularityExported(tt.Height, trace.MsgRct.Return)
+				result, err := datacap.GranularityExported(tt.Network, tt.Height, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}

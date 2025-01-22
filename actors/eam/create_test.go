@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-type testFn func(height int64, raw, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
+type testFn func(network string, height int64, raw, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
 
 func TestParseCreateExternal(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("CreateExternalExported", expected)
@@ -58,7 +58,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 				if trace.Msg == nil {
 					continue
 				}
-				result, addrInfo, err := fn(tt.Height, trace.Msg.Params, trace.MsgRct.Return, trace.Msg.Cid())
+				result, addrInfo, err := fn(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return, trace.Msg.Cid())
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 				require.Equal(t, addrInfo, tt.Address)

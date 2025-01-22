@@ -15,7 +15,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func PubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
+func PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(raw)
 	reader := bytes.NewReader(rawReturn)
@@ -28,17 +28,17 @@ func PubkeyAddress(raw, rawReturn []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func AuthenticateMessage(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return authenticateMessageGeneric[*accountv9.AuthenticateMessageParams, *accountv9.AuthenticateMessageParams](raw, rawReturn, &accountv9.AuthenticateMessageParams{})
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return authenticateMessageGeneric[*accountv10.AuthenticateMessageParams, *accountv10.AuthenticateMessageParams](raw, rawReturn, &accountv10.AuthenticateMessageParams{})
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return authenticateMessageGeneric[*accountv11.AuthenticateMessageParams, *accountv11.AuthenticateMessageParams](raw, rawReturn, &accountv11.AuthenticateMessageParams{})
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return authenticateMessageGeneric[*accountv14.AuthenticateMessageParams, *accountv14.AuthenticateMessageParams](raw, rawReturn, &accountv14.AuthenticateMessageParams{})
 	default:
 		return authenticateMessageGeneric[*accountv15.AuthenticateMessageParams, *accountv15.AuthenticateMessageParams](raw, rawReturn, &accountv15.AuthenticateMessageParams{})

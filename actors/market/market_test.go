@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-type testFn func(height int64, rawParams, rawReturn []byte) (map[string]interface{}, error)
+type testFn func(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error)
 
 func TestPublishStorageDeals(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("PublishStorageDealsParams", expected)
@@ -166,7 +166,7 @@ func TestOnMinerSectorsTerminate(t *testing.T) {
 					continue
 				}
 
-				result, err := market.OnMinerSectorsTerminateParams(tt.Height, trace.Msg.Params)
+				result, err := market.OnMinerSectorsTerminateParams(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
@@ -188,7 +188,7 @@ func TestParseAddBalance(t *testing.T) {
 					continue
 				}
 
-				result, err := market.ParseAddBalance(tt.Height, trace.Msg.Params)
+				result, err := market.ParseAddBalance(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
@@ -210,7 +210,7 @@ func TestParseWithdrawBalance(t *testing.T) {
 					continue
 				}
 
-				result, err := market.ParseWithdrawBalance(tt.Height, trace.Msg.Params)
+				result, err := market.ParseWithdrawBalance(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
@@ -229,7 +229,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					continue
 				}
 
-				result, err := fn(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := fn(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}

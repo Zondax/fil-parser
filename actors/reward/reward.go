@@ -13,53 +13,53 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func RewardConstructor(height int64, raw []byte) (map[string]interface{}, error) {
+func RewardConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	return parse[*abi.StoragePower](raw)
 }
 
-func AwardBlockReward(height int64, raw []byte) (map[string]interface{}, error) {
+func AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return parse[*rewardv8.AwardBlockRewardParams](raw)
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*rewardv9.AwardBlockRewardParams](raw)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*rewardv10.AwardBlockRewardParams](raw)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*rewardv11.AwardBlockRewardParams](raw)
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		return parse[*rewardv12.AwardBlockRewardParams](raw)
-	case tools.V13.IsSupported(height):
+	case tools.V13.IsSupported(network, height):
 		return parse[*rewardv13.AwardBlockRewardParams](raw)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*rewardv14.AwardBlockRewardParams](raw)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*rewardv15.AwardBlockRewardParams](raw)
 	}
 	return nil, nil
 }
 
-func UpdateNetworkKPI(height int64, raw []byte) (map[string]interface{}, error) {
+func UpdateNetworkKPI(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	return parse[*abi.StoragePower](raw)
 }
 
-func ThisEpochReward(height int64, raw []byte) (map[string]interface{}, error) {
+func ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return parse[*rewardv8.ThisEpochRewardReturn](raw)
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*rewardv9.ThisEpochRewardReturn](raw)
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*rewardv10.ThisEpochRewardReturn](raw)
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*rewardv11.ThisEpochRewardReturn](raw)
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		return parse[*rewardv12.ThisEpochRewardReturn](raw)
-	case tools.V13.IsSupported(height):
+	case tools.V13.IsSupported(network, height):
 		return parse[*rewardv13.ThisEpochRewardReturn](raw)
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*rewardv14.ThisEpochRewardReturn](raw)
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*rewardv15.ThisEpochRewardReturn](raw)
 	}
 	return nil, nil

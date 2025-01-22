@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-type testFn func(height int64, raw []byte) (map[string]interface{}, error)
+type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 type test struct {
 	name     string
 	height   int64
@@ -53,7 +53,7 @@ func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 					continue
 				}
 
-				result, err := fn(tt.Height, trace.Msg.Params)
+				result, err := fn(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 

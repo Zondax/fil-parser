@@ -10,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-type valueTestFn func(height int64, txMetadata string) (interface{}, error)
+type valueTestFn func(network string, height int64, txMetadata string) (interface{}, error)
 
 func TestChangeOwnerAddressValue(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any]("ChangeOwnerAddressValue", expected)
@@ -101,7 +101,7 @@ func runValueTest(t *testing.T, fn valueTestFn, tests []tools.TestCase[map[strin
 				}
 				// TODO: parse whole multisig tx first before calling this function
 
-				result, err := fn(tt.Height, string(trace.Msg.Params))
+				result, err := fn(tt.Network, tt.Height, string(trace.Msg.Params))
 				require.NoError(t, err)
 				require.True(t, reflect.DeepEqual(result, tt.Expected))
 			}

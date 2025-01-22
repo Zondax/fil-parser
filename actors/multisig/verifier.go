@@ -12,23 +12,23 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func AddVerifierValue(height int64, txMetadata string) (interface{}, error) {
+func AddVerifierValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(height):
+	case tools.V8.IsSupported(network, height):
 		return parse[*verifreg8.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg8.AddVerifierParams])
-	case tools.V9.IsSupported(height):
+	case tools.V9.IsSupported(network, height):
 		return parse[*verifreg9.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg9.AddVerifierParams])
-	case tools.V10.IsSupported(height):
+	case tools.V10.IsSupported(network, height):
 		return parse[*verifreg10.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg10.AddVerifierParams])
-	case tools.V11.IsSupported(height):
+	case tools.V11.IsSupported(network, height):
 		return parse[*verifreg11.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg11.AddVerifierParams])
-	case tools.V12.IsSupported(height):
+	case tools.V12.IsSupported(network, height):
 		return parse[*verifreg12.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg12.AddVerifierParams])
-	case tools.V13.IsSupported(height):
+	case tools.V13.IsSupported(network, height):
 		return parse[*verifreg13.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg13.AddVerifierParams])
-	case tools.V14.IsSupported(height):
+	case tools.V14.IsSupported(network, height):
 		return parse[*verifreg14.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg14.AddVerifierParams])
-	case tools.V15.IsSupported(height):
+	case tools.V15.IsSupported(network, height):
 		return parse[*verifreg15.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg15.AddVerifierParams])
 	}
 	return nil, nil
