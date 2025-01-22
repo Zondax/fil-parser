@@ -34,6 +34,37 @@ func TestBuildTipSetKeyHash(t *testing.T) {
 	}
 }
 
+func TestIsSupported(t *testing.T) {
+	tests := []struct {
+		name    string
+		version version
+		network string
+		height  int64
+		want    bool
+	}{
+
+		{name: "V7 on calibration", version: V7, network: "calibration", height: 2383680, want: false},
+		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 170000, want: false},
+		{name: "V7 on calibration", version: V7, network: "calibration", height: 0, want: false},
+		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 10000, want: true},
+
+		{name: "V9 on calibration", version: V9, network: "calibration", height: 265100, want: false},
+		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265201, want: true},
+		{name: "V9 on calibration", version: V9, network: "calibration", height: 265200, want: false},
+		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265200, want: false},
+
+		{name: "V24 on calibration", version: V24, network: "calibration", height: 2081674, want: true},
+		{name: "V24 on mainnet", version: V24, network: "mainnet", height: 1427974, want: false},
+		{name: "V24 on calibration", version: V24, network: "calibration", height: 2081672, want: false},
+		{name: "V24 on mainnet", version: V24, network: "mainnet", height: 4461240, want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.version.IsSupported(tt.network, tt.height))
+		})
+	}
+}
+
 /*
 func TestBuildCidFromMessageTrace(t *testing.T) {
 	h1, err := multihash.Sum([]byte("TEST"), multihash.SHA2_256, -1)
