@@ -19,7 +19,10 @@ import (
 var expectedData []byte
 var expected map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -29,21 +32,21 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error)
 
 func TestParseExec(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseExec", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseExec", expected)
 	require.NoError(t, err)
 
 	runTest(t, initActor.ParseExec, tests)
 }
 
 func TestParseExec4(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseExec4", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseExec4", expected)
 	require.NoError(t, err)
 
 	runTest(t, initActor.ParseExec4, tests)
 }
 
 func TestInitConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("InitConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "InitConstructor", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

@@ -9,19 +9,19 @@ import (
 )
 
 func TestGetAvailableBalance(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetAvailableBalance", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetAvailableBalance", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.GetAvailableBalance, tests)
 }
 
 func TestGetVestingFunds(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetVestingFunds", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetVestingFunds", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.GetVestingFunds, tests)
 }
 
 func TestParseWithdrawBalance(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseWithdrawBalance", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseWithdrawBalance", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ParseWithdrawBalance, tests)
 }

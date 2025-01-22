@@ -14,8 +14,10 @@ import (
 //go:embed expected.json
 var expectedData []byte
 var expected map[string]any
+var network string
 
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -25,7 +27,7 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 
 func TestCronConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CronConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "CronConstructor", expected)
 	require.NoError(t, err)
 	runTest(t, cron.CronConstructor, tests)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestMintExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MintExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "MintExported", expected)
 	require.NoError(t, err)
 
 	runTest(t, datacap.MintExported, tests)

@@ -16,7 +16,10 @@ import (
 var expectedData []byte
 var expected map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -24,21 +27,21 @@ func TestMain(m *testing.M) {
 }
 
 func TestNameExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("NameExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "NameExported", expected)
 	require.NoError(t, err)
 
 	runDatacapTest(t, datacap.NameExported, tests)
 }
 
 func TestSymbolExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("SymbolExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "SymbolExported", expected)
 	require.NoError(t, err)
 
 	runDatacapTest(t, datacap.SymbolExported, tests)
 }
 
 func TestTotalSupplyExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("TotalSupplyExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "TotalSupplyExported", expected)
 	require.NoError(t, err)
 
 	runDatacapTest(t, datacap.TotalSupplyExported, tests)

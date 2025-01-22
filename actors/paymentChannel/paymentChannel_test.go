@@ -15,7 +15,10 @@ import (
 var expectedData []byte
 var expected map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -31,13 +34,13 @@ type test struct {
 }
 
 func TestPaymentChannelConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PaymentChannelConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "PaymentChannelConstructor", expected)
 	require.NoError(t, err)
 	runTest(t, paymentchannel.PaymentChannelConstructor, tests)
 }
 
 func TestUpdateChannelState(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("UpdateChannelState", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "UpdateChannelState", expected)
 	require.NoError(t, err)
 	runTest(t, paymentchannel.UpdateChannelState, tests)
 }

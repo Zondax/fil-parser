@@ -9,7 +9,7 @@ import (
 )
 
 func TestAddVerifierValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("AddVerifierValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "AddVerifierValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.AddVerifierValue, tests)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestTransferExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("TransferExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "TransferExported", expected)
 	require.NoError(t, err)
 
 	runTest(t, datacap.TransferExported, tests)

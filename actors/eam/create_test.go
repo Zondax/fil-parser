@@ -14,11 +14,14 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
+var network string
+
 //go:embed expected.json
 var expectedData []byte
 var expected map[string]any
 
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -28,21 +31,21 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, raw, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
 
 func TestParseCreateExternal(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CreateExternalExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "CreateExternalExported", expected)
 	require.NoError(t, err)
 
 	runTest(t, eam.ParseCreateExternal, tests)
 }
 
 func TestParseCreate(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CreateExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "CreateExported", expected)
 	require.NoError(t, err)
 
 	runTest(t, eam.ParseCreate, tests)
 }
 
 func TestParseCreate2(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("Create2Exported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "Create2Exported", expected)
 	require.NoError(t, err)
 
 	runTest(t, eam.ParseCreate2, tests)

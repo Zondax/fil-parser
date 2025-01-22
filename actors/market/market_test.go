@@ -17,7 +17,10 @@ import (
 var expectedData []byte
 var expected map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -27,133 +30,133 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error)
 
 func TestPublishStorageDeals(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PublishStorageDealsParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "PublishStorageDealsParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.PublishStorageDealsParams, tests)
 }
 
 func TestVerifyDealsForActivation(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("VerifyDealsForActivationParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "VerifyDealsForActivationParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.VerifyDealsForActivationParams, tests)
 }
 
 func TestActivateDeals(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ActivateDealsParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ActivateDealsParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.ActivateDealsParams, tests)
 }
 
 func TestComputeDataCommitment(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ComputeDataCommitmentParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ComputeDataCommitmentParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.ComputeDataCommitmentParams, tests)
 }
 
 func TestGetBalance(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetBalanceParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetBalanceParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetBalanceParams, tests)
 }
 
 func TestGetDealDataCommitment(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealDataCommitmentParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealDataCommitmentParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealDataCommitmentParams, tests)
 }
 
 func TestGetDealClient(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealClientParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealClientParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealClientParams, tests)
 }
 
 func TestGetDealProvider(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealProviderParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealProviderParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealProviderParams, tests)
 }
 
 func TestGetDealLabel(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealLabelParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealLabelParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealLabelParams, tests)
 }
 
 func TestGetDealTerm(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealTermParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealTermParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealTermParams, tests)
 }
 
 func TestGetDealTotalPrice(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealTotalPriceParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealTotalPriceParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealTotalPriceParams, tests)
 }
 
 func TestGetDealClientCollateral(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealClientCollateralParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealClientCollateralParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealClientCollateralParams, tests)
 }
 
 func TestGetDealProviderCollateral(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealProviderCollateralParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealProviderCollateralParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealProviderCollateralParams, tests)
 }
 
 func TestGetDealVerified(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealVerifiedParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealVerifiedParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealVerifiedParams, tests)
 }
 
 func TestGetDealActivation(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealActivationParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealActivationParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealActivationParams, tests)
 }
 
 func TestDealProviderCollateral(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealProviderCollateralParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealProviderCollateralParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealProviderCollateralParams, tests)
 }
 
 func TestGetDealVerifiedParams(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealVerifiedParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealVerifiedParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealVerifiedParams, tests)
 }
 
 func TestGetDealActivationParams(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetDealActivationParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetDealActivationParams", expected)
 	require.NoError(t, err)
 
 	runTest(t, market.GetDealActivationParams, tests)
 }
 
 func TestOnMinerSectorsTerminate(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("OnMinerSectorsTerminateParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "OnMinerSectorsTerminateParams", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -175,7 +178,7 @@ func TestOnMinerSectorsTerminate(t *testing.T) {
 }
 
 func TestParseAddBalance(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseAddBalance", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseAddBalance", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -197,7 +200,7 @@ func TestParseAddBalance(t *testing.T) {
 }
 
 func TestParseWithdrawBalance(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseWithdrawBalance", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseWithdrawBalance", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

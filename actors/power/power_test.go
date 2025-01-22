@@ -16,7 +16,10 @@ import (
 var expectedData []byte
 var expected map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -26,67 +29,67 @@ func TestMain(m *testing.M) {
 type testFn func(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
 
 func TestCurrentTotalPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CurrentTotalPower", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "CurrentTotalPower", expected)
 	require.NoError(t, err)
 	runTest(t, power.CurrentTotalPower, tests)
 }
 
 func TestSubmitPoRepForBulkVerify(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("SubmitPoRepForBulkVerify", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "SubmitPoRepForBulkVerify", expected)
 	require.NoError(t, err)
 	runTest(t, power.SubmitPoRepForBulkVerify, tests)
 }
 
 func TestCreateMiner(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CreateMiner", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "CreateMiner", expected)
 	require.NoError(t, err)
 	runTest(t, power.CreateMiner, tests)
 }
 
 func TestEnrollCronEvent(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("EnrollCronEvent", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "EnrollCronEvent", expected)
 	require.NoError(t, err)
 	runTest(t, power.EnrollCronEvent, tests)
 }
 
 func TestUpdateClaimedPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("UpdateClaimedPower", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "UpdateClaimedPower", expected)
 	require.NoError(t, err)
 	runTest(t, power.UpdateClaimedPower, tests)
 }
 
 func TestUpdatePledgeTotal(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("UpdatePledgeTotal", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "UpdatePledgeTotal", expected)
 	require.NoError(t, err)
 	runTest(t, power.UpdatePledgeTotal, tests)
 }
 
 func TestNetworkRawPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("NetworkRawPower", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "NetworkRawPower", expected)
 	require.NoError(t, err)
 	runTest(t, power.NetworkRawPower, tests)
 }
 
 func TestMinerRawPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MinerRawPower", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "MinerRawPower", expected)
 	require.NoError(t, err)
 	runTest(t, power.MinerRawPower, tests)
 }
 
 func TestMinerCount(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MinerCount", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "MinerCount", expected)
 	require.NoError(t, err)
 	runTest(t, power.MinerCount, tests)
 }
 
 func TestMinerConsensusCount(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MinerConsensusCount", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "MinerConsensusCount", expected)
 	require.NoError(t, err)
 	runTest(t, power.MinerConsensusCount, tests)
 }
 
 func TestPowerConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PowerConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "PowerConstructor", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

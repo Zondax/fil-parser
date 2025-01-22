@@ -13,78 +13,78 @@ import (
 type valueTestFn func(network string, height int64, txMetadata string) (interface{}, error)
 
 func TestChangeOwnerAddressValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeOwnerAddressValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeOwnerAddressValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ChangeOwnerAddressValue, tests)
 }
 
 func TestParseWithdrawBalanceValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseWithdrawBalanceValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseWithdrawBalanceValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseWithdrawBalanceValue, tests)
 }
 
 func TestParseInvokeContractValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseInvokeContractValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseInvokeContractValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseInvokeContractValue, tests)
 }
 
 func TestParseAddSignerValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseAddSignerValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseAddSignerValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseAddSignerValue, tests)
 }
 
 func TestParseApproveValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseApproveValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseApproveValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseApproveValue, tests)
 }
 
 func TestParseCancelValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseCancelValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseCancelValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseCancelValue, tests)
 }
 func TestChangeNumApprovalsThresholdValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeNumApprovalsThresholdValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeNumApprovalsThresholdValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ChangeNumApprovalsThresholdValue, tests)
 }
 
 func TestParseConstructorValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseConstructorValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseConstructorValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseConstructorValue, tests)
 }
 
 func TestParseLockBalanceValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseLockBalanceValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseLockBalanceValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseLockBalanceValue, tests)
 }
 
 func TestParseRemoveSignerValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseRemoveSignerValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseRemoveSignerValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseRemoveSignerValue, tests)
 }
 
 func TestParseSendValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseSendValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseSendValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseSendValue, tests)
 }
 
 func TestParseSwapSignerValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseSwapSignerValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseSwapSignerValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseSwapSignerValue, tests)
 }
 
 func TestParseUniversalReceiverHookValue(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ParseUniversalReceiverHookValue", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ParseUniversalReceiverHookValue", expected)
 	require.NoError(t, err)
 	runValueTest(t, multisig.ParseUniversalReceiverHookValue, tests)
 }

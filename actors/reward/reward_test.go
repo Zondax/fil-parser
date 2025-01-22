@@ -15,7 +15,10 @@ import (
 var expectedData []byte
 var expected map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -25,25 +28,25 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 
 func TestRewardConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("RewardConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "RewardConstructor", expected)
 	require.NoError(t, err)
 	runTest(t, reward.RewardConstructor, tests)
 }
 
 func TestAwardBlockReward(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("AwardBlockReward", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "AwardBlockReward", expected)
 	require.NoError(t, err)
 	runTest(t, reward.AwardBlockReward, tests)
 }
 
 func TestUpdateNetworkKPI(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("UpdateNetworkKPI", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "UpdateNetworkKPI", expected)
 	require.NoError(t, err)
 	runTest(t, reward.UpdateNetworkKPI, tests)
 }
 
 func TestThisEpochReward(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ThisEpochReward", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ThisEpochReward", expected)
 	require.NoError(t, err)
 	runTest(t, reward.ThisEpochReward, tests)
 }

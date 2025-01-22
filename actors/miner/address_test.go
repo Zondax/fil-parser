@@ -12,49 +12,49 @@ import (
 type testFn func(network string, height int64, rawReturn []byte) (map[string]interface{}, error)
 
 func TestChangeMultiaddrs(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeMultiaddrs", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeMultiaddrs", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ChangeMultiaddrs, tests)
 }
 
 func TestChangePeerID(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangePeerID", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangePeerID", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ChangePeerID, tests)
 }
 
 func TestChangeWorkerAddress(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeWorkerAddress", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeWorkerAddress", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ChangeWorkerAddress, tests)
 }
 
 func TestChangeOwnerAddress(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeOwnerAddress", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeOwnerAddress", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ChangeOwnerAddress, tests)
 }
 
 func TestGetOwner(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetOwner", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetOwner", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.GetOwner, tests)
 }
 
 func TestGetPeerID(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetPeerID", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetPeerID", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.GetPeerID, tests)
 }
 
 func TestGetMultiaddrs(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetMultiaddrs", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetMultiaddrs", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.GetMultiaddrs, tests)
 }
 
 func TestIsControllingAddressExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("IsControllingAddressExported", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "IsControllingAddressExported", expectedData)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

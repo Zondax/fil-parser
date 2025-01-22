@@ -10,73 +10,73 @@ import (
 )
 
 func TestExtendSectorExpiration2(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ExtendSectorExpiration2", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ExtendSectorExpiration2", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ExtendSectorExpiration2, tests)
 }
 
 func TestPreCommitSector(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PreCommitSector", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "PreCommitSector", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.PreCommitSector, tests)
 }
 
 func TestProveCommitSector(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ProveCommitSector", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ProveCommitSector", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ProveCommitSector, tests)
 }
 
 func TestSubmitWindowedPoSt(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("SubmitWindowedPoSt", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "SubmitWindowedPoSt", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.SubmitWindowedPoSt, tests)
 }
 
 func TestConfirmSectorProofsValid(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ConfirmSectorProofsValid", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ConfirmSectorProofsValid", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ConfirmSectorProofsValid, tests)
 }
 
 func TestCheckSectorProven(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CheckSectorProven", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "CheckSectorProven", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.CheckSectorProven, tests)
 }
 
 func TestExtendSectorExpiration(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ExtendSectorExpiration", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ExtendSectorExpiration", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ExtendSectorExpiration, tests)
 }
 
 func TestCompactSectorNumbers(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CompactSectorNumbers", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "CompactSectorNumbers", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.CompactSectorNumbers, tests)
 }
 
 func TestCompactPartitions(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("CompactPartitions", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "CompactPartitions", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.CompactPartitions, tests)
 }
 
 func TestPreCommitSectorBatch(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PreCommitSectorBatch", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "PreCommitSectorBatch", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.PreCommitSectorBatch, tests)
 }
 
 func TestGetSectorSize(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetSectorSize", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetSectorSize", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.GetSectorSize, tests)
 }
 
 func TestProveCommitSectors3(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ProveCommitSectors3", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ProveCommitSectors3", expectedData)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

@@ -16,7 +16,10 @@ import (
 var expected []byte
 var expectedData map[string]any
 
+var network string
+
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expected, &expectedData); err != nil {
 		panic(err)
 	}
@@ -24,73 +27,73 @@ func TestMain(m *testing.M) {
 }
 
 func TestDeclareFaults(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("DeclareFaults", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "DeclareFaults", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.DeclareFaults, tests)
 }
 
 func TestDeclareFaultsRecovered(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("DeclareFaultsRecovered", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "DeclareFaultsRecovered", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.DeclareFaultsRecovered, tests)
 }
 
 func TestProveReplicaUpdates(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ProveReplicaUpdates", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ProveReplicaUpdates", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ProveReplicaUpdates, tests)
 }
 
 func TestPreCommitSectorBatch2(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PreCommitSectorBatch2", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "PreCommitSectorBatch2", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.PreCommitSectorBatch2, tests)
 }
 
 func TestProveCommitAggregate(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ProveCommitAggregate", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ProveCommitAggregate", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ProveCommitAggregate, tests)
 }
 
 func TestDisputeWindowedPoSt(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("DisputeWindowedPoSt", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "DisputeWindowedPoSt", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.DisputeWindowedPoSt, tests)
 }
 
 func TestReportConsensusFault(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ReportConsensusFault", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ReportConsensusFault", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ReportConsensusFault, tests)
 }
 
 func TestChangeBeneficiary(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeBeneficiary", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeBeneficiary", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ChangeBeneficiary, tests)
 }
 
 func TestMinerConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MinerConstructor", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "MinerConstructor", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.MinerConstructor, tests)
 }
 
 func TestApplyRewards(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ApplyRewards", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ApplyRewards", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.ApplyRewards, tests)
 }
 
 func TestOnDeferredCronEvent(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("OnDeferredCronEvent", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "OnDeferredCronEvent", expectedData)
 	require.NoError(t, err)
 	runTest(t, miner.OnDeferredCronEvent, tests)
 }
 
 func TestTerminateSectors(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("TerminateSectors", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "TerminateSectors", expectedData)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -113,7 +116,7 @@ func TestTerminateSectors(t *testing.T) {
 }
 
 func TestProveReplicaUpdates2(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ProveReplicaUpdates2", expectedData)
+	tests, err := tools.LoadTestData[map[string]any](network, "ProveReplicaUpdates2", expectedData)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

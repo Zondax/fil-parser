@@ -168,7 +168,7 @@ type TestCase[T any] struct {
 	Address   *types.AddressInfo
 }
 
-func LoadTestData[T any](fnName string, network string, expected map[string]any) ([]TestCase[T], error) {
+func LoadTestData[T any](network string, fnName string, expected map[string]any) ([]TestCase[T], error) {
 	var tests []TestCase[T]
 	for _, version := range GetSupportedVersions(network) {
 

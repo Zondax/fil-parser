@@ -16,8 +16,10 @@ import (
 //go:embed expected.json
 var expectedData []byte
 var expected map[string]any
+var network string
 
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -27,35 +29,35 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 
 func TestResurrect(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("Resurrect", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "Resurrect", expected)
 	require.NoError(t, err)
 
 	runTest(t, evm.Resurrect, tests)
 }
 
 func TestGetByteCode(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetByteCode", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetByteCode", expected)
 	require.NoError(t, err)
 
 	runTest(t, evm.GetByteCode, tests)
 }
 
 func TestGetByteCodeHash(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetByteCodeHash", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetByteCodeHash", expected)
 	require.NoError(t, err)
 
 	runTest(t, evm.GetByteCodeHash, tests)
 }
 
 func TestEVMConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("EVMConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "EVMConstructor", expected)
 	require.NoError(t, err)
 
 	runTest(t, evm.EVMConstructor, tests)
 }
 
 func TestGetStorageAt(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GetStorageAt", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GetStorageAt", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -76,7 +78,7 @@ func TestGetStorageAt(t *testing.T) {
 }
 
 func TestInvokeContract(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("InvokeContract", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "InvokeContract", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -97,7 +99,7 @@ func TestInvokeContract(t *testing.T) {
 }
 
 func TestInvokeContractDelegate(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("InvokeContractDelegate", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "InvokeContractDelegate", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

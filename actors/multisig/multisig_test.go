@@ -17,8 +17,10 @@ import (
 //go:embed expected.json
 var expectedData []byte
 var expected map[string]any
+var network string
 
 func TestMain(m *testing.M) {
+	network = "mainnet"
 	if err := json.Unmarshal(expectedData, &expected); err != nil {
 		panic(err)
 	}
@@ -28,43 +30,43 @@ func TestMain(m *testing.M) {
 type testFn func(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser multisig.ParseFn) (map[string]interface{}, error)
 
 func TestApprove(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("Approve", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "Approve", expected)
 	require.NoError(t, err)
 	runTest(t, multisig.Approve, tests)
 }
 
 func TestCancel(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("Cancel", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "Cancel", expected)
 	require.NoError(t, err)
 	runTest(t, multisig.Cancel, tests)
 }
 
 func TestRemoveSigner(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("RemoveSigner", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "RemoveSigner", expected)
 	require.NoError(t, err)
 	runTest(t, multisig.RemoveSigner, tests)
 }
 
 func TestChangeNumApprovalsThreshold(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ChangeNumApprovalsThreshold", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "ChangeNumApprovalsThreshold", expected)
 	require.NoError(t, err)
 	runTest(t, multisig.ChangeNumApprovalsThreshold, tests)
 }
 
 func TestLockBalance(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("LockBalance", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "LockBalance", expected)
 	require.NoError(t, err)
 	runTest(t, multisig.LockBalance, tests)
 }
 
 func TestUniversalReceiverHook(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("UniversalReceiverHook", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "UniversalReceiverHook", expected)
 	require.NoError(t, err)
 	runTest(t, multisig.UniversalReceiverHook, tests)
 }
 
 func TestMsigConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MsigConstructor", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "MsigConstructor", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
@@ -86,7 +88,7 @@ func TestMsigConstructor(t *testing.T) {
 	}
 }
 func TestMsigParams(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("MsigParams", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "MsigParams", expected)
 	require.NoError(t, err)
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {

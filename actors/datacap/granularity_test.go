@@ -10,7 +10,7 @@ import (
 )
 
 func TestGranularityExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("GranularityExported", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "GranularityExported", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {

@@ -20,8 +20,11 @@ var expectedData []byte
 var expected map[string]any
 var lib *rosettaFilecoinLib.RosettaConstructionFilecoin
 
+var network string
+
 func TestMain(m *testing.M) {
 	var err error
+	network = "mainnet"
 	lib, err = tools.GetLib(tools.NodeUrl)
 	if err != nil {
 		panic(err)
@@ -35,7 +38,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestAuthenticateMessage(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("AuthenticateMessage", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "AuthenticateMessage", expected)
 	require.NoError(t, err)
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
@@ -55,7 +58,7 @@ func TestAuthenticateMessage(t *testing.T) {
 }
 
 func TestPubkeyAddress(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("PubkeyAddress", expected)
+	tests, err := tools.LoadTestData[map[string]any](network, "PubkeyAddress", expected)
 	require.NoError(t, err)
 
 	for _, tt := range tests {
