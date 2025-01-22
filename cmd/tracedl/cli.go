@@ -28,7 +28,8 @@ func GetStartCommand(c *cli.CLI) *cobra.Command {
 	cmd.Flags().String("type", "traces", "--type trace")
 	cmd.Flags().String("outPath", ".", "--outPath ../")
 	cmd.Flags().String("compress", "gz", "--compress s2")
-	cmd.Flags().Uint64("height", 0, "--height 387926")
+
+	cmd.Flags().UintSlice("heights", []uint{0}, "--heights 387926,387927,387928")
 	return cmd
 }
 
@@ -55,9 +56,10 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 		zap.S().Errorf("Error loading compress: %s", err)
 		return
 	}
-	height, err := cmd.Flags().GetUint64("height")
+
+	heights, err := cmd.Flags().GetUintSlice("heights")
 	if err != nil {
-		zap.S().Errorf("Error loading height: %s", err)
+		zap.S().Errorf("Error loading heights: %s", err)
 		return
 	}
 
@@ -66,46 +68,50 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 		zap.S().Error(err)
 		return
 	}
+	if len(heights) > 0 {
+		for _, tmp := range heights {
+			height := uint64(tmp)
+			var data any
+			switch logType {
+			case "traces":
+				data, err = getTraceFileByHeight(height, rpcClient.client)
+			case "tipset":
+				data, err = getTipsetFileByHeight(height, lotusChainTypes.EmptyTSK, rpcClient.client)
+			case "ethlog":
+				data, err = getEthLogsByHeight(height, rpcClient.client)
+			case "nativelog":
+				data, err = getNativeLogsByHeight(height, rpcClient.client)
+			case "metadata":
+				data, err = getMetadata(rpcClient)
+			}
 
-	var data any
-	switch logType {
-	case "traces":
-		data, err = getTraceFileByHeight(height, rpcClient.client)
-	case "tipset":
-		data, err = getTipsetFileByHeight(height, lotusChainTypes.EmptyTSK, rpcClient.client)
-	case "ethlog":
-		data, err = getEthLogsByHeight(height, rpcClient.client)
-	case "nativelog":
-		data, err = getNativeLogsByHeight(height, rpcClient.client)
-	case "metadata":
-		data, err = getMetadata(rpcClient)
-	}
+			if err != nil {
+				zap.S().Error(err)
+				return
+			}
 
-	if err != nil {
-		zap.S().Error(err)
-		return
-	}
+			dataJson, err := sonic.Marshal(data)
+			if err != nil {
+				zap.S().Error(err)
+				return
+			}
+			out := dataJson
+			fname := fmt.Sprintf("%s_%d.json", logType, height)
+			if format != "" {
+				out, err = compress(format, dataJson)
+				if err != nil {
+					zap.S().Error(err)
+					return
+				}
+				fname = fmt.Sprintf("%s_%d.json.%s", logType, height, format)
+			}
 
-	dataJson, err := sonic.Marshal(data)
-	if err != nil {
-		zap.S().Error(err)
-		return
-	}
+			if err := writeToFile(outPath, fname, out); err != nil {
+				zap.S().Error(err)
+				return
+			}
 
-	out := dataJson
-	fname := fmt.Sprintf("%s_%d.json", logType, height)
-	if format != "" {
-		out, err = compress(format, dataJson)
-		if err != nil {
-			zap.S().Error(err)
-			return
 		}
-		fname = fmt.Sprintf("%s_%d.json.%s", logType, height, format)
-	}
-
-	if err := writeToFile(outPath, fname, out); err != nil {
-		zap.S().Error(err)
-		return
 	}
 
 }

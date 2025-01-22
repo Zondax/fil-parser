@@ -3,6 +3,7 @@ package account_test
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -51,6 +52,9 @@ func TestAuthenticateMessage(t *testing.T) {
 				}
 				result, err := account.AuthenticateMessage(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
+				data, err := json.Marshal(result)
+				require.NoError(t, err)
+				fmt.Println(string(data))
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
 		})

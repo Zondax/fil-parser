@@ -11,7 +11,7 @@ type version struct {
 }
 
 var (
-	supportedVersions         = []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22}
+	supportedVersions         = []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24}
 	V1                version = version{calibration: 0, mainnet: 0, nodeVersion: 1}
 	V2                version = version{calibration: 0, mainnet: 0, nodeVersion: 2}
 	V3                version = version{calibration: 0, mainnet: 0, nodeVersion: 3}
@@ -61,9 +61,18 @@ func (v version) IsSupported(network string, height int64) bool {
 	return false
 }
 
+func AnyIsSupported(network string, height int64, versions ...version) bool {
+	for _, v := range versions {
+		if v.IsSupported(network, height) {
+			return true
+		}
+	}
+	return false
+}
+
 func (v version) next() version {
 	for i, version := range supportedVersions {
-		if version == v {
+		if version.nodeVersion == v.nodeVersion {
 			if i == len(supportedVersions)-1 {
 				return v
 			}
@@ -85,7 +94,7 @@ func (v version) Height() int64 {
 }
 
 func GetSupportedVersions(network string) []version {
-	result := make([]version, len(supportedVersions))
+	var result []version
 	for _, v := range supportedVersions {
 		v.currentNetwork = network
 		result = append(result, v)

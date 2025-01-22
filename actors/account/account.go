@@ -9,8 +9,10 @@ import (
 	accountv10 "github.com/filecoin-project/go-state-types/builtin/v10/account"
 	accountv11 "github.com/filecoin-project/go-state-types/builtin/v11/account"
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v11/account"
+	accountv12 "github.com/filecoin-project/go-state-types/builtin/v12/account"
+	accountv13 "github.com/filecoin-project/go-state-types/builtin/v13/account"
 	accountv14 "github.com/filecoin-project/go-state-types/builtin/v14/account"
-	accountv15 "github.com/filecoin-project/go-state-types/builtin/v15/account"
+	typegen "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -29,18 +31,25 @@ func PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{
 }
 
 func AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+	versions := tools.GetSupportedVersions(network)
+
 	switch {
-	case tools.V8.IsSupported(network, height):
-		return nil, fmt.Errorf("not supported")
+	// all versions before V17
+	case tools.AnyIsSupported(network, height, versions[:len(versions)-7]...):
+		return map[string]interface{}{}, nil // method did not exist
 	case tools.V17.IsSupported(network, height):
-		return authenticateMessageGeneric[*accountv9.AuthenticateMessageParams, *accountv9.AuthenticateMessageParams](raw, rawReturn, &accountv9.AuthenticateMessageParams{})
+		return authenticateMessageGeneric[*accountv9.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv9.AuthenticateMessageParams{})
 	case tools.V18.IsSupported(network, height):
-		return authenticateMessageGeneric[*accountv10.AuthenticateMessageParams, *accountv10.AuthenticateMessageParams](raw, rawReturn, &accountv10.AuthenticateMessageParams{})
-	case tools.V19.IsSupported(network, height):
-		return authenticateMessageGeneric[*accountv11.AuthenticateMessageParams, *accountv11.AuthenticateMessageParams](raw, rawReturn, &accountv11.AuthenticateMessageParams{})
+		return authenticateMessageGeneric[*accountv10.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv10.AuthenticateMessageParams{})
+	case tools.V19.IsSupported(network, height) || tools.V20.IsSupported(network, height):
+		return authenticateMessageGeneric[*accountv11.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv11.AuthenticateMessageParams{})
+	case tools.V21.IsSupported(network, height):
+		return authenticateMessageGeneric[*accountv12.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv12.AuthenticateMessageParams{})
+	case tools.V22.IsSupported(network, height):
+		return authenticateMessageGeneric[*accountv13.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv13.AuthenticateMessageParams{})
 	case tools.V23.IsSupported(network, height):
-		return authenticateMessageGeneric[*accountv14.AuthenticateMessageParams, *accountv14.AuthenticateMessageParams](raw, rawReturn, &accountv14.AuthenticateMessageParams{})
+		return authenticateMessageGeneric[*accountv14.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv14.AuthenticateMessageParams{})
 	default:
-		return authenticateMessageGeneric[*accountv15.AuthenticateMessageParams, *accountv15.AuthenticateMessageParams](raw, rawReturn, &accountv15.AuthenticateMessageParams{})
+		return nil, fmt.Errorf("not supported")
 	}
 }

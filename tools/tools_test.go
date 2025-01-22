@@ -6,6 +6,7 @@ import (
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/stretchr/testify/require"
+	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 )
 
 func TestBuildTipSetKeyHash(t *testing.T) {
@@ -62,6 +63,29 @@ func TestIsSupported(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, tt.version.IsSupported(tt.network, tt.height))
 		})
+	}
+}
+
+func TestDownloadTraces(t *testing.T) {
+	versions := GetSupportedVersions("mainnet")
+
+	for _, version := range versions {
+		height := version.Height()
+		if version != version.next() {
+			height = (version.Height() + version.next().Height()) / 2
+		}
+		if version.Height() == 0 {
+			height = V8.Height()
+		} else {
+			height += 100
+		}
+
+		traces, err := ReadTraces(height)
+		require.NoError(t, err)
+		require.NotEmpty(t, traces)
+		_, err = ComputeState[typesV2.ComputeStateOutputV2](height, version.String())
+		require.NoError(t, err)
+		require.NotEmpty(t, traces)
 	}
 }
 

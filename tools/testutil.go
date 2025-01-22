@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/lotus/api"
@@ -18,7 +19,7 @@ import (
 )
 
 const (
-	dataPath          = "data/heights"
+	dataPath          = "../../data/heights"
 	fileDataExtension = "json.gz"
 	tracesPrefix      = "traces"
 	tipsetPrefix      = "tipset"
@@ -124,28 +125,13 @@ func ReadTraces(height int64) ([]byte, error) {
 }
 
 func ComputeState[T any](height int64, version string) (*T, error) {
-	tipset, err := ReadTipset(height)
-	if err != nil {
-		return nil, err
-	}
-	ethlogs, err := ReadEthLogs(height)
-	if err != nil {
-		return nil, err
-	}
 	traces, err := ReadTraces(height)
 	if err != nil {
 		return nil, err
 	}
 
-	txsData := types.TxsData{
-		EthLogs:  ethlogs,
-		Tipset:   tipset,
-		Traces:   traces,
-		Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: version}},
-	}
-
 	var computeState T
-	err = sonic.UnmarshalString(string(txsData.Traces), &computeState)
+	err = sonic.UnmarshalString(string(traces), &computeState)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +156,8 @@ type TestCase[T any] struct {
 
 func LoadTestData[T any](network string, fnName string, expected map[string]any) ([]TestCase[T], error) {
 	var tests []TestCase[T]
-	for _, version := range GetSupportedVersions(network) {
+	versions := GetSupportedVersions(network)
+	for _, version := range versions {
 
 		versionData := expected[version.String()]
 		if versionData == nil {
@@ -186,11 +173,26 @@ func LoadTestData[T any](network string, fnName string, expected map[string]any)
 			return nil, fmt.Errorf("function %s not found in version %s", fnName, version.String())
 		}
 
+		height := version.Height()
+		if version != version.next() {
+			height = (version.Height() + version.next().Height()) / 2
+		}
+		if version.Height() == 0 {
+			height = V8.Height()
+		} else {
+			height += 100
+		}
+
+		if !version.IsSupported(network, height) {
+			fmt.Println("skipping", version.String(), height)
+			continue
+		}
+
 		tests = append(tests, TestCase[T]{
-			Name:     fnName,
+			Name:     fnName + "_" + version.String() + "_" + strconv.FormatInt(height, 10),
 			Version:  version.String(),
 			Url:      NodeUrl,
-			Height:   version.Height(),
+			Height:   height,
 			Expected: fnData.(T),
 		})
 	}
