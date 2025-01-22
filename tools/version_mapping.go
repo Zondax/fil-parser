@@ -1,5 +1,7 @@
 package tools
 
+import "fmt"
+
 type version int64
 
 var supportedVersions = []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22}
@@ -18,6 +20,16 @@ func (v version) next() version {
 		}
 	}
 	return v
+}
+
+func (v version) String() string {
+	return fmt.Sprintf("V%d", v)
+}
+func GetSupportedVersions() []version {
+	// Create a new slice with same length and copy all elements
+	result := make([]version, len(supportedVersions))
+	copy(result, supportedVersions)
+	return result
 }
 
 const (

@@ -12,51 +12,47 @@ import (
 
 type testFn func(height int64, raw, rawReturn []byte) (map[string]interface{}, error)
 
-type test struct {
-	name     string
-	version  string
-	url      string
-	height   int64
-	expected map[string]any
-}
-
 func TestIncreaseAllowance(t *testing.T) {
-	tests := []test{}
+	tests, err := tools.LoadTestData[map[string]any]("IncreaseAllowance", expected)
+	require.NoError(t, err)
 
 	runTest(t, datacap.IncreaseAllowance, tests)
 }
 
 func TestDecreaseAllowance(t *testing.T) {
-	tests := []test{}
+	tests, err := tools.LoadTestData[map[string]any]("DecreaseAllowance", expected)
+	require.NoError(t, err)
 
 	runTest(t, datacap.DecreaseAllowance, tests)
 }
 
 func TestRevokeAllowance(t *testing.T) {
-	tests := []test{}
+	tests, err := tools.LoadTestData[map[string]any]("RevokeAllowance", expected)
+	require.NoError(t, err)
 
 	runTest(t, datacap.RevokeAllowance, tests)
 }
 
 func TestGetAllowance(t *testing.T) {
-	tests := []test{}
+	tests, err := tools.LoadTestData[map[string]any]("GetAllowance", expected)
+	require.NoError(t, err)
 
 	runTest(t, datacap.GetAllowance, tests)
 }
 
-func runTest(t *testing.T, fn testFn, tests []test) {
+func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			computeState, err := tools.ComputeState[typesV2.ComputeStateOutputV2](tt.height, tt.version)
+		t.Run(tt.Name, func(t *testing.T) {
+			computeState, err := tools.ComputeState[typesV2.ComputeStateOutputV2](tt.Height, tt.Version)
 			require.NoError(t, err)
 
 			for _, trace := range computeState.Trace {
 				if trace.Msg == nil {
 					continue
 				}
-				result, err := fn(tt.height, trace.Msg.Params, trace.MsgRct.Return)
+				result, err := fn(tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
-				require.True(t, tools.CompareResult(result, tt.expected))
+				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-package reward_test
+package cron_test
 
 import (
 	_ "embed"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zondax/fil-parser/actors/reward"
+	"github.com/zondax/fil-parser/actors/cron"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -24,28 +24,10 @@ func TestMain(m *testing.M) {
 
 type testFn func(height int64, raw []byte) (map[string]interface{}, error)
 
-func TestRewardConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("RewardConstructor", expected)
+func TestCronConstructor(t *testing.T) {
+	tests, err := tools.LoadTestData[map[string]any]("CronConstructor", expected)
 	require.NoError(t, err)
-	runTest(t, reward.RewardConstructor, tests)
-}
-
-func TestAwardBlockReward(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("AwardBlockReward", expected)
-	require.NoError(t, err)
-	runTest(t, reward.AwardBlockReward, tests)
-}
-
-func TestUpdateNetworkKPI(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("UpdateNetworkKPI", expected)
-	require.NoError(t, err)
-	runTest(t, reward.UpdateNetworkKPI, tests)
-}
-
-func TestThisEpochReward(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any]("ThisEpochReward", expected)
-	require.NoError(t, err)
-	runTest(t, reward.ThisEpochReward, tests)
+	runTest(t, cron.CronConstructor, tests)
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

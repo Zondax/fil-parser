@@ -10,20 +10,21 @@ import (
 )
 
 func TestGranularityExported(t *testing.T) {
-	tests := []test{}
+	tests, err := tools.LoadTestData[map[string]any]("GranularityExported", expected)
+	require.NoError(t, err)
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			computeState, err := tools.ComputeState[typesV2.ComputeStateOutputV2](tt.height, tt.version)
+		t.Run(tt.Name, func(t *testing.T) {
+			computeState, err := tools.ComputeState[typesV2.ComputeStateOutputV2](tt.Height, tt.Version)
 			require.NoError(t, err)
 
 			for _, trace := range computeState.Trace {
 				if trace.Msg == nil {
 					continue
 				}
-				result, err := datacap.GranularityExported(tt.height, trace.MsgRct.Return)
+				result, err := datacap.GranularityExported(tt.Height, trace.MsgRct.Return)
 				require.NoError(t, err)
-				require.True(t, tools.CompareResult(result, tt.expected))
+				require.True(t, tools.CompareResult(result, tt.Expected))
 			}
 		})
 	}

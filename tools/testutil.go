@@ -156,3 +156,42 @@ func ComputeState[T any](height int64, version string) (*T, error) {
 func CompareResult(result1, result2 map[string]any) bool {
 	return reflect.DeepEqual(result1, result2)
 }
+
+type TestCase[T any] struct {
+	Name      string
+	Version   string
+	Url       string
+	Height    int64
+	TipsetKey filTypes.TipSetKey
+	Expected  T
+	Address   *types.AddressInfo
+}
+
+func LoadTestData[T any](fnName string, expected map[string]any) ([]TestCase[T], error) {
+	var tests []TestCase[T]
+	for _, version := range GetSupportedVersions() {
+
+		versionData := expected[version.String()]
+		if versionData == nil {
+			return nil, fmt.Errorf("version %s not found in expected data", version.String())
+		}
+		tmp, ok := versionData.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("version %s not found in expected data", version.String())
+		}
+		fnData := tmp[fnName]
+
+		if fnData == nil {
+			return nil, fmt.Errorf("function %s not found in version %s", fnName, version.String())
+		}
+
+		tests = append(tests, TestCase[T]{
+			Name:     fnName,
+			Version:  version.String(),
+			Url:      NodeUrl,
+			Height:   int64(version),
+			Expected: fnData.(T),
+		})
+	}
+	return tests, nil
+}
