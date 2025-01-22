@@ -14,67 +14,67 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func BurnExported(height uint64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func BurnExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(int64(height)):
+	case tools.V8.IsSupported(height):
 		return parse[*datacapv8.BurnParams, *datacapv8.BurnReturn](raw, rawReturn, true)
-	case tools.V9.IsSupported(int64(height)):
+	case tools.V9.IsSupported(height):
 		return parse[*datacapv9.BurnParams, *datacapv9.BurnReturn](raw, rawReturn, true)
-	case tools.V10.IsSupported(int64(height)):
+	case tools.V10.IsSupported(height):
 		return parse[*datacapv10.BurnParams, *datacapv10.BurnReturn](raw, rawReturn, true)
-	case tools.V11.IsSupported(int64(height)):
+	case tools.V11.IsSupported(height):
 		return parse[*datacapv11.BurnParams, *datacapv11.BurnReturn](raw, rawReturn, true)
-	case tools.V12.IsSupported(int64(height)):
+	case tools.V12.IsSupported(height):
 		return parse[*datacapv12.BurnParams, *datacapv12.BurnReturn](raw, rawReturn, true)
-	case tools.V13.IsSupported(int64(height)):
+	case tools.V13.IsSupported(height):
 		return parse[*datacapv13.BurnParams, *datacapv13.BurnReturn](raw, rawReturn, true)
-	case tools.V14.IsSupported(int64(height)):
+	case tools.V14.IsSupported(height):
 		return parse[*datacapv14.BurnParams, *datacapv14.BurnReturn](raw, rawReturn, true)
-	case tools.V15.IsSupported(int64(height)):
+	case tools.V15.IsSupported(height):
 		return parse[*datacapv15.BurnParams, *datacapv15.BurnReturn](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
-func BurnFromExported(height uint64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func BurnFromExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(int64(height)):
+	case tools.V8.IsSupported(height):
 		return parse[*datacapv8.BurnFromParams, *datacapv8.BurnFromReturn](raw, rawReturn, true)
-	case tools.V9.IsSupported(int64(height)):
+	case tools.V9.IsSupported(height):
 		return parse[*datacapv9.BurnFromParams, *datacapv9.BurnFromReturn](raw, rawReturn, true)
-	case tools.V10.IsSupported(int64(height)):
+	case tools.V10.IsSupported(height):
 		return parse[*datacapv10.BurnFromParams, *datacapv10.BurnFromReturn](raw, rawReturn, true)
-	case tools.V11.IsSupported(int64(height)):
+	case tools.V11.IsSupported(height):
 		return parse[*datacapv11.BurnFromParams, *datacapv11.BurnFromReturn](raw, rawReturn, true)
-	case tools.V12.IsSupported(int64(height)):
+	case tools.V12.IsSupported(height):
 		return parse[*datacapv12.BurnFromParams, *datacapv12.BurnFromReturn](raw, rawReturn, true)
-	case tools.V13.IsSupported(int64(height)):
+	case tools.V13.IsSupported(height):
 		return parse[*datacapv13.BurnFromParams, *datacapv13.BurnFromReturn](raw, rawReturn, true)
-	case tools.V14.IsSupported(int64(height)):
+	case tools.V14.IsSupported(height):
 		return parse[*datacapv14.BurnFromParams, *datacapv14.BurnFromReturn](raw, rawReturn, true)
-	case tools.V15.IsSupported(int64(height)):
+	case tools.V15.IsSupported(height):
 		return parse[*datacapv15.BurnFromParams, *datacapv15.BurnFromReturn](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
-func DestroyExported(height uint64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func DestroyExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(int64(height)):
+	case tools.V8.IsSupported(height):
 		return parse[*datacapv8.DestroyParams, *datacapv8.BurnReturn](raw, rawReturn, true)
-	case tools.V9.IsSupported(int64(height)):
+	case tools.V9.IsSupported(height):
 		return parse[*datacapv9.DestroyParams, *datacapv9.BurnReturn](raw, rawReturn, true)
-	case tools.V10.IsSupported(int64(height)):
+	case tools.V10.IsSupported(height):
 		return parse[*datacapv10.DestroyParams, *datacapv10.BurnReturn](raw, rawReturn, true)
-	case tools.V11.IsSupported(int64(height)):
+	case tools.V11.IsSupported(height):
 		return parse[*datacapv11.DestroyParams, *datacapv11.BurnReturn](raw, rawReturn, true)
-	case tools.V12.IsSupported(int64(height)):
+	case tools.V12.IsSupported(height):
 		return parse[*datacapv12.DestroyParams, *datacapv12.BurnReturn](raw, rawReturn, true)
-	case tools.V13.IsSupported(int64(height)):
+	case tools.V13.IsSupported(height):
 		return parse[*datacapv13.DestroyParams, *datacapv13.BurnReturn](raw, rawReturn, true)
-	case tools.V14.IsSupported(int64(height)):
+	case tools.V14.IsSupported(height):
 		return parse[*datacapv14.DestroyParams, *datacapv14.BurnReturn](raw, rawReturn, true)
-	case tools.V15.IsSupported(int64(height)):
+	case tools.V15.IsSupported(height):
 		return parse[*datacapv15.DestroyParams, *datacapv15.BurnReturn](raw, rawReturn, true)
 	}
 	return nil, fmt.Errorf("not supported")

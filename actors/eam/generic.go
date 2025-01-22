@@ -51,6 +51,7 @@ func parseCreate[T createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, is
 		if err != nil {
 			return metadata, nil, err
 		}
+		metadata[parser.ParamsKey] = params
 	}
 
 	createReturn, err := parseEamReturn[T](rawReturn)

@@ -39,7 +39,7 @@ func MsigConstructor(height int64, raw []byte) (map[string]interface{}, error) {
 	return map[string]interface{}{}, nil
 }
 
-func MsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, parser parseFn) (map[string]interface{}, error) {
+func MsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parseWithMsigParser[*multisig8.ConstructorParams, *multisig8.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*multisig8.ConstructorParams], false)
@@ -61,7 +61,7 @@ func MsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, 
 	return map[string]interface{}{}, nil
 }
 
-func Approve(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser parseFn) (map[string]interface{}, error) {
+func Approve(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parseWithMsigParser[*multisig8.ApproveReturn, *multisig8.ApproveReturn](msg, height, key, parser, rawReturn, cborUnmarshaller[*multisig8.ApproveReturn], true)
@@ -83,7 +83,7 @@ func Approve(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, raw
 	return map[string]interface{}{}, nil
 }
 
-func Cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser parseFn) (map[string]interface{}, error) {
+func Cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parseWithMsigParser[metadataWithCbor, metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false)
@@ -105,7 +105,7 @@ func Cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawR
 	return map[string]interface{}{}, nil
 }
 
-func RemoveSigner(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser parseFn) (map[string]interface{}, error) {
+func RemoveSigner(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parseWithMsigParser[metadataWithCbor, metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false)
@@ -127,7 +127,7 @@ func RemoveSigner(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey
 	return map[string]interface{}{}, nil
 }
 
-func ChangeNumApprovalsThreshold(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser parseFn) (map[string]interface{}, error) {
+func ChangeNumApprovalsThreshold(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parse[*multisig8.ChangeNumApprovalsThresholdParams, []byte](rawReturn, cborUnmarshaller[*multisig8.ChangeNumApprovalsThresholdParams])
@@ -149,7 +149,7 @@ func ChangeNumApprovalsThreshold(msg *parser.LotusMessage, height int64, key fil
 	return map[string]interface{}{}, nil
 }
 
-func LockBalance(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser parseFn) (map[string]interface{}, error) {
+func LockBalance(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parse[*multisig8.LockBalanceParams, []byte](rawReturn, cborUnmarshaller[*multisig8.LockBalanceParams])
@@ -171,7 +171,7 @@ func LockBalance(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey,
 	return map[string]interface{}{}, nil
 }
 
-func UniversalReceiverHook(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser parseFn) (map[string]interface{}, error) {
+func UniversalReceiverHook(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
 		return parse[*abi.CborBytesTransparent, []byte](rawReturn, cborUnmarshaller[*abi.CborBytesTransparent])

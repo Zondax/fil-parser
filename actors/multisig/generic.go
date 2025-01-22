@@ -13,7 +13,7 @@ import (
 func parseWithMsigParser[T multisigParams, R multisigReturn](msg *parser.LotusMessage,
 	height int64,
 	key filTypes.TipSetKey,
-	fn parseFn,
+	fn ParseFn,
 	rawReturn []byte,
 	unmarshaller func(io.Reader, any) error,
 	customReturn bool,

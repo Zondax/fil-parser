@@ -15,7 +15,7 @@ type multisigReturn interface {
 	UnmarshalCBOR(io.Reader) error
 }
 
-type parseFn func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error)
+type ParseFn func(*parser.LotusMessage, int64, filTypes.TipSetKey) (string, error)
 
 type metadataWithCbor map[string]interface{}
 
