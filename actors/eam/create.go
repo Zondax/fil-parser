@@ -18,19 +18,19 @@ import (
 func ParseCreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	external := true
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parseCreate[*eamv15.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parseCreate[*eamv14.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parseCreate[*eamv13.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parseCreate[*eamv12.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V11.IsSupported(network, height):
-		return parseCreate[*eamv11.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V10.IsSupported(network, height):
+	case tools.V19.IsSupported(network, height) || tools.V20.IsSupported(network, height):
+		return parseCreate[*eamv13.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
+	case tools.V18.IsSupported(network, height):
 		return parseCreate[*eamv10.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V9.IsSupported(network, height):
+	case tools.V17.IsSupported(network, height):
 		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
@@ -39,19 +39,19 @@ func ParseCreateExternal(network string, height int64, rawParams, rawReturn []by
 func ParseCreate(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	external := false
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parseCreate[*eamv15.CreateReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parseCreate[*eamv14.CreateReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parseCreate[*eamv13.CreateReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parseCreate[*eamv12.CreateReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V11.IsSupported(network, height):
+	case tools.V19.IsSupported(network, height) || tools.V20.IsSupported(network, height):
 		return parseCreate[*eamv11.CreateReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parseCreate[*eamv10.CreateReturn](rawParams, rawReturn, msgCid, external)
-	case tools.V9.IsSupported(network, height):
+	case tools.V17.IsSupported(network, height):
 		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
@@ -60,19 +60,19 @@ func ParseCreate(network string, height int64, rawParams, rawReturn []byte, msgC
 func ParseCreate2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	external := false
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parseCreate[*eamv15.Create2Return](rawParams, rawReturn, msgCid, external)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parseCreate[*eamv14.Create2Return](rawParams, rawReturn, msgCid, external)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parseCreate[*eamv13.Create2Return](rawParams, rawReturn, msgCid, external)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parseCreate[*eamv12.Create2Return](rawParams, rawReturn, msgCid, external)
-	case tools.V11.IsSupported(network, height):
+	case tools.V19.IsSupported(network, height) || tools.V20.IsSupported(network, height):
 		return parseCreate[*eamv11.Create2Return](rawParams, rawReturn, msgCid, external)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parseCreate[*eamv10.Create2Return](rawParams, rawReturn, msgCid, external)
-	case tools.V9.IsSupported(network, height):
+	case tools.V17.IsSupported(network, height):
 		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)

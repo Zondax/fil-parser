@@ -46,17 +46,17 @@ func InvokeContract(network string, height int64, rawParams, rawReturn []byte) (
 
 func Resurrect(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.ResurrectParams, *evmv15.ResurrectParams](raw, nil, false)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parse[*evmv14.ResurrectParams, *evmv14.ResurrectParams](raw, nil, false)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parse[*evmv13.ResurrectParams, *evmv13.ResurrectParams](raw, nil, false)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parse[*evmv12.ResurrectParams, *evmv12.ResurrectParams](raw, nil, false)
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		return parse[*evmv11.ResurrectParams, *evmv11.ResurrectParams](raw, nil, false)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parse[*evmv10.ResurrectParams, *evmv10.ResurrectParams](raw, nil, false)
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
@@ -64,17 +64,17 @@ func Resurrect(network string, height int64, raw []byte) (map[string]interface{}
 
 func InvokeContractDelegate(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parse[*evmv14.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parse[*evmv13.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parse[*evmv12.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		return parse[*evmv11.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parse[*evmv10.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
@@ -82,7 +82,7 @@ func InvokeContractDelegate(network string, height int64, rawParams, rawReturn [
 
 func GetByteCode(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		data, err := parse[*evmv15.GetBytecodeReturn, *evmv15.GetBytecodeReturn](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -90,7 +90,7 @@ func GetByteCode(network string, height int64, raw []byte) (map[string]interface
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		data, err := parse[*evmv14.GetBytecodeReturn, *evmv14.GetBytecodeReturn](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -98,7 +98,7 @@ func GetByteCode(network string, height int64, raw []byte) (map[string]interface
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		data, err := parse[*evmv13.GetBytecodeReturn, *evmv13.GetBytecodeReturn](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -106,7 +106,7 @@ func GetByteCode(network string, height int64, raw []byte) (map[string]interface
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		data, err := parse[*evmv11.GetBytecodeReturn, *evmv11.GetBytecodeReturn](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -114,7 +114,7 @@ func GetByteCode(network string, height int64, raw []byte) (map[string]interface
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		data, err := parse[*evmv10.GetBytecodeReturn, *evmv10.GetBytecodeReturn](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -128,7 +128,7 @@ func GetByteCode(network string, height int64, raw []byte) (map[string]interface
 
 func GetByteCodeHash(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -136,7 +136,7 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -144,7 +144,7 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -152,7 +152,7 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -160,7 +160,7 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -168,7 +168,7 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 		// The return value is the same as the params
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
 		if err != nil {
 			return nil, err
@@ -182,17 +182,17 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 
 func EVMConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.ConstructorParams, *evmv15.ConstructorParams](raw, nil, false)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parse[*evmv14.ConstructorParams, *evmv14.ConstructorParams](raw, nil, false)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parse[*evmv13.ConstructorParams, *evmv13.ConstructorParams](raw, nil, false)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parse[*evmv12.ConstructorParams, *evmv12.ConstructorParams](raw, nil, false)
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		return parse[*evmv11.ConstructorParams, *evmv11.ConstructorParams](raw, nil, false)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parse[*evmv10.ConstructorParams, *evmv10.ConstructorParams](raw, nil, false)
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
@@ -200,17 +200,17 @@ func EVMConstructor(network string, height int64, raw []byte) (map[string]interf
 
 func GetStorageAt(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parse[*evmv14.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parse[*evmv13.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parse[*evmv12.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		return parse[*evmv11.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parse[*evmv10.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)

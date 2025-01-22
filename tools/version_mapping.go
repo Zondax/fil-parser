@@ -3,29 +3,31 @@ package tools
 import "fmt"
 
 var (
-	LatestVersion version = version{calibration: 22000, mainnet: 22000}
 	V1            version = version{calibration: 0, mainnet: 0}
-	V2            version = version{calibration: 100, mainnet: 100}
-	V3            version = version{calibration: 1000, mainnet: 1000}
-	V4            version = version{calibration: 2000, mainnet: 2000}
-	V5            version = version{calibration: 3000, mainnet: 3000}
-	V6            version = version{calibration: 4000, mainnet: 4000}
-	V7            version = version{calibration: 5000, mainnet: 5000}
-	V8            version = version{calibration: 6000, mainnet: 6000}
-	V9            version = version{calibration: 7000, mainnet: 7000}
-	V10           version = version{calibration: 8000, mainnet: 8000}
-	V11           version = version{calibration: 9000, mainnet: 9000}
-	V12           version = version{calibration: 10000, mainnet: 10000}
-	V13           version = version{calibration: 11000, mainnet: 11000}
-	V14           version = version{calibration: 12000, mainnet: 12000}
-	V15           version = version{calibration: 13000, mainnet: 13000}
-	V16           version = version{calibration: 14000, mainnet: 14000}
-	V17           version = version{calibration: 15000, mainnet: 15000}
-	V18           version = version{calibration: 16000, mainnet: 16000}
-	V19           version = version{calibration: 17000, mainnet: 17000}
-	V20           version = version{calibration: 18000, mainnet: 18000}
-	V21           version = version{calibration: 19000, mainnet: 19000}
-	V22           version = version{calibration: 20000, mainnet: 20000}
+	V2            version = version{calibration: 0, mainnet: 0}
+	V3            version = version{calibration: 0, mainnet: 0}
+	V4            version = version{calibration: 0, mainnet: 0}
+	V5            version = version{calibration: 0, mainnet: 0}
+	V6            version = version{calibration: 0, mainnet: 0}
+	V7            version = version{calibration: 0, mainnet: 0}
+	V8            version = version{calibration: 0, mainnet: 170000}
+	V9            version = version{calibration: 0, mainnet: 265200}
+	V10           version = version{calibration: 0, mainnet: 550321}
+	V11           version = version{calibration: 0, mainnet: 665280}
+	V12           version = version{calibration: 193789, mainnet: 712320}
+	V13           version = version{calibration: 0, mainnet: 892800} // calibration reset
+	V14           version = version{calibration: 312746, mainnet: 1231620}
+	V15           version = version{calibration: 682006, mainnet: 1594680}
+	V16           version = version{calibration: 1044660, mainnet: 1960320}
+	V17           version = version{calibration: 16800, mainnet: 2383680} // calibration reset
+	V18           version = version{calibration: 322354, mainnet: 2683348}
+	V19           version = version{calibration: 489094, mainnet: 2809800}
+	V20           version = version{calibration: 492214, mainnet: 2809800}
+	V21           version = version{calibration: 1108174, mainnet: 3469380}
+	V22           version = version{calibration: 1427974, mainnet: 3817920}
+	V23           version = version{calibration: 1779094, mainnet: 4154640}
+	V24           version = version{calibration: 2081674, mainnet: 4461240}
+	LatestVersion version = V24
 )
 
 type version struct {

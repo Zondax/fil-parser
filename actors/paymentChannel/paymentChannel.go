@@ -20,21 +20,21 @@ type paymentChannelParams interface {
 
 func PaymentChannelConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(network, height):
+	case tools.V16.IsSupported(network, height):
 		return parse[*paychv8.ConstructorParams](raw)
-	case tools.V9.IsSupported(network, height):
+	case tools.V17.IsSupported(network, height):
 		return parse[*paychv9.ConstructorParams](raw)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parse[*paychv10.ConstructorParams](raw)
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		return parse[*paychv11.ConstructorParams](raw)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parse[*paychv12.ConstructorParams](raw)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parse[*paychv13.ConstructorParams](raw)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parse[*paychv14.ConstructorParams](raw)
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parse[*paychv15.ConstructorParams](raw)
 	}
 	return nil, nil
@@ -42,21 +42,21 @@ func PaymentChannelConstructor(network string, height int64, raw []byte) (map[st
 
 func UpdateChannelState(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.V8.IsSupported(network, height):
+	case tools.V16.IsSupported(network, height):
 		return parse[*paychv8.UpdateChannelStateParams](raw)
-	case tools.V9.IsSupported(network, height):
+	case tools.V17.IsSupported(network, height):
 		return parse[*paychv9.UpdateChannelStateParams](raw)
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return parse[*paychv10.UpdateChannelStateParams](raw)
-	case tools.V11.IsSupported(network, height):
+	case tools.V20.IsSupported(network, height):
 		return parse[*paychv11.UpdateChannelStateParams](raw)
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return parse[*paychv12.UpdateChannelStateParams](raw)
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return parse[*paychv13.UpdateChannelStateParams](raw)
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return parse[*paychv14.UpdateChannelStateParams](raw)
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return parse[*paychv15.UpdateChannelStateParams](raw)
 	}
 	return nil, nil

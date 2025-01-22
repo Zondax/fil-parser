@@ -16,35 +16,35 @@ func GranularityExported(network string, height int64, rawReturn []byte) (map[st
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		data, err := parse[*datacapv10.GranularityReturn, *datacapv10.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V11.IsSupported(network, height):
+	case tools.V19.IsSupported(network, height) || tools.V20.IsSupported(network, height):
 		data, err := parse[*datacapv11.GranularityReturn, *datacapv11.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		data, err := parse[*datacapv12.GranularityReturn, *datacapv12.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		data, err := parse[*datacapv14.GranularityReturn, *datacapv14.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
 		}
 		data[parser.ReturnKey] = data[parser.ParamsKey]
 		return data, nil
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		data, err := parse[*datacapv15.GranularityReturn, *datacapv15.GranularityReturn](rawReturn, nil, false)
 		if err != nil {
 			return nil, err
