@@ -1,6 +1,8 @@
 package power
 
 import (
+	"fmt"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
 	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
@@ -203,11 +205,9 @@ func UpdatePledgeTotal(msg *parser.LotusMessage, height int64, raw, rawReturn []
 func NetworkRawPower(msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		data, _, err := parse[*powerv8.NetworkRawPowerReturn, *powerv8.NetworkRawPowerReturn](msg, raw, rawReturn, false)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
-		data, _, err := parse[*powerv9.NetworkRawPowerReturn, *powerv9.NetworkRawPowerReturn](msg, raw, rawReturn, false)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V10.IsSupported(height):
 		data, _, err := parse[*powerv10.NetworkRawPowerReturn, *powerv10.NetworkRawPowerReturn](msg, raw, rawReturn, false)
 		return data, err
@@ -233,11 +233,9 @@ func NetworkRawPower(msg *parser.LotusMessage, height int64, raw, rawReturn []by
 func MinerRawPower(msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		data, _, err := parse[*powerv8.MinerRawPowerParams, *powerv8.MinerRawPowerReturn](msg, raw, rawReturn, true)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
-		data, _, err := parse[*powerv9.MinerRawPowerParams, *powerv9.MinerRawPowerReturn](msg, raw, rawReturn, true)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V10.IsSupported(height):
 		data, _, err := parse[*powerv10.MinerRawPowerParams, *powerv10.MinerRawPowerReturn](msg, raw, rawReturn, true)
 		return data, err
@@ -263,11 +261,9 @@ func MinerRawPower(msg *parser.LotusMessage, height int64, raw, rawReturn []byte
 func MinerCount(msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		data, _, err := parse[*powerv8.MinerCountReturn, *powerv8.MinerCountReturn](msg, raw, rawReturn, false)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
-		data, _, err := parse[*powerv9.MinerCountReturn, *powerv9.MinerCountReturn](msg, raw, rawReturn, false)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V10.IsSupported(height):
 		data, _, err := parse[*powerv10.MinerCountReturn, *powerv10.MinerCountReturn](msg, raw, rawReturn, false)
 		return data, err
@@ -293,11 +289,9 @@ func MinerCount(msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (
 func MinerConsensusCount(msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		data, _, err := parse[*powerv8.MinerConsensusCountReturn, *powerv8.MinerConsensusCountReturn](msg, raw, rawReturn, false)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
-		data, _, err := parse[*powerv9.MinerConsensusCountReturn, *powerv9.MinerConsensusCountReturn](msg, raw, rawReturn, false)
-		return data, err
+		return nil, fmt.Errorf("not supported")
 	case tools.V10.IsSupported(height):
 		data, _, err := parse[*powerv10.MinerConsensusCountReturn, *powerv10.MinerConsensusCountReturn](msg, raw, rawReturn, false)
 		return data, err

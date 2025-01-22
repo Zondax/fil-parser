@@ -29,9 +29,9 @@ func GetAvailableBalance(height int64, rawReturn []byte) (map[string]interface{}
 	case tools.V10.IsSupported(height):
 		return parseGeneric[*miner10.GetAvailableBalanceReturn, *miner10.GetAvailableBalanceReturn](rawReturn, nil, false)
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.GetAvailableBalanceReturn, *miner9.GetAvailableBalanceReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.GetAvailableBalanceReturn, *miner8.GetAvailableBalanceReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -51,9 +51,9 @@ func GetVestingFunds(height int64, rawReturn []byte) (map[string]interface{}, er
 	case tools.V10.IsSupported(height):
 		return parseGeneric[*miner10.GetVestingFundsReturn, *miner10.GetVestingFundsReturn](rawReturn, nil, false)
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.GetVestingFundsReturn, *miner9.GetVestingFundsReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.GetVestingFundsReturn, *miner8.GetVestingFundsReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }

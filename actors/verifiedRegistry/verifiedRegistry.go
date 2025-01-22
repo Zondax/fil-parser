@@ -1,6 +1,8 @@
 package verifiedregistry
 
 import (
+	"fmt"
+
 	"github.com/filecoin-project/go-address"
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
@@ -131,7 +133,7 @@ func RemoveVerifiedClientDataCap(height int64, raw []byte) (map[string]interface
 func RemoveExpiredAllocations(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*verifregv8.RemoveExpiredAllocationsParams, *verifregv8.RemoveExpiredAllocationsReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*verifregv9.RemoveExpiredAllocationsParams, *verifregv9.RemoveExpiredAllocationsReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -197,7 +199,7 @@ func Deprecated2(height int64, raw []byte) (map[string]interface{}, error) {
 func ClaimAllocations(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*verifregv8.ClaimAllocationsParams, *verifregv8.ClaimAllocationsReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*verifregv9.ClaimAllocationsParams, *verifregv9.ClaimAllocationsReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -219,7 +221,7 @@ func ClaimAllocations(height int64, raw, rawReturn []byte) (map[string]interface
 func GetClaims(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*verifregv8.GetClaimsParams, *verifregv8.GetClaimsReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*verifregv9.GetClaimsParams, *verifregv9.GetClaimsReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -241,7 +243,7 @@ func GetClaims(height int64, raw, rawReturn []byte) (map[string]interface{}, err
 func ExtendClaimTerms(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*verifregv8.ExtendClaimTermsParams, *verifregv8.ExtendClaimTermsReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*verifregv9.ExtendClaimTermsParams, *verifregv9.ExtendClaimTermsReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -263,7 +265,7 @@ func ExtendClaimTerms(height int64, raw, rawReturn []byte) (map[string]interface
 func RemoveExpiredClaims(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*verifregv8.RemoveExpiredClaimsParams, *verifregv8.RemoveExpiredClaimsReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*verifregv9.RemoveExpiredClaimsParams, *verifregv9.RemoveExpiredClaimsReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -285,7 +287,7 @@ func RemoveExpiredClaims(height int64, raw, rawReturn []byte) (map[string]interf
 func VerifregUniversalReceiverHook(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*verifregv8.UniversalReceiverParams, *verifregv8.AllocationsResponse](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*verifregv9.UniversalReceiverParams, *verifregv9.AllocationsResponse](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):

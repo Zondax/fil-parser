@@ -229,7 +229,7 @@ func ChangeBeneficiary(height int64, rawParams []byte) (map[string]interface{}, 
 	case tools.V9.IsSupported(height):
 		return parseGeneric[*miner9.ChangeBeneficiaryParams, *miner9.ChangeBeneficiaryParams](rawParams, nil, false)
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.ChangeBeneficiaryParams, *miner8.ChangeBeneficiaryParams](rawParams, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }

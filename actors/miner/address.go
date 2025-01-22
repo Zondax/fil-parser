@@ -118,9 +118,9 @@ func IsControllingAddressExported(height int64, rawParams, rawReturn []byte) (ma
 	case tools.V10.IsSupported(height):
 		return parseGeneric[*miner10.IsControllingAddressParams, *miner10.IsControllingAddressReturn](rawParams, rawReturn, true)
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.IsControllingAddressParams, *miner9.IsControllingAddressReturn](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.IsControllingAddressParams, *miner8.IsControllingAddressReturn](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -140,9 +140,9 @@ func GetOwner(height int64, rawReturn []byte) (map[string]interface{}, error) {
 	case tools.V10.IsSupported(height):
 		return parseGeneric[*miner10.GetOwnerReturn, *miner10.GetOwnerReturn](rawReturn, nil, false)
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.GetOwnerReturn, *miner9.GetOwnerReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.GetOwnerReturn, *miner8.GetOwnerReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -162,9 +162,9 @@ func GetPeerID(height int64, rawReturn []byte) (map[string]interface{}, error) {
 	case tools.V10.IsSupported(height):
 		return parseGeneric[*miner10.GetPeerIDReturn, *miner10.GetPeerIDReturn](rawReturn, nil, false)
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.GetPeerIDReturn, *miner9.GetPeerIDReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.GetPeerIDReturn, *miner8.GetPeerIDReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -184,9 +184,9 @@ func GetMultiaddrs(height int64, rawReturn []byte) (map[string]interface{}, erro
 	case tools.V10.IsSupported(height):
 		return parseGeneric[*miner10.GetMultiAddrsReturn, *miner10.GetMultiAddrsReturn](rawReturn, nil, false)
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.GetMultiAddrsReturn, *miner9.GetMultiAddrsReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.GetMultiAddrsReturn, *miner8.GetMultiAddrsReturn](rawReturn, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }

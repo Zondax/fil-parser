@@ -42,7 +42,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	case manifest.CronKey:
 		metadata, err = p.ParseCron(txType, msg, msgRct)
 	case manifest.AccountKey:
-		metadata, err = p.ParseAccount(height, txType, msg, msgRct)
+		metadata, err = p.ParseAccount(txType, msg, msgRct)
 	case manifest.PowerKey:
 		metadata, addressInfo, err = p.ParseStoragepower(txType, msg, msgRct)
 	case manifest.MinerKey:

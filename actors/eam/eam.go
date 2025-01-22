@@ -11,7 +11,7 @@ import (
 	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-	eamv9 "github.com/filecoin-project/go-state-types/builtin/v9/eam"
+
 	"github.com/zondax/fil-parser/parser"
 )
 
@@ -53,12 +53,7 @@ func newEamCreate(r createReturn) parser.EamCreateReturn {
 			RobustAddress: v.RobustAddress,
 			EthAddress:    parser.EthPrefix + hex.EncodeToString(v.EthAddress[:]),
 		}
-	case *eamv9.CreateReturn:
-		return parser.EamCreateReturn{
-			ActorId:       v.ActorID,
-			RobustAddress: v.RobustAddress,
-			EthAddress:    parser.EthPrefix + hex.EncodeToString(v.EthAddress[:]),
-		}
+
 	default:
 		return parser.EamCreateReturn{}
 	}
@@ -91,8 +86,7 @@ func validateEamReturn(ret createReturn) error {
 		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv10.CreateReturn:
 		return checkAndSetAddress(&v.RobustAddress)
-	case *eamv9.CreateReturn:
-		return checkAndSetAddress(&v.RobustAddress)
+
 	}
 
 	return nil

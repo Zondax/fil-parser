@@ -11,7 +11,7 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
-	"github.com/filecoin-project/lotus/chain/actors/builtin/tools"
+	"github.com/zondax/fil-parser/tools"
 )
 
 func ExtendSectorExpiration2(height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -31,7 +31,7 @@ func ExtendSectorExpiration2(height int64, rawParams []byte) (map[string]interfa
 	case tools.V9.IsSupported(height):
 		return parseGeneric[*miner9.ExtendSectorExpiration2Params, *miner9.ExtendSectorExpiration2Params](rawParams, nil, false)
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.ExtendSectorExpiration2Params, *miner8.ExtendSectorExpiration2Params](rawParams, nil, false)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -89,15 +89,15 @@ func ProveCommitSectors3(height int64, rawParams, rawReturn []byte) (map[string]
 	case tools.V13.IsSupported(height):
 		return parseGeneric[*miner13.ProveCommitSectors3Params, *miner13.ProveCommitSectors3Return](rawParams, rawReturn, true)
 	case tools.V12.IsSupported(height):
-		return parseGeneric[*miner12.ProveCommitSectors3Params, *miner12.ProveCommitSectors3Return](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V11.IsSupported(height):
-		return parseGeneric[*miner11.ProveCommitSectors3Params, *miner11.ProveCommitSectors3Return](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V10.IsSupported(height):
-		return parseGeneric[*miner10.ProveCommitSectors3Params, *miner10.ProveCommitSectors3Return](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.ProveCommitSectors3Params, *miner9.ProveCommitSectors3Return](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.ProveCommitSectors3Params, *miner8.ProveCommitSectors3Return](rawParams, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -127,9 +127,9 @@ func SubmitWindowedPoSt(height int64, rawParams []byte) (map[string]interface{},
 func ConfirmSectorProofsValid(height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V15.IsSupported(height):
-		return parseGeneric[*miner15.ConfirmSectorProofsParams, *miner15.ConfirmSectorProofsParams](rawParams, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V14.IsSupported(height):
-		return parseGeneric[*miner14.ConfirmSectorProofsParams, *miner14.ConfirmSectorProofsParams](rawParams, nil, false)
+		return nil, fmt.Errorf("not supported")
 	case tools.V13.IsSupported(height):
 		return parseGeneric[*miner13.ConfirmSectorProofsParams, *miner13.ConfirmSectorProofsParams](rawParams, nil, false)
 	case tools.V12.IsSupported(height):
@@ -256,24 +256,25 @@ func PreCommitSectorBatch(height int64, rawParams []byte) (map[string]interface{
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
+// TODO: miner.GetSectorSizeReturn does not implement UnmarshalCBOR
 func GetSectorSize(height int64, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V15.IsSupported(height):
-		return parseGeneric[*miner15.GetSectorSizeReturn, *miner15.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V14.IsSupported(height):
-		return parseGeneric[*miner14.GetSectorSizeReturn, *miner14.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V13.IsSupported(height):
-		return parseGeneric[*miner13.GetSectorSizeReturn, *miner13.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V12.IsSupported(height):
-		return parseGeneric[*miner12.GetSectorSizeReturn, *miner12.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V11.IsSupported(height):
-		return parseGeneric[*miner11.GetSectorSizeReturn, *miner11.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V10.IsSupported(height):
-		return parseGeneric[*miner10.GetSectorSizeReturn, *miner10.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V9.IsSupported(height):
-		return parseGeneric[*miner9.GetSectorSizeReturn, *miner9.GetSectorSizeReturn](rawReturn, nil, false)
-	case tools.V8.IsSupported(height):
-		return parseGeneric[*miner8.GetSectorSizeReturn, *miner8.GetSectorSizeReturn](rawReturn, nil, false)
-	}
+	// switch {
+	// case tools.V15.IsSupported(height):
+	// 	return parseGeneric[*miner15.GetSectorSizeReturn, *miner15.GetSectorSizeReturn](rawReturn, nil, false)
+	// case tools.V14.IsSupported(height):
+	// 	return parseGeneric[*miner14.GetSectorSizeReturn, *miner14.GetSectorSizeReturn](rawReturn, nil, false)
+	// case tools.V13.IsSupported(height):
+	// 	return parseGeneric[*miner13.GetSectorSizeReturn, *miner13.GetSectorSizeReturn](rawReturn, nil, false)
+	// case tools.V12.IsSupported(height):
+	// 	return parseGeneric[*miner12.GetSectorSizeReturn, *miner12.GetSectorSizeReturn](rawReturn, nil, false)
+	// case tools.V11.IsSupported(height):
+	// 	return parseGeneric[*miner11.GetSectorSizeReturn, *miner11.GetSectorSizeReturn](rawReturn, nil, false)
+	// case tools.V10.IsSupported(height):
+	// 	return parseGeneric[*miner10.GetSectorSizeReturn, *miner10.GetSectorSizeReturn](rawReturn, nil, false)
+	// case tools.V9.IsSupported(height):
+	// 	return nil, fmt.Errorf("not supported")
+	// case tools.V8.IsSupported(height):
+	// 	return nil, fmt.Errorf("not supported")
+	// }
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }

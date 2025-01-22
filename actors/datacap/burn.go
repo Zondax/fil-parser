@@ -9,7 +9,6 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
-	datacapv8 "github.com/filecoin-project/go-state-types/builtin/v8/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -17,7 +16,7 @@ import (
 func BurnExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*datacapv8.BurnParams, *datacapv8.BurnReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*datacapv9.BurnParams, *datacapv9.BurnReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -39,7 +38,7 @@ func BurnExported(height int64, raw, rawReturn []byte) (map[string]interface{}, 
 func BurnFromExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*datacapv8.BurnFromParams, *datacapv8.BurnFromReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*datacapv9.BurnFromParams, *datacapv9.BurnFromReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):
@@ -61,7 +60,7 @@ func BurnFromExported(height int64, raw, rawReturn []byte) (map[string]interface
 func DestroyExported(height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(height):
-		return parse[*datacapv8.DestroyParams, *datacapv8.BurnReturn](raw, rawReturn, true)
+		return nil, fmt.Errorf("not supported")
 	case tools.V9.IsSupported(height):
 		return parse[*datacapv9.DestroyParams, *datacapv9.BurnReturn](raw, rawReturn, true)
 	case tools.V10.IsSupported(height):

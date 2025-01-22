@@ -9,7 +9,7 @@ import (
 	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-	eamv9 "github.com/filecoin-project/go-state-types/builtin/v9/eam"
+
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -31,7 +31,7 @@ func ParseCreateExternal(height int64, rawParams, rawReturn []byte, msgCid cid.C
 	case tools.V10.IsSupported(height):
 		return parseCreate[*eamv10.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
 	case tools.V9.IsSupported(height):
-		return parseCreate[*eamv9.CreateExternalReturn](rawParams, rawReturn, msgCid, external)
+		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -52,7 +52,7 @@ func ParseCreate(height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map
 	case tools.V10.IsSupported(height):
 		return parseCreate[*eamv10.CreateReturn](rawParams, rawReturn, msgCid, external)
 	case tools.V9.IsSupported(height):
-		return parseCreate[*eamv9.CreateReturn](rawParams, rawReturn, msgCid, external)
+		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -73,7 +73,7 @@ func ParseCreate2(height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (ma
 	case tools.V10.IsSupported(height):
 		return parseCreate[*eamv10.Create2Return](rawParams, rawReturn, msgCid, external)
 	case tools.V9.IsSupported(height):
-		return parseCreate[*eamv9.Create2Return](rawParams, rawReturn, msgCid, external)
+		return nil, nil, fmt.Errorf("unsupported height: %d", height)
 	}
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
 }
