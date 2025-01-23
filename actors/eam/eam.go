@@ -15,6 +15,8 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
+type Eam struct{}
+
 func newEamCreate(r createReturn) parser.EamCreateReturn {
 	switch v := r.(type) {
 	case *eamv15.CreateReturn:

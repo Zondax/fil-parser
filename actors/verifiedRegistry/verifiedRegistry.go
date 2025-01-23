@@ -16,7 +16,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
+type VerifiedRegistry struct{}
+
+func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.AddVerifierParams, *verifregv8.AddVerifierParams](raw, nil, false)
@@ -38,11 +40,11 @@ func AddVerifier(network string, height int64, raw []byte) (map[string]interface
 	return nil, nil
 }
 
-func RemoveVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) RemoveVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	return parse[*address.Address, *address.Address](raw, nil, false)
 }
 
-func AddVerifiedClient(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) AddVerifiedClient(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.AddVerifiedClientParams, *verifregv8.AddVerifiedClientParams](raw, nil, false)
@@ -64,7 +66,7 @@ func AddVerifiedClient(network string, height int64, raw []byte) (map[string]int
 	return nil, nil
 }
 
-func UseBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.UseBytesParams, *verifregv8.UseBytesParams](raw, nil, false)
@@ -86,7 +88,7 @@ func UseBytes(network string, height int64, raw []byte) (map[string]interface{},
 	return nil, nil
 }
 
-func RestoreBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.RestoreBytesParams, *verifregv8.RestoreBytesParams](raw, nil, false)
@@ -108,7 +110,7 @@ func RestoreBytes(network string, height int64, raw []byte) (map[string]interfac
 	return nil, nil
 }
 
-func RemoveVerifiedClientDataCap(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.DataCap, *verifregv8.DataCap](raw, nil, false)
@@ -130,7 +132,7 @@ func RemoveVerifiedClientDataCap(network string, height int64, raw []byte) (map[
 	return nil, nil
 }
 
-func RemoveExpiredAllocations(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) RemoveExpiredAllocations(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -152,7 +154,7 @@ func RemoveExpiredAllocations(network string, height int64, raw, rawReturn []byt
 	return nil, nil
 }
 
-func Deprecated1(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.RestoreBytesParams, *verifregv8.RestoreBytesParams](raw, nil, false)
@@ -174,7 +176,7 @@ func Deprecated1(network string, height int64, raw []byte) (map[string]interface
 	return nil, nil
 }
 
-func Deprecated2(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) Deprecated2(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifregv8.UseBytesParams, *verifregv8.UseBytesParams](raw, nil, false)
@@ -196,7 +198,7 @@ func Deprecated2(network string, height int64, raw []byte) (map[string]interface
 	return nil, nil
 }
 
-func ClaimAllocations(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -218,7 +220,7 @@ func ClaimAllocations(network string, height int64, raw, rawReturn []byte) (map[
 	return nil, nil
 }
 
-func GetClaims(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) GetClaims(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -240,7 +242,7 @@ func GetClaims(network string, height int64, raw, rawReturn []byte) (map[string]
 	return nil, nil
 }
 
-func ExtendClaimTerms(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) ExtendClaimTerms(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -262,7 +264,7 @@ func ExtendClaimTerms(network string, height int64, raw, rawReturn []byte) (map[
 	return nil, nil
 }
 
-func RemoveExpiredClaims(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) RemoveExpiredClaims(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -284,7 +286,7 @@ func RemoveExpiredClaims(network string, height int64, raw, rawReturn []byte) (m
 	return nil, nil
 }
 
-func VerifregUniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) VerifregUniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")

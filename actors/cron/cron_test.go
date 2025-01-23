@@ -26,10 +26,18 @@ func TestMain(m *testing.M) {
 
 type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 
-func TestCronConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "CronConstructor", expected)
-	require.NoError(t, err)
-	runTest(t, cron.CronConstructor, tests)
+func TestCron(t *testing.T) {
+	cron := &cron.Cron{}
+	testFns := map[string]testFn{
+		"CronConstructor": cron.CronConstructor,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

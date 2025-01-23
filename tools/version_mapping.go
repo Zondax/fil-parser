@@ -101,3 +101,21 @@ func GetSupportedVersions(network string) []version {
 	}
 	return result
 }
+
+func VersionsBefore(version version) []version {
+	for i, v := range supportedVersions {
+		if v.nodeVersion == version.nodeVersion {
+			return supportedVersions[:i+1]
+		}
+	}
+	return nil
+}
+
+func VersionsAfter(version version) []version {
+	for i, v := range supportedVersions {
+		if v.nodeVersion == version.nodeVersion {
+			return supportedVersions[i:]
+		}
+	}
+	return nil
+}

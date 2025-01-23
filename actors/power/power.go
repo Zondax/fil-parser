@@ -17,7 +17,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+type Power struct{}
+
+func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		data, _, err := parse[*powerv8.CurrentTotalPowerReturn, *powerv8.CurrentTotalPowerReturn](msg, raw, rawReturn, false)
@@ -47,12 +49,12 @@ func CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, r
 	return nil, nil
 }
 
-func SubmitPoRepForBulkVerify(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) SubmitPoRepForBulkVerify(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	data, _, err := parse[*proof.SealVerifyInfo, *proof.SealVerifyInfo](msg, raw, rawReturn, false)
 	return data, err
 }
 
-func PowerConstructor(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, error) {
+func (*Power) PowerConstructor(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		data, _, err := parse[*powerv8.MinerConstructorParams, *powerv8.MinerConstructorParams](msg, raw, nil, false)
@@ -82,7 +84,7 @@ func PowerConstructor(network string, height int64, msg *parser.LotusMessage, ra
 	return nil, nil
 }
 
-func CreateMiner(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) CreateMiner(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		data, _, err := parse[*powerv8.CreateMinerParams, *powerv8.CreateMinerReturn](msg, raw, rawReturn, true)
@@ -112,7 +114,7 @@ func CreateMiner(network string, msg *parser.LotusMessage, height int64, raw, ra
 	return nil, nil
 }
 
-func EnrollCronEvent(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) EnrollCronEvent(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		data, _, err := parse[*powerv8.EnrollCronEventParams, *powerv8.EnrollCronEventParams](msg, raw, rawReturn, true)
@@ -142,7 +144,7 @@ func EnrollCronEvent(network string, msg *parser.LotusMessage, height int64, raw
 	return nil, nil
 }
 
-func UpdateClaimedPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) UpdateClaimedPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		data, _, err := parse[*powerv8.UpdateClaimedPowerParams, *powerv8.UpdateClaimedPowerParams](msg, raw, rawReturn, true)
@@ -172,7 +174,7 @@ func UpdateClaimedPower(network string, msg *parser.LotusMessage, height int64, 
 	return nil, nil
 }
 
-func UpdatePledgeTotal(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) UpdatePledgeTotal(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		data, _, err := parse[*abi.TokenAmount, *abi.TokenAmount](msg, raw, rawReturn, false)
@@ -202,7 +204,7 @@ func UpdatePledgeTotal(network string, msg *parser.LotusMessage, height int64, r
 	return nil, nil
 }
 
-func NetworkRawPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) NetworkRawPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -230,7 +232,7 @@ func NetworkRawPower(network string, msg *parser.LotusMessage, height int64, raw
 	return nil, nil
 }
 
-func MinerRawPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) MinerRawPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -258,7 +260,7 @@ func MinerRawPower(network string, msg *parser.LotusMessage, height int64, raw, 
 	return nil, nil
 }
 
-func MinerCount(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) MinerCount(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -286,7 +288,7 @@ func MinerCount(network string, msg *parser.LotusMessage, height int64, raw, raw
 	return nil, nil
 }
 
-func MinerConsensusCount(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Power) MinerConsensusCount(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")

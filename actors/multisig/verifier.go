@@ -12,7 +12,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func AddVerifierValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) AddVerifierValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*verifreg8.AddVerifierParams, string](txMetadata, jsonUnmarshaller[*verifreg8.AddVerifierParams])

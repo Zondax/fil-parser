@@ -17,7 +17,9 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func InitConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+type Init struct{}
+
+func (*Init) InitConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return initConstructor[*builtinInitv15.ConstructorParams](raw)
@@ -39,7 +41,7 @@ func InitConstructor(network string, height int64, raw []byte) (map[string]inter
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ParseExec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (*Init) ParseExec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseExec[*builtinInitv15.ExecParams, *builtinInitv15.ExecReturn](msg, raw)
@@ -61,7 +63,7 @@ func ParseExec(network string, height int64, msg *parser.LotusMessage, raw []byt
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ParseExec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (*Init) ParseExec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseExec[*builtinInitv15.Exec4Params, *builtinInitv15.Exec4Return](msg, raw)

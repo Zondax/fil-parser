@@ -39,6 +39,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestAuthenticateMessage(t *testing.T) {
+
 	tests, err := tools.LoadTestData[map[string]any](network, "AuthenticateMessage", expected)
 	require.NoError(t, err)
 	for _, tt := range tests {
@@ -50,6 +51,7 @@ func TestAuthenticateMessage(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
+				account := &account.Account{}
 				result, err := account.AuthenticateMessage(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				data, err := json.Marshal(result)
@@ -74,6 +76,7 @@ func TestPubkeyAddress(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
+				account := &account.Account{}
 				result, err := account.PubkeyAddress(tt.Network, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))

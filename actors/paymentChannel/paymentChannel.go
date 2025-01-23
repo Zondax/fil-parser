@@ -14,11 +14,12 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+type PaymentChannel struct{}
 type paymentChannelParams interface {
 	UnmarshalCBOR(io.Reader) error
 }
 
-func PaymentChannelConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*PaymentChannel) PaymentChannelConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*paychv8.ConstructorParams](raw)
@@ -40,7 +41,7 @@ func PaymentChannelConstructor(network string, height int64, raw []byte) (map[st
 	return nil, nil
 }
 
-func UpdateChannelState(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*PaymentChannel) UpdateChannelState(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*paychv8.UpdateChannelStateParams](raw)

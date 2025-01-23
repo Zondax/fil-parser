@@ -11,7 +11,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func CronConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+type Cron struct{}
+
+func (c *Cron) CronConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return cronConstructorGeneric[*cronv8.ConstructorParams](raw, &cronv8.ConstructorParams{})

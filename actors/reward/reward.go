@@ -13,11 +13,13 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func RewardConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+type Reward struct{}
+
+func (*Reward) RewardConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	return parse[*abi.StoragePower](raw)
 }
 
-func AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*rewardv8.AwardBlockRewardParams](raw)
@@ -39,11 +41,11 @@ func AwardBlockReward(network string, height int64, raw []byte) (map[string]inte
 	return nil, nil
 }
 
-func UpdateNetworkKPI(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	return parse[*abi.StoragePower](raw)
 }
 
-func ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*rewardv8.ThisEpochRewardReturn](raw)

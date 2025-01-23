@@ -16,7 +16,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func InvokeContract(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+type Evm struct{}
+
+func (*Evm) InvokeContract(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
@@ -44,7 +46,7 @@ func InvokeContract(network string, height int64, rawParams, rawReturn []byte) (
 	return metadata, nil
 }
 
-func Resurrect(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Evm) Resurrect(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.ResurrectParams, *evmv15.ResurrectParams](raw, nil, false)
@@ -62,7 +64,7 @@ func Resurrect(network string, height int64, raw []byte) (map[string]interface{}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func InvokeContractDelegate(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Evm) InvokeContractDelegate(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.DelegateCallParams, *abi.CborBytes](rawParams, rawReturn, true)
@@ -80,7 +82,7 @@ func InvokeContractDelegate(network string, height int64, rawParams, rawReturn [
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetByteCode(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Evm) GetByteCode(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		data, err := parse[*evmv15.GetBytecodeReturn, *evmv15.GetBytecodeReturn](raw, nil, false)
@@ -126,7 +128,7 @@ func GetByteCode(network string, height int64, raw []byte) (map[string]interface
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetByteCodeHash(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Evm) GetByteCodeHash(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		data, err := parse[*abi.CborBytes, *abi.CborBytes](raw, nil, false)
@@ -180,7 +182,7 @@ func GetByteCodeHash(network string, height int64, raw []byte) (map[string]inter
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func EVMConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func (*Evm) EVMConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.ConstructorParams, *evmv15.ConstructorParams](raw, nil, false)
@@ -198,7 +200,7 @@ func EVMConstructor(network string, height int64, raw []byte) (map[string]interf
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetStorageAt(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Evm) GetStorageAt(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parse[*evmv15.GetStorageAtParams, *abi.CborBytes](rawParams, rawReturn, true)

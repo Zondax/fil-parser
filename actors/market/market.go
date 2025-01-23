@@ -15,7 +15,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func ParseAddBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+type Market struct{}
+
+func (*Market) ParseAddBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*address.Address, *address.Address](rawParams, nil, false)
@@ -33,7 +35,7 @@ func ParseAddBalance(network string, height int64, rawParams []byte) (map[string
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ParseWithdrawBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Market) ParseWithdrawBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.WithdrawBalanceParams, *v15Market.WithdrawBalanceParams](rawParams, nil, false)
@@ -55,7 +57,7 @@ func ParseWithdrawBalance(network string, height int64, rawParams []byte) (map[s
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func PublishStorageDealsParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) PublishStorageDealsParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.PublishStorageDealsParams, *v15Market.PublishStorageDealsReturn](rawParams, rawReturn, true)
@@ -77,7 +79,7 @@ func PublishStorageDealsParams(network string, height int64, rawParams, rawRetur
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func VerifyDealsForActivationParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) VerifyDealsForActivationParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.VerifyDealsForActivationParams, *v15Market.VerifyDealsForActivationReturn](rawParams, rawReturn, true)
@@ -99,7 +101,7 @@ func VerifyDealsForActivationParams(network string, height int64, rawParams, raw
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ActivateDealsParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) ActivateDealsParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.ActivateDealsParams, *v15Market.ActivateDealsResult](rawParams, rawReturn, true)
@@ -119,7 +121,7 @@ func ActivateDealsParams(network string, height int64, rawParams, rawReturn []by
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func OnMinerSectorsTerminateParams(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Market) OnMinerSectorsTerminateParams(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.OnMinerSectorsTerminateParams, *v15Market.OnMinerSectorsTerminateParams](rawParams, nil, false)
@@ -141,7 +143,7 @@ func OnMinerSectorsTerminateParams(network string, height int64, rawParams []byt
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ComputeDataCommitmentParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) ComputeDataCommitmentParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V19.IsSupported(network, height):
 		return parseGeneric[*v11Market.ComputeDataCommitmentParams, *v11Market.ComputeDataCommitmentReturn](rawParams, rawReturn, true)
@@ -155,7 +157,7 @@ func ComputeDataCommitmentParams(network string, height int64, rawParams, rawRet
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetBalanceParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetBalanceParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*address.Address, *v15Market.GetBalanceReturn](rawParams, rawReturn, true)
@@ -173,7 +175,7 @@ func GetBalanceParams(network string, height int64, rawParams, rawReturn []byte)
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealDataCommitmentParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealDataCommitmentParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealDataCommitmentParams, *v15Market.GetDealDataCommitmentReturn](rawParams, rawReturn, true)
@@ -191,7 +193,7 @@ func GetDealDataCommitmentParams(network string, height int64, rawParams, rawRet
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealClientParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealClientParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealClientParams, *v15Market.GetDealClientReturn](rawParams, rawReturn, true)
@@ -209,7 +211,7 @@ func GetDealClientParams(network string, height int64, rawParams, rawReturn []by
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealProviderParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealProviderParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealProviderParams, *v15Market.GetDealProviderReturn](rawParams, rawReturn, true)
@@ -227,7 +229,7 @@ func GetDealProviderParams(network string, height int64, rawParams, rawReturn []
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealLabelParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealLabelParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealLabelParams, *v15Market.GetDealLabelReturn](rawParams, rawReturn, true)
@@ -245,7 +247,7 @@ func GetDealLabelParams(network string, height int64, rawParams, rawReturn []byt
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealTermParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealTermParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealTermParams, *v15Market.GetDealTermReturn](rawParams, rawReturn, true)
@@ -263,7 +265,7 @@ func GetDealTermParams(network string, height int64, rawParams, rawReturn []byte
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealTotalPriceParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealTotalPriceParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealTotalPriceParams, *v15Market.GetDealTotalPriceReturn](rawParams, rawReturn, true)
@@ -281,7 +283,7 @@ func GetDealTotalPriceParams(network string, height int64, rawParams, rawReturn 
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealClientCollateralParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealClientCollateralParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealClientCollateralParams, *v15Market.GetDealClientCollateralReturn](rawParams, rawReturn, true)
@@ -299,7 +301,7 @@ func GetDealClientCollateralParams(network string, height int64, rawParams, rawR
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealProviderCollateralParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealProviderCollateralParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealProviderCollateralParams, *v15Market.GetDealProviderCollateralReturn](rawParams, rawReturn, true)
@@ -317,7 +319,7 @@ func GetDealProviderCollateralParams(network string, height int64, rawParams, ra
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealVerifiedParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealVerifiedParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealVerifiedParams, *v15Market.GetDealVerifiedReturn](rawParams, rawReturn, true)
@@ -335,7 +337,7 @@ func GetDealVerifiedParams(network string, height int64, rawParams, rawReturn []
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetDealActivationParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Market) GetDealActivationParams(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*v15Market.GetDealActivationParams, *v15Market.GetDealActivationReturn](rawParams, rawReturn, true)

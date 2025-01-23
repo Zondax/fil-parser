@@ -15,7 +15,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func ChangeMultiaddrs(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+type Miner struct{}
+
+func (*Miner) ChangeMultiaddrs(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ChangeMultiaddrsParams, *miner15.ChangeMultiaddrsParams](rawParams, nil, false)
@@ -37,7 +39,7 @@ func ChangeMultiaddrs(network string, height int64, rawParams []byte) (map[strin
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ChangePeerID(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ChangePeerID(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ChangePeerIDParams, *miner15.ChangePeerIDParams](rawParams, nil, false)
@@ -59,7 +61,7 @@ func ChangePeerID(network string, height int64, rawParams []byte) (map[string]in
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ChangeWorkerAddress(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ChangeWorkerAddress(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ChangeWorkerAddressParams, *miner15.ChangeWorkerAddressParams](rawParams, nil, false)
@@ -81,7 +83,7 @@ func ChangeWorkerAddress(network string, height int64, rawParams []byte) (map[st
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ChangeOwnerAddress(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ChangeOwnerAddress(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*address.Address, *address.Address](rawParams, nil, false)
@@ -103,7 +105,7 @@ func ChangeOwnerAddress(network string, height int64, rawParams []byte) (map[str
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func IsControllingAddressExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) IsControllingAddressExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.IsControllingAddressParams, *miner15.IsControllingAddressReturn](rawParams, rawReturn, true)
@@ -125,7 +127,7 @@ func IsControllingAddressExported(network string, height int64, rawParams, rawRe
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetOwner(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) GetOwner(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.GetOwnerReturn, *miner15.GetOwnerReturn](rawReturn, nil, false)
@@ -147,7 +149,7 @@ func GetOwner(network string, height int64, rawReturn []byte) (map[string]interf
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetPeerID(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) GetPeerID(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.GetPeerIDReturn, *miner15.GetPeerIDReturn](rawReturn, nil, false)
@@ -169,7 +171,7 @@ func GetPeerID(network string, height int64, rawReturn []byte) (map[string]inter
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetMultiaddrs(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) GetMultiaddrs(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.GetMultiAddrsReturn, *miner15.GetMultiAddrsReturn](rawReturn, nil, false)

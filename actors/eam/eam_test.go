@@ -30,25 +30,20 @@ func TestMain(m *testing.M) {
 
 type testFn func(network string, height int64, raw, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
 
-func TestParseCreateExternal(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "CreateExternalExported", expected)
-	require.NoError(t, err)
-
-	runTest(t, eam.ParseCreateExternal, tests)
-}
-
-func TestParseCreate(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "CreateExported", expected)
-	require.NoError(t, err)
-
-	runTest(t, eam.ParseCreate, tests)
-}
-
-func TestParseCreate2(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "Create2Exported", expected)
-	require.NoError(t, err)
-
-	runTest(t, eam.ParseCreate2, tests)
+func TestEam(t *testing.T) {
+	eam := &eam.Eam{}
+	testFns := map[string]testFn{
+		"ParseCreateExternal": eam.ParseCreateExternal,
+		"ParseCreate":         eam.ParseCreate,
+		"ParseCreate2":        eam.ParseCreate2,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

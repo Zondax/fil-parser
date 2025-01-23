@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -13,6 +14,8 @@ import (
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/klauspost/compress/s2"
 	"github.com/spf13/cobra"
+	"github.com/zondax/fil-parser/actors/account"
+	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/golem/pkg/cli"
 	"go.uber.org/zap"
 )
@@ -31,6 +34,33 @@ func GetStartCommand(c *cli.CLI) *cobra.Command {
 
 	cmd.Flags().UintSlice("heights", []uint{0}, "--heights 387926,387927,387928")
 	return cmd
+}
+
+func getTrace(height uint64, logType string, rpcClient *RPCClient) ([]byte, error) {
+	var data any
+	var err error
+	switch logType {
+	case "traces":
+		data, err = getTraceFileByHeight(height, rpcClient.client)
+	case "tipset":
+		data, err = getTipsetFileByHeight(height, lotusChainTypes.EmptyTSK, rpcClient.client)
+	case "ethlog":
+		data, err = getEthLogsByHeight(height, rpcClient.client)
+	case "nativelog":
+		data, err = getNativeLogsByHeight(height, rpcClient.client)
+	case "metadata":
+		data, err = getMetadata(rpcClient)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	dataJson, err := sonic.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return dataJson, nil
 }
 
 func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
@@ -71,30 +101,18 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 	if len(heights) > 0 {
 		for _, tmp := range heights {
 			height := uint64(tmp)
-			var data any
-			switch logType {
-			case "traces":
-				data, err = getTraceFileByHeight(height, rpcClient.client)
-			case "tipset":
-				data, err = getTipsetFileByHeight(height, lotusChainTypes.EmptyTSK, rpcClient.client)
-			case "ethlog":
-				data, err = getEthLogsByHeight(height, rpcClient.client)
-			case "nativelog":
-				data, err = getNativeLogsByHeight(height, rpcClient.client)
-			case "metadata":
-				data, err = getMetadata(rpcClient)
-			}
-
+			dataJson, err := getTrace(height, logType, rpcClient)
 			if err != nil {
 				zap.S().Error(err)
 				return
 			}
-
-			dataJson, err := sonic.Marshal(data)
+			actorJson, err := DownloadActorJSON(height, dataJson)
 			if err != nil {
 				zap.S().Error(err)
-				return
+				continue
 			}
+			fmt.Println(string(actorJson))
+
 			out := dataJson
 			fname := fmt.Sprintf("%s_%d.json", logType, height)
 			if format != "" {
@@ -149,4 +167,27 @@ func compress(format string, data []byte) ([]byte, error) {
 	_ = enc.Close()
 
 	return b.Bytes(), nil
+}
+
+func DownloadActorJSON(height uint64, traces []byte) ([]byte, error) {
+	var computeState *typesV2.ComputeStateOutputV2
+	err := sonic.Unmarshal(traces, &computeState)
+	if err != nil {
+		return nil, err
+	}
+	if len(computeState.Trace) == 0 {
+		return nil, fmt.Errorf("no traces found")
+	}
+	resp, err := account.AuthenticateMessage("mainnet", 10000, computeState.Trace[0].Msg.Params, computeState.Trace[0].MsgRct.Return)
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+	if string(data) == "{}" {
+		return nil, fmt.Errorf("no data found")
+	}
+	return data, nil
 }

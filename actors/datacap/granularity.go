@@ -12,7 +12,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func GranularityExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) GranularityExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")

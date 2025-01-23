@@ -28,64 +28,27 @@ func TestMain(m *testing.M) {
 
 type testFn func(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
 
-func TestCurrentTotalPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "CurrentTotalPower", expected)
-	require.NoError(t, err)
-	runTest(t, power.CurrentTotalPower, tests)
-}
-
-func TestSubmitPoRepForBulkVerify(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "SubmitPoRepForBulkVerify", expected)
-	require.NoError(t, err)
-	runTest(t, power.SubmitPoRepForBulkVerify, tests)
-}
-
-func TestCreateMiner(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "CreateMiner", expected)
-	require.NoError(t, err)
-	runTest(t, power.CreateMiner, tests)
-}
-
-func TestEnrollCronEvent(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "EnrollCronEvent", expected)
-	require.NoError(t, err)
-	runTest(t, power.EnrollCronEvent, tests)
-}
-
-func TestUpdateClaimedPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "UpdateClaimedPower", expected)
-	require.NoError(t, err)
-	runTest(t, power.UpdateClaimedPower, tests)
-}
-
-func TestUpdatePledgeTotal(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "UpdatePledgeTotal", expected)
-	require.NoError(t, err)
-	runTest(t, power.UpdatePledgeTotal, tests)
-}
-
-func TestNetworkRawPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "NetworkRawPower", expected)
-	require.NoError(t, err)
-	runTest(t, power.NetworkRawPower, tests)
-}
-
-func TestMinerRawPower(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "MinerRawPower", expected)
-	require.NoError(t, err)
-	runTest(t, power.MinerRawPower, tests)
-}
-
-func TestMinerCount(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "MinerCount", expected)
-	require.NoError(t, err)
-	runTest(t, power.MinerCount, tests)
-}
-
-func TestMinerConsensusCount(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "MinerConsensusCount", expected)
-	require.NoError(t, err)
-	runTest(t, power.MinerConsensusCount, tests)
+func TestPower(t *testing.T) {
+	power := &power.Power{}
+	testFns := map[string]testFn{
+		"CurrentTotalPower":        power.CurrentTotalPower,
+		"SubmitPoRepForBulkVerify": power.SubmitPoRepForBulkVerify,
+		"CreateMiner":              power.CreateMiner,
+		"EnrollCronEvent":          power.EnrollCronEvent,
+		"UpdateClaimedPower":       power.UpdateClaimedPower,
+		"UpdatePledgeTotal":        power.UpdatePledgeTotal,
+		"NetworkRawPower":          power.NetworkRawPower,
+		"MinerRawPower":            power.MinerRawPower,
+		"MinerCount":               power.MinerCount,
+		"MinerConsensusCount":      power.MinerConsensusCount,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
 func TestPowerConstructor(t *testing.T) {
@@ -106,6 +69,7 @@ func TestPowerConstructor(t *testing.T) {
 					From:   trace.Msg.From,
 					Method: trace.Msg.Method,
 				}
+				power := &power.Power{}
 				result, err := power.PowerConstructor(tt.Network, tt.Height, lotusMsg, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))

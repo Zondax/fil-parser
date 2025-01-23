@@ -31,18 +31,19 @@ func TestMain(m *testing.M) {
 
 type testFn func(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error)
 
-func TestParseExec(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "ParseExec", expected)
-	require.NoError(t, err)
-
-	runTest(t, initActor.ParseExec, tests)
-}
-
-func TestParseExec4(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "ParseExec4", expected)
-	require.NoError(t, err)
-
-	runTest(t, initActor.ParseExec4, tests)
+func TestInit(t *testing.T) {
+	initActor := &initActor.Init{}
+	testFns := map[string]testFn{
+		"ParseExec":  initActor.ParseExec,
+		"ParseExec4": initActor.ParseExec4,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
 func TestInitConstructor(t *testing.T) {
@@ -58,7 +59,7 @@ func TestInitConstructor(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
-
+				initActor := &initActor.Init{}
 				result, err := initActor.InitConstructor(tt.Network, tt.Height, trace.Msg.Params)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))

@@ -1,4 +1,3 @@
-
 {
     "V1": {
         "PubkeyAddress": {},
@@ -13,6 +12,86 @@
         "AuthenticateMessage": {}
     },
     "V4": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V5": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V6": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V7": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V8": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V9": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V10": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V11": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V12": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V13": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V14": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V15": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V16": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V17": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V18": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V19": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V20": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V21": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V22": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V23": {
+        "PubkeyAddress": {},
+        "AuthenticateMessage": {}
+    },
+    "V24": {
         "PubkeyAddress": {},
         "AuthenticateMessage": {}
     }

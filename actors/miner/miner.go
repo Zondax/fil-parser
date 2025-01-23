@@ -14,7 +14,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func TerminateSectors(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) TerminateSectors(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.TerminateSectorsParams, *miner15.TerminateSectorsReturn](rawParams, rawReturn, true)
@@ -36,7 +36,7 @@ func TerminateSectors(network string, height int64, rawParams, rawReturn []byte)
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func DeclareFaults(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.DeclareFaultsParams, *miner15.DeclareFaultsParams](rawParams, nil, false)
@@ -58,7 +58,7 @@ func DeclareFaults(network string, height int64, rawParams []byte) (map[string]i
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func DeclareFaultsRecovered(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.DeclareFaultsRecoveredParams, *miner15.DeclareFaultsRecoveredParams](rawParams, nil, false)
@@ -80,7 +80,7 @@ func DeclareFaultsRecovered(network string, height int64, rawParams []byte) (map
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ProveReplicaUpdates(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ProveReplicaUpdatesParams, *miner15.ProveReplicaUpdatesParams](rawParams, nil, false)
@@ -102,7 +102,7 @@ func ProveReplicaUpdates(network string, height int64, rawParams []byte) (map[st
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.PreCommitSectorBatchParams2, *miner15.PreCommitSectorBatchParams2](rawParams, nil, false)
@@ -124,7 +124,7 @@ func PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ProveReplicaUpdates2(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ProveReplicaUpdatesParams2, *miner15.ProveReplicaUpdatesParams2](rawParams, rawReturn, true)
@@ -146,7 +146,7 @@ func ProveReplicaUpdates2(network string, height int64, rawParams, rawReturn []b
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ProveCommitAggregate(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ProveCommitAggregateParams, *miner15.ProveCommitAggregateParams](rawParams, nil, false)
@@ -168,7 +168,7 @@ func ProveCommitAggregate(network string, height int64, rawParams []byte) (map[s
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func DisputeWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.DisputeWindowedPoStParams, *miner15.DisputeWindowedPoStParams](rawParams, nil, false)
@@ -190,7 +190,7 @@ func DisputeWindowedPoSt(network string, height int64, rawParams []byte) (map[st
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ReportConsensusFault(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ReportConsensusFaultParams, *miner15.ReportConsensusFaultParams](rawParams, nil, false)
@@ -212,7 +212,7 @@ func ReportConsensusFault(network string, height int64, rawParams []byte) (map[s
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ChangeBeneficiary(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ChangeBeneficiary(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ChangeBeneficiaryParams, *miner15.ChangeBeneficiaryParams](rawParams, nil, false)
@@ -234,7 +234,7 @@ func ChangeBeneficiary(network string, height int64, rawParams []byte) (map[stri
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func MinerConstructor(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) MinerConstructor(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.MinerConstructorParams, *miner15.MinerConstructorParams](rawParams, nil, false)
@@ -256,7 +256,7 @@ func MinerConstructor(network string, height int64, rawParams []byte) (map[strin
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ApplyRewards(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ApplyRewardParams, *miner15.ApplyRewardParams](rawParams, nil, false)
@@ -278,7 +278,7 @@ func ApplyRewards(network string, height int64, rawParams []byte) (map[string]in
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.DeferredCronEventParams, *miner15.DeferredCronEventParams](rawParams, nil, false)

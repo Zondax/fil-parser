@@ -14,7 +14,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func GetAvailableBalance(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) GetAvailableBalance(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.GetAvailableBalanceReturn, *miner15.GetAvailableBalanceReturn](rawReturn, nil, false)
@@ -36,7 +36,7 @@ func GetAvailableBalance(network string, height int64, rawReturn []byte) (map[st
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetVestingFunds(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) GetVestingFunds(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.GetVestingFundsReturn, *miner15.GetVestingFundsReturn](rawReturn, nil, false)
@@ -58,7 +58,7 @@ func GetVestingFunds(network string, height int64, rawReturn []byte) (map[string
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ParseWithdrawBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ParseWithdrawBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.WithdrawBalanceParams, *miner15.WithdrawBalanceParams](rawParams, nil, false)

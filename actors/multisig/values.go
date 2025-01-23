@@ -15,7 +15,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func ChangeOwnerAddressValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ChangeOwnerAddressValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*ChangeOwnerAddressParams, string](txMetadata, jsonUnmarshaller[*ChangeOwnerAddressParams])
@@ -37,7 +37,7 @@ func ChangeOwnerAddressValue(network string, height int64, txMetadata string) (i
 	return nil, nil
 }
 
-func ParseWithdrawBalanceValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseWithdrawBalanceValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*miner11.WithdrawBalanceParams, string](txMetadata, jsonUnmarshaller[*miner11.WithdrawBalanceParams])
@@ -59,7 +59,7 @@ func ParseWithdrawBalanceValue(network string, height int64, txMetadata string) 
 	return nil, nil
 }
 
-func ParseInvokeContractValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseInvokeContractValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*InvokeContractParams, string](txMetadata, jsonUnmarshaller[*InvokeContractParams])
@@ -81,7 +81,7 @@ func ParseInvokeContractValue(network string, height int64, txMetadata string) (
 	return nil, nil
 }
 
-func ParseAddSignerValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseAddSignerValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*multisig11.AddSignerParams, string](txMetadata, jsonUnmarshaller[*multisig11.AddSignerParams])
@@ -103,7 +103,7 @@ func ParseAddSignerValue(network string, height int64, txMetadata string) (inter
 	return nil, nil
 }
 
-func ParseApproveValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseApproveValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		if data, err := parse[metadataWithCbor, string](txMetadata, jsonUnmarshaller[metadataWithCbor]); err != nil {
@@ -157,7 +157,7 @@ func ParseApproveValue(network string, height int64, txMetadata string) (interfa
 	return nil, nil
 }
 
-func ParseCancelValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseCancelValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		if data, err := parse[metadataWithCbor, string](txMetadata, jsonUnmarshaller[metadataWithCbor]); err != nil {
@@ -211,7 +211,7 @@ func ParseCancelValue(network string, height int64, txMetadata string) (interfac
 	return nil, nil
 }
 
-func ChangeNumApprovalsThresholdValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ChangeNumApprovalsThresholdValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*multisig8.ChangeNumApprovalsThresholdParams, string](txMetadata, jsonUnmarshaller[*multisig8.ChangeNumApprovalsThresholdParams])
@@ -233,7 +233,7 @@ func ChangeNumApprovalsThresholdValue(network string, height int64, txMetadata s
 	return nil, nil
 }
 
-func ParseConstructorValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseConstructorValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		if data, err := parse[*multisig8.ConstructorParams, string](txMetadata, jsonUnmarshaller[*multisig8.ConstructorParams]); err != nil {
@@ -287,7 +287,7 @@ func ParseConstructorValue(network string, height int64, txMetadata string) (int
 	return nil, nil
 }
 
-func ParseLockBalanceValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseLockBalanceValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		if data, err := parse[*multisig8.LockBalanceParams, string](txMetadata, jsonUnmarshaller[*multisig8.LockBalanceParams]); err != nil {
@@ -341,7 +341,7 @@ func ParseLockBalanceValue(network string, height int64, txMetadata string) (int
 	return nil, nil
 }
 
-func ParseRemoveSignerValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseRemoveSignerValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		if data, err := parse[*multisig8.RemoveSignerParams, string](txMetadata, jsonUnmarshaller[*multisig8.RemoveSignerParams]); err != nil {
@@ -395,7 +395,7 @@ func ParseRemoveSignerValue(network string, height int64, txMetadata string) (in
 	return nil, nil
 }
 
-func ParseSendValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseSendValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*SendValue, string](txMetadata, jsonUnmarshaller[*SendValue])
@@ -417,7 +417,7 @@ func ParseSendValue(network string, height int64, txMetadata string) (interface{
 	return nil, nil
 }
 
-func ParseSwapSignerValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseSwapSignerValue(network string, height int64, txMetadata string) (interface{}, error) {
 	switch {
 	case tools.V16.IsSupported(network, height):
 		return parse[*multisig8.SwapSignerParams, string](txMetadata, jsonUnmarshaller[*multisig8.SwapSignerParams])
@@ -439,7 +439,7 @@ func ParseSwapSignerValue(network string, height int64, txMetadata string) (inte
 	return nil, nil
 }
 
-func ParseUniversalReceiverHookValue(network string, height int64, txMetadata string) (interface{}, error) {
+func (*Msig) ParseUniversalReceiverHookValue(network string, height int64, txMetadata string) (interface{}, error) {
 	var tx TransactionUniversalReceiverHookMetadata
 	err := json.Unmarshal([]byte(txMetadata), &tx)
 	if err != nil {

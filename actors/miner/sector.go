@@ -14,7 +14,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func ExtendSectorExpiration2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ExtendSectorExpiration2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ExtendSectorExpiration2Params, *miner15.ExtendSectorExpiration2Params](rawParams, nil, false)
@@ -36,7 +36,7 @@ func ExtendSectorExpiration2(network string, height int64, rawParams []byte) (ma
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func PreCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) PreCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.PreCommitSectorParams, *miner15.PreCommitSectorParams](rawParams, nil, false)
@@ -58,7 +58,7 @@ func PreCommitSector(network string, height int64, rawParams []byte) (map[string
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ProveCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ProveCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ProveCommitSectorParams, *miner15.ProveCommitSectorParams](rawParams, nil, false)
@@ -80,7 +80,7 @@ func ProveCommitSector(network string, height int64, rawParams []byte) (map[stri
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ProveCommitSectors3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) ProveCommitSectors3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ProveCommitSectors3Params, *miner15.ProveCommitSectors3Return](rawParams, rawReturn, true)
@@ -102,7 +102,7 @@ func ProveCommitSectors3(network string, height int64, rawParams, rawReturn []by
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func SubmitWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) SubmitWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.SubmitWindowedPoStParams, *miner15.SubmitWindowedPoStParams](rawParams, nil, false)
@@ -124,7 +124,7 @@ func SubmitWindowedPoSt(network string, height int64, rawParams []byte) (map[str
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ConfirmSectorProofsValid(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ConfirmSectorProofsValid(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -146,7 +146,7 @@ func ConfirmSectorProofsValid(network string, height int64, rawParams []byte) (m
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func CheckSectorProven(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.CheckSectorProvenParams, *miner15.CheckSectorProvenParams](rawParams, nil, false)
@@ -168,7 +168,7 @@ func CheckSectorProven(network string, height int64, rawParams []byte) (map[stri
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ExtendSectorExpiration(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) ExtendSectorExpiration(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.ExtendSectorExpirationParams, *miner15.ExtendSectorExpirationParams](rawParams, nil, false)
@@ -190,7 +190,7 @@ func ExtendSectorExpiration(network string, height int64, rawParams []byte) (map
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func CompactSectorNumbers(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) CompactSectorNumbers(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.CompactSectorNumbersParams, *miner15.CompactSectorNumbersParams](rawParams, nil, false)
@@ -212,7 +212,7 @@ func CompactSectorNumbers(network string, height int64, rawParams []byte) (map[s
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func CompactPartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) CompactPartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.CompactPartitionsParams, *miner15.CompactPartitionsParams](rawParams, nil, false)
@@ -234,7 +234,7 @@ func CompactPartitions(network string, height int64, rawParams []byte) (map[stri
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func PreCommitSectorBatch(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) PreCommitSectorBatch(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric[*miner15.PreCommitSectorBatchParams, *miner15.PreCommitSectorBatchParams](rawParams, nil, false)
@@ -256,6 +256,6 @@ func PreCommitSectorBatch(network string, height int64, rawParams []byte) (map[s
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func GetSectorSize(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+func (*Miner) GetSectorSize(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }

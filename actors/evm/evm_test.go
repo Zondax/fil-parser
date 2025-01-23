@@ -31,28 +31,28 @@ type testFn func(network string, height int64, raw []byte) (map[string]interface
 func TestResurrect(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any](network, "Resurrect", expected)
 	require.NoError(t, err)
-
+	evm := &evm.Evm{}
 	runTest(t, evm.Resurrect, tests)
 }
 
 func TestGetByteCode(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any](network, "GetByteCode", expected)
 	require.NoError(t, err)
-
+	evm := &evm.Evm{}
 	runTest(t, evm.GetByteCode, tests)
 }
 
 func TestGetByteCodeHash(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any](network, "GetByteCodeHash", expected)
 	require.NoError(t, err)
-
+	evm := &evm.Evm{}
 	runTest(t, evm.GetByteCodeHash, tests)
 }
 
 func TestEVMConstructor(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any](network, "EVMConstructor", expected)
 	require.NoError(t, err)
-
+	evm := &evm.Evm{}
 	runTest(t, evm.EVMConstructor, tests)
 }
 
@@ -69,6 +69,7 @@ func TestGetStorageAt(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
+				evm := &evm.Evm{}
 				result, err := evm.GetStorageAt(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
@@ -90,6 +91,7 @@ func TestInvokeContract(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
+				evm := &evm.Evm{}
 				result, err := evm.InvokeContract(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
@@ -111,6 +113,7 @@ func TestInvokeContractDelegate(t *testing.T) {
 				if trace.Msg == nil {
 					continue
 				}
+				evm := &evm.Evm{}
 				result, err := evm.InvokeContractDelegate(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))

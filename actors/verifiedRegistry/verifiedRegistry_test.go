@@ -28,87 +28,44 @@ func TestMain(m *testing.M) {
 type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 type testFn2 func(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
 
-func TestAddVerifier(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "AddVerifier", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.AddVerifier, tests)
+func TestVerifiedRegistry(t *testing.T) {
+	verifiedregistry := &verifiedregistry.VerifiedRegistry{}
+	testFns := map[string]testFn{
+		"AddVerifier":                 verifiedregistry.AddVerifier,
+		"RemoveVerifier":              verifiedregistry.RemoveVerifier,
+		"AddVerifiedClient":           verifiedregistry.AddVerifiedClient,
+		"UseBytes":                    verifiedregistry.UseBytes,
+		"RestoreBytes":                verifiedregistry.RestoreBytes,
+		"RemoveVerifiedClientDataCap": verifiedregistry.RemoveVerifiedClientDataCap,
+		"Deprecated1":                 verifiedregistry.Deprecated1,
+		"Deprecated2":                 verifiedregistry.Deprecated2,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
-func TestRemoveVerifier(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "RemoveVerifier", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.RemoveVerifier, tests)
-}
-
-func TestAddVerifiedClient(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "AddVerifiedClient", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.AddVerifiedClient, tests)
-}
-
-func TestUseBytes(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "UseBytes", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.UseBytes, tests)
-}
-
-func TestRestoreBytes(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "RestoreBytes", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.RestoreBytes, tests)
-}
-
-func TestRemoveVerifiedClientDataCap(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "RemoveVerifiedClientDataCap", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.RemoveVerifiedClientDataCap, tests)
-}
-
-func TestDeprecated1(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "Deprecated1", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.Deprecated1, tests)
-}
-
-func TestDeprecated2(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "Deprecated2", expected)
-	require.NoError(t, err)
-	runTest(t, verifiedregistry.Deprecated2, tests)
-}
-
-func TestClaimAllocations(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "ClaimAllocations", expected)
-	require.NoError(t, err)
-	runTest2(t, verifiedregistry.ClaimAllocations, tests)
-}
-
-func TestGetClaims(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "GetClaims", expected)
-	require.NoError(t, err)
-	runTest2(t, verifiedregistry.GetClaims, tests)
-}
-
-func TestExtendClaimTerms(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "ExtendClaimTerms", expected)
-	require.NoError(t, err)
-	runTest2(t, verifiedregistry.ExtendClaimTerms, tests)
-}
-
-func TestRemoveExpiredClaims(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "RemoveExpiredClaims", expected)
-	require.NoError(t, err)
-	runTest2(t, verifiedregistry.RemoveExpiredClaims, tests)
-}
-
-func TestVerifregUniversalReceiverHook(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "VerifregUniversalReceiverHook", expected)
-	require.NoError(t, err)
-	runTest2(t, verifiedregistry.VerifregUniversalReceiverHook, tests)
-}
-func TestRemoveExpiredAllocations(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "RemoveExpiredAllocations", expected)
-	require.NoError(t, err)
-	runTest2(t, verifiedregistry.RemoveExpiredAllocations, tests)
+func TestVerifiedRegistry2(t *testing.T) {
+	verifiedregistry := &verifiedregistry.VerifiedRegistry{}
+	testFns := map[string]testFn2{
+		"ClaimAllocations":              verifiedregistry.ClaimAllocations,
+		"GetClaims":                     verifiedregistry.GetClaims,
+		"ExtendClaimTerms":              verifiedregistry.ExtendClaimTerms,
+		"RemoveExpiredClaims":           verifiedregistry.RemoveExpiredClaims,
+		"VerifregUniversalReceiverHook": verifiedregistry.VerifregUniversalReceiverHook,
+		"RemoveExpiredAllocations":      verifiedregistry.RemoveExpiredAllocations,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest2(t, fn, tests)
+		})
+	}
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

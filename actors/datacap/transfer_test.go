@@ -11,6 +11,6 @@ import (
 func TestTransferExported(t *testing.T) {
 	tests, err := tools.LoadTestData[map[string]any](network, "TransferExported", expected)
 	require.NoError(t, err)
-
+	datacap := &datacap.Datacap{}
 	runTest(t, datacap.TransferExported, tests)
 }

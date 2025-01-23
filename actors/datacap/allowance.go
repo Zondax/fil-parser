@@ -12,7 +12,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func IncreaseAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) IncreaseAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -32,7 +32,7 @@ func IncreaseAllowance(network string, height int64, raw, rawReturn []byte) (map
 	return nil, fmt.Errorf("not supported")
 }
 
-func DecreaseAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) DecreaseAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -52,7 +52,7 @@ func DecreaseAllowance(network string, height int64, raw, rawReturn []byte) (map
 	return nil, fmt.Errorf("not supported")
 }
 
-func RevokeAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) RevokeAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -72,7 +72,7 @@ func RevokeAllowance(network string, height int64, raw, rawReturn []byte) (map[s
 	return nil, fmt.Errorf("not supported")
 }
 
-func GetAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) GetAllowance(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")

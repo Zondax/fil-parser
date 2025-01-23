@@ -11,7 +11,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func BurnExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) BurnExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -31,7 +31,7 @@ func BurnExported(network string, height int64, raw, rawReturn []byte) (map[stri
 	return nil, fmt.Errorf("not supported")
 }
 
-func BurnFromExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) BurnFromExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")
@@ -51,7 +51,7 @@ func BurnFromExported(network string, height int64, raw, rawReturn []byte) (map[
 	return nil, fmt.Errorf("not supported")
 }
 
-func DestroyExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) DestroyExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")

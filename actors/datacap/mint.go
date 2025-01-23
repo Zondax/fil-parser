@@ -17,7 +17,7 @@ type (
 	mintReturn = unmarshalCBOR
 )
 
-func MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V8.IsSupported(network, height):
 		return nil, fmt.Errorf("not supported")

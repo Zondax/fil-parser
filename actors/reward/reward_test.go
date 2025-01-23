@@ -27,28 +27,21 @@ func TestMain(m *testing.M) {
 
 type testFn func(network string, height int64, raw []byte) (map[string]interface{}, error)
 
-func TestRewardConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "RewardConstructor", expected)
-	require.NoError(t, err)
-	runTest(t, reward.RewardConstructor, tests)
-}
-
-func TestAwardBlockReward(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "AwardBlockReward", expected)
-	require.NoError(t, err)
-	runTest(t, reward.AwardBlockReward, tests)
-}
-
-func TestUpdateNetworkKPI(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "UpdateNetworkKPI", expected)
-	require.NoError(t, err)
-	runTest(t, reward.UpdateNetworkKPI, tests)
-}
-
-func TestThisEpochReward(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "ThisEpochReward", expected)
-	require.NoError(t, err)
-	runTest(t, reward.ThisEpochReward, tests)
+func TestReward(t *testing.T) {
+	reward := &reward.Reward{}
+	testFns := map[string]testFn{
+		"RewardConstructor": reward.RewardConstructor,
+		"AwardBlockReward":  reward.AwardBlockReward,
+		"UpdateNetworkKPI":  reward.UpdateNetworkKPI,
+		"ThisEpochReward":   reward.ThisEpochReward,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

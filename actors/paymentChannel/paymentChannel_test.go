@@ -33,16 +33,19 @@ type test struct {
 	expected map[string]interface{}
 }
 
-func TestPaymentChannelConstructor(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "PaymentChannelConstructor", expected)
-	require.NoError(t, err)
-	runTest(t, paymentchannel.PaymentChannelConstructor, tests)
-}
-
-func TestUpdateChannelState(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "UpdateChannelState", expected)
-	require.NoError(t, err)
-	runTest(t, paymentchannel.UpdateChannelState, tests)
+func TestPaymentChannel(t *testing.T) {
+	paymentchannel := &paymentchannel.PaymentChannel{}
+	testFns := map[string]testFn{
+		"PaymentChannelConstructor": paymentchannel.PaymentChannelConstructor,
+		"UpdateChannelState":        paymentchannel.UpdateChannelState,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

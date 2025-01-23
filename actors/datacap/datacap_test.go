@@ -12,6 +12,8 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+type testFn func(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
+
 //go:embed expected.json
 var expectedData []byte
 var expected map[string]any
@@ -26,25 +28,64 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestNameExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "NameExported", expected)
-	require.NoError(t, err)
-
-	runDatacapTest(t, datacap.NameExported, tests)
+func TestDatacap(t *testing.T) {
+	datacap := &datacap.Datacap{}
+	testFns := map[string]func(rawReturn []byte) (map[string]interface{}, error){
+		"NameExported":        datacap.NameExported,
+		"SymbolExported":      datacap.SymbolExported,
+		"TotalSupplyExported": datacap.TotalSupplyExported,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runDatacapTest(t, fn, tests)
+		})
+	}
 }
 
-func TestSymbolExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "SymbolExported", expected)
-	require.NoError(t, err)
-
-	runDatacapTest(t, datacap.SymbolExported, tests)
+func TestBurn(t *testing.T) {
+	datacap := &datacap.Datacap{}
+	testFns := map[string]testFn{
+		"BurnExported":      datacap.BurnExported,
+		"BurnFromExported":  datacap.BurnFromExported,
+		"DestroyExported":   datacap.DestroyExported,
+		"MintExported":      datacap.MintExported,
+		"TransferExported":  datacap.TransferExported,
+		"IncreaseAllowance": datacap.IncreaseAllowance,
+		"DecreaseAllowance": datacap.DecreaseAllowance,
+		"RevokeAllowance":   datacap.RevokeAllowance,
+		"GetAllowance":      datacap.GetAllowance,
+	}
+	for name, fn := range testFns {
+		t.Run(name, func(t *testing.T) {
+			tests, err := tools.LoadTestData[map[string]any](network, name, expected)
+			require.NoError(t, err)
+			runTest(t, fn, tests)
+		})
+	}
 }
 
-func TestTotalSupplyExported(t *testing.T) {
-	tests, err := tools.LoadTestData[map[string]any](network, "TotalSupplyExported", expected)
+func TestGranularityExported(t *testing.T) {
+	tests, err := tools.LoadTestData[map[string]any](network, "GranularityExported", expected)
 	require.NoError(t, err)
 
-	runDatacapTest(t, datacap.TotalSupplyExported, tests)
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			computeState, err := tools.ComputeState[typesV2.ComputeStateOutputV2](tt.Height, tt.Version)
+			require.NoError(t, err)
+
+			for _, trace := range computeState.Trace {
+				if trace.Msg == nil {
+					continue
+				}
+				datacap := &datacap.Datacap{}
+				result, err := datacap.GranularityExported(tt.Network, tt.Height, trace.MsgRct.Return)
+				require.NoError(t, err)
+				require.True(t, tools.CompareResult(result, tt.Expected))
+			}
+		})
+	}
 }
 
 func runDatacapTest(t *testing.T, fn func(rawReturn []byte) (map[string]interface{}, error), tests []tools.TestCase[map[string]any]) {
@@ -58,6 +99,24 @@ func runDatacapTest(t *testing.T, fn func(rawReturn []byte) (map[string]interfac
 					continue
 				}
 				result, err := fn(trace.MsgRct.Return)
+				require.NoError(t, err)
+				require.True(t, tools.CompareResult(result, tt.Expected))
+			}
+		})
+	}
+}
+
+func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			computeState, err := tools.ComputeState[typesV2.ComputeStateOutputV2](tt.Height, tt.Version)
+			require.NoError(t, err)
+
+			for _, trace := range computeState.Trace {
+				if trace.Msg == nil {
+					continue
+				}
+				result, err := fn(tt.Network, tt.Height, trace.Msg.Params, trace.MsgRct.Return)
 				require.NoError(t, err)
 				require.True(t, tools.CompareResult(result, tt.Expected))
 			}

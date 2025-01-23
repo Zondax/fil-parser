@@ -15,7 +15,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func ParseCreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (*Eam) ParseCreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	external := true
 	switch {
 	case tools.V24.IsSupported(network, height):
@@ -36,7 +36,7 @@ func ParseCreateExternal(network string, height int64, rawParams, rawReturn []by
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ParseCreate(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (*Eam) ParseCreate(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	external := false
 	switch {
 	case tools.V24.IsSupported(network, height):
@@ -57,7 +57,7 @@ func ParseCreate(network string, height int64, rawParams, rawReturn []byte, msgC
 	return nil, nil, fmt.Errorf("unsupported height: %d", height)
 }
 
-func ParseCreate2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (*Eam) ParseCreate2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	external := false
 	switch {
 	case tools.V24.IsSupported(network, height):

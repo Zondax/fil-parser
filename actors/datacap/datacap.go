@@ -5,7 +5,9 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func NameExported(rawReturn []byte) (map[string]interface{}, error) {
+type Datacap struct{}
+
+func (d *Datacap) NameExported(rawReturn []byte) (map[string]interface{}, error) {
 	data, err := parse[*abi.CborString, *abi.CborString](nil, rawReturn, false)
 	if err != nil {
 		return nil, err
@@ -14,7 +16,7 @@ func NameExported(rawReturn []byte) (map[string]interface{}, error) {
 	return data, nil
 }
 
-func SymbolExported(rawReturn []byte) (map[string]interface{}, error) {
+func (d *Datacap) SymbolExported(rawReturn []byte) (map[string]interface{}, error) {
 	data, err := parse[*abi.CborString, *abi.CborString](nil, rawReturn, false)
 	if err != nil {
 		return nil, err
@@ -23,7 +25,7 @@ func SymbolExported(rawReturn []byte) (map[string]interface{}, error) {
 	return data, nil
 }
 
-func TotalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
+func (d *Datacap) TotalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
 	data, err := parse[*abi.TokenAmount, *abi.TokenAmount](nil, rawReturn, false)
 	if err != nil {
 		return nil, err

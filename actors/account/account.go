@@ -17,7 +17,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{}, error) {
+type Account struct{}
+
+func (a *Account) PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(raw)
 	reader := bytes.NewReader(rawReturn)
@@ -30,12 +32,10 @@ func PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{
 	return metadata, nil
 }
 
-func AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	versions := tools.GetSupportedVersions(network)
-
+func (a *Account) AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	// all versions before V17
-	case tools.AnyIsSupported(network, height, versions[:len(versions)-7]...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
 		return map[string]interface{}{}, nil // method did not exist
 	case tools.V17.IsSupported(network, height):
 		return authenticateMessageGeneric[*accountv9.AuthenticateMessageParams, *typegen.CborBool](raw, rawReturn, &accountv9.AuthenticateMessageParams{})
