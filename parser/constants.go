@@ -183,6 +183,7 @@ const (
 	MethodBurnFromExported                    = "BurnFromExported"                    // MethodsDatacap
 	MethodAllowanceExported                   = "AllowanceExported"                   // MethodsDatacap
 	MethodGranularityExported                 = "GranularityExported"                 // MethodsDatacap
+	MethodInvokeEVM                           = "InvokeEVM"                           // MethodsEVM
 
 	MethodUnknown = "Unknown" // Common
 )

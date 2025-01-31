@@ -267,13 +267,13 @@ func TestDetermineTxType(t *testing.T) {
 			name:     "Unknown txType with f4 address",
 			txType:   parser.MethodUnknown,
 			to:       createFakeF4Address(t),
-			expected: "InvokeEVM",
+			expected: parser.MethodInvokeEVM,
 		},
 		{
 			name:     "Unknown txType with f0 address",
 			txType:   parser.MethodUnknown,
 			to:       "f01656666",
-			expected: "Send",
+			expected: parser.MethodSend,
 		},
 		{
 			name:     "Known txType",

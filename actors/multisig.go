@@ -58,12 +58,12 @@ func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msg
 func determineTxType(txType string, to address.Address) string {
 	if txType == parser.MethodUnknown {
 		if strings.HasPrefix(to.String(), "f4") {
-			return "InvokeEVM"
+			return parser.MethodInvokeEVM
 		} else if strings.HasPrefix(to.String(), "f0") ||
 			strings.HasPrefix(to.String(), "f1") ||
 			strings.HasPrefix(to.String(), "f2") ||
 			strings.HasPrefix(to.String(), "f3") {
-			return "Send"
+			return parser.MethodSend
 		}
 	}
 	return txType
