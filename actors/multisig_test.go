@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
@@ -253,6 +254,51 @@ func TestParseMultisigMetadata(t *testing.T) {
 		compareRetField(t, txType, resultMap, expectedMap)
 		assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
 	}
+}
+
+func TestDetermineTxType(t *testing.T) {
+	tests := []struct {
+		name     string
+		txType   string
+		to       string
+		expected string
+	}{
+		{
+			name:     "Unknown txType with f4 address",
+			txType:   parser.MethodUnknown,
+			to:       createFakeF4Address(t),
+			expected: "InvokeEVM",
+		},
+		{
+			name:     "Unknown txType with f0 address",
+			txType:   parser.MethodUnknown,
+			to:       "f01656666",
+			expected: "Send",
+		},
+		{
+			name:     "Known txType",
+			txType:   parser.MethodSend,
+			to:       "f01656666",
+			expected: parser.MethodSend,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			toAddress, err := address.NewFromString(tt.to)
+			fmt.Printf("toAddress: %s\n", toAddress)
+			require.NoError(t, err)
+			actual := determineTxType(tt.txType, toAddress)
+			fmt.Printf("actual: %s\n", actual)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+func createFakeF4Address(t *testing.T) string {
+	namespace := uint64(1234)
+	subaddress := []byte("fake_subaddress")
+	addr, err := address.NewDelegatedAddress(namespace, subaddress)
+	require.NoError(t, err)
+	return addr.String()
 }
 
 func unmarshalExpected(txType, jsonStr string) (interface{}, error) {

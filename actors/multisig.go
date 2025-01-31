@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -24,6 +26,8 @@ Still needs to parse:
 	Receive
 */
 func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+	txType = determineTxType(txType, msg.To)
+
 	switch txType {
 	case parser.MethodConstructor: // TODO: not tested
 		return p.msigConstructor(msg.Params)
@@ -49,6 +53,20 @@ func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msg
 		return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
+}
+
+func determineTxType(txType string, to address.Address) string {
+	if txType == parser.MethodUnknown {
+		if strings.HasPrefix(to.String(), "f4") {
+			return "InvokeEVM"
+		} else if strings.HasPrefix(to.String(), "f0") ||
+			strings.HasPrefix(to.String(), "f1") ||
+			strings.HasPrefix(to.String(), "f2") ||
+			strings.HasPrefix(to.String(), "f3") {
+			return "Send"
+		}
+	}
+	return txType
 }
 
 func (p *ActorParser) msigConstructor(raw []byte) (map[string]interface{}, error) {
