@@ -3,7 +3,10 @@ package actors
 import (
 	"bytes"
 	"encoding/hex"
+	"strings"
+
 	"github.com/filecoin-project/go-address"
+	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/zondax/fil-parser/parser"
 )
 
@@ -28,6 +31,28 @@ func (p *ActorParser) parseConstructor(raw []byte) (map[string]interface{}, erro
 
 func (p *ActorParser) unknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
+	var params multisig2.ProposeParams
+
+	// Try to parse as ProposeParams
+	if err := params.UnmarshalCBOR(bytes.NewReader(msgParams)); err == nil {
+		metadata[parser.ParamsKey] = map[string]interface{}{
+			"To":     params.To.String(),
+			"Value":  params.Value.String(),
+			"Method": params.Method,
+			"Params": params.Params,
+		}
+		metadata[parser.ReturnKey] = hex.EncodeToString(msgReturn)
+
+		// Use parser package constants for method types
+		if strings.HasPrefix(params.To.String(), "f410") {
+			metadata["TxTypeToExecute"] = parser.MethodInvokeEVM
+		} else {
+			metadata["TxTypeToExecute"] = parser.MethodSend
+		}
+		return metadata, nil
+	}
+
+	// Fallback to original behavior
 	if len(msgParams) > 0 {
 		metadata[parser.ParamsKey] = hex.EncodeToString(msgParams)
 	}

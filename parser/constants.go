@@ -27,6 +27,7 @@ const (
 	MultisigConstructorMethod = "Constructor"
 
 	// Methods
+	MethodInvokeEVM                           = "InvokeEVM"
 	MethodSend                                = "Send"                                // Common
 	MethodFee                                 = "Fee"                                 // Common
 	MethodConstructor                         = "Constructor"                         // Common
