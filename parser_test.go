@@ -274,7 +274,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData, false)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResult.Txs)
 			require.NotNil(t, parsedResult.Addresses)
@@ -374,13 +374,13 @@ func TestParser_InDepthCompare(t *testing.T) {
 				Traces:   traces,
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
 			}
-			parsedResultV1, err := p.ParseTransactions(context.Background(), txsData)
+			parsedResultV1, err := p.ParseTransactions(context.Background(), txsData, false)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResultV1.Txs)
 			require.NotNil(t, parsedResultV1.Addresses)
 
 			txsData.Metadata = types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}}
-			parsedResultV2, err := p.ParseTransactions(context.Background(), txsData)
+			parsedResultV2, err := p.ParseTransactions(context.Background(), txsData, false)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResultV2.Txs)
 			require.NotNil(t, parsedResultV2.Addresses)
@@ -1721,7 +1721,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData, false)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResult.Txs)
 
@@ -1798,6 +1798,141 @@ func TestParseGenesisMultisig(t *testing.T) {
 
 	assert.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
 	assert.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+}
+
+func TestParser_ActorVersionComparison(t *testing.T) {
+	type expectedResults struct {
+		totalTraces  int
+		totalAddress int
+		totalTxCids  int
+	}
+	tests := []struct {
+		name    string
+		version string
+		url     string
+		height  string
+		results expectedResults
+	}{
+		{
+			name:    "parser with traces from v1",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907480",
+			results: expectedResults{
+				totalTraces:  650,
+				totalAddress: 98,
+				totalTxCids:  99,
+			},
+		},
+		{
+			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "845259",
+			results: expectedResults{
+				totalTraces:  31,
+				totalAddress: 2,
+				totalTxCids:  0,
+			},
+		},
+		{
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907520",
+			results: expectedResults{
+				totalTraces:  907,
+				totalAddress: 88,
+				totalTxCids:  147,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573062",
+			results: expectedResults{
+				totalTraces:  773,
+				totalAddress: 70,
+				totalTxCids:  118,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573064",
+			results: expectedResults{
+				totalTraces:  734,
+				totalAddress: 75,
+				totalTxCids:  97,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573066",
+			results: expectedResults{
+				totalTraces:  1118,
+				totalAddress: 102,
+				totalTxCids:  177,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:  37,
+				totalAddress: 11,
+				totalTxCids:  2,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lib := getLib(t, tt.url)
+
+			tipset, err := readTipset(tt.height)
+			require.NoError(t, err)
+			ethlogs, err := readEthLogs(tt.height)
+			require.NoError(t, err)
+			traces, err := readGzFile(tracesFilename(tt.height))
+			require.NoError(t, err)
+
+			logger, err := zap.NewDevelopment()
+			require.NoError(t, err)
+
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+
+			txsData := types.TxsData{
+				EthLogs:  ethlogs,
+				Tipset:   tipset,
+				Traces:   traces,
+				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+			}
+
+			parsedResultActorV1, err := p.ParseTransactions(context.Background(), txsData, false)
+			require.NoError(t, err)
+			parsedResultActorV2, err := p.ParseTransactions(context.Background(), txsData, true)
+			require.NoError(t, err)
+
+			require.NotNil(t, parsedResultActorV1.Txs)
+			require.NotNil(t, parsedResultActorV2.Txs)
+
+			require.Equal(t, len(parsedResultActorV1.Txs), len(parsedResultActorV2.Txs))
+			require.Equal(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
+			require.Equal(t, len(parsedResultActorV1.TxCids), len(parsedResultActorV2.TxCids))
+
+			require.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
+			require.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
+			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
+		})
+	}
+
 }
 
 func getStoredGenesisData(network string) (*types.GenesisBalances, *types.ExtendedTipSet, error) {
