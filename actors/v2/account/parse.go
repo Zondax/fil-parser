@@ -12,5 +12,17 @@ func (a *Account) Name() string {
 }
 
 func (a *Account) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+	switch txType {
+	case parser.MethodSend:
+		// return a.parseSend(msg), nil
+	case parser.MethodConstructor:
+		// return p.parseConstructor(msg.Params)
+	case parser.MethodPubkeyAddress:
+		return a.PubkeyAddress(network, msg.Params, msgRct.Return)
+	case parser.MethodAuthenticateMessage:
+		return a.AuthenticateMessage(network, height, msg.Params, msgRct.Return)
+	case parser.UnknownStr:
+		// return p.unknownMetadata(msg.Params, msgRct.Return)
+	}
 	return map[string]interface{}{}, parser.ErrUnknownMethod
 }

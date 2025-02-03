@@ -73,7 +73,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		metadata, err = miner.Parse(network, height, txType, msg, msgRct)
 	case manifest.MarketKey:
 		market := &market.Market{}
-		metadata, err = market.ParseStoragemarket(network, height, txType, msg, msgRct)
+		metadata, err = market.Parse(network, height, txType, msg, msgRct)
 	case manifest.PaychKey:
 		paymentChannel := &paymentchannel.PaymentChannel{}
 		metadata, err = paymentChannel.Parse(network, height, txType, msg, msgRct)
