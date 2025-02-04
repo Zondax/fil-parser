@@ -5,7 +5,23 @@ import (
 	"os"
 	"testing"
 
+	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
+	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
+	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
+	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
+	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
+	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
+	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
+	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
+	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
+	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
+	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
+	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	v2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/actors/v2/miner"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
@@ -144,6 +160,30 @@ func TestIsControllingAddressExported(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMethodCoverage(t *testing.T) {
+	m := &miner.Miner{}
+
+	actorVersions := []any{
+		legacyv2.Actor{},
+		legacyv3.Actor{},
+		legacyv4.Actor{},
+		legacyv5.Actor{},
+		legacyv6.Actor{},
+		legacyv7.Actor{},
+		miner8.Methods,
+		miner9.Methods,
+		miner10.Methods,
+		miner11.Methods,
+		miner12.Methods,
+		miner13.Methods,
+		miner14.Methods,
+		miner15.Methods,
+	}
+
+	missingMethods := v2.MissingMethods(m, actorVersions)
+	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

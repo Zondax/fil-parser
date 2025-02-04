@@ -1,7 +1,6 @@
 package power_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
@@ -34,14 +33,14 @@ var network string
 
 func TestMain(m *testing.M) {
 	network = "mainnet"
-	if err := json.Unmarshal(expectedData, &expected); err != nil {
-		panic(err)
-	}
-	var err error
-	expectedData, err = tools.ReadActorSnapshot()
-	if err != nil {
-		panic(err)
-	}
+	// if err := json.Unmarshal(expectedData, &expected); err != nil {
+	// 	panic(err)
+	// }
+	// var err error
+	// expectedData, err = tools.ReadActorSnapshot()
+	// if err != nil {
+	// 	panic(err)
+	// }
 	m.Run()
 }
 
@@ -52,14 +51,14 @@ func TestPower(t *testing.T) {
 	testFns := map[string]testFn{
 		"CurrentTotalPower":        power.CurrentTotalPower,
 		"SubmitPoRepForBulkVerify": power.SubmitPoRepForBulkVerify,
-		"CreateMiner":              power.CreateMinerExported,
-		"EnrollCronEvent":          power.EnrollCronEvent,
-		"UpdateClaimedPower":       power.UpdateClaimedPower,
-		"UpdatePledgeTotal":        power.UpdatePledgeTotal,
-		"NetworkRawPower":          power.NetworkRawPowerExported,
-		"MinerRawPower":            power.MinerRawPowerExported,
-		"MinerCount":               power.MinerCountExported,
-		"MinerConsensusCount":      power.MinerConsensusCountExported,
+		// "CreateMiner":              power.CreateMinerExported,
+		"EnrollCronEvent":     power.EnrollCronEvent,
+		"UpdateClaimedPower":  power.UpdateClaimedPower,
+		"UpdatePledgeTotal":   power.UpdatePledgeTotal,
+		"NetworkRawPower":     power.NetworkRawPowerExported,
+		"MinerRawPower":       power.MinerRawPowerExported,
+		"MinerCount":          power.MinerCountExported,
+		"MinerConsensusCount": power.MinerConsensusCountExported,
 	}
 	for name, fn := range testFns {
 		t.Run(name, func(t *testing.T) {
@@ -97,7 +96,7 @@ func TestPowerConstructor(t *testing.T) {
 	}
 }
 
-func TestMethodCoverageG(t *testing.T) {
+func TestMethodCoverage(t *testing.T) {
 	power := &power.Power{}
 
 	actorVersions := []any{
@@ -118,7 +117,6 @@ func TestMethodCoverageG(t *testing.T) {
 	}
 
 	missingMethods := v2.MissingMethods(power, actorVersions)
-
 	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 

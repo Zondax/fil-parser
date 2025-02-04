@@ -24,12 +24,12 @@ func (p *PaymentChannel) Parse(network string, height int64, txType string, msg 
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-func (p *PaymentChannel) TransactionTypes() []string {
-	return []string{
-		parser.MethodSend,
-		parser.MethodConstructor,
-		parser.MethodUpdateChannelState,
-		parser.MethodSettle,
-		parser.MethodCollect,
+func (p *PaymentChannel) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:               nil,
+		parser.MethodConstructor:        p.Constructor,
+		parser.MethodUpdateChannelState: p.UpdateChannelState,
+		parser.MethodSettle:             nil,
+		parser.MethodCollect:            nil,
 	}
 }

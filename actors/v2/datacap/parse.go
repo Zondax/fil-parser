@@ -69,23 +69,23 @@ func (p *Datacap) Parse(network string, height int64, txType string, msg *parser
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-func (d *Datacap) TransactionTypes() []string {
-	return []string{
-		parser.MethodConstructor,
-		parser.MethodMintExported,
-		parser.MethodDestroyExported,
-		parser.MethodNameExported,
-		parser.MethodSymbolExported,
-		parser.MethodTotalSupplyExported,
-		parser.MethodBalanceExported,
-		parser.MethodTransferExported,
-		parser.MethodTransferFromExported,
-		parser.MethodIncreaseAllowanceExported,
-		parser.MethodDecreaseAllowanceExported,
-		parser.MethodRevokeAllowanceExported,
-		parser.MethodBurnExported,
-		parser.MethodBurnFromExported,
-		parser.MethodAllowanceExported,
-		parser.MethodGranularityExported,
+func (d *Datacap) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodConstructor:               nil,
+		parser.MethodMintExported:              d.MintExported,
+		parser.MethodDestroyExported:           d.DestroyExported,
+		parser.MethodNameExported:              d.NameExported,
+		parser.MethodSymbolExported:            d.SymbolExported,
+		parser.MethodTotalSupplyExported:       d.TotalSupplyExported,
+		parser.MethodBalanceExported:           nil,
+		parser.MethodTransferExported:          d.TransferExported,
+		parser.MethodTransferFromExported:      nil,
+		parser.MethodIncreaseAllowanceExported: d.IncreaseAllowanceExported,
+		parser.MethodDecreaseAllowanceExported: d.DecreaseAllowanceExported,
+		parser.MethodRevokeAllowanceExported:   d.RevokeAllowanceExported,
+		parser.MethodBurnExported:              d.BurnExported,
+		parser.MethodBurnFromExported:          d.BurnFromExported,
+		parser.MethodAllowanceExported:         d.AllowanceExported,
+		parser.MethodGranularityExported:       d.GranularityExported,
 	}
 }

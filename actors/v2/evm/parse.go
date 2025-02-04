@@ -36,15 +36,15 @@ func (p *Evm) Parse(network string, height int64, txType string, msg *parser.Lot
 	return metadata, nil, parser.ErrUnknownMethod
 }
 
-func (p *Evm) TransactionTypes() []string {
-	return []string{
-		parser.MethodConstructor,
-		parser.MethodResurrect,
-		parser.MethodInvokeContract,
-		parser.MethodInvokeContractReadOnly,
-		parser.MethodInvokeContractDelegate,
-		parser.MethodGetBytecode,
-		parser.MethodGetBytecodeHash,
-		parser.MethodGetStorageAt,
+func (p *Evm) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodConstructor:            p.Constructor,
+		parser.MethodResurrect:              p.Resurrect,
+		parser.MethodInvokeContract:         p.InvokeContract,
+		parser.MethodInvokeContractReadOnly: nil,
+		parser.MethodInvokeContractDelegate: p.InvokeContractDelegate,
+		parser.MethodGetBytecode:            p.GetBytecode,
+		parser.MethodGetBytecodeHash:        p.GetBytecodeHash,
+		parser.MethodGetStorageAt:           p.GetStorageAt,
 	}
 }

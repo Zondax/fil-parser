@@ -16,7 +16,7 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 	case parser.MethodConstructor:
 		metadata, err = p.Constructor(network, height, msg, msg.Params)
 	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
-		metadata, err = p.CreateMinerExported(network, msg, height, msg.Params, msgRct.Return)
+		metadata, addressInfo, err = p.CreateMinerExported(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodUpdateClaimedPower:
 		metadata, err = p.UpdateClaimedPower(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodEnrollCronEvent:
@@ -61,5 +61,7 @@ func (p *Power) TransactionTypes() map[string]any {
 		parser.MethodMinerRawPowerExported:       p.MinerRawPowerExported,
 		parser.MethodMinerCountExported:          p.MinerCountExported,
 		parser.MethodMinerConsensusCountExported: p.MinerConsensusCountExported,
+		parser.MethodOnEpochTickEnd:              nil,
+		parser.MethodOnConsensusFault:            nil,
 	}
 }

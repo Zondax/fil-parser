@@ -26,9 +26,9 @@ func (c *Cron) Parse(network string, height int64, txType string, msg *parser.Lo
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-func (c *Cron) TransactionTypes() []string {
-	return []string{
-		parser.MethodConstructor,
-		parser.MethodEpochTick,
+func (c *Cron) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodConstructor: c.Constructor,
+		parser.MethodEpochTick:   nil,
 	}
 }

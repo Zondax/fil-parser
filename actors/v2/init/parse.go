@@ -26,11 +26,11 @@ func (i *Init) Parse(network string, height int64, txType string, msg *parser.Lo
 	return metadata, nil, err
 }
 
-func (i *Init) TransactionTypes() []string {
-	return []string{
-		parser.MethodSend,
-		parser.MethodConstructor,
-		parser.MethodExec,
-		parser.MethodExec4,
+func (i *Init) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:        nil,
+		parser.MethodConstructor: i.Constructor,
+		parser.MethodExec:        i.Exec,
+		parser.MethodExec4:       i.Exec4,
 	}
 }

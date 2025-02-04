@@ -27,7 +27,7 @@ import (
 type Actor interface {
 	Name() string
 	Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
-	TransactionTypes() []string
+	TransactionTypes() map[string]any
 }
 
 type ActorParser struct {

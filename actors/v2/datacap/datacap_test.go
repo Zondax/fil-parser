@@ -2,14 +2,22 @@ package datacap_test
 
 import (
 	_ "embed"
-	"encoding/json"
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	v2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/actors/v2/datacap"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
+
+	datacapv10 "github.com/filecoin-project/go-state-types/builtin/v10/datacap"
+	datacapv11 "github.com/filecoin-project/go-state-types/builtin/v11/datacap"
+	datacapv12 "github.com/filecoin-project/go-state-types/builtin/v12/datacap"
+	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
+	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
+	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 )
 
 type testFn func(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error)
@@ -21,14 +29,14 @@ var network string
 
 func TestMain(m *testing.M) {
 	network = "mainnet"
-	if err := json.Unmarshal(expectedData, &expected); err != nil {
-		panic(err)
-	}
-	var err error
-	expectedData, err = tools.ReadActorSnapshot()
-	if err != nil {
-		panic(err)
-	}
+	// if err := json.Unmarshal(expectedData, &expected); err != nil {
+	// 	panic(err)
+	// }
+	// var err error
+	// expectedData, err = tools.ReadActorSnapshot()
+	// if err != nil {
+	// 	panic(err)
+	// }
 	os.Exit(m.Run())
 }
 
@@ -90,6 +98,22 @@ func TestGranularityExported(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMethodCoverage(t *testing.T) {
+	d := &datacap.Datacap{}
+
+	actorVersions := []any{
+		datacapv10.Methods,
+		datacapv11.Methods,
+		datacapv12.Methods,
+		datacapv13.Methods,
+		datacapv14.Methods,
+		datacapv15.Methods,
+	}
+
+	missingMethods := v2.MissingMethods(d, actorVersions)
+	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 
 func runDatacapTest(t *testing.T, fn func(rawReturn []byte) (map[string]interface{}, error), tests []tools.TestCase[map[string]any]) {

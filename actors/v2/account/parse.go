@@ -31,11 +31,11 @@ func (a *Account) Parse(network string, height int64, txType string, msg *parser
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-func (a *Account) TransactionTypes() []string {
-	return []string{
-		parser.MethodSend,
-		parser.MethodConstructor,
-		parser.MethodPubkeyAddress,
-		parser.MethodAuthenticateMessage,
+func (a *Account) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:                nil,
+		parser.MethodConstructor:         nil,
+		parser.MethodPubkeyAddress:       a.PubkeyAddress,
+		parser.MethodAuthenticateMessage: a.AuthenticateMessage,
 	}
 }

@@ -58,28 +58,28 @@ func (p *VerifiedRegistry) Parse(network string, height int64, txType string, ms
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-func (p *VerifiedRegistry) TransactionTypes() []string {
-	return []string{
-		parser.MethodSend,
-		parser.MethodConstructor,
-		parser.MethodAddVerifier,
-		parser.MethodRemoveVerifier,
-		parser.MethodAddVerifiedClient,
-		parser.MethodAddVerifiedClientExported,
-		parser.MethodUseBytes,
-		parser.MethodRestoreBytes,
-		parser.MethodRemoveVerifiedClientDataCap,
-		parser.MethodRemoveExpiredAllocations,
-		parser.MethodRemoveExpiredAllocationsExported,
-		parser.MethodVerifiedDeprecated1,
-		parser.MethodVerifiedDeprecated2,
-		parser.MethodClaimAllocations,
-		parser.MethodGetClaims,
-		parser.MethodGetClaimsExported,
-		parser.MethodExtendClaimTerms,
-		parser.MethodExtendClaimTermsExported,
-		parser.MethodRemoveExpiredClaims,
-		parser.MethodRemoveExpiredClaimsExported,
-		parser.MethodUniversalReceiverHook,
+func (p *VerifiedRegistry) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:                             nil,
+		parser.MethodConstructor:                      nil,
+		parser.MethodAddVerifier:                      p.AddVerifier,
+		parser.MethodRemoveVerifier:                   p.RemoveVerifier,
+		parser.MethodAddVerifiedClient:                p.AddVerifiedClientExported,
+		parser.MethodAddVerifiedClientExported:        p.AddVerifiedClientExported,
+		parser.MethodUseBytes:                         p.UseBytes,
+		parser.MethodRestoreBytes:                     p.RestoreBytes,
+		parser.MethodRemoveVerifiedClientDataCap:      p.RemoveVerifiedClientDataCap,
+		parser.MethodRemoveExpiredAllocations:         p.RemoveExpiredAllocationsExported,
+		parser.MethodRemoveExpiredAllocationsExported: p.RemoveExpiredAllocationsExported,
+		parser.MethodVerifiedDeprecated1:              p.Deprecated1,
+		parser.MethodVerifiedDeprecated2:              p.Deprecated2,
+		parser.MethodClaimAllocations:                 p.ClaimAllocations,
+		parser.MethodGetClaims:                        p.GetClaimsExported,
+		parser.MethodGetClaimsExported:                p.GetClaimsExported,
+		parser.MethodExtendClaimTerms:                 p.ExtendClaimTermsExported,
+		parser.MethodExtendClaimTermsExported:         p.ExtendClaimTermsExported,
+		parser.MethodRemoveExpiredClaims:              p.RemoveExpiredClaimsExported,
+		parser.MethodRemoveExpiredClaimsExported:      p.RemoveExpiredClaimsExported,
+		parser.MethodUniversalReceiverHook:            p.UniversalReceiverHook,
 	}
 }

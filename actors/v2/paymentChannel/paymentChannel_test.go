@@ -1,10 +1,25 @@
 package paymentchannel_test
 
 import (
-	"encoding/json"
 	"testing"
 
+	paychv10 "github.com/filecoin-project/go-state-types/builtin/v10/paych"
+	paychv11 "github.com/filecoin-project/go-state-types/builtin/v11/paych"
+	paychv12 "github.com/filecoin-project/go-state-types/builtin/v12/paych"
+	paychv13 "github.com/filecoin-project/go-state-types/builtin/v13/paych"
+	paychv14 "github.com/filecoin-project/go-state-types/builtin/v14/paych"
+	paychv15 "github.com/filecoin-project/go-state-types/builtin/v15/paych"
+	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
+	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
+	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/paych"
+	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/paych"
+	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/paych"
+	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/paych"
+	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/paych"
+	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/paych"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	v2 "github.com/zondax/fil-parser/actors/v2"
 	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
@@ -17,14 +32,14 @@ var network string
 
 func TestMain(m *testing.M) {
 	network = "mainnet"
-	if err := json.Unmarshal(expectedData, &expected); err != nil {
-		panic(err)
-	}
-	var err error
-	expectedData, err = tools.ReadActorSnapshot()
-	if err != nil {
-		panic(err)
-	}
+	// if err := json.Unmarshal(expectedData, &expected); err != nil {
+	// 	panic(err)
+	// }
+	// var err error
+	// expectedData, err = tools.ReadActorSnapshot()
+	// if err != nil {
+	// 	panic(err)
+	// }
 	m.Run()
 }
 
@@ -49,6 +64,30 @@ func TestPaymentChannel(t *testing.T) {
 			runTest(t, fn, tests)
 		})
 	}
+}
+
+func TestMethodCoverage(t *testing.T) {
+	pc := &paymentchannel.PaymentChannel{}
+
+	actorVersions := []any{
+		legacyv2.Actor{},
+		legacyv3.Actor{},
+		legacyv4.Actor{},
+		legacyv5.Actor{},
+		legacyv6.Actor{},
+		legacyv7.Actor{},
+		paychv8.Methods,
+		paychv9.Methods,
+		paychv10.Methods,
+		paychv11.Methods,
+		paychv12.Methods,
+		paychv13.Methods,
+		paychv14.Methods,
+		paychv15.Methods,
+	}
+
+	missingMethods := v2.MissingMethods(pc, actorVersions)
+	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

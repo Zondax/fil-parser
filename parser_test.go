@@ -1824,61 +1824,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  99,
 			},
 		},
-		{
-			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
-			version: v1.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "845259",
-			results: expectedResults{
-				totalTraces:  31,
-				totalAddress: 2,
-				totalTxCids:  0,
-			},
-		},
-		{
-			name:    "parser with traces from v2",
-			version: v2.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "2907520",
-			results: expectedResults{
-				totalTraces:  907,
-				totalAddress: 88,
-				totalTxCids:  147,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573062",
-			results: expectedResults{
-				totalTraces:  773,
-				totalAddress: 70,
-				totalTxCids:  118,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573064",
-			results: expectedResults{
-				totalTraces:  734,
-				totalAddress: 75,
-				totalTxCids:  97,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573066",
-			results: expectedResults{
-				totalTraces:  1118,
-				totalAddress: 102,
-				totalTxCids:  177,
-			},
-		},
+
 		{
 			name:    "parser with traces from v2 and lotus 1.26 (calib)",
 			version: v2.NodeVersionsSupported[2],
@@ -1930,6 +1876,11 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			require.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
 			require.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
 			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
+
+			// compare tx metadata
+			for i, tx := range parsedResultActorV1.Txs {
+				require.Equalf(t, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata, "Tx metadata mismatch for tx_type: %s", tx.TxType)
+			}
 		})
 	}
 

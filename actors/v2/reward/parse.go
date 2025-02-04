@@ -28,12 +28,12 @@ func (p *Reward) Parse(network string, height int64, txType string, msg *parser.
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-func (p *Reward) TransactionTypes() []string {
-	return []string{
-		parser.MethodSend,
-		parser.MethodConstructor,
-		parser.MethodAwardBlockReward,
-		parser.MethodUpdateNetworkKPI,
-		parser.MethodThisEpochReward,
+func (p *Reward) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:             nil,
+		parser.MethodConstructor:      p.Constructor,
+		parser.MethodAwardBlockReward: p.AwardBlockReward,
+		parser.MethodUpdateNetworkKPI: p.UpdateNetworkKPI,
+		parser.MethodThisEpochReward:  p.ThisEpochReward,
 	}
 }

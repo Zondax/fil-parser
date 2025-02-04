@@ -7,7 +7,40 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func parse[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawReturn []byte, customReturn bool, params T, r R) (map[string]interface{}, *types.AddressInfo, error) {
+func parse[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawReturn []byte, customReturn bool, params T, r R, key string) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	reader := bytes.NewReader(raw)
+	err := params.UnmarshalCBOR(reader)
+	if err != nil {
+		return metadata, err
+	}
+
+	metadata[key] = params
+	if !customReturn {
+		return metadata, nil
+	}
+
+	if len(rawReturn) > 0 {
+		reader = bytes.NewReader(rawReturn)
+		err = r.UnmarshalCBOR(reader)
+		if err != nil {
+			return metadata, err
+		}
+		metadata[parser.ReturnKey] = r
+	}
+	return metadata, nil
+}
+
+/*
+networkRawPower
+minerRawPower
+minerCount
+minerConsensusCount
+parseCreateMiner
+currentTotalPower
+*/
+
+func parseCreateMiner[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawReturn []byte, params T, r R) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	err := params.UnmarshalCBOR(reader)
@@ -16,9 +49,6 @@ func parse[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawRetur
 	}
 
 	metadata[parser.ParamsKey] = params
-	if !customReturn {
-		return metadata, nil, nil
-	}
 
 	var createdActor *types.AddressInfo
 	if len(rawReturn) > 0 {
