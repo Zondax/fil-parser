@@ -5,6 +5,8 @@ import (
 
 	datacapv10 "github.com/filecoin-project/go-state-types/builtin/v10/datacap"
 	datacapv11 "github.com/filecoin-project/go-state-types/builtin/v11/datacap"
+	datacapv12 "github.com/filecoin-project/go-state-types/builtin/v12/datacap"
+	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
@@ -23,7 +25,9 @@ func (*Datacap) BurnExported(network string, height int64, raw, rawReturn []byte
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return parse(raw, rawReturn, true, &datacapv11.BurnParams{}, &datacapv11.BurnReturn{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv11.BurnParams{}, &datacapv11.BurnReturn{})
+		return parse(raw, rawReturn, true, &datacapv12.BurnParams{}, &datacapv12.BurnReturn{})
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv13.BurnParams{}, &datacapv13.BurnReturn{})
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.BurnParams{}, &datacapv14.BurnReturn{})
 	case tools.V24.IsSupported(network, height):
@@ -44,6 +48,8 @@ func (*Datacap) BurnFromExported(network string, height int64, raw, rawReturn []
 		return parse(raw, rawReturn, true, &datacapv11.BurnFromParams{}, &datacapv11.BurnFromReturn{})
 	case tools.V21.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv11.BurnFromParams{}, &datacapv11.BurnFromReturn{})
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv12.BurnFromParams{}, &datacapv12.BurnFromReturn{})
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.BurnFromParams{}, &datacapv14.BurnFromReturn{})
 	case tools.V24.IsSupported(network, height):
@@ -64,6 +70,8 @@ func (*Datacap) DestroyExported(network string, height int64, raw, rawReturn []b
 		return parse(raw, rawReturn, true, &datacapv11.DestroyParams{}, &datacapv11.BurnReturn{})
 	case tools.V21.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv11.DestroyParams{}, &datacapv11.BurnReturn{})
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv12.DestroyParams{}, &datacapv12.BurnReturn{})
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.DestroyParams{}, &datacapv14.BurnReturn{})
 	case tools.V24.IsSupported(network, height):

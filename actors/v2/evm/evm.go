@@ -102,6 +102,8 @@ func (*Evm) GetBytecode(network string, height int64, raw []byte) (map[string]in
 		data, err = parse(raw, nil, false, &evmv14.GetBytecodeReturn{}, &evmv14.GetBytecodeReturn{})
 	case tools.V22.IsSupported(network, height):
 		data, err = parse(raw, nil, false, &evmv13.GetBytecodeReturn{}, &evmv13.GetBytecodeReturn{})
+	case tools.V21.IsSupported(network, height):
+		data, err = parse(raw, nil, false, &evmv12.GetBytecodeReturn{}, &evmv12.GetBytecodeReturn{})
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
 		data, err = parse(raw, nil, false, &evmv11.GetBytecodeReturn{}, &evmv11.GetBytecodeReturn{})
 	case tools.V18.IsSupported(network, height):

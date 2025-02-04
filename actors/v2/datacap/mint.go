@@ -6,6 +6,7 @@ import (
 	datacapv10 "github.com/filecoin-project/go-state-types/builtin/v10/datacap"
 	datacapv11 "github.com/filecoin-project/go-state-types/builtin/v11/datacap"
 	datacapv12 "github.com/filecoin-project/go-state-types/builtin/v12/datacap"
+	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
@@ -32,6 +33,8 @@ func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte
 		return parse(raw, rawReturn, true, &datacapv12.MintParams{}, &datacapv12.MintReturn{})
 	case tools.V21.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv12.MintParams{}, &datacapv12.MintReturn{})
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv13.MintParams{}, &datacapv13.MintReturn{})
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.MintParams{}, &datacapv14.MintReturn{})
 	case tools.V24.IsSupported(network, height):

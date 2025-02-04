@@ -162,7 +162,7 @@ func (*Miner) SubmitWindowedPoSt(network string, height int64, rawParams []byte)
 
 func (*Miner) ConfirmSectorProofsValid(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsAfter(network, tools.V23)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsAfter(tools.V23)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V22.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner13.ConfirmSectorProofsParams{}, &miner13.ConfirmSectorProofsParams{})

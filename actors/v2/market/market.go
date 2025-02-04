@@ -208,7 +208,7 @@ func (*Market) OnMinerSectorsTerminateExported(network string, height int64, raw
 
 func (*Market) ComputeDataCommitmentExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsAfter(network, tools.V20)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsAfter(tools.V20)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return parseGeneric(rawParams, rawReturn, true, &v11Market.ComputeDataCommitmentParams{}, &v11Market.ComputeDataCommitmentReturn{})

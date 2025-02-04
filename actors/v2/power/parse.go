@@ -1,11 +1,12 @@
 package power
 
 import (
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Power) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Power) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	var err error
 	var addressInfo *types.AddressInfo
 	metadata := make(map[string]interface{})
@@ -42,4 +43,23 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 		err = parser.ErrUnknownMethod
 	}
 	return metadata, addressInfo, err
+}
+
+func (p *Power) TransactionTypes() []string {
+	return []string{
+		parser.MethodSend,
+		parser.MethodConstructor,
+		parser.MethodCreateMiner,
+		parser.MethodCreateMinerExported,
+		parser.MethodUpdateClaimedPower,
+		parser.MethodEnrollCronEvent,
+		parser.MethodCronTick,
+		parser.MethodUpdatePledgeTotal,
+		parser.MethodSubmitPoRepForBulkVerify,
+		parser.MethodCurrentTotalPower,
+		parser.MethodNetworkRawPowerExported,
+		parser.MethodMinerRawPowerExported,
+		parser.MethodMinerCountExported,
+		parser.MethodMinerConsensusCountExported,
+	}
 }

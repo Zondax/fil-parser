@@ -6,6 +6,8 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	datacapv10 "github.com/filecoin-project/go-state-types/builtin/v10/datacap"
 	datacapv11 "github.com/filecoin-project/go-state-types/builtin/v11/datacap"
+	datacapv12 "github.com/filecoin-project/go-state-types/builtin/v12/datacap"
+	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
@@ -25,7 +27,9 @@ func (*Datacap) IncreaseAllowanceExported(network string, height int64, raw, raw
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return parse(raw, rawReturn, true, &datacapv11.IncreaseAllowanceParams{}, &r)
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv11.IncreaseAllowanceParams{}, &r)
+		return parse(raw, rawReturn, true, &datacapv12.IncreaseAllowanceParams{}, &r)
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv13.IncreaseAllowanceParams{}, &r)
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.IncreaseAllowanceParams{}, &r)
 	case tools.V24.IsSupported(network, height):
@@ -46,7 +50,9 @@ func (*Datacap) DecreaseAllowanceExported(network string, height int64, raw, raw
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return parse(raw, rawReturn, true, &datacapv11.DecreaseAllowanceParams{}, &r)
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv11.DecreaseAllowanceParams{}, &r)
+		return parse(raw, rawReturn, true, &datacapv12.DecreaseAllowanceParams{}, &r)
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv13.DecreaseAllowanceParams{}, &r)
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.DecreaseAllowanceParams{}, &r)
 	case tools.V24.IsSupported(network, height):
@@ -67,7 +73,9 @@ func (*Datacap) RevokeAllowanceExported(network string, height int64, raw, rawRe
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return parse(raw, rawReturn, true, &datacapv11.RevokeAllowanceParams{}, &r)
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv11.RevokeAllowanceParams{}, &r)
+		return parse(raw, rawReturn, true, &datacapv12.RevokeAllowanceParams{}, &r)
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv13.RevokeAllowanceParams{}, &r)
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.RevokeAllowanceParams{}, &r)
 	case tools.V24.IsSupported(network, height):
@@ -88,7 +96,9 @@ func (*Datacap) AllowanceExported(network string, height int64, raw, rawReturn [
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return parse(raw, rawReturn, true, &datacapv11.GetAllowanceParams{}, &r)
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv11.GetAllowanceParams{}, &r)
+		return parse(raw, rawReturn, true, &datacapv12.GetAllowanceParams{}, &r)
+	case tools.V22.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv13.GetAllowanceParams{}, &r)
 	case tools.V23.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv14.GetAllowanceParams{}, &r)
 	case tools.V24.IsSupported(network, height):

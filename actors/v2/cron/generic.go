@@ -6,7 +6,7 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func cronConstructorGeneric[P cronConstructorParams](raw []byte, params P) (map[string]interface{}, error) {
+func cronConstructorLegacy[P cronConstructorParams](raw []byte, params P) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	err := params.UnmarshalCBOR(reader)

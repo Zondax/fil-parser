@@ -1,43 +1,85 @@
 package verifiedregistry
 
 import (
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 )
 
-func (p *VerifiedRegistry) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *VerifiedRegistry) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
 		// return p.parseSend(msg), nil
 	case parser.MethodConstructor:
 		// return p.Constructor(network, height, msg.Params)
 	case parser.MethodAddVerifier:
-		return p.AddVerifier(network, height, msg.Params)
+		resp, err := p.AddVerifier(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodRemoveVerifier: // TODO: not tested
-		return p.RemoveVerifier(network, height, msg.Params)
+		resp, err := p.RemoveVerifier(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodAddVerifiedClient, parser.MethodAddVerifiedClientExported:
-		return p.AddVerifiedClientExported(network, height, msg.Params)
+		resp, err := p.AddVerifiedClientExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodUseBytes:
-		return p.UseBytes(network, height, msg.Params)
+		resp, err := p.UseBytes(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodRestoreBytes:
-		return p.RestoreBytes(network, height, msg.Params)
+		resp, err := p.RestoreBytes(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodRemoveVerifiedClientDataCap: // TODO: not tested
-		return p.RemoveVerifiedClientDataCap(network, height, msg.Params)
+		resp, err := p.RemoveVerifiedClientDataCap(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodRemoveExpiredAllocations, parser.MethodRemoveExpiredAllocationsExported:
-		return p.RemoveExpiredAllocationsExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.RemoveExpiredAllocationsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodVerifiedDeprecated1: // UseBytes
-		return p.Deprecated1(network, height, msg.Params)
+		resp, err := p.Deprecated1(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodVerifiedDeprecated2: // RestoreBytes
-		return p.Deprecated2(network, height, msg.Params)
+		resp, err := p.Deprecated2(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodClaimAllocations:
-		return p.ClaimAllocations(network, height, msg.Params, msgRct.Return)
+		resp, err := p.ClaimAllocations(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetClaims, parser.MethodGetClaimsExported: // TODO: not tested
-		return p.GetClaimsExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetClaimsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodExtendClaimTerms, parser.MethodExtendClaimTermsExported: // TODO: not tested
-		return p.ExtendClaimTermsExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.ExtendClaimTermsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodRemoveExpiredClaims, parser.MethodRemoveExpiredClaimsExported:
-		return p.RemoveExpiredClaimsExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.RemoveExpiredClaimsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodUniversalReceiverHook:
-		return p.UniversalReceiverHook(network, height, msg.Params, msgRct.Return)
+		resp, err := p.UniversalReceiverHook(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+}
+
+func (p *VerifiedRegistry) TransactionTypes() []string {
+	return []string{
+		parser.MethodSend,
+		parser.MethodConstructor,
+		parser.MethodAddVerifier,
+		parser.MethodRemoveVerifier,
+		parser.MethodAddVerifiedClient,
+		parser.MethodAddVerifiedClientExported,
+		parser.MethodUseBytes,
+		parser.MethodRestoreBytes,
+		parser.MethodRemoveVerifiedClientDataCap,
+		parser.MethodRemoveExpiredAllocations,
+		parser.MethodRemoveExpiredAllocationsExported,
+		parser.MethodVerifiedDeprecated1,
+		parser.MethodVerifiedDeprecated2,
+		parser.MethodClaimAllocations,
+		parser.MethodGetClaims,
+		parser.MethodGetClaimsExported,
+		parser.MethodExtendClaimTerms,
+		parser.MethodExtendClaimTermsExported,
+		parser.MethodRemoveExpiredClaims,
+		parser.MethodRemoveExpiredClaimsExported,
+		parser.MethodUniversalReceiverHook,
+	}
 }

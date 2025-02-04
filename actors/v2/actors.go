@@ -27,6 +27,7 @@ import (
 type Actor interface {
 	Name() string
 	Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
+	TransactionTypes() []string
 }
 
 type ActorParser struct {
@@ -58,43 +59,43 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	switch actor {
 	case manifest.InitKey:
 		initActor := &initActor.Init{}
-		metadata, addressInfo, err = initActor.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = initActor.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.CronKey:
 		cron := &cron.Cron{}
-		metadata, err = cron.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = cron.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.AccountKey:
 		account := &account.Account{}
-		metadata, err = account.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = account.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.PowerKey:
 		power := &power.Power{}
-		metadata, addressInfo, err = power.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = power.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.MinerKey:
 		miner := &miner.Miner{}
-		metadata, err = miner.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = miner.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.MarketKey:
 		market := &market.Market{}
-		metadata, err = market.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = market.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.PaychKey:
 		paymentChannel := &paymentchannel.PaymentChannel{}
-		metadata, err = paymentChannel.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = paymentChannel.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.MultisigKey:
 		multisig := &multisig.Msig{}
 		metadata, err = multisig.Parse(network, height, txType, msg, msgRct, key)
 	case manifest.RewardKey:
 		reward := &reward.Reward{}
-		metadata, err = reward.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = reward.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.VerifregKey:
 		verifiedRegistry := &verifiedregistry.VerifiedRegistry{}
-		metadata, err = verifiedRegistry.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = verifiedRegistry.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.EvmKey:
 		evm := &evm.Evm{}
-		metadata, err = evm.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = evm.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.EamKey:
 		eam := &eam.Eam{}
 		metadata, addressInfo, err = eam.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.DatacapKey:
 		datacap := &datacap.Datacap{}
-		metadata, err = datacap.Parse(network, height, txType, msg, msgRct)
+		metadata, addressInfo, err = datacap.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.EthAccountKey:
 		// metadata, err = p.ParseEthAccount(txType, msg, msgRct)
 	case manifest.PlaceholderKey:

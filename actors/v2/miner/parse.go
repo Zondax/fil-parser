@@ -1,96 +1,189 @@
 package miner
 
 import (
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 )
 
-func (m *Miner) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (m *Miner) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
 		// return p.parseSend(msg), nil
 	case parser.MethodConstructor:
-		return m.Constructor(network, height, msg.Params)
+		resp, err := m.Constructor(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodControlAddresses:
 		// return m.ControlAddresses(network, height, msg.Params, msgRct.Return)
 	case parser.MethodChangeWorkerAddress, parser.MethodChangeWorkerAddressExported:
-		return m.ChangeWorkerAddressExported(network, height, msg.Params)
+		resp, err := m.ChangeWorkerAddressExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodChangePeerID, parser.MethodChangePeerIDExported:
-		return m.ChangePeerIDExported(network, height, msg.Params)
+		resp, err := m.ChangePeerIDExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodSubmitWindowedPoSt:
-		return m.SubmitWindowedPoSt(network, height, msg.Params)
+		resp, err := m.SubmitWindowedPoSt(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodPreCommitSector:
-		return m.PreCommitSector(network, height, msg.Params)
+		resp, err := m.PreCommitSector(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodProveCommitSector:
-		return m.ProveCommitSector(network, height, msg.Params)
+		resp, err := m.ProveCommitSector(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodProveCommitSectors3:
-		return m.ProveCommitSectors3(network, height, msg.Params, msgRct.Return)
+		resp, err := m.ProveCommitSectors3(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodExtendSectorExpiration:
-		return m.ExtendSectorExpiration(network, height, msg.Params)
+		resp, err := m.ExtendSectorExpiration(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodTerminateSectors:
-		return m.TerminateSectors(network, height, msg.Params, msgRct.Return)
+		resp, err := m.TerminateSectors(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodDeclareFaults:
-		return m.DeclareFaults(network, height, msg.Params)
+		resp, err := m.DeclareFaults(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodDeclareFaultsRecovered:
-		return m.DeclareFaultsRecovered(network, height, msg.Params)
+		resp, err := m.DeclareFaultsRecovered(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodOnDeferredCronEvent:
-		return m.OnDeferredCronEvent(network, height, msg.Params)
+		resp, err := m.OnDeferredCronEvent(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodCheckSectorProven:
-		return m.CheckSectorProven(network, height, msg.Params)
+		resp, err := m.CheckSectorProven(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodApplyRewards:
-		return m.ApplyRewards(network, height, msg.Params)
+		resp, err := m.ApplyRewards(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodReportConsensusFault:
-		return m.ReportConsensusFault(network, height, msg.Params)
+		resp, err := m.ReportConsensusFault(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
-		return m.WithdrawBalanceExported(network, height, msg.Params)
+		resp, err := m.WithdrawBalanceExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodConfirmSectorProofsValid:
-		return m.ConfirmSectorProofsValid(network, height, msg.Params)
+		resp, err := m.ConfirmSectorProofsValid(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodChangeMultiaddrs, parser.MethodChangeMultiaddrsExported:
-		return m.ChangeMultiaddrsExported(network, height, msg.Params)
+		resp, err := m.ChangeMultiaddrsExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodCompactPartitions:
-		return m.CompactPartitions(network, height, msg.Params)
+		resp, err := m.CompactPartitions(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodCompactSectorNumbers:
-		return m.CompactSectorNumbers(network, height, msg.Params)
+		resp, err := m.CompactSectorNumbers(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodConfirmChangeWorkerAddress, parser.MethodConfirmChangeWorkerAddressExported:
 		// return m.emptyParamsAndReturn()
 	case parser.MethodConfirmUpdateWorkerKey: // TODO: ?
 	case parser.MethodRepayDebt, parser.MethodRepayDebtExported:
 		// return p.emptyParamsAndReturn()
 	case parser.MethodChangeOwnerAddress, parser.MethodChangeOwnerAddressExported: // TODO: not tested
-		return m.ChangeOwnerAddressExported(network, height, msg.Params)
+		resp, err := m.ChangeOwnerAddressExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodDisputeWindowedPoSt:
-		return m.DisputeWindowedPoSt(network, height, msg.Params)
+		resp, err := m.DisputeWindowedPoSt(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodPreCommitSectorBatch:
-		return m.PreCommitSectorBatch(network, height, msg.Params)
+		resp, err := m.PreCommitSectorBatch(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodProveCommitAggregate:
-		return m.ProveCommitAggregate(network, height, msg.Params)
+		resp, err := m.ProveCommitAggregate(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodProveReplicaUpdates:
-		return m.ProveReplicaUpdates(network, height, msg.Params)
+		resp, err := m.ProveReplicaUpdates(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodPreCommitSectorBatch2:
-		return m.PreCommitSectorBatch2(network, height, msg.Params)
+		resp, err := m.PreCommitSectorBatch2(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodProveReplicaUpdates2:
-		return m.ProveReplicaUpdates2(network, height, msg.Params, msgRct.Return)
+		resp, err := m.ProveReplicaUpdates2(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodChangeBeneficiary, parser.MethodChangeBeneficiaryExported:
-		return m.ChangeBeneficiaryExported(network, height, msg.Params)
+		resp, err := m.ChangeBeneficiaryExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodGetBeneficiary:
 		// return m.GetBeneficiaryExported(network, height, msg.Params, msgRct.Return)
 	case parser.MethodExtendSectorExpiration2:
-		return m.ExtendSectorExpiration2(network, height, msg.Params)
+		resp, err := m.ExtendSectorExpiration2(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodGetOwner:
-		return m.GetOwnerExported(network, height, msgRct.Return)
+		resp, err := m.GetOwnerExported(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodIsControllingAddressExported:
-		return m.IsControllingAddressExported(network, height, msg.Params, msgRct.Return)
+		resp, err := m.IsControllingAddressExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetSectorSize:
-		return m.GetSectorSize(network, height, msgRct.Return)
+		resp, err := m.GetSectorSize(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetAvailableBalance:
-		return m.GetAvailableBalanceExported(network, height, msgRct.Return)
+		resp, err := m.GetAvailableBalanceExported(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetVestingFunds:
-		return m.GetVestingFundsExported(network, height, msgRct.Return)
+		resp, err := m.GetVestingFundsExported(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetPeerID:
-		return m.GetPeerIDExported(network, height, msgRct.Return)
+		resp, err := m.GetPeerIDExported(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetMultiaddrs:
-		return m.GetMultiaddrsExported(network, height, msgRct.Return)
+		resp, err := m.GetMultiaddrsExported(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
 		// return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+}
+
+func (m *Miner) TransactionTypes() []string {
+	return []string{
+		parser.MethodSend,
+		parser.MethodConstructor,
+		parser.MethodControlAddresses,
+		parser.MethodChangeWorkerAddress,
+		parser.MethodChangeWorkerAddressExported,
+		parser.MethodChangePeerID,
+		parser.MethodChangePeerIDExported,
+		parser.MethodSubmitWindowedPoSt,
+		parser.MethodPreCommitSector,
+		parser.MethodProveCommitSector,
+		parser.MethodProveCommitSectors3,
+		parser.MethodExtendSectorExpiration,
+		parser.MethodTerminateSectors,
+		parser.MethodDeclareFaults,
+		parser.MethodDeclareFaultsRecovered,
+		parser.MethodOnDeferredCronEvent,
+		parser.MethodCheckSectorProven,
+		parser.MethodApplyRewards,
+		parser.MethodReportConsensusFault,
+		parser.MethodWithdrawBalance,
+		parser.MethodWithdrawBalanceExported,
+		parser.MethodConfirmSectorProofsValid,
+		parser.MethodChangeMultiaddrs,
+		parser.MethodChangeMultiaddrsExported,
+		parser.MethodCompactPartitions,
+		parser.MethodCompactSectorNumbers,
+		parser.MethodConfirmChangeWorkerAddress,
+		parser.MethodConfirmChangeWorkerAddressExported,
+		parser.MethodConfirmUpdateWorkerKey,
+		parser.MethodRepayDebt,
+		parser.MethodRepayDebtExported,
+		parser.MethodChangeOwnerAddress,
+		parser.MethodChangeOwnerAddressExported,
+		parser.MethodDisputeWindowedPoSt,
+		parser.MethodPreCommitSectorBatch,
+		parser.MethodProveCommitAggregate,
+		parser.MethodProveReplicaUpdates,
+		parser.MethodPreCommitSectorBatch2,
+		parser.MethodProveReplicaUpdates2,
+		parser.MethodChangeBeneficiary,
+		parser.MethodChangeBeneficiaryExported,
+		parser.MethodGetBeneficiary,
+		parser.MethodExtendSectorExpiration2,
+		parser.MethodGetOwner,
+		parser.MethodIsControllingAddressExported,
+		parser.MethodGetSectorSize,
+		parser.MethodGetAvailableBalance,
+		parser.MethodGetVestingFunds,
+		parser.MethodGetPeerID,
+		parser.MethodGetMultiaddrs,
+	}
 }

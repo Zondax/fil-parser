@@ -2,7 +2,9 @@ package cron
 
 import (
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 )
 
 type Cron struct{}
@@ -11,14 +13,22 @@ func (c *Cron) Name() string {
 	return manifest.CronKey
 }
 
-func (c *Cron) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (c *Cron) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodConstructor:
-		return c.Constructor(network, height, msg.Params)
+		resp, err := c.Constructor(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodEpochTick:
 		// return p.emptyParamsAndReturn()
 	case parser.UnknownStr:
 		// return p.unknownMetadata(msg.Params, msgRct.Return)
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+}
+
+func (c *Cron) TransactionTypes() []string {
+	return []string{
+		parser.MethodConstructor,
+		parser.MethodEpochTick,
+	}
 }

@@ -25,3 +25,12 @@ func (p *Eam) Parse(network string, height int64, txType string, msg *parser.Lot
 	}
 	return metadata, nil, err
 }
+
+func (p *Eam) TransactionTypes() []string {
+	return []string{
+		parser.MethodConstructor,
+		parser.MethodCreate,
+		parser.MethodCreate2,
+		parser.MethodCreateExternal,
+	}
+}
