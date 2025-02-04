@@ -35,6 +35,8 @@ func (p *Power) Name() string {
 func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	var err error
+	// we are only parsing the return value, so we need to use the rawReturn
+	raw = rawReturn
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
 		data, err = parse(msg, raw, rawReturn, false, &legacyv2.CurrentTotalPowerReturn{}, &legacyv2.CurrentTotalPowerReturn{}, parser.ReturnKey)
@@ -240,6 +242,8 @@ func (*Power) UpdatePledgeTotal(network string, msg *parser.LotusMessage, height
 func (*Power) NetworkRawPowerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	var err error
+	// we are only parsing the return value, so we need to use the rawReturn
+	raw = rawReturn
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
@@ -294,6 +298,8 @@ func (*Power) MinerRawPowerExported(network string, msg *parser.LotusMessage, he
 func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	var err error
+	// we are only parsing the return value, so we need to use the rawReturn
+	raw = rawReturn
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
@@ -324,6 +330,8 @@ func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, heigh
 func (*Power) MinerConsensusCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	var err error
+	// we are only parsing the return value, so we need to use the rawReturn
+	raw = rawReturn
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)

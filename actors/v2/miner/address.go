@@ -227,3 +227,38 @@ func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []by
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
+
+func (*Miner) ControlAddresses(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner15.GetControlAddressesReturn{})
+	case tools.V23.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner14.GetControlAddressesReturn{})
+	case tools.V22.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner13.GetControlAddressesReturn{})
+	case tools.V21.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner12.GetControlAddressesReturn{})
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return parseControlReturn(rawParams, rawReturn, &miner11.GetControlAddressesReturn{})
+	case tools.V18.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner10.GetControlAddressesReturn{})
+	case tools.V17.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner9.GetControlAddressesReturn{})
+	case tools.V16.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner8.GetControlAddressesReturn{})
+	case tools.V15.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &legacyv7.GetControlAddressesReturn{})
+	case tools.V14.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &legacyv6.GetControlAddressesReturn{})
+	case tools.V13.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &legacyv5.GetControlAddressesReturn{})
+	case tools.V12.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &legacyv4.GetControlAddressesReturn{})
+	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
+		return parseControlReturn(rawParams, rawReturn, &legacyv3.GetControlAddressesReturn{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+		return parseControlReturn(rawParams, rawReturn, &legacyv2.GetControlAddressesReturn{})
+	}
+
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}

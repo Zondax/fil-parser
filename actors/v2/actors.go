@@ -88,7 +88,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		verifiedRegistry := &verifiedregistry.VerifiedRegistry{}
 		metadata, addressInfo, err = verifiedRegistry.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.EvmKey:
-		evm := &evm.Evm{}
+		evm := evm.New(p.logger)
 		metadata, addressInfo, err = evm.Parse(network, height, txType, msg, msgRct, mainMsgCid)
 	case manifest.EamKey:
 		eam := &eam.Eam{}

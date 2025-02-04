@@ -31,15 +31,6 @@ func parse[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawRetur
 	return metadata, nil
 }
 
-/*
-networkRawPower
-minerRawPower
-minerCount
-minerConsensusCount
-parseCreateMiner
-currentTotalPower
-*/
-
 func parseCreateMiner[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawReturn []byte, params T, r R) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)

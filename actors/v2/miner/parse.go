@@ -14,7 +14,8 @@ func (m *Miner) Parse(network string, height int64, txType string, msg *parser.L
 		resp, err := m.Constructor(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodControlAddresses:
-		// return m.ControlAddresses(network, height, msg.Params, msgRct.Return)
+		resp, err := m.ControlAddresses(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodChangeWorkerAddress, parser.MethodChangeWorkerAddressExported:
 		resp, err := m.ChangeWorkerAddressExported(network, height, msg.Params)
 		return resp, nil, err

@@ -34,14 +34,14 @@ func (p *Datacap) Parse(network string, height int64, txType string, msg *parser
 		resp, err := p.TotalSupplyExported(msgRct.Return)
 		return resp, nil, err
 	case parser.MethodBalanceExported:
-		// resp, err := p.BalanceExported(network, height, msg.Params, msgRct.Return)
-		// return resp, nil, err
+		resp, err := p.BalanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodTransferExported:
 		resp, err := p.TransferExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodTransferFromExported:
-		// resp, err := p.TransferFromExported(network, height, msg.Params, msgRct.Return)
-		// return resp, nil, err
+		resp, err := p.TransferFromExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodIncreaseAllowanceExported:
 		resp, err := p.IncreaseAllowanceExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
