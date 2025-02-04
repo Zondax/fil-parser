@@ -1878,9 +1878,13 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
 
 			// compare tx metadata
+			failedTxType := map[string]string{}
 			for i, tx := range parsedResultActorV1.Txs {
-				require.Equalf(t, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata, "Tx metadata mismatch for tx_type: %s", tx.TxType)
+				if tx.TxMetadata != parsedResultActorV2.Txs[i].TxMetadata {
+					failedTxType[tx.TxType] = fmt.Sprintf("V1: %s \n V2: %s", tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata)
+				}
 			}
+			assert.Equal(t, 0, len(failedTxType), "Tx metadata mismatch for tx_type: %v", failedTxType)
 		})
 	}
 
