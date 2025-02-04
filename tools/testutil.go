@@ -205,11 +205,6 @@ func DeterministicTestHeight(version version) int64 {
 	if version != version.next() {
 		height = (version.Height() + version.next().Height()) / 2
 	}
-	if version.Height() == 0 {
-		height = V8.Height()
-	} else {
-		height += 100
-	}
 
 	return height
 }

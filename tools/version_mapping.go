@@ -44,24 +44,44 @@ var (
 
 func (v version) IsSupported(network string, height int64) bool {
 	if network == "calibration" {
+		if height == 0 && v.calibration == 0 {
+			return true
+		}
 		if height >= LatestVersion.calibration {
 			return v == LatestVersion
 		}
+
+		// edge case: check if two new versions have the same calibration height
+		if v.calibration == v.next().calibration && !IsLatestVersion(v) {
+			return v.next().IsSupported(network, height)
+		}
 		// check if the height is greater than the current version  but less than the next version
-		if height > v.calibration && height < v.next().calibration {
+		if height >= v.calibration && height < v.next().calibration {
 			return true
 		}
 	} else {
+		if height == 0 && v.mainnet == 0 {
+			return true
+		}
 		if height >= LatestVersion.mainnet {
 			return v == LatestVersion
 		}
+
+		// edge case: check if two new versions have the same mainnet height
+		if v.mainnet == v.next().mainnet && !IsLatestVersion(v) {
+			return v.next().IsSupported(network, height)
+		}
 		// check if the height is greater than the current version  but less than the next version
-		if height > v.mainnet && height < v.next().mainnet {
+		if height >= v.mainnet && height < v.next().mainnet {
 			return true
 		}
 	}
 
 	return false
+}
+
+func IsLatestVersion(version version) bool {
+	return version.nodeVersion == LatestVersion.nodeVersion
 }
 
 func AnyIsSupported(network string, height int64, versions ...version) bool {
@@ -105,6 +125,7 @@ func GetSupportedVersions(network string) []version {
 	return result
 }
 
+// VersionsBefore returns all versions before the given version (inclusive of the start version)
 func VersionsBefore(version version) []version {
 	offset := 1 // we start at version 1
 	for i, v := range supportedVersions {
@@ -118,7 +139,8 @@ func VersionsBefore(version version) []version {
 	return nil
 }
 
-func VersionsAfter(network string, start version) []version {
+// VersionsAfter returns all versions after the given version (inclusive of the start version)
+func VersionsAfter(start version) []version {
 	var result []version
 	offset := 1 // we start at version 1
 	for i, v := range supportedVersions {
@@ -127,7 +149,7 @@ func VersionsAfter(network string, start version) []version {
 			break
 		}
 		if v.nodeVersion == start.nodeVersion {
-			result = append(result, supportedVersions[i+offset:]...)
+			result = append(result, supportedVersions[i:]...)
 			break
 		}
 	}
@@ -146,6 +168,7 @@ func VersionRange(version version) (int64, int64) {
 	}
 	return min, max
 }
+
 func VersionFromString(version string) version {
 	for _, v := range supportedVersions {
 		if v.String() == version {
