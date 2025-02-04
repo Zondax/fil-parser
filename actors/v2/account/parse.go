@@ -33,9 +33,10 @@ func (a *Account) Parse(network string, height int64, txType string, msg *parser
 
 func (a *Account) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                nil,
-		parser.MethodConstructor:         nil,
-		parser.MethodPubkeyAddress:       a.PubkeyAddress,
-		parser.MethodAuthenticateMessage: a.AuthenticateMessage,
+		parser.MethodSend:                  nil,
+		parser.MethodConstructor:           nil,
+		parser.MethodPubkeyAddress:         a.PubkeyAddress,
+		parser.MethodAuthenticateMessage:   a.AuthenticateMessage,
+		parser.MethodUniversalReceiverHook: nil,
 	}
 }

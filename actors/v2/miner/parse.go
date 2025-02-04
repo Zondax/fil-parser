@@ -185,5 +185,8 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodGetVestingFunds:                    m.GetVestingFundsExported,
 		parser.MethodGetPeerID:                          m.GetPeerIDExported,
 		parser.MethodGetMultiaddrs:                      m.GetMultiaddrsExported,
+		parser.MethodInternalSectorSetupForPreseal:      nil,
+		parser.MethodProveCommitSectorsNI:               nil,
+		parser.MethodProveReplicaUpdates3:               nil,
 	}
 }

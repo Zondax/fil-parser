@@ -100,5 +100,8 @@ func (p *Market) TransactionTypes() map[string]any {
 		parser.MethodGetDealProviderCollateral:   p.GetDealProviderCollateralExported,
 		parser.MethodGetDealVerified:             p.GetDealVerifiedExported,
 		parser.MethodGetDealActivation:           p.GetDealActivationExported,
+		parser.MethodGetDealSectorExported:       nil,
+		parser.MethodSettleDealPaymentsExported:  nil,
+		parser.MethodSectorContentChanged:        nil,
 	}
 }

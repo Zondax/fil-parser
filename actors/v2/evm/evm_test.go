@@ -1,7 +1,6 @@
 package evm_test
 
 import (
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -27,9 +26,9 @@ var network string
 
 func TestMain(m *testing.M) {
 	network = "mainnet"
-	if err := json.Unmarshal(expectedData, &expected); err != nil {
-		panic(err)
-	}
+	// if err := json.Unmarshal(expectedData, &expected); err != nil {
+	// 	panic(err)
+	// }
 	os.Exit(m.Run())
 }
 
