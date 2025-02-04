@@ -45,21 +45,21 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 	return metadata, addressInfo, err
 }
 
-func (p *Power) TransactionTypes() []string {
-	return []string{
-		parser.MethodSend,
-		parser.MethodConstructor,
-		parser.MethodCreateMiner,
-		parser.MethodCreateMinerExported,
-		parser.MethodUpdateClaimedPower,
-		parser.MethodEnrollCronEvent,
-		parser.MethodCronTick,
-		parser.MethodUpdatePledgeTotal,
-		parser.MethodSubmitPoRepForBulkVerify,
-		parser.MethodCurrentTotalPower,
-		parser.MethodNetworkRawPowerExported,
-		parser.MethodMinerRawPowerExported,
-		parser.MethodMinerCountExported,
-		parser.MethodMinerConsensusCountExported,
+func (p *Power) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:                        nil,
+		parser.MethodConstructor:                 p.Constructor,
+		parser.MethodCreateMiner:                 p.CreateMinerExported,
+		parser.MethodCreateMinerExported:         p.CreateMinerExported,
+		parser.MethodUpdateClaimedPower:          p.UpdateClaimedPower,
+		parser.MethodEnrollCronEvent:             p.EnrollCronEvent,
+		parser.MethodCronTick:                    nil,
+		parser.MethodUpdatePledgeTotal:           p.UpdatePledgeTotal,
+		parser.MethodSubmitPoRepForBulkVerify:    p.SubmitPoRepForBulkVerify,
+		parser.MethodCurrentTotalPower:           p.CurrentTotalPower,
+		parser.MethodNetworkRawPowerExported:     p.NetworkRawPowerExported,
+		parser.MethodMinerRawPowerExported:       p.MinerRawPowerExported,
+		parser.MethodMinerCountExported:          p.MinerCountExported,
+		parser.MethodMinerConsensusCountExported: p.MinerConsensusCountExported,
 	}
 }

@@ -81,6 +81,45 @@ func TestPowerConstructor(t *testing.T) {
 	}
 }
 
+func TestMethodCoverage(t *testing.T) {
+	power := &power.Power{}
+	txTypes := power.TransactionTypes()
+
+	actorVersions := []map[abi.MethodNum]builtin.MethodMeta{
+		powerv8.Methods,
+		powerv9.Methods,
+		powerv10.Methods,
+		powerv11.Methods,
+		powerv12.Methods,
+		powerv13.Methods,
+		powerv14.Methods,
+		powerv15.Methods,
+	}
+
+	for _, actorVersion := range actorVersions {
+		for _, method := range v2.BuiltinActorMethods(actorVersion) {
+			_, ok := txTypes[method]
+			assert.True(t, ok)
+		}
+	}
+
+	legacyActorVersions := []rt.VMActor{
+		legacyv2.Actor{},
+		legacyv3.Actor{},
+		legacyv4.Actor{},
+		legacyv5.Actor{},
+		legacyv6.Actor{},
+		legacyv7.Actor{},
+	}
+	for _, actorVersion := range legacyActorVersions {
+		methods := v2.RuntimeActorMethods(actorVersion)
+		for _, method := range methods {
+			_, ok := txTypes[method]
+			assert.True(t, ok)
+		}
+	}
+}
+
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
