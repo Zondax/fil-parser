@@ -2,8 +2,11 @@ package v2_test
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"testing"
 
+	builtinActors "github.com/filecoin-project/go-state-types/actors"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
@@ -45,6 +48,18 @@ var actorParsers = []v2.Actor{
 	&ethaccount.EthAccount{},
 }
 
+var latestBuiltinActorVersion uint64
+
+func TestMain(m *testing.M) {
+	version, err := v2.LatestBuiltinActorVersion()
+	if err != nil {
+		panic(fmt.Sprintf("failed to get latest builtin actor version: %v", err))
+	}
+	fmt.Printf("latestBuiltinActorVersion: %d\n", version)
+	latestBuiltinActorVersion = version
+	os.Exit(m.Run())
+}
+
 // TestVersionCoverage tests that all actor methods are supported for all supported network versions
 func TestVersionCoverage(t *testing.T) {
 	network := "mainnet"
@@ -63,8 +78,7 @@ func TestVersionCoverage(t *testing.T) {
 }
 
 func TestAllActorsSupported(t *testing.T) {
-	// we use v10 to ensure all evm methods are retrieved as well
-	filActors := manifest.GetBuiltinActorsKeys(10)
+	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
 	exclude := map[string]bool{
 		manifest.SystemKey:      true,
 		manifest.PlaceholderKey: true,
