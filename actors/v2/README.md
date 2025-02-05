@@ -29,6 +29,11 @@ There are different types of tests to ensure comprehensive coverage:
 
 **Test Function:** `TestAllActorsSupported`
 
+This test verifies that all actors in the latest builtin-actor release and all legacy spec-actors are supported by the parser.
+It will fail if any actor is not supported.
+
+> Note: No modification is needed to this test for new releases, the test automatically gets the latest builtin-actor release from github.
+
 To add a new actor:
 
 - Create a new package under `actors/v2`.
@@ -38,6 +43,11 @@ To add a new actor:
 ### Method Coverage Verification
 
 **Test Function:** `TestMethodCoverage`
+
+This test verifies that all methods exposed by the actor in all builtin-actor and spec-actor releases are supported by the actors.
+It will fail if any method is not covered.
+
+> Note: No modification is needed to this test on new builtin-actor releases. The test will pass once support is added.
 
 To add support for a new method:
 
@@ -49,10 +59,17 @@ To add support for a new method:
 
 **Test Function:** `TestVersionCoverage`
 
+This test verifies that all the actor methods can correctly handle all network versions ( decided by the height of the block ).
+It will fail if any network version is not supported.
+
+> Note: No modification is needed to this test on new builtin-actor releases. The test will pass once support is added.
+
 To add support for a new network version:
 
 - Include the network version in `tools/version_mapping.go`.
 - Ensure the version is supported in the actor parsing methods (use existing switch cases as a reference).
+
+These tests are designed to ensure that the actor parser accurately handles all releases of both builtin-actors and spec-actors. They are configured to automatically fail upon the release of any new builtin-actor version. This failure mechanism guides developers to the necessary modifications, thereby eliminating the need for manual verification of the parser with each new Filecoin upgrade.
 
 ## Compatibility
 
