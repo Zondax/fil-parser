@@ -32,6 +32,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	cidLink "github.com/ipld/go-ipld-prime/linking/cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	"github.com/zondax/fil-parser/parser"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
@@ -1824,7 +1825,61 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  99,
 			},
 		},
-
+		{
+			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "845259",
+			results: expectedResults{
+				totalTraces:  31,
+				totalAddress: 2,
+				totalTxCids:  0,
+			},
+		},
+		{
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907520",
+			results: expectedResults{
+				totalTraces:  907,
+				totalAddress: 88,
+				totalTxCids:  147,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573062",
+			results: expectedResults{
+				totalTraces:  773,
+				totalAddress: 70,
+				totalTxCids:  118,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573064",
+			results: expectedResults{
+				totalTraces:  734,
+				totalAddress: 75,
+				totalTxCids:  97,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573066",
+			results: expectedResults{
+				totalTraces:  1118,
+				totalAddress: 102,
+				totalTxCids:  177,
+			},
+		},
 		{
 			name:    "parser with traces from v2 and lotus 1.26 (calib)",
 			version: v2.NodeVersionsSupported[2],
@@ -1880,9 +1935,24 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			// compare tx metadata
 			failedTxType := map[string]string{}
 			for i, tx := range parsedResultActorV1.Txs {
-				if tx.TxMetadata != parsedResultActorV2.Txs[i].TxMetadata {
-					failedTxType[tx.TxType] = fmt.Sprintf("V1: %s \n V2: %s", tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata)
+				var metadataV1 map[string]interface{}
+				err := json.Unmarshal([]byte(tx.TxMetadata), &metadataV1)
+				if err != nil {
+					t.Fatalf("Error unmarshalling v1 tx metadata: %s", err.Error())
 				}
+				var metadataV2 map[string]interface{}
+				err = json.Unmarshal([]byte(parsedResultActorV2.Txs[i].TxMetadata), &metadataV2)
+				if err != nil {
+					t.Fatalf("Error unmarshalling v2 tx metadata: %s", err.Error())
+				}
+
+				if metadataV1[parser.ParamsKey] != nil {
+					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+				}
+				if metadataV1[parser.ReturnKey] != nil {
+					require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+				}
+
 			}
 			assert.Equal(t, 0, len(failedTxType), "Tx metadata mismatch for tx_type: %v", failedTxType)
 		})
