@@ -15,11 +15,32 @@ func (e *EthAccount) Name() string {
 }
 
 func (e *EthAccount) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
-	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+	var resp map[string]interface{}
+	var err error
+	switch txType {
+	case parser.MethodConstructor:
+		resp, err = e.Constructor()
+	default:
+		resp, err = e.parseEthAccountAny(msg.Params, msgRct.Return)
+	}
+
+	return resp, nil, err
 }
 
 func (e *EthAccount) TransactionTypes() map[string]any {
 	return map[string]any{
-		// parser.MethodSend: e.Send,
+		parser.MethodConstructor: e.Constructor,
 	}
+}
+
+func (e *EthAccount) Constructor() (map[string]interface{}, error) {
+	return e.parseEthAccountAny(nil, nil)
+}
+
+func (e *EthAccount) parseEthAccountAny(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsKey] = rawParams
+	metadata[parser.ReturnKey] = rawReturn
+
+	return metadata, nil
 }
