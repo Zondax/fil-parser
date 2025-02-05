@@ -10,13 +10,14 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func parseWithMsigParser[T multisigParams, R multisigReturn](msg *parser.LotusMessage,
+func parseWithMsigParser[R multisigReturn](msg *parser.LotusMessage,
 	height int64,
 	key filTypes.TipSetKey,
 	fn ParseFn,
 	rawReturn []byte,
 	unmarshaller func(io.Reader, any) error,
 	customReturn bool,
+	r R,
 ) (map[string]interface{}, error) {
 
 	metadata := make(map[string]interface{})
@@ -27,7 +28,6 @@ func parseWithMsigParser[T multisigParams, R multisigReturn](msg *parser.LotusMe
 	metadata[parser.ParamsKey] = params
 
 	if customReturn {
-		var r R
 		err = unmarshaller(bytes.NewReader(rawReturn), &r)
 		if err != nil {
 			return map[string]interface{}{}, err
@@ -38,9 +38,8 @@ func parseWithMsigParser[T multisigParams, R multisigReturn](msg *parser.LotusMe
 
 }
 
-func parse[T multisigParams, P []byte | string](raw P, unmarshaller func(io.Reader, any) error) (map[string]interface{}, error) {
+func parse[T multisigParams, P []byte | string](raw P, params T, unmarshaller func(io.Reader, any) error) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	var params T
 	rawBytes, err := toBytes(raw)
 	if err != nil {
 		return map[string]interface{}{}, err
@@ -54,18 +53,33 @@ func parse[T multisigParams, P []byte | string](raw P, unmarshaller func(io.Read
 	return metadata, nil
 }
 
-func getValue[T multisigParams](height int64, raw map[string]interface{}) (interface{}, error) {
-	paramsRaw, ok := raw["Params"].(map[string]interface{})
+// parseConstructorValue, parseLockBalanceValue, parseRemoveSignerValue, , parseSwapSignerValue, parseUniversalReceiverHookValu
+func getValue[T multisigParams](height int64, raw map[string]interface{}, v T) (interface{}, error) {
+	paramsRaw, ok := raw[parser.ParamsKey]
 	if !ok {
-		return nil, fmt.Errorf("Params not found or not a map[string]interface{}")
+		return nil, fmt.Errorf("Params not found")
+	}
+	switch p := paramsRaw.(type) {
+	case map[string]interface{}:
+		err := mapToStruct(p, v)
+		if err != nil {
+			return nil, err
+		}
+	case string:
+		err := json.Unmarshal([]byte(p), v)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("Params not a map[string]interface{} or string")
 	}
 
-	var v T
-	err := mapToStruct(paramsRaw, &v)
-	if err != nil {
-		return nil, err
-	}
 	return v, nil
+}
+
+func parseValue(raw string, v any) (interface{}, error) {
+	err := json.Unmarshal([]byte(raw), &v)
+	return v, err
 }
 
 func jsonUnmarshaller[T multisigParams](reader io.Reader, to any) error {
