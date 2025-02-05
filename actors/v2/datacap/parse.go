@@ -2,6 +2,7 @@ package datacap
 
 import (
 	"github.com/filecoin-project/go-state-types/manifest"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -13,7 +14,7 @@ func (d *Datacap) Name() string {
 	return manifest.DatacapKey
 }
 
-func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodConstructor:
 		// resp, err := p.Constructor(network, height, msg.Params)

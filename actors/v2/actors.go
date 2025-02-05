@@ -26,7 +26,7 @@ import (
 
 type Actor interface {
 	Name() string
-	Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error)
+	Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
 	TransactionTypes() map[string]any
 }
 
@@ -59,43 +59,43 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	switch actor {
 	case manifest.InitKey:
 		initActor := &initActor.Init{}
-		metadata, addressInfo, err = initActor.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = initActor.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.CronKey:
 		cron := &cron.Cron{}
-		metadata, addressInfo, err = cron.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = cron.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.AccountKey:
 		account := &account.Account{}
-		metadata, addressInfo, err = account.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = account.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.PowerKey:
 		power := &power.Power{}
-		metadata, addressInfo, err = power.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = power.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.MinerKey:
 		miner := &miner.Miner{}
-		metadata, addressInfo, err = miner.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = miner.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.MarketKey:
 		market := &market.Market{}
-		metadata, addressInfo, err = market.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = market.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.PaychKey:
 		paymentChannel := &paymentchannel.PaymentChannel{}
-		metadata, addressInfo, err = paymentChannel.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = paymentChannel.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.MultisigKey:
 		multisig := &multisig.Msig{}
-		metadata, err = multisig.Parse(network, height, txType, msg, msgRct, key)
+		metadata, addressInfo, err = multisig.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.RewardKey:
 		reward := &reward.Reward{}
-		metadata, addressInfo, err = reward.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = reward.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.VerifregKey:
 		verifiedRegistry := &verifiedregistry.VerifiedRegistry{}
-		metadata, addressInfo, err = verifiedRegistry.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = verifiedRegistry.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.EvmKey:
 		evm := evm.New(p.logger)
-		metadata, addressInfo, err = evm.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = evm.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.EamKey:
 		eam := &eam.Eam{}
-		metadata, addressInfo, err = eam.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = eam.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.DatacapKey:
 		datacap := &datacap.Datacap{}
-		metadata, addressInfo, err = datacap.Parse(network, height, txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = datacap.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 	case manifest.EthAccountKey:
 		// metadata, err = p.ParseEthAccount(txType, msg, msgRct)
 	case manifest.PlaceholderKey:
@@ -104,4 +104,15 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 		err = parser.ErrNotValidActor
 	}
 	return metadata, addressInfo, err
+}
+
+func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
+	keys := manifest.GetBuiltinActorsKeys(10)
+
+	for _, key := range keys {
+		if key == actor {
+			return 10, nil
+		}
+	}
+	return 0, nil
 }

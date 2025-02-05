@@ -1,12 +1,13 @@
 package evm
 
 import (
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Evm) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Evm) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodConstructor:
