@@ -6,14 +6,22 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type Datacap struct{}
+type Datacap struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Datacap {
+	return &Datacap{
+		logger: logger,
+	}
+}
 
 func (d *Datacap) Name() string {
 	return manifest.DatacapKey
 }
-
 func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodConstructor:

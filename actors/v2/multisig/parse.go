@@ -7,15 +7,18 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
 type Msig struct {
 	helper *helper.Helper
+	logger *zap.Logger
 }
 
-func NewMsig(helper *helper.Helper) *Msig {
+func New(helper *helper.Helper, logger *zap.Logger) *Msig {
 	return &Msig{
 		helper: helper,
+		logger: logger,
 	}
 }
 

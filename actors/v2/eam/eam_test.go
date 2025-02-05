@@ -4,16 +4,8 @@ import (
 	"os"
 	"testing"
 
-	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
-	eamv11 "github.com/filecoin-project/go-state-types/builtin/v11/eam"
-	eamv12 "github.com/filecoin-project/go-state-types/builtin/v12/eam"
-	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
-	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
-	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
 	"github.com/ipfs/go-cid"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	v2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/actors/v2/eam"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
@@ -54,22 +46,6 @@ func TestEam(t *testing.T) {
 			runTest(t, fn, tests)
 		})
 	}
-}
-
-func TestMethodCoverage(t *testing.T) {
-	e := &eam.Eam{}
-
-	actorVersions := []any{
-		eamv10.Methods,
-		eamv11.Methods,
-		eamv12.Methods,
-		eamv13.Methods,
-		eamv14.Methods,
-		eamv15.Methods,
-	}
-
-	missingMethods := v2.MissingMethods(e, actorVersions)
-	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

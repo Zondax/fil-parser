@@ -21,10 +21,18 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/paych"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
+	"go.uber.org/zap"
 )
 
-type PaymentChannel struct{}
+type PaymentChannel struct {
+	logger *zap.Logger
+}
 
+func New(logger *zap.Logger) *PaymentChannel {
+	return &PaymentChannel{
+		logger: logger,
+	}
+}
 func (p *PaymentChannel) Name() string {
 	return manifest.PaychKey
 }

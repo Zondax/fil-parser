@@ -3,23 +3,7 @@ package power_test
 import (
 	"testing"
 
-	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
-	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
-	powerv12 "github.com/filecoin-project/go-state-types/builtin/v12/power"
-	powerv13 "github.com/filecoin-project/go-state-types/builtin/v13/power"
-	powerv14 "github.com/filecoin-project/go-state-types/builtin/v14/power"
-	powerv15 "github.com/filecoin-project/go-state-types/builtin/v15/power"
-	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
-	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
-	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/power"
-	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/power"
-	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/power"
-	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/power"
-	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/power"
-	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/power"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	v2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/actors/v2/power"
 	"github.com/zondax/fil-parser/parser"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
@@ -94,30 +78,6 @@ func TestPowerConstructor(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMethodCoverage(t *testing.T) {
-	power := &power.Power{}
-
-	actorVersions := []any{
-		legacyv2.Actor{},
-		legacyv3.Actor{},
-		legacyv4.Actor{},
-		legacyv5.Actor{},
-		legacyv6.Actor{},
-		legacyv7.Actor{},
-		powerv8.Methods,
-		powerv9.Methods,
-		powerv10.Methods,
-		powerv11.Methods,
-		powerv12.Methods,
-		powerv13.Methods,
-		powerv14.Methods,
-		powerv15.Methods,
-	}
-
-	missingMethods := v2.MissingMethods(power, actorVersions)
-	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

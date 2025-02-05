@@ -1,6 +1,8 @@
 package v2
 
 import (
+	"fmt"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
@@ -8,14 +10,17 @@ import (
 	"github.com/zondax/fil-parser/actors/v2/cron"
 	"github.com/zondax/fil-parser/actors/v2/datacap"
 	"github.com/zondax/fil-parser/actors/v2/eam"
+	"github.com/zondax/fil-parser/actors/v2/ethaccount"
 	"github.com/zondax/fil-parser/actors/v2/evm"
 	initActor "github.com/zondax/fil-parser/actors/v2/init"
 	"github.com/zondax/fil-parser/actors/v2/market"
 	"github.com/zondax/fil-parser/actors/v2/miner"
 	"github.com/zondax/fil-parser/actors/v2/multisig"
 	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
+	"github.com/zondax/fil-parser/actors/v2/placeholder"
 	"github.com/zondax/fil-parser/actors/v2/power"
 	"github.com/zondax/fil-parser/actors/v2/reward"
+	"github.com/zondax/fil-parser/actors/v2/system"
 	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -55,55 +60,11 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	}
 	network := ""
 
-	var addressInfo *types.AddressInfo
-	switch actor {
-	case manifest.InitKey:
-		initActor := &initActor.Init{}
-		metadata, addressInfo, err = initActor.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.CronKey:
-		cron := &cron.Cron{}
-		metadata, addressInfo, err = cron.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.AccountKey:
-		account := &account.Account{}
-		metadata, addressInfo, err = account.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.PowerKey:
-		power := &power.Power{}
-		metadata, addressInfo, err = power.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.MinerKey:
-		miner := &miner.Miner{}
-		metadata, addressInfo, err = miner.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.MarketKey:
-		market := &market.Market{}
-		metadata, addressInfo, err = market.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.PaychKey:
-		paymentChannel := &paymentchannel.PaymentChannel{}
-		metadata, addressInfo, err = paymentChannel.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.MultisigKey:
-		multisig := &multisig.Msig{}
-		metadata, addressInfo, err = multisig.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.RewardKey:
-		reward := &reward.Reward{}
-		metadata, addressInfo, err = reward.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.VerifregKey:
-		verifiedRegistry := &verifiedregistry.VerifiedRegistry{}
-		metadata, addressInfo, err = verifiedRegistry.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.EvmKey:
-		evm := evm.New(p.logger)
-		metadata, addressInfo, err = evm.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.EamKey:
-		eam := &eam.Eam{}
-		metadata, addressInfo, err = eam.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.DatacapKey:
-		datacap := &datacap.Datacap{}
-		metadata, addressInfo, err = datacap.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
-	case manifest.EthAccountKey:
-		// metadata, err = p.ParseEthAccount(txType, msg, msgRct)
-	case manifest.PlaceholderKey:
-		// metadata, err = p.ParsePlaceholder(txType, msg, msgRct)
-	default:
-		err = parser.ErrNotValidActor
+	actorParser, err := p.GetActor(actor)
+	if err != nil {
+		return nil, nil, parser.ErrNotValidActor
 	}
-	return metadata, addressInfo, err
+	return actorParser.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
 }
 
 func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
@@ -115,4 +76,43 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 		}
 	}
 	return 0, nil
+}
+
+func (p *ActorParser) GetActor(actor string) (Actor, error) {
+	switch actor {
+	case manifest.AccountKey:
+		return account.New(p.logger), nil
+	case manifest.CronKey:
+		return cron.New(p.logger), nil
+	case manifest.DatacapKey:
+		return datacap.New(p.logger), nil
+	case manifest.EamKey:
+		return eam.New(p.logger), nil
+	case manifest.EthAccountKey:
+		return ethaccount.New(p.logger), nil
+	case manifest.EvmKey:
+		return evm.New(p.logger), nil
+	case manifest.InitKey:
+		return initActor.New(p.logger), nil
+	case manifest.MarketKey:
+		return market.New(p.logger), nil
+	case manifest.MinerKey:
+		return miner.New(p.logger), nil
+	case manifest.MultisigKey:
+		return multisig.New(p.helper, p.logger), nil
+	case manifest.PaychKey:
+		return paymentchannel.New(p.logger), nil
+	case manifest.PowerKey:
+		return power.New(p.logger), nil
+	case manifest.RewardKey:
+		return reward.New(p.logger), nil
+	case manifest.VerifregKey:
+		return verifiedregistry.New(p.logger), nil
+	case manifest.PlaceholderKey:
+		return placeholder.New(p.logger), nil
+	case manifest.SystemKey:
+		return system.New(p.logger), nil
+	default:
+		return nil, fmt.Errorf("actor %s not found", actor)
+	}
 }

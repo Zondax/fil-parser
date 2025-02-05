@@ -6,10 +6,18 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type EthAccount struct{}
+type EthAccount struct {
+	logger *zap.Logger
+}
 
+func New(logger *zap.Logger) *EthAccount {
+	return &EthAccount{
+		logger: logger,
+	}
+}
 func (e *EthAccount) Name() string {
 	return manifest.EthAccountKey
 }

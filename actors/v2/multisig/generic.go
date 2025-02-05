@@ -21,6 +21,9 @@ func parseWithMsigParser[R multisigReturn](msg *parser.LotusMessage,
 ) (map[string]interface{}, error) {
 
 	metadata := make(map[string]interface{})
+	if msg == nil || msg.To.Empty() {
+		return map[string]interface{}{}, fmt.Errorf("invalid message")
+	}
 	params, err := fn(msg, height, key)
 	if err != nil {
 		return map[string]interface{}{}, err
@@ -45,7 +48,7 @@ func parse[T multisigParams, P []byte | string](raw P, params T, unmarshaller fu
 		return map[string]interface{}{}, err
 	}
 	reader := bytes.NewReader(rawBytes)
-	err = unmarshaller(reader, &params)
+	err = unmarshaller(reader, params)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}

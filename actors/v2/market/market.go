@@ -22,10 +22,18 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
+	"go.uber.org/zap"
 )
 
-type Market struct{}
+type Market struct {
+	logger *zap.Logger
+}
 
+func New(logger *zap.Logger) *Market {
+	return &Market{
+		logger: logger,
+	}
+}
 func (m *Market) Name() string {
 	return manifest.MarketKey
 }

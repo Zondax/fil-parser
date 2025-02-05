@@ -24,10 +24,18 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type Power struct{}
+type Power struct {
+	logger *zap.Logger
+}
 
+func New(logger *zap.Logger) *Power {
+	return &Power{
+		logger: logger,
+	}
+}
 func (p *Power) Name() string {
 	return manifest.PowerKey
 }

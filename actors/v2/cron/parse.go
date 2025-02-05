@@ -6,9 +6,18 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type Cron struct{}
+type Cron struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Cron {
+	return &Cron{
+		logger: logger,
+	}
+}
 
 func (c *Cron) Name() string {
 	return manifest.CronKey

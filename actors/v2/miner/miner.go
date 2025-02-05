@@ -20,7 +20,18 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
+	"go.uber.org/zap"
 )
+
+type Miner struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Miner {
+	return &Miner{
+		logger: logger,
+	}
+}
 
 func (m *Miner) Name() string {
 	return manifest.MinerKey

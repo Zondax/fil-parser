@@ -6,9 +6,18 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type Account struct{}
+type Account struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Account {
+	return &Account{
+		logger: logger,
+	}
+}
 
 func (a *Account) Name() string {
 	return manifest.AccountKey

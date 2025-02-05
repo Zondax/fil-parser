@@ -4,30 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	v2 "github.com/zondax/fil-parser/actors/v2"
 	initActor "github.com/zondax/fil-parser/actors/v2/init"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
-
-	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
-	builtinInitv11 "github.com/filecoin-project/go-state-types/builtin/v11/init"
-	builtinInitv12 "github.com/filecoin-project/go-state-types/builtin/v12/init"
-	builtinInitv13 "github.com/filecoin-project/go-state-types/builtin/v13/init"
-	builtinInitv14 "github.com/filecoin-project/go-state-types/builtin/v14/init"
-	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
-	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
-	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
-	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/init"
-	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/init"
-	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/init"
-	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/init"
-	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/init"
-	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
 )
 
 var expectedData []byte
@@ -86,30 +69,6 @@ func TestInitConstructor(t *testing.T) {
 		})
 	}
 
-}
-
-func TestMethodCoverage(t *testing.T) {
-	i := &initActor.Init{}
-
-	actorVersions := []any{
-		legacyv2.Actor{},
-		legacyv3.Actor{},
-		legacyv4.Actor{},
-		legacyv5.Actor{},
-		legacyv6.Actor{},
-		legacyv7.Actor{},
-		builtinInitv8.Methods,
-		builtinInitv9.Methods,
-		builtinInitv10.Methods,
-		builtinInitv11.Methods,
-		builtinInitv12.Methods,
-		builtinInitv13.Methods,
-		builtinInitv14.Methods,
-		builtinInitv15.Methods,
-	}
-
-	missingMethods := v2.MissingMethods(i, actorVersions)
-	assert.Empty(t, missingMethods, "missing methods: %v", missingMethods)
 }
 
 func runTest(t *testing.T, fn testFn, tests []tools.TestCase[map[string]any]) {

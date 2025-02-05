@@ -19,9 +19,18 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/reward"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"go.uber.org/zap"
 )
 
-type Reward struct{}
+type Reward struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Reward {
+	return &Reward{
+		logger: logger,
+	}
+}
 
 func (r *Reward) Name() string {
 	return manifest.RewardKey

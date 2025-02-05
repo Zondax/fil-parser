@@ -22,8 +22,6 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-type Miner struct{}
-
 func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
