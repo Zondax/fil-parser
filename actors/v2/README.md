@@ -57,3 +57,35 @@ To add support for a new network version:
 ## Compatibility
 
 The `ActorParser` is designed to be backwards compatible and a drop in replacement for ActorsV1.
+
+
+## Misc
+
+### Filecoin Network Version - Actor Version Mapping
+
+>
+> [https://github.com/filecoin-project/builtin-actors/releases](https://github.com/filecoin-project/builtin-actors/releases?page=11)
+>
+> [https://github.com/filecoin-project/community/discussions/74](https://github.com/filecoin-project/community/discussions/74)
+
+The following table shows the mapping of Filecoin network versions to actor versions:
+
+| Network Version | Actor Version              | Height(Mainnet) | Height(Calibration) |
+|-----------------|----------------------------|-----------------|---------------------|
+| v8              | v2(spec-actors)            | 170000          | UNKNOWN             |
+| v9              | v2(spec-actors)            | 265200          | UNKNOWN             |
+| v10             | v3(spec-actors)            | 550321          | UNKNOWN             |
+| v11             | v3(spec-actors)            | 665280          | UNKNOWN             |
+| v12             | v4(spec-actors)            | 712320          | 193789              |
+| v13             | v5(spec-actors)            | 892800          | 0 (RESET)           |
+| v14             | v6(spec-actors)            | 1231620         | 312746              |
+| v15             | v7(spec-actors)            | 1594680         | 682006              |
+| v16             | v8(builtin-actors)         | 1960320         | 1044660             |
+| v17             | v9(builtin-actors)         | 2383680         | 16800 (RESET)       |
+| v18             | v10(builtin-actors)        | 2683348         | 322354              |
+| v19             | v11(builtin-actors)        | 2809800         | 489094              |
+| v20             | v11(builtin-actors)        | 2870280         | 492214              |
+| v21             | v12(builtin-actors)        | 3469380         | 1108174             |
+| v22             | v13(builtin-actors)        | 3817920         | 1427974             |
+| v23             | v14(builtin-actors)        | 4154640         | 1779094             |
+| v24             | v15(builtin-actors)        | 4461240         | 2081674             |
