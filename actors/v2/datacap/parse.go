@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
@@ -25,8 +26,8 @@ func (d *Datacap) Name() string {
 func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodConstructor:
-		// resp, err := p.Constructor(network, height, msg.Params)
-		// return resp, nil, err
+		resp, err := actors.ParseConstructor(msg.Params)
+		return resp, nil, err
 	case parser.MethodMintExported:
 		resp, err := p.MintExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -73,14 +74,15 @@ func (p *Datacap) Parse(network string, height int64, txType string, msg *parser
 		resp, err := p.GranularityExported(network, height, msgRct.Return)
 		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
 func (d *Datacap) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodConstructor:               nil,
+		parser.MethodConstructor:               actors.ParseConstructor,
 		parser.MethodMintExported:              d.MintExported,
 		parser.MethodDestroyExported:           d.DestroyExported,
 		parser.MethodNameExported:              d.NameExported,

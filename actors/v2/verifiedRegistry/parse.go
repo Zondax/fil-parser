@@ -3,6 +3,7 @@ package verifiedregistry
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -10,9 +11,11 @@ import (
 func (p *VerifiedRegistry) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		// return p.parseSend(msg), nil
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
-		// return p.Constructor(network, height, msg.Params)
+		resp, err := actors.ParseConstructor(msg.Params)
+		return resp, nil, err
 	case parser.MethodAddVerifier:
 		resp, err := p.AddVerifier(network, height, msg.Params)
 		return resp, nil, err
@@ -61,8 +64,8 @@ func (p *VerifiedRegistry) Parse(network string, height int64, txType string, ms
 
 func (p *VerifiedRegistry) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                             nil,
-		parser.MethodConstructor:                      nil,
+		parser.MethodSend:                             actors.ParseSend,
+		parser.MethodConstructor:                      actors.ParseConstructor,
 		parser.MethodAddVerifier:                      p.AddVerifier,
 		parser.MethodRemoveVerifier:                   p.RemoveVerifier,
 		parser.MethodAddVerifiedClient:                p.AddVerifiedClientExported,

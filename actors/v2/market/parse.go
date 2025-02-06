@@ -3,6 +3,7 @@ package market
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -10,9 +11,11 @@ import (
 func (p *Market) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		// return p.parseSend(msg), nil
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
-		// return p.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodAddBalance, parser.MethodAddBalanceExported:
 		resp, err := p.AddBalance(network, height, msg.Params)
 		return resp, nil, err
@@ -35,7 +38,8 @@ func (p *Market) Parse(network string, height int64, txType string, msg *parser.
 		resp, err := p.ComputeDataCommitmentExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodCronTick:
-		// return p.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodGetBalance:
 		resp, err := p.GetBalanceExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -70,15 +74,16 @@ func (p *Market) Parse(network string, height int64, txType string, msg *parser.
 		resp, err := p.GetDealActivationExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
 func (p *Market) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                        nil,
-		parser.MethodConstructor:                 nil,
+		parser.MethodSend:                        actors.ParseSend,
+		parser.MethodConstructor:                 actors.ParseEmptyParamsAndReturn,
 		parser.MethodAddBalance:                  p.AddBalance,
 		parser.MethodAddBalanceExported:          p.AddBalance,
 		parser.MethodWithdrawBalance:             p.WithdrawBalance,
@@ -89,7 +94,7 @@ func (p *Market) TransactionTypes() map[string]any {
 		parser.MethodActivateDeals:               p.ActivateDealsExported,
 		parser.MethodOnMinerSectorsTerminate:     p.OnMinerSectorsTerminateExported,
 		parser.MethodComputeDataCommitment:       p.ComputeDataCommitmentExported,
-		parser.MethodCronTick:                    nil,
+		parser.MethodCronTick:                    actors.ParseEmptyParamsAndReturn,
 		parser.MethodGetBalance:                  p.GetBalanceExported,
 		parser.MethodGetDealDataCommitment:       p.GetDealDataCommitmentExported,
 		parser.MethodGetDealClient:               p.GetDealClientExported,

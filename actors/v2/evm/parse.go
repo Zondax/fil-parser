@@ -3,6 +3,7 @@ package evm
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -32,7 +33,8 @@ func (p *Evm) Parse(network string, height int64, txType string, msg *parser.Lot
 		resp, err := p.GetStorageAt(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
 	return metadata, nil, parser.ErrUnknownMethod
 }
@@ -42,7 +44,7 @@ func (p *Evm) TransactionTypes() map[string]any {
 		parser.MethodConstructor:            p.Constructor,
 		parser.MethodResurrect:              p.Resurrect,
 		parser.MethodInvokeContract:         p.InvokeContract,
-		parser.MethodInvokeContractReadOnly: nil,
+		parser.MethodInvokeContractReadOnly: p.InvokeContract,
 		parser.MethodInvokeContractDelegate: p.InvokeContractDelegate,
 		parser.MethodGetBytecode:            p.GetBytecode,
 		parser.MethodGetBytecodeHash:        p.GetBytecodeHash,

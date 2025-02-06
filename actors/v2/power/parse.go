@@ -3,6 +3,7 @@ package power
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -13,7 +14,8 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodSend:
-		// metadata = p.parseSend(msg)
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		metadata, err = p.Constructor(network, height, msg, msg.Params)
 	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
@@ -23,7 +25,8 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 	case parser.MethodEnrollCronEvent:
 		metadata, err = p.EnrollCronEvent(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodCronTick:
-		// metadata, err = p.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodUpdatePledgeTotal:
 		metadata, err = p.UpdatePledgeTotal(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodSubmitPoRepForBulkVerify:
@@ -39,7 +42,8 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 	case parser.MethodMinerConsensusCountExported:
 		metadata, err = p.MinerConsensusCountExported(network, msg, height, msg.Params, msgRct.Return)
 	case parser.UnknownStr:
-		// metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	default:
 		err = parser.ErrUnknownMethod
 	}
@@ -48,13 +52,13 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 
 func (p *Power) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                        nil,
+		parser.MethodSend:                        actors.ParseSend,
 		parser.MethodConstructor:                 p.Constructor,
 		parser.MethodCreateMiner:                 p.CreateMinerExported,
 		parser.MethodCreateMinerExported:         p.CreateMinerExported,
 		parser.MethodUpdateClaimedPower:          p.UpdateClaimedPower,
 		parser.MethodEnrollCronEvent:             p.EnrollCronEvent,
-		parser.MethodCronTick:                    nil,
+		parser.MethodCronTick:                    actors.ParseEmptyParamsAndReturn,
 		parser.MethodUpdatePledgeTotal:           p.UpdatePledgeTotal,
 		parser.MethodSubmitPoRepForBulkVerify:    p.SubmitPoRepForBulkVerify,
 		parser.MethodCurrentTotalPower:           p.CurrentTotalPower,
@@ -62,7 +66,7 @@ func (p *Power) TransactionTypes() map[string]any {
 		parser.MethodMinerRawPowerExported:       p.MinerRawPowerExported,
 		parser.MethodMinerCountExported:          p.MinerCountExported,
 		parser.MethodMinerConsensusCountExported: p.MinerConsensusCountExported,
-		parser.MethodOnEpochTickEnd:              nil,
+		parser.MethodOnEpochTickEnd:              actors.ParseEmptyParamsAndReturn,
 		parser.MethodOnConsensusFault:            nil,
 	}
 }

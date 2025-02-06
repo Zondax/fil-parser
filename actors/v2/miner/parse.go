@@ -3,6 +3,7 @@ package miner
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -10,7 +11,8 @@ import (
 func (m *Miner) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		// return p.parseSend(msg), nil
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := m.Constructor(network, height, msg.Params)
 		return resp, nil, err
@@ -75,10 +77,12 @@ func (m *Miner) Parse(network string, height int64, txType string, msg *parser.L
 		resp, err := m.CompactSectorNumbers(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodConfirmChangeWorkerAddress, parser.MethodConfirmChangeWorkerAddressExported:
-		// return m.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodConfirmUpdateWorkerKey: // TODO: ?
 	case parser.MethodRepayDebt, parser.MethodRepayDebtExported:
-		// return p.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodChangeOwnerAddress, parser.MethodChangeOwnerAddressExported: // TODO: not tested
 		resp, err := m.ChangeOwnerAddressExported(network, height, msg.Params)
 		return resp, nil, err
@@ -130,16 +134,17 @@ func (m *Miner) Parse(network string, height int64, txType string, msg *parser.L
 		resp, err := m.GetMultiaddrsExported(network, height, msgRct.Return)
 		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
 func (m *Miner) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                               nil,
+		parser.MethodSend:                               actors.ParseSend,
 		parser.MethodConstructor:                        m.Constructor,
-		parser.MethodControlAddresses:                   nil,
+		parser.MethodControlAddresses:                   m.ControlAddresses,
 		parser.MethodChangeWorkerAddress:                m.ChangeWorkerAddressExported,
 		parser.MethodChangeWorkerAddressExported:        m.ChangeWorkerAddressExported,
 		parser.MethodChangePeerID:                       m.ChangePeerIDExported,
@@ -163,11 +168,11 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodChangeMultiaddrsExported:           m.ChangeMultiaddrsExported,
 		parser.MethodCompactPartitions:                  m.CompactPartitions,
 		parser.MethodCompactSectorNumbers:               m.CompactSectorNumbers,
-		parser.MethodConfirmChangeWorkerAddress:         nil,
-		parser.MethodConfirmChangeWorkerAddressExported: nil,
+		parser.MethodConfirmChangeWorkerAddress:         actors.ParseEmptyParamsAndReturn,
+		parser.MethodConfirmChangeWorkerAddressExported: actors.ParseEmptyParamsAndReturn,
 		parser.MethodConfirmUpdateWorkerKey:             nil,
-		parser.MethodRepayDebt:                          nil,
-		parser.MethodRepayDebtExported:                  nil,
+		parser.MethodRepayDebt:                          actors.ParseEmptyParamsAndReturn,
+		parser.MethodRepayDebtExported:                  actors.ParseEmptyParamsAndReturn,
 		parser.MethodChangeOwnerAddress:                 m.ChangeOwnerAddressExported,
 		parser.MethodChangeOwnerAddressExported:         m.ChangeOwnerAddressExported,
 		parser.MethodDisputeWindowedPoSt:                m.DisputeWindowedPoSt,

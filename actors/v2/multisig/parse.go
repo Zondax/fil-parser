@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -38,7 +39,8 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 	case parser.MethodConstructor: // TODO: not tested
 		ret, err = p.MsigConstructor(network, height, msg.Params)
 	case parser.MethodSend:
-		// ret, err = p.ParseSend(msg)
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
 		ret, err = p.Propose(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.MethodApprove, parser.MethodApproveExported:
@@ -56,7 +58,8 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
 		ret, err = p.UniversalReceiverHook(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
 
 	return ret, nil, err
@@ -65,7 +68,7 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 func (p *Msig) TransactionTypes() map[string]any {
 	return map[string]any{
 		parser.MethodConstructor:                         p.MsigConstructor,
-		parser.MethodSend:                                nil,
+		parser.MethodSend:                                actors.ParseSend,
 		parser.MethodPropose:                             p.Propose,
 		parser.MethodProposeExported:                     p.Propose,
 		parser.MethodApprove:                             p.Approve,
