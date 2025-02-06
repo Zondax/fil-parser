@@ -2,51 +2,101 @@ package datacap
 
 import (
 	"github.com/filecoin-project/go-state-types/manifest"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type Datacap struct{}
+type Datacap struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Datacap {
+	return &Datacap{
+		logger: logger,
+	}
+}
 
 func (d *Datacap) Name() string {
 	return manifest.DatacapKey
 }
-
-func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodConstructor:
-		// return p.Constructor(network, height, msg.Params)
+		resp, err := actors.ParseConstructor(msg.Params)
+		return resp, nil, err
 	case parser.MethodMintExported:
-		return p.MintExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.MintExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodDestroyExported:
-		return p.DestroyExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.DestroyExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodNameExported:
-		return p.NameExported(msgRct.Return)
+		resp, err := p.NameExported(msgRct.Return)
+		return resp, nil, err
 	case parser.MethodSymbolExported:
-		return p.SymbolExported(msgRct.Return)
+		resp, err := p.SymbolExported(msgRct.Return)
+		return resp, nil, err
 	case parser.MethodTotalSupplyExported:
-		return p.TotalSupplyExported(msgRct.Return)
+		resp, err := p.TotalSupplyExported(msgRct.Return)
+		return resp, nil, err
 	case parser.MethodBalanceExported:
-		// return p.BalanceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.BalanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodTransferExported:
-		return p.TransferExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.TransferExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodTransferFromExported:
-		// return p.TransferFromExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.TransferFromExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodIncreaseAllowanceExported:
-		return p.IncreaseAllowanceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.IncreaseAllowanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodDecreaseAllowanceExported:
-		return p.DecreaseAllowanceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.DecreaseAllowanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodRevokeAllowanceExported:
-		return p.RevokeAllowanceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.RevokeAllowanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodBurnExported:
-		return p.BurnExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.BurnExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodBurnFromExported:
-		return p.BurnFromExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.BurnFromExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodAllowanceExported:
-		return p.AllowanceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.AllowanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGranularityExported:
-		return p.GranularityExported(network, height, msgRct.Return)
+		resp, err := p.GranularityExported(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+}
+
+func (d *Datacap) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodConstructor:               actors.ParseConstructor,
+		parser.MethodMintExported:              d.MintExported,
+		parser.MethodDestroyExported:           d.DestroyExported,
+		parser.MethodNameExported:              d.NameExported,
+		parser.MethodSymbolExported:            d.SymbolExported,
+		parser.MethodTotalSupplyExported:       d.TotalSupplyExported,
+		parser.MethodBalanceExported:           nil,
+		parser.MethodTransferExported:          d.TransferExported,
+		parser.MethodTransferFromExported:      nil,
+		parser.MethodIncreaseAllowanceExported: d.IncreaseAllowanceExported,
+		parser.MethodDecreaseAllowanceExported: d.DecreaseAllowanceExported,
+		parser.MethodRevokeAllowanceExported:   d.RevokeAllowanceExported,
+		parser.MethodBurnExported:              d.BurnExported,
+		parser.MethodBurnFromExported:          d.BurnFromExported,
+		parser.MethodAllowanceExported:         d.AllowanceExported,
+		parser.MethodGranularityExported:       d.GranularityExported,
+	}
 }

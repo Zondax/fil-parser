@@ -1,28 +1,53 @@
 package evm
 
 import (
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Evm) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *Evm) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodConstructor:
-		return p.Constructor(network, height, msg.Params)
+		resp, err := p.Constructor(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodResurrect: // TODO: not tested
-		return p.Resurrect(network, height, msg.Params)
+		resp, err := p.Resurrect(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodInvokeContract, parser.MethodInvokeContractReadOnly:
-		return p.InvokeContract(network, height, msg.Params, msgRct.Return)
+		resp, err := p.InvokeContract(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodInvokeContractDelegate:
-		return p.InvokeContractDelegate(network, height, msg.Params, msgRct.Return)
+		resp, err := p.InvokeContractDelegate(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetBytecode:
-		return p.GetBytecode(network, height, msgRct.Return)
+		resp, err := p.GetBytecode(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetBytecodeHash: // TODO: not tested
-		return p.GetBytecodeHash(network, height, msgRct.Return)
+		resp, err := p.GetBytecodeHash(network, height, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetStorageAt: // TODO: not tested
-		return p.GetStorageAt(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetStorageAt(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
-	return metadata, nil
+	return metadata, nil, parser.ErrUnknownMethod
+}
+
+func (p *Evm) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodConstructor:            p.Constructor,
+		parser.MethodResurrect:              p.Resurrect,
+		parser.MethodInvokeContract:         p.InvokeContract,
+		parser.MethodInvokeContractReadOnly: p.InvokeContract,
+		parser.MethodInvokeContractDelegate: p.InvokeContractDelegate,
+		parser.MethodGetBytecode:            p.GetBytecode,
+		parser.MethodGetBytecodeHash:        p.GetBytecodeHash,
+		parser.MethodGetStorageAt:           p.GetStorageAt,
+	}
 }

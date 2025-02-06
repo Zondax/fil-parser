@@ -17,7 +17,7 @@ func parse[T verifiedRegistryParams, R verifiedRegistryReturn](raw, rawReturn []
 		metadata[parser.ParamsKey] = params
 	}
 	metadata[parser.ParamsKey] = params
-	if customReturn {
+	if !customReturn {
 		return metadata, nil
 	}
 	if len(rawReturn) > 0 {

@@ -32,6 +32,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	cidLink "github.com/ipld/go-ipld-prime/linking/cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	"github.com/zondax/fil-parser/parser"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
@@ -1930,6 +1931,30 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			require.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
 			require.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
 			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
+
+			// compare tx metadata
+			failedTxType := map[string]string{}
+			for i, tx := range parsedResultActorV1.Txs {
+				var metadataV1 map[string]interface{}
+				err := json.Unmarshal([]byte(tx.TxMetadata), &metadataV1)
+				if err != nil {
+					t.Fatalf("Error unmarshalling v1 tx metadata: %s", err.Error())
+				}
+				var metadataV2 map[string]interface{}
+				err = json.Unmarshal([]byte(parsedResultActorV2.Txs[i].TxMetadata), &metadataV2)
+				if err != nil {
+					t.Fatalf("Error unmarshalling v2 tx metadata: %s", err.Error())
+				}
+
+				if metadataV1[parser.ParamsKey] != nil {
+					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+				}
+				if metadataV1[parser.ReturnKey] != nil {
+					require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+				}
+
+			}
+			assert.Equal(t, 0, len(failedTxType), "Tx metadata mismatch for tx_type: %v", failedTxType)
 		})
 	}
 

@@ -11,8 +11,10 @@ import (
 	accountv12 "github.com/filecoin-project/go-state-types/builtin/v12/account"
 	accountv13 "github.com/filecoin-project/go-state-types/builtin/v13/account"
 	accountv14 "github.com/filecoin-project/go-state-types/builtin/v14/account"
+	accountv15 "github.com/filecoin-project/go-state-types/builtin/v15/account"
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
 	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -49,6 +51,8 @@ func (a *Account) AuthenticateMessage(network string, height int64, raw, rawRetu
 		return authenticateMessageGeneric(raw, rawReturn, &accountv13.AuthenticateMessageParams{}, &r)
 	case tools.V23.IsSupported(network, height):
 		return authenticateMessageGeneric(raw, rawReturn, &accountv14.AuthenticateMessageParams{}, &r)
+	case tools.V24.IsSupported(network, height):
+		return authenticateMessageGeneric(raw, rawReturn, &accountv15.AuthenticateMessageParams{}, &r)
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

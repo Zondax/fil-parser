@@ -13,18 +13,28 @@ import (
 	evmv14 "github.com/filecoin-project/go-state-types/builtin/v14/evm"
 	evmv15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
 	"github.com/filecoin-project/go-state-types/manifest"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"go.uber.org/zap"
 )
 
-type Evm struct{}
+type Evm struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Evm {
+	return &Evm{
+		logger: logger,
+	}
+}
 
 func (e *Evm) Name() string {
 	return manifest.EvmKey
 }
 
-func (*Evm) InvokeContract(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (e *Evm) InvokeContract(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
@@ -32,7 +42,7 @@ func (*Evm) InvokeContract(network string, height int64, rawParams, rawReturn []
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
-		return metadata, fmt.Errorf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams))
+		e.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
@@ -42,7 +52,7 @@ func (*Evm) InvokeContract(network string, height int64, rawParams, rawReturn []
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
-		return metadata, fmt.Errorf("error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn))
+		e.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
@@ -55,17 +65,17 @@ func (*Evm) InvokeContract(network string, height int64, rawParams, rawReturn []
 func (*Evm) Resurrect(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv15.ResurrectParams{}, &evmv15.ResurrectParams{})
+		return parse(raw, nil, false, &evmv15.ResurrectParams{}, &evmv15.ResurrectParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv14.ResurrectParams{}, &evmv14.ResurrectParams{})
+		return parse(raw, nil, false, &evmv14.ResurrectParams{}, &evmv14.ResurrectParams{}, parser.ParamsKey)
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv13.ResurrectParams{}, &evmv13.ResurrectParams{})
+		return parse(raw, nil, false, &evmv13.ResurrectParams{}, &evmv13.ResurrectParams{}, parser.ParamsKey)
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv12.ResurrectParams{}, &evmv12.ResurrectParams{})
+		return parse(raw, nil, false, &evmv12.ResurrectParams{}, &evmv12.ResurrectParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parse(raw, nil, false, &evmv11.ResurrectParams{}, &evmv11.ResurrectParams{})
+		return parse(raw, nil, false, &evmv11.ResurrectParams{}, &evmv11.ResurrectParams{}, parser.ParamsKey)
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv10.ResurrectParams{}, &evmv10.ResurrectParams{})
+		return parse(raw, nil, false, &evmv10.ResurrectParams{}, &evmv10.ResurrectParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
@@ -75,17 +85,17 @@ func (*Evm) Resurrect(network string, height int64, raw []byte) (map[string]inte
 func (*Evm) InvokeContractDelegate(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv15.DelegateCallParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv15.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv14.DelegateCallParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv14.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V22.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv13.DelegateCallParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv13.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V21.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv12.DelegateCallParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv12.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parse(rawParams, rawReturn, true, &evmv11.DelegateCallParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv11.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V18.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv10.DelegateCallParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv10.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
@@ -97,23 +107,21 @@ func (*Evm) GetBytecode(network string, height int64, raw []byte) (map[string]in
 	var err error
 	switch {
 	case tools.V24.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &evmv15.GetBytecodeReturn{}, &evmv15.GetBytecodeReturn{})
+		data, err = parse(raw, nil, false, &evmv15.GetBytecodeReturn{}, &evmv15.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &evmv14.GetBytecodeReturn{}, &evmv14.GetBytecodeReturn{})
+		data, err = parse(raw, nil, false, &evmv14.GetBytecodeReturn{}, &evmv14.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.V22.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &evmv13.GetBytecodeReturn{}, &evmv13.GetBytecodeReturn{})
+		data, err = parse(raw, nil, false, &evmv13.GetBytecodeReturn{}, &evmv13.GetBytecodeReturn{}, parser.ReturnKey)
+	case tools.V21.IsSupported(network, height):
+		data, err = parse(raw, nil, false, &evmv12.GetBytecodeReturn{}, &evmv12.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		data, err = parse(raw, nil, false, &evmv11.GetBytecodeReturn{}, &evmv11.GetBytecodeReturn{})
+		data, err = parse(raw, nil, false, &evmv11.GetBytecodeReturn{}, &evmv11.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.V18.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &evmv10.GetBytecodeReturn{}, &evmv10.GetBytecodeReturn{})
+		data, err = parse(raw, nil, false, &evmv10.GetBytecodeReturn{}, &evmv10.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	}
-
-	if data != nil {
-		data[parser.ReturnKey] = data[parser.ParamsKey]
 	}
 	return data, err
 }
@@ -123,24 +131,21 @@ func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[strin
 	var err error
 	switch {
 	case tools.V24.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{})
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{})
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.V22.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{})
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.V21.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{})
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{})
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.V18.IsSupported(network, height):
-		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{})
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	}
-	if data != nil {
-		data[parser.ReturnKey] = data[parser.ParamsKey]
 	}
 
 	return data, err
@@ -149,17 +154,17 @@ func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[strin
 func (*Evm) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv15.ConstructorParams{}, &evmv15.ConstructorParams{})
+		return parse(raw, nil, false, &evmv15.ConstructorParams{}, &evmv15.ConstructorParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv14.ConstructorParams{}, &evmv14.ConstructorParams{})
+		return parse(raw, nil, false, &evmv14.ConstructorParams{}, &evmv14.ConstructorParams{}, parser.ParamsKey)
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv13.ConstructorParams{}, &evmv13.ConstructorParams{})
+		return parse(raw, nil, false, &evmv13.ConstructorParams{}, &evmv13.ConstructorParams{}, parser.ParamsKey)
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv12.ConstructorParams{}, &evmv12.ConstructorParams{})
+		return parse(raw, nil, false, &evmv12.ConstructorParams{}, &evmv12.ConstructorParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parse(raw, nil, false, &evmv11.ConstructorParams{}, &evmv11.ConstructorParams{})
+		return parse(raw, nil, false, &evmv11.ConstructorParams{}, &evmv11.ConstructorParams{}, parser.ParamsKey)
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &evmv10.ConstructorParams{}, &evmv10.ConstructorParams{})
+		return parse(raw, nil, false, &evmv10.ConstructorParams{}, &evmv10.ConstructorParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
@@ -169,17 +174,17 @@ func (*Evm) Constructor(network string, height int64, raw []byte) (map[string]in
 func (*Evm) GetStorageAt(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv15.GetStorageAtParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv15.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv14.GetStorageAtParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv14.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V22.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv13.GetStorageAtParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv13.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V21.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv12.GetStorageAtParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv12.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parse(rawParams, rawReturn, true, &evmv11.GetStorageAtParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv11.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V18.IsSupported(network, height):
-		return parse(rawParams, rawReturn, true, &evmv10.GetStorageAtParams{}, &abi.CborBytes{})
+		return parse(rawParams, rawReturn, true, &evmv10.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}

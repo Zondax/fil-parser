@@ -1,55 +1,113 @@
 package market
 
 import (
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Market) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (p *Market) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		// return p.parseSend(msg), nil
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
-		// return p.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodAddBalance, parser.MethodAddBalanceExported:
-		return p.AddBalance(network, height, msg.Params)
+		resp, err := p.AddBalance(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
-		return p.WithdrawBalance(network, height, msg.Params)
+		resp, err := p.WithdrawBalance(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodPublishStorageDeals, parser.MethodPublishStorageDealsExported:
-		return p.PublishStorageDealsExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.PublishStorageDealsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodVerifyDealsForActivation:
-		return p.VerifyDealsForActivationExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.VerifyDealsForActivationExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodActivateDeals:
-		return p.ActivateDealsExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.ActivateDealsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodOnMinerSectorsTerminate:
-		return p.OnMinerSectorsTerminateExported(network, height, msg.Params)
+		resp, err := p.OnMinerSectorsTerminateExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.MethodComputeDataCommitment:
-		return p.ComputeDataCommitmentExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.ComputeDataCommitmentExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodCronTick:
-		// return p.emptyParamsAndReturn()
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
 	case parser.MethodGetBalance:
-		return p.GetBalanceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetBalanceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealDataCommitment:
-		return p.GetDealDataCommitmentExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealDataCommitmentExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealClient:
-		return p.GetDealClientExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealClientExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealProvider:
-		return p.GetDealProviderExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealProviderExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealLabel:
-		return p.GetDealLabelExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealLabelExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealTerm:
-		return p.GetDealTermExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealTermExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealTotalPrice:
-		return p.GetDealTotalPriceExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealTotalPriceExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealClientCollateral:
-		return p.GetDealClientCollateralExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealClientCollateralExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealProviderCollateral:
-		return p.GetDealProviderCollateralExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealProviderCollateralExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealVerified:
-		return p.GetDealVerifiedExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealVerifiedExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodGetDealActivation:
-		return p.GetDealActivationExported(network, height, msg.Params, msgRct.Return)
+		resp, err := p.GetDealActivationExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+}
+
+func (p *Market) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:                        actors.ParseSend,
+		parser.MethodConstructor:                 actors.ParseEmptyParamsAndReturn,
+		parser.MethodAddBalance:                  p.AddBalance,
+		parser.MethodAddBalanceExported:          p.AddBalance,
+		parser.MethodWithdrawBalance:             p.WithdrawBalance,
+		parser.MethodWithdrawBalanceExported:     p.WithdrawBalance,
+		parser.MethodPublishStorageDeals:         p.PublishStorageDealsExported,
+		parser.MethodPublishStorageDealsExported: p.PublishStorageDealsExported,
+		parser.MethodVerifyDealsForActivation:    p.VerifyDealsForActivationExported,
+		parser.MethodActivateDeals:               p.ActivateDealsExported,
+		parser.MethodOnMinerSectorsTerminate:     p.OnMinerSectorsTerminateExported,
+		parser.MethodComputeDataCommitment:       p.ComputeDataCommitmentExported,
+		parser.MethodCronTick:                    actors.ParseEmptyParamsAndReturn,
+		parser.MethodGetBalance:                  p.GetBalanceExported,
+		parser.MethodGetDealDataCommitment:       p.GetDealDataCommitmentExported,
+		parser.MethodGetDealClient:               p.GetDealClientExported,
+		parser.MethodGetDealProvider:             p.GetDealProviderExported,
+		parser.MethodGetDealLabel:                p.GetDealLabelExported,
+		parser.MethodGetDealTerm:                 p.GetDealTermExported,
+		parser.MethodGetDealTotalPrice:           p.GetDealTotalPriceExported,
+		parser.MethodGetDealClientCollateral:     p.GetDealClientCollateralExported,
+		parser.MethodGetDealProviderCollateral:   p.GetDealProviderCollateralExported,
+		parser.MethodGetDealVerified:             p.GetDealVerifiedExported,
+		parser.MethodGetDealActivation:           p.GetDealActivationExported,
+		parser.MethodGetDealSectorExported:       nil,
+		parser.MethodSettleDealPaymentsExported:  nil,
+		parser.MethodSectorContentChanged:        nil,
+	}
 }

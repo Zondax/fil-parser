@@ -6,7 +6,7 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func parse[T evmParams, R evmReturn](rawParams, rawReturn []byte, customReturn bool, params T, r R) (map[string]interface{}, error) {
+func parse[T evmParams, R evmReturn](rawParams, rawReturn []byte, customReturn bool, params T, r R, key string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -14,7 +14,7 @@ func parse[T evmParams, R evmReturn](rawParams, rawReturn []byte, customReturn b
 		if err != nil {
 			return metadata, err
 		}
-		metadata[parser.ParamsKey] = params
+		metadata[key] = params
 	}
 	if !customReturn {
 		return metadata, nil

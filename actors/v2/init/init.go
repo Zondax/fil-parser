@@ -18,6 +18,7 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/init"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/init"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
+	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -25,7 +26,15 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-type Init struct{}
+type Init struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Init {
+	return &Init{
+		logger: logger,
+	}
+}
 
 func (i *Init) Name() string {
 	return manifest.InitKey

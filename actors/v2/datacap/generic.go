@@ -6,7 +6,7 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-func parse[T datacapParams, R datacapReturn](raw, rawReturn []byte, customReturn bool, params T, r R) (map[string]interface{}, error) {
+func parse[T datacapParams, R datacapReturn](raw, rawReturn []byte, customReturn bool, params T, r R, key string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 
@@ -14,7 +14,7 @@ func parse[T datacapParams, R datacapReturn](raw, rawReturn []byte, customReturn
 	if err != nil {
 		return metadata, err
 	}
-	metadata[parser.ParamsKey] = params
+	metadata[key] = params
 
 	if !customReturn {
 		return metadata, nil

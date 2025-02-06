@@ -2,27 +2,55 @@ package account
 
 import (
 	"github.com/filecoin-project/go-state-types/manifest"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
+	"go.uber.org/zap"
 )
 
-type Account struct{}
+type Account struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Account {
+	return &Account{
+		logger: logger,
+	}
+}
 
 func (a *Account) Name() string {
 	return manifest.AccountKey
 }
 
-func (a *Account) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
+func (a *Account) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		// return a.parseSend(msg), nil
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
-		// return p.parseConstructor(msg.Params)
+		resp, err := actors.ParseConstructor(msg.Params)
+		return resp, nil, err
 	case parser.MethodPubkeyAddress:
-		return a.PubkeyAddress(network, msg.Params, msgRct.Return)
+		resp, err := a.PubkeyAddress(network, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodAuthenticateMessage:
-		return a.AuthenticateMessage(network, height, msg.Params, msgRct.Return)
+		resp, err := a.AuthenticateMessage(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
-		// return p.unknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
 	}
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
+}
+
+func (a *Account) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:                  actors.ParseSend,
+		parser.MethodConstructor:           actors.ParseConstructor,
+		parser.MethodPubkeyAddress:         a.PubkeyAddress,
+		parser.MethodAuthenticateMessage:   a.AuthenticateMessage,
+		parser.MethodUniversalReceiverHook: nil,
+	}
 }

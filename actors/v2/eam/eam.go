@@ -15,12 +15,21 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
-type Eam struct{}
+type Eam struct {
+	logger *zap.Logger
+}
+
+func New(logger *zap.Logger) *Eam {
+	return &Eam{
+		logger: logger,
+	}
+}
 
 func (e *Eam) Name() string {
 	return manifest.EamKey

@@ -21,10 +21,18 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/verifreg"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
+	"go.uber.org/zap"
 )
 
-type VerifiedRegistry struct{}
+type VerifiedRegistry struct {
+	logger *zap.Logger
+}
 
+func New(logger *zap.Logger) *VerifiedRegistry {
+	return &VerifiedRegistry{
+		logger: logger,
+	}
+}
 func (v *VerifiedRegistry) Name() string {
 	return manifest.VerifregKey
 }

@@ -69,6 +69,8 @@ const (
 	MethodMinerRawPowerExported               = "MinerRawPowerExported"               // MethodsPower
 	MethodMinerCountExported                  = "MinerCountExported"                  // MethodsPower
 	MethodMinerConsensusCountExported         = "MinerConsensusCountExported"         // MethodsPower
+	MethodOnEpochTickEnd                      = "OnEpochTickEnd"                      // MethodsPower
+	MethodOnConsensusFault                    = "OnConsensusFault"                    // MethodsPower
 	MethodOnDeferredCronEvent                 = "OnDeferredCronEvent"                 // MethodsMiner
 	MethodPreCommitSector                     = "PreCommitSector"                     // MethodsMiner
 	MethodProveCommitSector                   = "ProveCommitSector"                   // MethodsMiner - Deprecated
@@ -117,6 +119,9 @@ const (
 	MethodGetPeerID                           = "GetPeerIDExported"                   // MethodsMiner
 	MethodGetMultiaddrs                       = "GetMultiaddrsExported"               // MethodsMiner
 	MethodProveCommitSectors3                 = "ProveCommitSectors3"                 // MethodsMiner
+	MethodProveCommitSectorsNI                = "ProveCommitSectorsNI"                // MethodsMiner
+	MethodProveReplicaUpdates3                = "ProveReplicaUpdates3"                // MethodsMiner
+	MethodInternalSectorSetupForPreseal       = "InternalSectorSetupForPreseal"       // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket
@@ -136,6 +141,9 @@ const (
 	MethodGetDealProviderCollateral           = "GetDealProviderCollateralExported"   // MethodsMarket
 	MethodGetDealVerified                     = "GetDealVerifiedExported"             // MethodsMarket
 	MethodGetDealActivation                   = "GetDealActivationExported"           // MethodsMarket
+	MethodGetDealSectorExported               = "GetDealSectorExported"               // MethodsMarket
+	MethodSettleDealPaymentsExported          = "SettleDealPaymentsExported"          // MethodsMarket
+	MethodSectorContentChanged                = "SectorContentChanged"                // MethodsMarket
 	MethodUpdateChannelState                  = "UpdateChannelState"                  // MethodsPaymentChannel
 	MethodSettle                              = "Settle"                              // MethodsPaymentChannel
 	MethodCollect                             = "Collect"                             // MethodsPaymentChannel
