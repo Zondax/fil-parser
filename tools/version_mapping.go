@@ -42,21 +42,38 @@ var (
 	LatestVersion     version = V24
 )
 
+// IsSupported returns true if the height is within the version range for a given network
 func (v version) IsSupported(network string, height int64) bool {
 	if network == "calibration" {
+		if height == 0 && v.calibration == 0 {
+			return true
+		}
 		if height >= LatestVersion.calibration {
 			return v == LatestVersion
 		}
+
+		// edge case: check if two new versions have the same calibration height
+		if v.calibration == v.next().calibration && !IsLatestVersion(v) {
+			return v.next().IsSupported(network, height)
+		}
 		// check if the height is greater than the current version  but less than the next version
-		if height > v.calibration && height < v.next().calibration {
+		if height >= v.calibration && height < v.next().calibration {
 			return true
 		}
 	} else {
+		if height == 0 && v.mainnet == 0 {
+			return true
+		}
 		if height >= LatestVersion.mainnet {
 			return v == LatestVersion
 		}
+
+		// edge case: check if two new versions have the same mainnet height
+		if v.mainnet == v.next().mainnet && !IsLatestVersion(v) {
+			return v.next().IsSupported(network, height)
+		}
 		// check if the height is greater than the current version  but less than the next version
-		if height > v.mainnet && height < v.next().mainnet {
+		if height >= v.mainnet && height < v.next().mainnet {
 			return true
 		}
 	}
@@ -64,6 +81,12 @@ func (v version) IsSupported(network string, height int64) bool {
 	return false
 }
 
+// IsLatestVersion returns true if the version is the latest version
+func IsLatestVersion(version version) bool {
+	return version.nodeVersion == LatestVersion.nodeVersion
+}
+
+// AnyIsSupported returns true if any of the versions are supported for a given network and height
 func AnyIsSupported(network string, height int64, versions ...version) bool {
 	for _, v := range versions {
 		if v.IsSupported(network, height) {
@@ -73,6 +96,8 @@ func AnyIsSupported(network string, height int64, versions ...version) bool {
 	return false
 }
 
+// Next returns the next version
+// if the version is the latest version, it returns the latest version
 func (v version) next() version {
 	for i, version := range supportedVersions {
 		if version.nodeVersion == v.nodeVersion {
@@ -85,10 +110,14 @@ func (v version) next() version {
 	return v
 }
 
+// String returns the version as a string
 func (v version) String() string {
 	return fmt.Sprintf("V%d", v.nodeVersion)
 }
 
+// Height returns the height of a given version
+// if the version is on the calibration network, it returns the calibration height
+// otherwise, it returns the mainnet height
 func (v version) Height() int64 {
 	if v.currentNetwork == "calibration" {
 		return v.calibration
@@ -96,6 +125,7 @@ func (v version) Height() int64 {
 	return v.mainnet
 }
 
+// GetSupportedVersions returns all supported versions for a given network
 func GetSupportedVersions(network string) []version {
 	var result []version
 	for _, v := range supportedVersions {
@@ -105,6 +135,7 @@ func GetSupportedVersions(network string) []version {
 	return result
 }
 
+// VersionsBefore returns all versions before the given version (inclusive of the start version)
 func VersionsBefore(version version) []version {
 	offset := 1 // we start at version 1
 	for i, v := range supportedVersions {
@@ -118,7 +149,8 @@ func VersionsBefore(version version) []version {
 	return nil
 }
 
-func VersionsAfter(network string, start version) []version {
+// VersionsAfter returns all versions after the given version (inclusive of the start version)
+func VersionsAfter(start version) []version {
 	var result []version
 	offset := 1 // we start at version 1
 	for i, v := range supportedVersions {
@@ -127,13 +159,16 @@ func VersionsAfter(network string, start version) []version {
 			break
 		}
 		if v.nodeVersion == start.nodeVersion {
-			result = append(result, supportedVersions[i+offset:]...)
+			result = append(result, supportedVersions[i:]...)
 			break
 		}
 	}
 	return result
 }
 
+// VersionRange returns the height range of a given network version
+// if the version is the latest version, it returns the height range of the latest version
+// if configured version heights are 0, it returns 0 to the latest known version heights (V8 and above)
 func VersionRange(version version) (int64, int64) {
 	var min, max int64
 	if version.next().nodeVersion == version.nodeVersion {
@@ -146,6 +181,9 @@ func VersionRange(version version) (int64, int64) {
 	}
 	return min, max
 }
+
+// VersionFromString returns the version struct from a given version string
+// if the version is not found, it returns the first version (V1)
 func VersionFromString(version string) version {
 	for _, v := range supportedVersions {
 		if v.String() == version {

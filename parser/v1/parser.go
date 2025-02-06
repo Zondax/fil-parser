@@ -48,8 +48,12 @@ func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
 }
 
 func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(helper, logger),
+		actorParser:            actorsV2.NewActorParser(string(network), helper, logger),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),

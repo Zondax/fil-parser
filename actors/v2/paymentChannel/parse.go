@@ -1,22 +1,40 @@
 package paymentchannel
 
 import (
-	"github.com/filecoin-project/go-state-types/manifest"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/types"
 )
 
-type PaymentChannel struct{}
-
-func (p *PaymentChannel) Name() string {
-	return manifest.PaychKey
+func (p *PaymentChannel) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+	switch txType {
+	case parser.MethodSend:
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
+	case parser.MethodConstructor:
+		resp, err := p.Constructor(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodUpdateChannelState:
+		resp, err := p.UpdateChannelState(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodSettle, parser.MethodCollect:
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
+	case parser.UnknownStr:
+		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		return resp, nil, err
+	}
+	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
 }
 
-/*
-Still needs to parse:
-
-	LockBalance
-	Receive
-*/
-func (p *PaymentChannel) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, error) {
-	return map[string]interface{}{}, parser.ErrUnknownMethod
+func (p *PaymentChannel) TransactionTypes() map[string]any {
+	return map[string]any{
+		parser.MethodSend:               actors.ParseSend,
+		parser.MethodConstructor:        p.Constructor,
+		parser.MethodUpdateChannelState: p.UpdateChannelState,
+		parser.MethodSettle:             actors.ParseEmptyParamsAndReturn,
+		parser.MethodCollect:            actors.ParseEmptyParamsAndReturn,
+	}
 }
