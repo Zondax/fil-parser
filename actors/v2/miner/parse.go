@@ -108,7 +108,8 @@ func (m *Miner) Parse(network string, height int64, txType string, msg *parser.L
 		resp, err := m.ChangeBeneficiaryExported(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodGetBeneficiary:
-		// return m.GetBeneficiaryExported(network, height, msg.Params, msgRct.Return)
+		resp, err := m.GetBeneficiary(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.MethodExtendSectorExpiration2:
 		resp, err := m.ExtendSectorExpiration2(network, height, msg.Params)
 		return resp, nil, err
@@ -183,7 +184,7 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodProveReplicaUpdates2:               m.ProveReplicaUpdates2,
 		parser.MethodChangeBeneficiary:                  m.ChangeBeneficiaryExported,
 		parser.MethodChangeBeneficiaryExported:          m.ChangeBeneficiaryExported,
-		parser.MethodGetBeneficiary:                     nil,
+		parser.MethodGetBeneficiary:                     m.GetBeneficiary,
 		parser.MethodExtendSectorExpiration2:            m.ExtendSectorExpiration2,
 		parser.MethodGetOwner:                           m.GetOwnerExported,
 		parser.MethodIsControllingAddressExported:       m.IsControllingAddressExported,

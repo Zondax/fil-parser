@@ -31,7 +31,7 @@ func parseWithMsigParser[R multisigReturn](msg *parser.LotusMessage,
 	metadata[parser.ParamsKey] = params
 
 	if customReturn {
-		err = unmarshaller(bytes.NewReader(rawReturn), &r)
+		err = unmarshaller(bytes.NewReader(rawReturn), r)
 		if err != nil {
 			return map[string]interface{}{}, err
 		}

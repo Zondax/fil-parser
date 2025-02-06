@@ -9,6 +9,7 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 var eamTests = []struct {
@@ -71,7 +72,8 @@ func TestActorParserV2_EamCreates(t *testing.T) {
 			msg, err := deserializeMessage(manifest.EamKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, msg)
-			got, _, err := actor.Parse(network, height, tt.txType, msg, &parser.LotusMessageReceipt{
+
+			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, msg.Cid, filTypes.EmptyTSK)
 			require.NoError(t, err)

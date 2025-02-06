@@ -20,7 +20,7 @@ func (p *Market) Parse(network string, height int64, txType string, msg *parser.
 		resp, err := p.AddBalance(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
-		resp, err := p.WithdrawBalance(network, height, msg.Params)
+		resp, err := p.WithdrawBalance(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodPublishStorageDeals, parser.MethodPublishStorageDealsExported:
 		resp, err := p.PublishStorageDealsExported(network, height, msg.Params, msgRct.Return)

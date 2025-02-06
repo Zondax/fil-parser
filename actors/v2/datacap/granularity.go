@@ -23,34 +23,33 @@ func (*Datacap) GranularityExported(network string, height int64, rawReturn []by
 	case tools.V18.IsSupported(network, height):
 		var params datacapv10.GranularityReturn
 		var r datacapv10.GranularityReturn
-		data, err = parse(rawReturn, nil, false, &params, &r)
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		var params datacapv11.GranularityReturn
 		var r datacapv11.GranularityReturn
-		data, err = parse(rawReturn, nil, false, &params, &r)
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	case tools.V21.IsSupported(network, height):
 		var params datacapv12.GranularityReturn
 		var r datacapv12.GranularityReturn
-		data, err = parse(rawReturn, nil, false, &params, &r)
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	case tools.V22.IsSupported(network, height):
 		var params datacapv13.GranularityReturn
 		var r datacapv13.GranularityReturn
-		data, err = parse(rawReturn, nil, false, &params, &r)
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
 		var params datacapv14.GranularityReturn
 		var r datacapv14.GranularityReturn
-		data, err = parse(rawReturn, nil, false, &params, &r)
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		var params datacapv15.GranularityReturn
 		var r datacapv15.GranularityReturn
-		data, err = parse(rawReturn, nil, false, &params, &r)
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	default:
 		err = actors.ErrUnsupportedHeight
 	}
 	if err != nil {
 		return nil, err
 	}
-	data[parser.ReturnKey] = data[parser.ParamsKey]
 
 	return data, nil
 }

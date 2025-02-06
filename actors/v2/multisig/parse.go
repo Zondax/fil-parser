@@ -42,7 +42,7 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 		resp := actors.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		ret, err = p.Propose(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+		ret, err = p.Propose(network, msg, height, key, msg.Params, msgRct.Return, p.parseMsigParams)
 	case parser.MethodApprove, parser.MethodApproveExported:
 		ret, err = p.Approve(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.MethodCancel, parser.MethodCancelExported:
@@ -52,9 +52,9 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 	case parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
 		ret, err = p.RemoveSigner(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
-		ret, err = p.ChangeNumApprovalsThreshold(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+		ret, err = p.ChangeNumApprovalsThreshold(network, msg, height, key, msg.Params, p.parseMsigParams)
 	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
-		ret, err = p.LockBalance(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+		ret, err = p.LockBalance(network, msg, height, key, msg.Params, p.parseMsigParams)
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
 		ret, err = p.UniversalReceiverHook(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.UnknownStr:

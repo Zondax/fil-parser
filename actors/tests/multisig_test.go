@@ -22,6 +22,7 @@ import (
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/actors/v2/multisig"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 	"gotest.tools/assert"
 )
 
@@ -188,11 +189,16 @@ func TestActorParserV1_MultisigWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, err := p.ParseMultisig(tt.txType, &parser.LotusMessage{
-				Params: rawParams,
-			}, &parser.LotusMessageReceipt{
-				Return: nil,
-			}, height, filTypes.EmptyTSK)
+			msg := &parser.LotusMessage{}
+			msgRct := &parser.LotusMessageReceipt{}
+
+			if tt.key == parser.ReturnKey {
+				msgRct.Return = rawParams
+			} else {
+				msg.Params = rawParams
+			}
+
+			got, err := p.ParseMultisig(tt.txType, msg, msgRct, height, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -223,7 +229,7 @@ func TestActorParserV1_MultiSigParams(t *testing.T) {
 }
 
 func TestActorParserV1_ParseMultisigMetadata(t *testing.T) {
-	filePath := filepath.Join("..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
+	filePath := filepath.Join("..", "..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
 	file, err := os.Open(filePath)
 	require.NoError(t, err, "Error opening CSV file")
 	defer file.Close()
@@ -257,7 +263,12 @@ func TestActorParserV1_ParseMultisigMetadata(t *testing.T) {
 		require.NoError(t, json.Unmarshal(expectedJSON, &expectedMap), "Error unmarshaling expected JSON")
 
 		compareRetField(t, txType, resultMap, expectedMap)
-		assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
+
+		expectedJson, err := json.Marshal(expectedMap)
+		require.NoError(t, err)
+		resultJson, err := json.Marshal(resultMap)
+		require.NoError(t, err)
+		assert.Equal(t, string(expectedJson), string(resultJson), "Mismatch for other fields in txType %s", txType)
 	}
 }
 
@@ -301,7 +312,7 @@ func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(manifest.MultisigKey, height, tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(manifest.MultisigKey, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -328,12 +339,16 @@ func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 			rawParams, err := loadFile(manifest.MultisigKey, tt.txType, tt.key)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
+			msg := &parser.LotusMessage{}
+			msgRct := &parser.LotusMessageReceipt{}
 
-			got, _, err := actor.Parse(manifest.MultisigKey, height, tt.txType, &parser.LotusMessage{
-				Params: rawParams,
-			}, &parser.LotusMessageReceipt{
-				Return: nil,
-			}, cid.Undef, filTypes.EmptyTSK)
+			if tt.key == parser.ReturnKey {
+				msgRct.Return = rawParams
+			} else {
+				msg.Params = rawParams
+			}
+
+			got, _, err := actor.Parse(manifest.MultisigKey, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -373,7 +388,7 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 	require.NotNil(t, actor)
 	msigActor := actor.(*multisig.Msig)
 
-	filePath := filepath.Join("..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
+	filePath := filepath.Join("..", "..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
 	file, err := os.Open(filePath)
 	require.NoError(t, err, "Error opening CSV file")
 	defer file.Close()
@@ -381,6 +396,7 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	require.NoError(t, err, "Error reading CSV file")
+	height := tools.LatestVersion.Height()
 
 	for _, record := range records {
 		require.Len(t, record, 3, "Invalid record")
@@ -407,7 +423,12 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 		require.NoError(t, json.Unmarshal(expectedJSON, &expectedMap), "Error unmarshaling expected JSON")
 
 		compareRetField(t, txType, resultMap, expectedMap)
-		assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
+		expectedJson, err := json.Marshal(expectedMap)
+		require.NoError(t, err)
+		resultJson, err := json.Marshal(resultMap)
+		require.NoError(t, err)
+		assert.Equal(t, string(expectedJson), string(resultJson), "Mismatch for other fields in txType %s \n expected: %s\ngot: %s", txType, string(expectedJson), string(resultJson))
+		// assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
 	}
 }
 

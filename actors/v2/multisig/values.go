@@ -339,6 +339,8 @@ func (*Msig) ParseSwapSignerValue(network string, height int64, txMetadata strin
 	var v multisigParams
 	var err error
 	switch {
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
 		v = &multisig8.SwapSignerParams{}
 	case tools.V17.IsSupported(network, height):
@@ -359,7 +361,7 @@ func (*Msig) ParseSwapSignerValue(network string, height int64, txMetadata strin
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	if err != nil {
+	if err == nil {
 		err = json.Unmarshal([]byte(txMetadata), &v)
 		return v, err
 	}

@@ -11,6 +11,7 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 var initWithParamsOrReturnTests = []struct {
@@ -93,7 +94,7 @@ func TestActorParserV2_InitWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: nil,
@@ -119,7 +120,8 @@ func TestActorParserV2_Exec(t *testing.T) {
 			msg, err := deserializeMessage(manifest.InitKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, msg)
-			got, addr, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+
+			got, addr, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: msg.Params,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,

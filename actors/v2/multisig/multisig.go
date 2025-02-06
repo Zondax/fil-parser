@@ -94,15 +94,16 @@ func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func (*Msig) Propose(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, _ ParseFn) (map[string]interface{}, error) {
+func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams, rawReturn []byte, _ ParseFn) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	rawParams, methodNum, to, value, _, err := getProposeParams(network, height)
+	innerParamsRaw, methodNum, to, value, _, err := getProposeParams(network, height, rawParams)
 	if err != nil {
 		return nil, err
 	}
-	method, innerParams, err := innerProposeParams(network, height, methodNum, rawParams)
+
+	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
-		return map[string]interface{}{}, err
+		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 
 	metadata[parser.ParamsKey] = parser.Propose{
@@ -172,50 +173,50 @@ func (*Msig) RemoveSigner(network string, msg *parser.LotusMessage, height int64
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
+func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
-		return parse(rawReturn, &multisig8.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig8.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig8.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig8.ChangeNumApprovalsThresholdParams])
 	case tools.V17.IsSupported(network, height):
-		return parse(rawReturn, &multisig9.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig9.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig9.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig9.ChangeNumApprovalsThresholdParams])
 	case tools.V18.IsSupported(network, height):
-		return parse(rawReturn, &multisig10.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig10.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig10.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig10.ChangeNumApprovalsThresholdParams])
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parse(rawReturn, &multisig11.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig11.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig11.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig11.ChangeNumApprovalsThresholdParams])
 	case tools.V21.IsSupported(network, height):
-		return parse(rawReturn, &multisig12.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig12.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig12.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig12.ChangeNumApprovalsThresholdParams])
 	case tools.V22.IsSupported(network, height):
-		return parse(rawReturn, &multisig13.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig13.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig13.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig13.ChangeNumApprovalsThresholdParams])
 	case tools.V23.IsSupported(network, height):
-		return parse(rawReturn, &multisig14.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig14.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig14.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig14.ChangeNumApprovalsThresholdParams])
 	case tools.V24.IsSupported(network, height):
-		return parse(rawReturn, &multisig15.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig15.ChangeNumApprovalsThresholdParams])
+		return parse(rawParams, &multisig15.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig15.ChangeNumApprovalsThresholdParams])
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
+func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
-		return parse(rawReturn, &multisig8.LockBalanceParams{}, cborUnmarshaller[*multisig8.LockBalanceParams])
+		return parse(rawParams, &multisig8.LockBalanceParams{}, cborUnmarshaller[*multisig8.LockBalanceParams])
 	case tools.V17.IsSupported(network, height):
-		return parse(rawReturn, &multisig9.LockBalanceParams{}, cborUnmarshaller[*multisig9.LockBalanceParams])
+		return parse(rawParams, &multisig9.LockBalanceParams{}, cborUnmarshaller[*multisig9.LockBalanceParams])
 	case tools.V18.IsSupported(network, height):
-		return parse(rawReturn, &multisig10.LockBalanceParams{}, cborUnmarshaller[*multisig10.LockBalanceParams])
+		return parse(rawParams, &multisig10.LockBalanceParams{}, cborUnmarshaller[*multisig10.LockBalanceParams])
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parse(rawReturn, &multisig11.LockBalanceParams{}, cborUnmarshaller[*multisig11.LockBalanceParams])
+		return parse(rawParams, &multisig11.LockBalanceParams{}, cborUnmarshaller[*multisig11.LockBalanceParams])
 	case tools.V21.IsSupported(network, height):
-		return parse(rawReturn, &multisig12.LockBalanceParams{}, cborUnmarshaller[*multisig12.LockBalanceParams])
+		return parse(rawParams, &multisig12.LockBalanceParams{}, cborUnmarshaller[*multisig12.LockBalanceParams])
 	case tools.V22.IsSupported(network, height):
-		return parse(rawReturn, &multisig13.LockBalanceParams{}, cborUnmarshaller[*multisig13.LockBalanceParams])
+		return parse(rawParams, &multisig13.LockBalanceParams{}, cborUnmarshaller[*multisig13.LockBalanceParams])
 	case tools.V23.IsSupported(network, height):
-		return parse(rawReturn, &multisig14.LockBalanceParams{}, cborUnmarshaller[*multisig14.LockBalanceParams])
+		return parse(rawParams, &multisig14.LockBalanceParams{}, cborUnmarshaller[*multisig14.LockBalanceParams])
 	case tools.V24.IsSupported(network, height):
-		return parse(rawReturn, &multisig15.LockBalanceParams{}, cborUnmarshaller[*multisig15.LockBalanceParams])
+		return parse(rawParams, &multisig15.LockBalanceParams{}, cborUnmarshaller[*multisig15.LockBalanceParams])
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

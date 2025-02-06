@@ -147,9 +147,6 @@ func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[strin
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	if data != nil {
-		data[parser.ReturnKey] = data[parser.ParamsKey]
-	}
 
 	return data, err
 }

@@ -15,17 +15,19 @@ import (
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
-func parseGeneric[T minerParam, R minerReturn](rawParams, rawReturn []byte, customReturn bool, params T, r R) (map[string]interface{}, error) {
+func parseGeneric[T minerParam, R minerReturn](rawParams, rawReturn []byte, customReturn bool, params T, r R, key string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
 		return metadata, fmt.Errorf("error unmarshalling params: %w", err)
 	}
-	metadata[parser.ParamsKey] = params
+	metadata[key] = params
 	if !customReturn {
 		return metadata, nil
 	}
@@ -96,6 +98,160 @@ func getControlAddress(controlReturn any) (parser.ControlAddress, error) {
 	}
 	return controlAddress, nil
 
+}
+
+func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parser.GetBeneficiaryReturn, error) {
+	reader := bytes.NewReader(rawReturn)
+
+	var (
+		beneficiary string
+		quota       string
+		usedQuota   string
+		expiration  int64
+
+		newBeneficiary        string
+		newQuota              string
+		newExpiration         int64
+		approvedByBeneficiary bool
+		approvedByNominee     bool
+	)
+	switch {
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
+		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.V17.IsSupported(network, height):
+		tmp := &miner9.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+
+	case tools.V18.IsSupported(network, height):
+		tmp := &miner10.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		tmp := &miner11.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+	case tools.V21.IsSupported(network, height):
+		tmp := &miner12.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+	case tools.V22.IsSupported(network, height):
+		tmp := &miner13.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+	case tools.V23.IsSupported(network, height):
+		tmp := &miner14.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+	case tools.V24.IsSupported(network, height):
+		tmp := &miner15.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+		newQuota = tmp.Proposed.NewQuota.String()
+		newExpiration = int64(tmp.Proposed.NewExpiration)
+		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+		approvedByNominee = tmp.Proposed.ApprovedByNominee
+	default:
+		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	return parser.GetBeneficiaryReturn{
+		Active: parser.ActiveBeneficiary{
+			Beneficiary: beneficiary,
+			Term: parser.BeneficiaryTerm{
+				Quota:      quota,
+				UsedQuota:  usedQuota,
+				Expiration: expiration,
+			},
+		},
+		Proposed: parser.Proposed{
+			NewBeneficiary:        newBeneficiary,
+			NewQuota:              newQuota,
+			NewExpiration:         newExpiration,
+			ApprovedByBeneficiary: approvedByBeneficiary,
+			ApprovedByNominee:     approvedByNominee,
+		},
+	}, nil
 }
 
 func getControlAddrs(addrs []address.Address) []string {

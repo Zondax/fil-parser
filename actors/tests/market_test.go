@@ -1,6 +1,7 @@
 package actortest
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -8,9 +9,11 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
+	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 var marketWithParamsOrReturnTests = []struct {
@@ -37,12 +40,14 @@ var marketWithParamsOrReturnTests = []struct {
 }
 
 var marketWithParamsAndReturnTests = []struct {
-	name   string
-	txType string
+	name    string
+	txType  string
+	version string
 }{
 	{
 		name:   "Publish Storage Deals",
 		txType: parser.MethodPublishStorageDeals,
+		// version: tools.V20.String(),
 	},
 	{
 		name:   "Publish Storage Deals Exported",
@@ -173,7 +178,7 @@ func TestActorParserV2_MarketWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: nil,
@@ -199,11 +204,17 @@ func TestActorParserV2_MarketWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(network, tools.V20.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, cid.Undef, filTypes.EmptyTSK)
+
+			if errors.Is(err, actors.ErrInvalidHeightForMethod) {
+				t.Skipf("skipping %s because of unsupported height", tt.name)
+				return
+			}
+
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")

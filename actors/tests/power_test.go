@@ -11,6 +11,7 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 var powerWithParamsOrReturnTests = []struct {
@@ -97,11 +98,16 @@ func TestActorParserV1_PowerWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, _, err := p.ParseStoragepower(tt.txType, &parser.LotusMessage{
-				Params: rawParams,
-			}, &parser.LotusMessageReceipt{
-				Return: nil,
-			})
+			msg := &parser.LotusMessage{}
+			msgRct := &parser.LotusMessageReceipt{}
+
+			if tt.key == parser.ReturnKey {
+				msgRct.Return = rawParams
+			} else {
+				msg.Params = rawParams
+			}
+
+			got, _, err := p.ParseStoragepower(tt.txType, msg, msgRct)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -135,7 +141,7 @@ func TestActorParserV1_PowerWithParamsAndReturn(t *testing.T) {
 	}
 }
 
-func TestActorParserV1_parseCreateMiner(t *testing.T) {
+func TestActorParserV1_ParseCreateMiner(t *testing.T) {
 	p := getActorParser(actorsV1.NewActorParser).(*actorsV1.ActorParser)
 
 	for _, tt := range powerCreateMinerTests {
@@ -171,11 +177,16 @@ func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
-				Params: rawParams,
-			}, &parser.LotusMessageReceipt{
-				Return: nil,
-			}, cid.Undef, filTypes.EmptyTSK)
+			msg := &parser.LotusMessage{}
+			msgRct := &parser.LotusMessageReceipt{}
+
+			if tt.key == parser.ReturnKey {
+				msgRct.Return = rawParams
+			} else {
+				msg.Params = rawParams
+			}
+
+			got, _, err := actor.Parse(network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -197,7 +208,7 @@ func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -212,7 +223,7 @@ func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
 	}
 }
 
-func TestActorParserV2_parseCreateMiner(t *testing.T) {
+func TestActorParserV2_ParseCreateMiner(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
 	actor, err := p.GetActor(manifest.PowerKey)
 	require.NoError(t, err)
@@ -228,7 +239,7 @@ func TestActorParserV2_parseCreateMiner(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, msg)
 
-			got, addr, err := actor.Parse(network, height, tt.method, msg, &parser.LotusMessageReceipt{
+			got, addr, err := actor.Parse(network, tools.LatestVersion.Height(), tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, cid.Undef, filTypes.EmptyTSK)
 

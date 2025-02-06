@@ -8,32 +8,29 @@ import (
 func (d *Datacap) NameExported(rawReturn []byte) (map[string]interface{}, error) {
 	var params abi.CborString
 	var r abi.CborString
-	data, err := parse(nil, rawReturn, false, &params, &r)
+	data, err := parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	if err != nil {
 		return nil, err
 	}
-	data[parser.ReturnKey] = data[parser.ParamsKey]
 	return data, nil
 }
 
 func (d *Datacap) SymbolExported(rawReturn []byte) (map[string]interface{}, error) {
 	var params abi.CborString
 	var r abi.CborString
-	data, err := parse(nil, rawReturn, false, &params, &r)
+	data, err := parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	if err != nil {
 		return nil, err
 	}
-	data[parser.ReturnKey] = data[parser.ParamsKey]
 	return data, nil
 }
 
 func (d *Datacap) TotalSupplyExported(rawReturn []byte) (map[string]interface{}, error) {
 	var params abi.TokenAmount
 	var r abi.TokenAmount
-	data, err := parse(nil, rawReturn, false, &params, &r)
+	data, err := parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	if err != nil {
 		return nil, err
 	}
-	data[parser.ReturnKey] = data[parser.ParamsKey]
 	return data, nil
 }

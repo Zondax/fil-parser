@@ -1,6 +1,7 @@
 package market
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
@@ -22,6 +23,7 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"go.uber.org/zap"
 )
@@ -43,38 +45,48 @@ func (*Market) AddBalance(network string, height int64, rawParams []byte) (map[s
 	return parseGeneric(rawParams, nil, false, &address.Address{}, &address.Address{})
 }
 
-func (*Market) WithdrawBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Market) WithdrawBalance(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	var resp map[string]interface{}
+	var err error
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v15Market.WithdrawBalanceParams{}, &v15Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v15Market.WithdrawBalanceParams{}, &v15Market.WithdrawBalanceParams{})
 	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v14Market.WithdrawBalanceParams{}, &v14Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v14Market.WithdrawBalanceParams{}, &v14Market.WithdrawBalanceParams{})
 	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v13Market.WithdrawBalanceParams{}, &v13Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v13Market.WithdrawBalanceParams{}, &v13Market.WithdrawBalanceParams{})
 	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v12Market.WithdrawBalanceParams{}, &v12Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v12Market.WithdrawBalanceParams{}, &v12Market.WithdrawBalanceParams{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &v11Market.WithdrawBalanceParams{}, &v11Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v11Market.WithdrawBalanceParams{}, &v11Market.WithdrawBalanceParams{})
 	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v10Market.WithdrawBalanceParams{}, &v10Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v10Market.WithdrawBalanceParams{}, &v10Market.WithdrawBalanceParams{})
 	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v9Market.WithdrawBalanceParams{}, &v9Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v9Market.WithdrawBalanceParams{}, &v9Market.WithdrawBalanceParams{})
 	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v8Market.WithdrawBalanceParams{}, &v8Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v8Market.WithdrawBalanceParams{}, &v8Market.WithdrawBalanceParams{})
 	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.WithdrawBalanceParams{}, &legacyv7.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv7.WithdrawBalanceParams{}, &legacyv7.WithdrawBalanceParams{})
 	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.WithdrawBalanceParams{}, &legacyv6.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv6.WithdrawBalanceParams{}, &legacyv6.WithdrawBalanceParams{})
 	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.WithdrawBalanceParams{}, &legacyv5.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv5.WithdrawBalanceParams{}, &legacyv5.WithdrawBalanceParams{})
 	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &legacyv4.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &legacyv4.WithdrawBalanceParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &legacyv3.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &legacyv3.WithdrawBalanceParams{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
-		return parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &legacyv2.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &legacyv2.WithdrawBalanceParams{})
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	if err != nil {
+		return nil, err
+	}
+	if rawReturn != nil {
+		resp[parser.ReturnKey] = base64.StdEncoding.EncodeToString(rawReturn)
+	}
+	return resp, nil
 }
 
 func (*Market) PublishStorageDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {

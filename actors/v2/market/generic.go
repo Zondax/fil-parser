@@ -16,7 +16,9 @@ func parseGeneric[T marketParam, R marketReturn](rawParams, rawReturn []byte, re
 
 	metadata[parser.ParamsKey] = params
 	if !returnCustomParam {
-		metadata[parser.ParamsKey] = getAddressAsString(params)
+		if addr := getAddressAsString(params); addr != "" {
+			metadata[parser.ParamsKey] = addr
+		}
 		return metadata, nil
 	}
 	if len(rawReturn) > 0 {

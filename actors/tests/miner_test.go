@@ -11,6 +11,7 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 var minerWithParamsOrReturnTests = []struct {
@@ -249,11 +250,17 @@ func TestActorParserV1_MinerWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, err := p.ParseStorageminer(tt.txType, &parser.LotusMessage{
-				Params: rawParams,
-			}, &parser.LotusMessageReceipt{
-				Return: nil,
-			})
+			msg := &parser.LotusMessage{}
+			msgRct := &parser.LotusMessageReceipt{}
+
+			if tt.key == parser.ReturnKey {
+				msgRct.Return = rawParams
+			} else {
+				msg.Params = rawParams
+			}
+
+			got, err := p.ParseStorageminer(tt.txType, msg, msgRct)
+
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -299,11 +306,16 @@ func TestActorParserV2_MinerWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
-				Params: rawParams,
-			}, &parser.LotusMessageReceipt{
-				Return: nil,
-			}, cid.Undef, filTypes.EmptyTSK)
+			msg := &parser.LotusMessage{}
+			msgRct := &parser.LotusMessageReceipt{}
+
+			if tt.key == parser.ReturnKey {
+				msgRct.Return = rawParams
+			} else {
+				msg.Params = rawParams
+			}
+
+			got, _, err := actor.Parse(network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -325,7 +337,7 @@ func TestActorParserV2_MinerWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,

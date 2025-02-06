@@ -59,49 +59,51 @@ func getApproveReturn(network string, height int64, raw map[string]interface{}) 
 	}
 
 	switch {
-	case tools.V8.IsSupported(network, height):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.V16.IsSupported(network, height):
 		return multisig8.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V9.IsSupported(network, height):
+	case tools.V17.IsSupported(network, height):
 		return multisig9.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V10.IsSupported(network, height):
+	case tools.V18.IsSupported(network, height):
 		return multisig10.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V11.IsSupported(network, height):
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		return multisig11.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V12.IsSupported(network, height):
+	case tools.V21.IsSupported(network, height):
 		return multisig12.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V13.IsSupported(network, height):
+	case tools.V22.IsSupported(network, height):
 		return multisig13.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V14.IsSupported(network, height):
+	case tools.V23.IsSupported(network, height):
 		return multisig14.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),
 		}, nil
-	case tools.V15.IsSupported(network, height):
+	case tools.V24.IsSupported(network, height):
 		return multisig15.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
@@ -109,5 +111,5 @@ func getApproveReturn(network string, height int64, raw map[string]interface{}) 
 		}, nil
 	}
 
-	return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

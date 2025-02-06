@@ -11,6 +11,7 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 func TestActorParserV1_Cron(t *testing.T) {
@@ -41,7 +42,7 @@ func TestActorParserV2_Cron(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, rawParams)
 
-	got, _, err := actor.Parse(network, height, parser.MethodConstructor, &parser.LotusMessage{
+	got, _, err := actor.Parse(network, tools.LatestVersion.Height(), parser.MethodConstructor, &parser.LotusMessage{
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: nil,

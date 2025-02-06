@@ -49,7 +49,7 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 		if proposeParams == nil {
 			return parser.MethodSend, nil, nil
 		}
-		_, _, _, _, params, err = getProposeParams(network, height)
+		_, _, _, _, params, err = getProposeParams(network, height, proposeParams)
 		return parser.MethodSend, params, err
 	case builtin.MethodsMultisig.Approve:
 		methodName = parser.MethodApprove
@@ -78,77 +78,78 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 	default:
 		err = parser.ErrUnknownMethod
 	}
-	if err != nil {
+	if err == nil {
 		err := params.UnmarshalCBOR(reader)
 		return methodName, params, err
 	}
 	return "", nil, err
 }
 
-func getProposeParams(network string, height int64) (raw []byte, methodNum abi.MethodNum, to, value string, params multisigParams, err error) {
+func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to, value string, params multisigParams, err error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		err = fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-		return
 	case tools.V16.IsSupported(network, height):
 		tmp := &multisig8.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.V17.IsSupported(network, height):
 		tmp := &multisig9.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.V18.IsSupported(network, height):
 		tmp := &multisig10.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
 		tmp := &multisig11.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.V21.IsSupported(network, height):
 		tmp := &multisig12.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.V22.IsSupported(network, height):
 		tmp := &multisig13.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.V23.IsSupported(network, height):
 		tmp := &multisig14.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
 	case tools.V24.IsSupported(network, height):
 		tmp := &multisig15.ProposeParams{}
-		err = tmp.UnmarshalCBOR(bytes.NewReader(raw))
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
-			return
+			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	default:
+		return nil, 0, "", "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	return
+
+	return nil, 0, "", "", nil, err
 }
 
 func proposeReturn(network string, height int64) (multisigParams, error) {
