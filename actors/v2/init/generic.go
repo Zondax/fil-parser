@@ -25,7 +25,10 @@ func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawR
 	if err != nil {
 		return metadata, nil, err
 	}
-	tmp := execParams(params)
+	codeCid, tmp, err := execParams(params)
+	if err != nil {
+		return metadata, nil, err
+	}
 	metadata[parser.ParamsKey] = tmp
 
 	var createdActor *types.AddressInfo
@@ -35,7 +38,7 @@ func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawR
 		if err != nil {
 			return metadata, nil, err
 		}
-		createdActor = returnParams(msg, tmp.CodeCid, r)
+		createdActor = returnParams(msg, codeCid.String(), r)
 		metadata[parser.ReturnKey] = createdActor
 	}
 

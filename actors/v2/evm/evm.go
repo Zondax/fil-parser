@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-state-types/abi"
+
 	evmv10 "github.com/filecoin-project/go-state-types/builtin/v10/evm"
 	evmv11 "github.com/filecoin-project/go-state-types/builtin/v11/evm"
 	evmv12 "github.com/filecoin-project/go-state-types/builtin/v12/evm"
@@ -58,7 +59,6 @@ func (e *Evm) InvokeContract(network string, height int64, rawParams, rawReturn 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
 		metadata[parser.ReturnKey] = parser.EthPrefix + hex.EncodeToString(returnValue)
 	}
-
 	return metadata, nil
 }
 

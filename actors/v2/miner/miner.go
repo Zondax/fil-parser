@@ -14,11 +14,17 @@ import (
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 	"github.com/filecoin-project/go-state-types/manifest"
+	builtinv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
+	builtinv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
+	builtinv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
+	builtinv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
+	builtinv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
+	builtinv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -387,8 +393,18 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 		return parseGeneric(rawParams, nil, false, &miner9.ApplyRewardParams{}, &miner9.ApplyRewardParams{}, parser.ParamsKey)
 	case tools.V16.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner8.ApplyRewardParams{}, &miner8.ApplyRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.V15.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &builtinv7.ApplyRewardParams{}, &builtinv7.ApplyRewardParams{}, parser.ParamsKey)
+	case tools.V14.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &builtinv6.ApplyRewardParams{}, &builtinv6.ApplyRewardParams{}, parser.ParamsKey)
+	case tools.V13.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &builtinv5.ApplyRewardParams{}, &builtinv5.ApplyRewardParams{}, parser.ParamsKey)
+	case tools.V12.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &builtinv4.ApplyRewardParams{}, &builtinv4.ApplyRewardParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parseGeneric(rawParams, nil, false, &builtinv3.ApplyRewardParams{}, &builtinv3.ApplyRewardParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+		return parseGeneric(rawParams, nil, false, &builtinv2.ApplyRewardParams{}, &builtinv2.ApplyRewardParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
