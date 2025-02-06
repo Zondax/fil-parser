@@ -20,6 +20,7 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/market"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/market"
 	cbg "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
 	"go.uber.org/zap"

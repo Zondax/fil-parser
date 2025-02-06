@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -16,7 +17,7 @@ type ActorParser struct {
 	logger *zap.Logger
 }
 
-func NewActorParser(helper *helper.Helper, logger *zap.Logger) *ActorParser {
+func NewActorParser(helper *helper.Helper, logger *zap.Logger) actors.ActorParserInterface {
 	return &ActorParser{
 		helper: helper,
 		logger: logger2.GetSafeLogger(logger),

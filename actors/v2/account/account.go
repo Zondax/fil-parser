@@ -14,6 +14,7 @@ import (
 	accountv15 "github.com/filecoin-project/go-state-types/builtin/v15/account"
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
 	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"

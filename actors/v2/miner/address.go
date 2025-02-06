@@ -18,6 +18,7 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
 )

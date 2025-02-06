@@ -1,0 +1,241 @@
+package actortest
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/filecoin-project/go-state-types/manifest"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/stretchr/testify/require"
+	actorsV1 "github.com/zondax/fil-parser/actors/v1"
+	actorsV2 "github.com/zondax/fil-parser/actors/v2"
+	"github.com/zondax/fil-parser/parser"
+)
+
+var powerWithParamsOrReturnTests = []struct {
+	name   string
+	txType string
+	key    string
+}{
+	{
+		name:   "Constructor",
+		txType: parser.MethodConstructor,
+		key:    parser.ParamsKey,
+	},
+	{
+		name:   "Current Total Power",
+		txType: parser.MethodCurrentTotalPower,
+		key:    parser.ReturnKey,
+	},
+	{
+		name:   "Enroll Cron Event",
+		txType: parser.MethodEnrollCronEvent,
+		key:    parser.ParamsKey,
+	},
+	{
+		name:   "Submit PoRep For Bulk Verify",
+		txType: parser.MethodSubmitPoRepForBulkVerify,
+		key:    parser.ParamsKey,
+	},
+	{
+		name:   "Update Claimed Power",
+		txType: parser.MethodUpdateClaimedPower,
+		key:    parser.ParamsKey,
+	},
+	{
+		name:   "Update Pledge Total",
+		txType: parser.MethodUpdatePledgeTotal,
+		key:    parser.ParamsKey,
+	},
+	{
+		name:   "Network Raw Power Exported",
+		txType: parser.MethodNetworkRawPowerExported,
+		key:    parser.ReturnKey,
+	},
+	{
+		name:   "Miner Count Exported",
+		txType: parser.MethodMinerCountExported,
+		key:    parser.ReturnKey,
+	},
+	{
+		name:   "Miner Consensus Count Exported",
+		txType: parser.MethodMinerConsensusCountExported,
+		key:    parser.ReturnKey,
+	},
+}
+
+var powerWithParamsAndReturnTests = []struct {
+	name   string
+	txType string
+}{
+	{
+		name:   "Miner Raw Power Exported",
+		txType: parser.MethodMinerRawPowerExported,
+	},
+}
+var powerCreateMinerTests = []struct {
+	name   string
+	method string
+}{
+	{
+		name:   "Create Miner",
+		method: parser.MethodCreateMiner,
+	},
+	{
+		name:   "Create Miner Exported",
+		method: parser.MethodCreateMinerExported,
+	},
+}
+
+func TestActorParserV1_PowerWithParamsOrReturn(t *testing.T) {
+	p := getActorParser(actorsV1.NewActorParser).(*actorsV1.ActorParser)
+
+	for _, tt := range powerWithParamsOrReturnTests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawParams, err := loadFile(manifest.PowerKey, tt.txType, tt.key)
+			require.NoError(t, err)
+			require.NotNil(t, rawParams)
+
+			got, _, err := p.ParseStoragepower(tt.txType, &parser.LotusMessage{
+				Params: rawParams,
+			}, &parser.LotusMessageReceipt{
+				Return: nil,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
+			require.NotNil(t, got[tt.key])
+		})
+	}
+}
+
+func TestActorParserV1_PowerWithParamsAndReturn(t *testing.T) {
+	p := getActorParser(actorsV1.NewActorParser).(*actorsV1.ActorParser)
+
+	for _, tt := range powerWithParamsAndReturnTests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.PowerKey, tt.txType)
+			require.NoError(t, err)
+			require.NotNil(t, rawParams)
+			require.NotNil(t, rawReturn)
+
+			got, _, err := p.ParseStoragepower(tt.txType, &parser.LotusMessage{
+				Params: rawParams,
+			}, &parser.LotusMessageReceipt{
+				Return: rawReturn,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
+			require.NotNil(t, got[parser.ParamsKey])
+			require.Contains(t, got, parser.ReturnKey, "Return could no be found in metadata")
+			require.NotNil(t, got[parser.ReturnKey])
+		})
+	}
+}
+
+func TestActorParserV1_parseCreateMiner(t *testing.T) {
+	p := getActorParser(actorsV1.NewActorParser).(*actorsV1.ActorParser)
+
+	for _, tt := range powerCreateMinerTests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawReturn, err := loadFile(manifest.PowerKey, tt.method, parser.ReturnKey)
+			require.NoError(t, err)
+			require.NotNil(t, rawReturn)
+
+			msg, err := deserializeMessage(manifest.PowerKey, tt.method)
+			require.NoError(t, err)
+			require.NotNil(t, msg)
+
+			got, addr, err := p.ParseStoragepower(tt.method, msg, &parser.LotusMessageReceipt{
+				Return: rawReturn,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.NotNil(t, addr)
+			require.Contains(t, got, parser.ReturnKey)
+		})
+	}
+}
+
+func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
+	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
+	actor, err := p.GetActor(manifest.PowerKey)
+	require.NoError(t, err)
+	require.NotNil(t, actor)
+
+	for _, tt := range powerWithParamsOrReturnTests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawParams, err := loadFile(manifest.PowerKey, tt.txType, tt.key)
+			require.NoError(t, err)
+			require.NotNil(t, rawParams)
+
+			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+				Params: rawParams,
+			}, &parser.LotusMessageReceipt{
+				Return: nil,
+			}, cid.Undef, filTypes.EmptyTSK)
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
+			require.NotNil(t, got[tt.key])
+		})
+	}
+}
+
+func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
+	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
+	actor, err := p.GetActor(manifest.PowerKey)
+	require.NoError(t, err)
+	require.NotNil(t, actor)
+
+	for _, tt := range powerWithParamsAndReturnTests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawParams, rawReturn, err := getParamsAndReturn(manifest.PowerKey, tt.txType)
+			require.NoError(t, err)
+			require.NotNil(t, rawParams)
+			require.NotNil(t, rawReturn)
+
+			got, _, err := actor.Parse(network, height, tt.txType, &parser.LotusMessage{
+				Params: rawParams,
+			}, &parser.LotusMessageReceipt{
+				Return: rawReturn,
+			}, cid.Undef, filTypes.EmptyTSK)
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
+			require.NotNil(t, got[parser.ParamsKey])
+			require.Contains(t, got, parser.ReturnKey, "Return could no be found in metadata")
+			require.NotNil(t, got[parser.ReturnKey])
+		})
+	}
+}
+
+func TestActorParserV2_parseCreateMiner(t *testing.T) {
+	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
+	actor, err := p.GetActor(manifest.PowerKey)
+	require.NoError(t, err)
+	require.NotNil(t, actor)
+
+	for _, tt := range powerCreateMinerTests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawReturn, err := loadFile(manifest.PowerKey, tt.method, parser.ReturnKey)
+			require.NoError(t, err)
+			require.NotNil(t, rawReturn)
+
+			msg, err := deserializeMessage(manifest.PowerKey, tt.method)
+			require.NoError(t, err)
+			require.NotNil(t, msg)
+
+			got, addr, err := actor.Parse(network, height, tt.method, msg, &parser.LotusMessageReceipt{
+				Return: rawReturn,
+			}, cid.Undef, filTypes.EmptyTSK)
+
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.NotNil(t, addr)
+			require.Contains(t, got, parser.ReturnKey)
+		})
+	}
+}

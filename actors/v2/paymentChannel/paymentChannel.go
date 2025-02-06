@@ -19,6 +19,7 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/paych"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/paych"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/paych"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
 	"go.uber.org/zap"

@@ -12,6 +12,7 @@ import (
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
 
 	"github.com/ipfs/go-cid"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
