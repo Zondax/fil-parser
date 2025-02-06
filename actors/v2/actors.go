@@ -37,14 +37,16 @@ type Actor interface {
 }
 
 type ActorParser struct {
-	helper *helper.Helper
-	logger *zap.Logger
+	network string
+	helper  *helper.Helper
+	logger  *zap.Logger
 }
 
-func NewActorParser(helper *helper.Helper, logger *zap.Logger) actors.ActorParserInterface {
+func NewActorParser(network string, helper *helper.Helper, logger *zap.Logger) actors.ActorParserInterface {
 	return &ActorParser{
-		helper: helper,
-		logger: logger2.GetSafeLogger(logger),
+		network: network,
+		helper:  helper,
+		logger:  logger2.GetSafeLogger(logger),
 	}
 }
 
@@ -59,13 +61,12 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	if err != nil {
 		return metadata, nil, err
 	}
-	network := ""
 
 	actorParser, err := p.GetActor(actor)
 	if err != nil {
 		return nil, nil, parser.ErrNotValidActor
 	}
-	return actorParser.Parse(network, height, txType, msg, msgRct, mainMsgCid, key)
+	return actorParser.Parse(p.network, height, txType, msg, msgRct, mainMsgCid, key)
 }
 
 func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {

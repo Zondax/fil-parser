@@ -302,7 +302,7 @@ func TestAllActorsSupported(t *testing.T) {
 }
 
 func getActors(t *testing.T) []v2.Actor {
-	actorParser := v2.NewActorParser(nil, l).(*v2.ActorParser)
+	actorParser := v2.NewActorParser("mainnet", nil, l).(*v2.ActorParser)
 	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
 	actors := []v2.Actor{}
 	for _, filActor := range filActors {

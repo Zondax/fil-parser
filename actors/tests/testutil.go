@@ -27,7 +27,7 @@ const (
 	height   = int64(0)
 )
 
-func getActorParser(actorParserFn func(*helper2.Helper, *zap.Logger) actors.ActorParserInterface) actors.ActorParserInterface {
+func getActorParser(actorParserFn any) actors.ActorParserInterface {
 	lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), testUrl, http.Header{})
 	if err != nil {
 		return nil
@@ -46,8 +46,14 @@ func getActorParser(actorParserFn func(*helper2.Helper, *zap.Logger) actors.Acto
 	if err != nil {
 		return nil
 	}
-
-	return actorParserFn(helper, logger)
+	switch fn := actorParserFn.(type) {
+	case func(*helper2.Helper, *zap.Logger) actors.ActorParserInterface:
+		return fn(helper, logger)
+	case func(string, *helper2.Helper, *zap.Logger) actors.ActorParserInterface:
+		return fn(network, helper, logger)
+	default:
+		panic(fmt.Sprintf("invalid actor parser function: %T", actorParserFn))
+	}
 }
 
 func getParamsAndReturn(actor, txType string) ([]byte, []byte, error) {
