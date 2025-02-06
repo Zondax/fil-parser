@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	multisig10 "github.com/filecoin-project/go-state-types/builtin/v10/multisig"
@@ -145,7 +146,7 @@ func (*Msig) ParseApproveValue(network string, height int64, txMetadata string) 
 
 	paramsRaw, ok := raw["Params"].(string)
 	if !ok {
-		return nil, fmt.Errorf("Params not found or not a string")
+		return nil, errors.New("parseApproveValue: Params not found or not a string")
 	}
 
 	var params ApproveValue
@@ -170,7 +171,7 @@ func (*Msig) ParseCancelValue(network string, height int64, txMetadata string) (
 
 	paramsStr, ok := raw[parser.ParamsKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("Params not found or not a string")
+		return nil, errors.New("parseCancelValue: Params not found or not a string")
 	}
 
 	var paramsRaw map[string]interface{}
@@ -254,21 +255,21 @@ func (*Msig) ParseConstructorValue(network string, height int64, txMetadata stri
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
-		return getValue(height, raw, &multisig8.ConstructorParams{})
+		return getValue(raw, &multisig8.ConstructorParams{})
 	case tools.V17.IsSupported(network, height):
-		return getValue(height, raw, &multisig9.ConstructorParams{})
+		return getValue(raw, &multisig9.ConstructorParams{})
 	case tools.V18.IsSupported(network, height):
-		return getValue(height, raw, &multisig10.ConstructorParams{})
+		return getValue(raw, &multisig10.ConstructorParams{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return getValue(height, raw, &multisig11.ConstructorParams{})
+		return getValue(raw, &multisig11.ConstructorParams{})
 	case tools.V21.IsSupported(network, height):
-		return getValue(height, raw, &multisig12.ConstructorParams{})
+		return getValue(raw, &multisig12.ConstructorParams{})
 	case tools.V22.IsSupported(network, height):
-		return getValue(height, raw, &multisig13.ConstructorParams{})
+		return getValue(raw, &multisig13.ConstructorParams{})
 	case tools.V23.IsSupported(network, height):
-		return getValue(height, raw, &multisig14.ConstructorParams{})
+		return getValue(raw, &multisig14.ConstructorParams{})
 	case tools.V24.IsSupported(network, height):
-		return getValue(height, raw, &multisig15.ConstructorParams{})
+		return getValue(raw, &multisig15.ConstructorParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -282,21 +283,21 @@ func (*Msig) ParseLockBalanceValue(network string, height int64, txMetadata stri
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
-		return getValue(height, raw, &multisig8.LockBalanceParams{})
+		return getValue(raw, &multisig8.LockBalanceParams{})
 	case tools.V17.IsSupported(network, height):
-		return getValue(height, raw, &multisig9.LockBalanceParams{})
+		return getValue(raw, &multisig9.LockBalanceParams{})
 	case tools.V18.IsSupported(network, height):
-		return getValue(height, raw, &multisig10.LockBalanceParams{})
+		return getValue(raw, &multisig10.LockBalanceParams{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return getValue(height, raw, &multisig11.LockBalanceParams{})
+		return getValue(raw, &multisig11.LockBalanceParams{})
 	case tools.V21.IsSupported(network, height):
-		return getValue(height, raw, &multisig12.LockBalanceParams{})
+		return getValue(raw, &multisig12.LockBalanceParams{})
 	case tools.V22.IsSupported(network, height):
-		return getValue(height, raw, &multisig13.LockBalanceParams{})
+		return getValue(raw, &multisig13.LockBalanceParams{})
 	case tools.V23.IsSupported(network, height):
-		return getValue(height, raw, &multisig14.LockBalanceParams{})
+		return getValue(raw, &multisig14.LockBalanceParams{})
 	case tools.V24.IsSupported(network, height):
-		return getValue(height, raw, &multisig15.LockBalanceParams{})
+		return getValue(raw, &multisig15.LockBalanceParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -310,21 +311,21 @@ func (*Msig) ParseRemoveSignerValue(network string, height int64, txMetadata str
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
-		return getValue(height, raw, &multisig8.RemoveSignerParams{})
+		return getValue(raw, &multisig8.RemoveSignerParams{})
 	case tools.V17.IsSupported(network, height):
-		return getValue(height, raw, &multisig9.RemoveSignerParams{})
+		return getValue(raw, &multisig9.RemoveSignerParams{})
 	case tools.V18.IsSupported(network, height):
-		return getValue(height, raw, &multisig10.RemoveSignerParams{})
+		return getValue(raw, &multisig10.RemoveSignerParams{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return getValue(height, raw, &multisig11.RemoveSignerParams{})
+		return getValue(raw, &multisig11.RemoveSignerParams{})
 	case tools.V21.IsSupported(network, height):
-		return getValue(height, raw, &multisig12.RemoveSignerParams{})
+		return getValue(raw, &multisig12.RemoveSignerParams{})
 	case tools.V22.IsSupported(network, height):
-		return getValue(height, raw, &multisig13.RemoveSignerParams{})
+		return getValue(raw, &multisig13.RemoveSignerParams{})
 	case tools.V23.IsSupported(network, height):
-		return getValue(height, raw, &multisig14.RemoveSignerParams{})
+		return getValue(raw, &multisig14.RemoveSignerParams{})
 	case tools.V24.IsSupported(network, height):
-		return getValue(height, raw, &multisig15.RemoveSignerParams{})
+		return getValue(raw, &multisig15.RemoveSignerParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

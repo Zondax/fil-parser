@@ -7,7 +7,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func parse[T powerParams, R powerReturn](msg *parser.LotusMessage, raw, rawReturn []byte, customReturn bool, params T, r R, key string) (map[string]interface{}, error) {
+func parse[T powerParams, R powerReturn](raw, rawReturn []byte, customReturn bool, params T, r R, key string) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(raw)
 	err := params.UnmarshalCBOR(reader)

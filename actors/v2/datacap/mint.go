@@ -15,11 +15,6 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-type (
-	mintParams = unmarshalCBOR
-	mintReturn = unmarshalCBOR
-)
-
 func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):

@@ -3,6 +3,7 @@ package multisig
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -56,11 +57,10 @@ func parse[T multisigParams, P []byte | string](raw P, params T, unmarshaller fu
 	return metadata, nil
 }
 
-// parseConstructorValue, parseLockBalanceValue, parseRemoveSignerValue, , parseSwapSignerValue, parseUniversalReceiverHookValu
-func getValue[T multisigParams](height int64, raw map[string]interface{}, v T) (interface{}, error) {
+func getValue[T multisigParams](raw map[string]interface{}, v T) (interface{}, error) {
 	paramsRaw, ok := raw[parser.ParamsKey]
 	if !ok {
-		return nil, fmt.Errorf("Params not found")
+		return nil, errors.New("getValue:Params not found")
 	}
 	switch p := paramsRaw.(type) {
 	case map[string]interface{}:
@@ -74,7 +74,7 @@ func getValue[T multisigParams](height int64, raw map[string]interface{}, v T) (
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("Params not a map[string]interface{} or string")
+		return nil, fmt.Errorf("getValue: Params not a map[string]interface{} or string")
 	}
 
 	return v, nil

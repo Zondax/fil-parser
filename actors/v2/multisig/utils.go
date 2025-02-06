@@ -40,22 +40,22 @@ func getApproveReturn(network string, height int64, raw map[string]interface{}) 
 
 	returnRaw, ok := raw["Return"].(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("Return not found or not a map")
+		return nil, errors.New("getApproveReturn: Return not found or not a map")
 	}
 
 	applied, ok := returnRaw["Applied"].(bool)
 	if !ok {
-		return nil, fmt.Errorf("Applied not found or not a bool")
+		return nil, errors.New("getApproveReturn: Applied not found or not a bool")
 	}
 
 	code, ok := returnRaw["Code"].(float64)
 	if !ok {
-		return nil, fmt.Errorf("Code not found or not a float64")
+		return nil, errors.New("getApproveReturn: Code not found or not a float64")
 	}
 
 	ret, ok := returnRaw["Ret"].(string)
 	if !ok {
-		return nil, fmt.Errorf("Ret not found or not a string")
+		return nil, errors.New("getApproveReturn: Ret not found or not a string")
 	}
 
 	switch {

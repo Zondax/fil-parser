@@ -9,11 +9,3 @@ type evmParams interface {
 type evmReturn interface {
 	UnmarshalCBOR(io.Reader) error
 }
-
-type createReturn interface {
-	UnmarshalCBOR(io.Reader) error
-}
-
-type createReturnStruct[T any] struct {
-	CreateReturn T
-}

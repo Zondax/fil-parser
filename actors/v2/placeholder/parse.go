@@ -23,13 +23,7 @@ func (p *Placeholder) Name() string {
 }
 
 func (p *Placeholder) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
-	var resp map[string]interface{}
-	var err error
-	switch txType {
-	default:
-		resp, err = p.parsePlaceholderAny(msg.Params, msgRct.Return)
-	}
-
+	resp, err := p.parsePlaceholderAny(msg.Params, msgRct.Return)
 	return resp, nil, err
 }
 

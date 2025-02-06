@@ -71,6 +71,9 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 		params, err = changeNumApprovalsThresholdParams(network, height)
 	case builtin.MethodsMultisig.LockBalance:
 		methodName = parser.MethodLockBalance
+		params, err = lockBalanceParams(network, height)
+	case builtin.MethodsMiner.WithdrawBalance:
+		methodName = parser.MethodWithdrawBalance
 		params, err = minerParams(network, height)
 	case builtin.MethodsVerifiedRegistry.AddVerifier:
 		methodName = parser.MethodAddVerifier
@@ -363,8 +366,4 @@ func verifierParams(network string, height int64) (multisigParams, error) {
 		return &verifregv15.AddVerifierParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-}
-func readParams[T multisigParams](params T, reader *bytes.Reader) (T, error) {
-	err := params.UnmarshalCBOR(reader)
-	return params, err
 }
