@@ -24,6 +24,7 @@ require (
 	github.com/zondax/znats v0.1.1
 	go.uber.org/zap v1.27.0
 	gorm.io/gorm v1.25.12
+	gotest.tools v2.2.0+incompatible
 )
 
 require (
@@ -40,6 +41,7 @@ require (
 	github.com/filecoin-project/go-f3 v0.7.2 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/golang/mock v1.6.0 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/icza/backscanner v0.0.0-20210726202459-ac2ffc679f94 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -88,12 +90,12 @@ require (
 	github.com/filecoin-project/go-hamt-ipld/v2 v2.0.0 // indirect
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.4.0 // indirect
 	github.com/filecoin-project/go-jsonrpc v0.7.1
-	github.com/filecoin-project/specs-actors/v2 v2.3.6 // indirect
-	github.com/filecoin-project/specs-actors/v3 v3.1.2 // indirect
-	github.com/filecoin-project/specs-actors/v4 v4.0.2 // indirect
-	github.com/filecoin-project/specs-actors/v5 v5.0.6 // indirect
-	github.com/filecoin-project/specs-actors/v6 v6.0.2 // indirect
-	github.com/filecoin-project/specs-actors/v7 v7.0.1 // indirect
+	github.com/filecoin-project/specs-actors/v2 v2.3.6
+	github.com/filecoin-project/specs-actors/v3 v3.1.2
+	github.com/filecoin-project/specs-actors/v4 v4.0.2
+	github.com/filecoin-project/specs-actors/v5 v5.0.6
+	github.com/filecoin-project/specs-actors/v6 v6.0.2
+	github.com/filecoin-project/specs-actors/v7 v7.0.1
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gbrlsnchs/jwt/v3 v3.0.1 // indirect
 	github.com/go-chi/chi/v5 v5.0.11 // indirect
