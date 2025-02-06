@@ -71,10 +71,21 @@ To add support for a new network version:
 
 These tests are designed to ensure that the actor parser accurately handles all releases of both builtin-actors and spec-actors. They are configured to automatically fail upon the release of any new builtin-actor version. This failure mechanism guides developers to the necessary modifications, thereby eliminating the need for manual verification of the parser with each new Filecoin upgrade.
 
+### Actor Functionality Tests
+
+**Test Location:** `actors/tests/{actor_name}_test.go`
+
+These tests, originally developed for actors version 1 (v1), are designed to validate the functionality of actors by comparing their function outputs against a set of pre-calculated expected values. These expected values are stored in the data/actors/{actor_name} directory.
+
+Each actor undergoes both v1 and v2 tests, and passing both test suites is a mandatory requirement. This dual testing approach ensures backward compatibility and adherence to established specifications.
+
+**Important Note:** The pre-computed data currently stored within data/actors corresponds to network version **V20**. If testing against a different network version is required, the `cmd/tracedl` tool provides a mechanism for automatically updating the stored data to the desired network version. This ensures that tests are always executed against the correct expected values for the target network version.
+
+These tests are designed to ensure that the actor parser accurately handles all releases of both builtin-actors and spec-actors. They are configured to automatically fail upon the release of any new builtin-actor version. This failure mechanism guides developers to the necessary modifications, thereby eliminating the need for manual verification of the parser with each new Filecoin upgrade.
+
 ## Compatibility
 
 The `ActorParser` is designed to be backwards compatible and a drop in replacement for ActorsV1.
-
 
 ## Misc
 
