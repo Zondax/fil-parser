@@ -46,9 +46,16 @@ import (
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
+	legacymultisig1 "github.com/filecoin-project/specs-actors/actors/builtin/multisig"
+	legacymultisig2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/multisig"
+	legacymultisig3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/multisig"
+	legacymultisig4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/multisig"
+	legacymultisig5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/multisig"
+	legacymultisig6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
+	legacymultisig7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
 
 	// all account version imports
-
+	legacyaccountv1 "github.com/filecoin-project/specs-actors/actors/builtin/account"
 	legacyaccountv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/account"
 	legacyaccountv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/account"
 	legacyaccountv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/account"
@@ -66,6 +73,7 @@ import (
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
 
 	// all cron version imports
+	legacycronv1 "github.com/filecoin-project/specs-actors/actors/builtin/cron"
 	legacycronv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/cron"
 	legacycronv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/cron"
 	legacycronv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/cron"
@@ -115,6 +123,7 @@ import (
 	evmv15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
 
 	// all init version imports
+	legacyInitv1 "github.com/filecoin-project/specs-actors/actors/builtin/init"
 	legacyInitv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/init"
 	legacyInitv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/init"
 	legacyInitv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/init"
@@ -132,6 +141,7 @@ import (
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 
 	// all market version imports
+	legacymarketv1 "github.com/filecoin-project/specs-actors/actors/builtin/market"
 	legacymarketv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/market"
 	legacymarketv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/market"
 	legacymarketv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/market"
@@ -149,6 +159,7 @@ import (
 	marketv9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
 	// all miner version imports
+	legacyminerv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	legacyminerv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
 	legacyminerv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
 	legacyminerv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
@@ -166,6 +177,7 @@ import (
 	minerv9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
 	// all paych version imports
+	legacypaychv1 "github.com/filecoin-project/specs-actors/actors/builtin/paych"
 	legacypaychv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/paych"
 	legacypaychv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/paych"
 	legacypaychv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/paych"
@@ -191,6 +203,7 @@ import (
 	placeholderv15 "github.com/filecoin-project/go-state-types/builtin/v15/placeholder"
 
 	// all power version imports
+	legacypowerv1 "github.com/filecoin-project/specs-actors/actors/builtin/power"
 	legacypowerv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/power"
 	legacypowerv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/power"
 	legacypowerv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/power"
@@ -208,6 +221,7 @@ import (
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
 
 	// all reward version imports
+	legacyrewardv1 "github.com/filecoin-project/specs-actors/actors/builtin/reward"
 	legacyrewardv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/reward"
 	legacyrewardv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/reward"
 	legacyrewardv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/reward"
@@ -225,6 +239,7 @@ import (
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 
 	// all system version imports
+	legacysystemv1 "github.com/filecoin-project/specs-actors/actors/builtin/system"
 	legacysystemv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/system"
 	legacysystemv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/system"
 	legacysystemv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/system"
@@ -242,6 +257,7 @@ import (
 	systemv9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 
 	// all verifiedregistry version imports
+	legacyverifregv1 "github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
 	legacyverifregv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/verifreg"
 	legacyverifregv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/verifreg"
 	legacyverifregv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/verifreg"
@@ -317,6 +333,13 @@ func getActors(t *testing.T) []v2.Actor {
 func TestMethodCoverage(t *testing.T) {
 	tb := map[v2.Actor][]any{
 		&multisig.Msig{}: {
+			legacymultisig1.Actor{},
+			legacymultisig2.Actor{},
+			legacymultisig3.Actor{},
+			legacymultisig4.Actor{},
+			legacymultisig5.Actor{},
+			legacymultisig6.Actor{},
+			legacymultisig7.Actor{},
 			multisig8.Methods,
 			multisig9.Methods,
 			multisig10.Methods,
@@ -327,6 +350,7 @@ func TestMethodCoverage(t *testing.T) {
 			multisig15.Methods,
 		},
 		&account.Account{}: {
+			legacyaccountv1.Actor{},
 			legacyaccountv2.Actor{},
 			legacyaccountv3.Actor{},
 			legacyaccountv4.Actor{},
@@ -343,6 +367,7 @@ func TestMethodCoverage(t *testing.T) {
 			accountv15.Methods,
 		},
 		&cron.Cron{}: {
+			legacycronv1.Actor{},
 			legacycronv2.Actor{},
 			legacycronv3.Actor{},
 			legacycronv4.Actor{},
@@ -391,6 +416,7 @@ func TestMethodCoverage(t *testing.T) {
 			evmv15.Methods,
 		},
 		&initActor.Init{}: {
+			legacyInitv1.Actor{},
 			legacyInitv2.Actor{},
 			legacyInitv3.Actor{},
 			legacyInitv4.Actor{},
@@ -407,6 +433,7 @@ func TestMethodCoverage(t *testing.T) {
 			builtinInitv15.Methods,
 		},
 		&market.Market{}: {
+			legacymarketv1.Actor{},
 			legacymarketv2.Actor{},
 			legacymarketv3.Actor{},
 			legacymarketv4.Actor{},
@@ -423,6 +450,7 @@ func TestMethodCoverage(t *testing.T) {
 			marketv15.Methods,
 		},
 		&miner.Miner{}: {
+			legacyminerv1.Actor{},
 			legacyminerv2.Actor{},
 			legacyminerv3.Actor{},
 			legacyminerv4.Actor{},
@@ -439,6 +467,7 @@ func TestMethodCoverage(t *testing.T) {
 			minerv15.Methods,
 		},
 		&paymentchannel.PaymentChannel{}: {
+			legacypaychv1.Actor{},
 			legacypaychv2.Actor{},
 			legacypaychv3.Actor{},
 			legacypaychv4.Actor{},
@@ -463,6 +492,7 @@ func TestMethodCoverage(t *testing.T) {
 			placeholderv15.Methods,
 		},
 		&power.Power{}: {
+			legacypowerv1.Actor{},
 			legacypowerv2.Actor{},
 			legacypowerv3.Actor{},
 			legacypowerv4.Actor{},
@@ -479,6 +509,7 @@ func TestMethodCoverage(t *testing.T) {
 			powerv15.Methods,
 		},
 		&reward.Reward{}: {
+			legacyrewardv1.Actor{},
 			legacyrewardv2.Actor{},
 			legacyrewardv3.Actor{},
 			legacyrewardv4.Actor{},
@@ -495,6 +526,7 @@ func TestMethodCoverage(t *testing.T) {
 			rewardv15.Methods,
 		},
 		&system.System{}: {
+			legacysystemv1.Actor{},
 			legacysystemv2.Actor{},
 			legacysystemv3.Actor{},
 			legacysystemv4.Actor{},
@@ -511,6 +543,7 @@ func TestMethodCoverage(t *testing.T) {
 			systemv15.Methods,
 		},
 		&verifiedregistry.VerifiedRegistry{}: {
+			legacyverifregv1.Actor{},
 			legacyverifregv2.Actor{},
 			legacyverifregv3.Actor{},
 			legacyverifregv4.Actor{},

@@ -3,7 +3,12 @@ package power
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/go-state-types/proof"
+
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
 	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
 	powerv12 "github.com/filecoin-project/go-state-types/builtin/v12/power"
@@ -12,19 +17,19 @@ import (
 	powerv15 "github.com/filecoin-project/go-state-types/builtin/v15/power"
 	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
-	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/go-state-types/proof"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/power"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/power"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/power"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/power"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/power"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/power"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/power"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 type Power struct {
@@ -45,7 +50,9 @@ func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height
 	var err error
 
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		data, err = parse(rawReturn, nil, false, &legacyv1.CurrentTotalPowerReturn{}, &legacyv1.CurrentTotalPowerReturn{}, parser.ReturnKey)
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		data, err = parse(rawReturn, nil, false, &legacyv2.CurrentTotalPowerReturn{}, &legacyv2.CurrentTotalPowerReturn{}, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		data, err = parse(rawReturn, nil, false, &legacyv3.CurrentTotalPowerReturn{}, &legacyv3.CurrentTotalPowerReturn{}, parser.ReturnKey)
@@ -88,7 +95,9 @@ func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage
 	var data map[string]interface{}
 	var err error
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		data, err = parse(raw, nil, false, &legacyv1.MinerConstructorParams{}, &legacyv1.MinerConstructorParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		data, err = parse(raw, nil, false, &legacyv2.MinerConstructorParams{}, &legacyv2.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		data, err = parse(raw, nil, false, &legacyv3.MinerConstructorParams{}, &legacyv3.MinerConstructorParams{}, parser.ParamsKey)
@@ -127,7 +136,9 @@ func (*Power) CreateMinerExported(network string, msg *parser.LotusMessage, heig
 	var addressInfo *types.AddressInfo
 	var err error
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		data, addressInfo, err = parseCreateMiner(msg, raw, rawReturn, &legacyv1.CreateMinerParams{}, &legacyv1.CreateMinerReturn{})
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		data, addressInfo, err = parseCreateMiner(msg, raw, rawReturn, &legacyv2.CreateMinerParams{}, &legacyv2.CreateMinerReturn{})
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		data, addressInfo, err = parseCreateMiner(msg, raw, rawReturn, &legacyv3.CreateMinerParams{}, &legacyv3.CreateMinerReturn{})
@@ -167,7 +178,9 @@ func (*Power) EnrollCronEvent(network string, msg *parser.LotusMessage, height i
 	var data map[string]interface{}
 	var err error
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		data, err = parse(raw, rawReturn, false, &legacyv1.EnrollCronEventParams{}, &legacyv1.EnrollCronEventParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		data, err = parse(raw, rawReturn, false, &legacyv2.EnrollCronEventParams{}, &legacyv2.EnrollCronEventParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		data, err = parse(raw, rawReturn, false, &legacyv3.EnrollCronEventParams{}, &legacyv3.EnrollCronEventParams{}, parser.ParamsKey)
@@ -207,7 +220,9 @@ func (*Power) UpdateClaimedPower(network string, msg *parser.LotusMessage, heigh
 	var data map[string]interface{}
 	var err error
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		data, err = parse(raw, rawReturn, false, &legacyv1.UpdateClaimedPowerParams{}, &legacyv1.UpdateClaimedPowerParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		data, err = parse(raw, rawReturn, false, &legacyv2.UpdateClaimedPowerParams{}, &legacyv2.UpdateClaimedPowerParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		data, err = parse(raw, rawReturn, false, &legacyv3.UpdateClaimedPowerParams{}, &legacyv3.UpdateClaimedPowerParams{}, parser.ParamsKey)

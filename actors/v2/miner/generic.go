@@ -14,7 +14,10 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
-	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
+	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -69,14 +72,10 @@ func getControlAddress(controlReturn any) (parser.ControlAddress, error) {
 	}
 
 	switch v := controlReturn.(type) {
-	case *legacyv2.GetControlAddressesReturn:
+	case *legacyv1.GetControlAddressesReturn:
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
-	// *legacyv2.GetControlAddressesReturn is the same type in v2,v3,v4,v5,v6,v7
-	// case *legacyv3.GetControlAddressesReturn:
-	// case *legacyv4.GetControlAddressesReturn:
-	// case *legacyv5.GetControlAddressesReturn:
-	// case *legacyv6.GetControlAddressesReturn:
-	// case *legacyv7.GetControlAddressesReturn:
+	case *legacyv7.GetControlAddressesReturn: // all previous legacy versions upto v1 are the same exact type, adding to the switch case will cause a compile time error
+		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	case *miner8.GetControlAddressesReturn:
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	case *miner9.GetControlAddressesReturn:

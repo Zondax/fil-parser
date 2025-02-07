@@ -3,6 +3,10 @@ package init
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
+	"github.com/filecoin-project/go-state-types/manifest"
+
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	builtinInitv11 "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	builtinInitv12 "github.com/filecoin-project/go-state-types/builtin/v12/init"
@@ -11,14 +15,14 @@ import (
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/init"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/init"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/init"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/init"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/init"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/init"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
-	"go.uber.org/zap"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -68,8 +72,10 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 		return initConstructor(raw, &legacyv4.ConstructorParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return initConstructor(raw, &legacyv3.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return initConstructor(raw, &legacyv2.ConstructorParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return initConstructor(raw, &legacyv1.ConstructorParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -102,8 +108,10 @@ func (*Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []
 		return parseExec(msg, raw, &legacyv4.ExecParams{}, &legacyv4.ExecReturn{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseExec(msg, raw, &legacyv3.ExecParams{}, &legacyv3.ExecReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseExec(msg, raw, &legacyv2.ExecParams{}, &legacyv2.ExecReturn{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseExec(msg, raw, &legacyv1.ExecParams{}, &legacyv1.ExecReturn{})
 	}
 	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

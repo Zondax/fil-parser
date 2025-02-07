@@ -3,7 +3,11 @@ package verifiedregistry
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/manifest"
+
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	verifregv12 "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
@@ -12,16 +16,17 @@ import (
 	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/verifreg"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/verifreg"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/verifreg"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/verifreg"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/verifreg"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/verifreg"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
-	"go.uber.org/zap"
 )
 
 type VerifiedRegistry struct {
@@ -65,8 +70,10 @@ func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (
 		return parse(raw, nil, false, &legacyv4.AddVerifierParams{}, &legacyv4.AddVerifierParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.AddVerifierParams{}, &legacyv3.AddVerifierParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.AddVerifierParams{}, &legacyv2.AddVerifierParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.AddVerifierParams{}, &legacyv1.AddVerifierParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -104,8 +111,10 @@ func (*VerifiedRegistry) AddVerifiedClientExported(network string, height int64,
 		return parse(raw, nil, false, &legacyv4.AddVerifiedClientParams{}, &legacyv4.AddVerifiedClientParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.AddVerifiedClientParams{}, &legacyv3.AddVerifiedClientParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.AddVerifiedClientParams{}, &legacyv2.AddVerifiedClientParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.AddVerifiedClientParams{}, &legacyv1.AddVerifiedClientParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -138,8 +147,10 @@ func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map
 		return parse(raw, nil, false, &legacyv4.UseBytesParams{}, &legacyv4.UseBytesParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.UseBytesParams{}, &legacyv3.UseBytesParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.UseBytesParams{}, &legacyv2.UseBytesParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.UseBytesParams{}, &legacyv1.UseBytesParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -172,8 +183,10 @@ func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) 
 		return parse(raw, nil, false, &legacyv4.RestoreBytesParams{}, &legacyv4.RestoreBytesParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.RestoreBytesParams{}, &legacyv3.RestoreBytesParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.RestoreBytesParams{}, &legacyv2.RestoreBytesParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.RestoreBytesParams{}, &legacyv1.RestoreBytesParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -206,8 +219,10 @@ func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int6
 		return parse(raw, nil, false, &legacyv4.DataCap{}, &legacyv4.DataCap{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.DataCap{}, &legacyv3.DataCap{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.DataCap{}, &legacyv2.DataCap{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.DataCap{}, &legacyv1.DataCap{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -262,8 +277,10 @@ func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (
 		return parse(raw, nil, false, &legacyv4.RestoreBytesParams{}, &legacyv4.RestoreBytesParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.RestoreBytesParams{}, &legacyv3.RestoreBytesParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.RestoreBytesParams{}, &legacyv2.RestoreBytesParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.RestoreBytesParams{}, &legacyv1.RestoreBytesParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -296,8 +313,10 @@ func (*VerifiedRegistry) Deprecated2(network string, height int64, raw []byte) (
 		return parse(raw, nil, false, &legacyv4.UseBytesParams{}, &legacyv4.UseBytesParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, nil, false, &legacyv3.UseBytesParams{}, &legacyv3.UseBytesParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, nil, false, &legacyv2.UseBytesParams{}, &legacyv2.UseBytesParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, nil, false, &legacyv1.UseBytesParams{}, &legacyv1.UseBytesParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

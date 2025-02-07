@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"io"
 
+	"go.uber.org/zap"
+
+	"github.com/filecoin-project/go-state-types/manifest"
+
 	paychv10 "github.com/filecoin-project/go-state-types/builtin/v10/paych"
 	paychv11 "github.com/filecoin-project/go-state-types/builtin/v11/paych"
 	paychv12 "github.com/filecoin-project/go-state-types/builtin/v12/paych"
@@ -12,7 +16,8 @@ import (
 	paychv15 "github.com/filecoin-project/go-state-types/builtin/v15/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/paych"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/paych"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/paych"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/paych"
@@ -22,7 +27,6 @@ import (
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
-	"go.uber.org/zap"
 )
 
 type PaymentChannel struct {
@@ -44,7 +48,9 @@ type paymentChannelParams interface {
 
 func (*PaymentChannel) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, &legacyv1.ConstructorParams{})
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, &legacyv2.ConstructorParams{})
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parse(raw, &legacyv3.ConstructorParams{})
@@ -78,7 +84,9 @@ func (*PaymentChannel) Constructor(network string, height int64, raw []byte) (ma
 
 func (*PaymentChannel) UpdateChannelState(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, &legacyv1.UpdateChannelStateParams{})
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, &legacyv2.UpdateChannelStateParams{})
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parse(raw, &legacyv3.UpdateChannelStateParams{})

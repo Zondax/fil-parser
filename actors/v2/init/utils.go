@@ -12,6 +12,9 @@ import (
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
+
+	legacyInitv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
+
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -53,6 +56,9 @@ func execParams(params constructorParams) (cid.Cid, any, error) {
 		return setParams(v.CodeCID, v.ConstructorParams, "")
 	case *builtinInitv8.ExecParams:
 		return setParams(v.CodeCID, v.ConstructorParams, "")
+		// all previous legacy versions are the same exact type, adding to the switch case will cause a compile time error
+	case *legacyInitv7.ExecParams:
+		return setParams(v.CodeCID, v.ConstructorParams, "")
 
 	case *builtinInitv15.Exec4Params:
 		return setParams(v.CodeCID, v.ConstructorParams, string(v.SubAddress))
@@ -68,6 +74,7 @@ func execParams(params constructorParams) (cid.Cid, any, error) {
 		return setParams(v.CodeCID, v.ConstructorParams, string(v.SubAddress))
 
 	}
+
 	return cid.Undef, nil, actors.ErrUnsupportedHeight
 }
 

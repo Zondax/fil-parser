@@ -6,29 +6,45 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
-
 	"github.com/filecoin-project/go-state-types/cbor"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 
 	multisig10 "github.com/filecoin-project/go-state-types/builtin/v10/multisig"
-	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	multisig11 "github.com/filecoin-project/go-state-types/builtin/v11/multisig"
-	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig12 "github.com/filecoin-project/go-state-types/builtin/v12/multisig"
-	verifregv12 "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	multisig13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
-	verifregv13 "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
 	multisig14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
-	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
+	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/multisig"
+	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/multisig"
+	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/multisig"
+	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/multisig"
+	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/multisig"
+	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
+	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
+
+	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
+	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	verifregv12 "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
+	verifregv13 "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
+	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
-	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
+
+	legacyverifreg1 "github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
+	legacyverifreg2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/verifreg"
+	legacyverifreg3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/verifreg"
+	legacyverifreg4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/verifreg"
+	legacyverifreg5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/verifreg"
+	legacyverifreg6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/verifreg"
+	legacyverifreg7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/verifreg"
 
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -37,6 +53,15 @@ import (
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
+	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
+
+	legacyminer1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
+	legacyminer2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
+	legacyminer3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
+	legacyminer4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
+	legacyminer5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
+	legacyminer6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
+	legacyminer7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
 )
 
 func innerProposeParams(network string, height int64, method abi.MethodNum, proposeParams []byte) (string, cbor.Unmarshaler, error) {
@@ -74,7 +99,7 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 		params, err = lockBalanceParams(network, height)
 	case builtin.MethodsMiner.WithdrawBalance:
 		methodName = parser.MethodWithdrawBalance
-		params, err = minerParams(network, height)
+		params, err = withdrawBalanceParams(network, height)
 	case builtin.MethodsVerifiedRegistry.AddVerifier:
 		methodName = parser.MethodAddVerifier
 		params, err = verifierParams(network, height)
@@ -90,8 +115,57 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 
 func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to, value string, params multisigParams, err error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		err = fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		tmp := &legacyv1.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
+		tmp := &legacyv2.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		tmp := &legacyv3.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	case tools.V12.IsSupported(network, height):
+		tmp := &legacyv4.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	case tools.V13.IsSupported(network, height):
+		tmp := &legacyv5.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	case tools.V14.IsSupported(network, height):
+		tmp := &legacyv6.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	case tools.V15.IsSupported(network, height):
+		tmp := &legacyv7.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
+		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+
 	case tools.V16.IsSupported(network, height):
 		tmp := &multisig8.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
@@ -157,8 +231,20 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 
 func proposeReturn(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.ProposeReturn{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.ProposeReturn{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.ProposeReturn{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.ProposeReturn{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.ProposeReturn{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.ProposeReturn{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.ProposeReturn{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.ProposeReturn{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -181,8 +267,21 @@ func proposeReturn(network string, height int64) (multisigParams, error) {
 
 func txnIDParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.TxnIDParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.TxnIDParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.TxnIDParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.TxnIDParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.TxnIDParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.TxnIDParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.TxnIDParams{}, nil
+
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.TxnIDParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -205,8 +304,20 @@ func txnIDParams(network string, height int64) (multisigParams, error) {
 
 func addSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.AddSignerParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.AddSignerParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.AddSignerParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.AddSignerParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.AddSignerParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.AddSignerParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.AddSignerParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.AddSignerParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -229,8 +340,20 @@ func addSignerParams(network string, height int64) (multisigParams, error) {
 
 func removeSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.RemoveSignerParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.RemoveSignerParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.RemoveSignerParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.RemoveSignerParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.RemoveSignerParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.RemoveSignerParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.RemoveSignerParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.RemoveSignerParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -253,8 +376,20 @@ func removeSignerParams(network string, height int64) (multisigParams, error) {
 
 func swapSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.SwapSignerParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.SwapSignerParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.SwapSignerParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.SwapSignerParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.SwapSignerParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.SwapSignerParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.SwapSignerParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.SwapSignerParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -277,8 +412,20 @@ func swapSignerParams(network string, height int64) (multisigParams, error) {
 
 func changeNumApprovalsThresholdParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.ChangeNumApprovalsThresholdParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.ChangeNumApprovalsThresholdParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -300,8 +447,20 @@ func changeNumApprovalsThresholdParams(network string, height int64) (multisigPa
 }
 func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyv1.LockBalanceParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyv2.LockBalanceParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyv3.LockBalanceParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyv4.LockBalanceParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyv5.LockBalanceParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyv6.LockBalanceParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyv7.LockBalanceParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &multisig8.LockBalanceParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -321,10 +480,22 @@ func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
-func minerParams(network string, height int64) (multisigParams, error) {
+func withdrawBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyminer1.WithdrawBalanceParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyminer2.WithdrawBalanceParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyminer3.WithdrawBalanceParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyminer4.WithdrawBalanceParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyminer5.WithdrawBalanceParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyminer6.WithdrawBalanceParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyminer7.WithdrawBalanceParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &miner8.WithdrawBalanceParams{}, nil
 	case tools.V17.IsSupported(network, height):
@@ -346,8 +517,20 @@ func minerParams(network string, height int64) (multisigParams, error) {
 }
 func verifierParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return &legacyverifreg1.AddVerifierParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+		return &legacyverifreg2.AddVerifierParams{}, nil
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return &legacyverifreg3.AddVerifierParams{}, nil
+	case tools.V12.IsSupported(network, height):
+		return &legacyverifreg4.AddVerifierParams{}, nil
+	case tools.V13.IsSupported(network, height):
+		return &legacyverifreg5.AddVerifierParams{}, nil
+	case tools.V14.IsSupported(network, height):
+		return &legacyverifreg6.AddVerifierParams{}, nil
+	case tools.V15.IsSupported(network, height):
+		return &legacyverifreg7.AddVerifierParams{}, nil
 	case tools.V16.IsSupported(network, height):
 		return &verifregv8.AddVerifierParams{}, nil
 	case tools.V17.IsSupported(network, height):

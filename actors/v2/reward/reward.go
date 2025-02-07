@@ -1,7 +1,11 @@
 package reward
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/manifest"
+
 	rewardv10 "github.com/filecoin-project/go-state-types/builtin/v10/reward"
 	rewardv11 "github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	rewardv12 "github.com/filecoin-project/go-state-types/builtin/v12/reward"
@@ -10,16 +14,17 @@ import (
 	rewardv15 "github.com/filecoin-project/go-state-types/builtin/v15/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/reward"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/reward"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/reward"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/reward"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/reward"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/reward"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/reward"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"go.uber.org/zap"
 )
 
 type Reward struct {
@@ -68,8 +73,10 @@ func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[s
 		return parse(raw, &legacyv4.AwardBlockRewardParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, &legacyv3.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, &legacyv2.AwardBlockRewardParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, &legacyv1.AwardBlockRewardParams{}, parser.ParamsKey)
 	}
 	return nil, nil
 }
@@ -106,8 +113,10 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 		return parse(raw, &legacyv4.ThisEpochRewardReturn{}, parser.ReturnKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parse(raw, &legacyv3.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parse(raw, &legacyv2.ThisEpochRewardReturn{}, parser.ReturnKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, &legacyv1.ThisEpochRewardReturn{}, parser.ReturnKey)
 	}
 	return nil, nil
 }

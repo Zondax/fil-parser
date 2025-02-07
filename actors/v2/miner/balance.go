@@ -11,12 +11,15 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -90,8 +93,10 @@ func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams []
 		return parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &legacyv4.WithdrawBalanceParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &legacyv3.WithdrawBalanceParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &legacyv2.WithdrawBalanceParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.WithdrawBalanceParams{}, &legacyv1.WithdrawBalanceParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

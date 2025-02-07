@@ -12,6 +12,8 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
@@ -56,8 +58,10 @@ func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams [
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.ChangeMultiaddrsParams{}, &legacyv3.ChangeMultiaddrsParams{}, parser.ParamsKey)
 
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.ChangeMultiaddrsParams{}, &legacyv2.ChangeMultiaddrsParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ChangeMultiaddrsParams{}, &legacyv1.ChangeMultiaddrsParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -94,8 +98,10 @@ func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byt
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.ChangePeerIDParams{}, &legacyv3.ChangePeerIDParams{}, parser.ParamsKey)
 
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.ChangePeerIDParams{}, &legacyv2.ChangePeerIDParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ChangePeerIDParams{}, &legacyv1.ChangePeerIDParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -132,8 +138,10 @@ func (*Miner) ChangeWorkerAddressExported(network string, height int64, rawParam
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.ChangeWorkerAddressParams{}, &legacyv3.ChangeWorkerAddressParams{}, parser.ParamsKey)
 
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.ChangeWorkerAddressParams{}, &legacyv2.ChangeWorkerAddressParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ChangeWorkerAddressParams{}, &legacyv1.ChangeWorkerAddressParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -256,8 +264,10 @@ func (*Miner) ControlAddresses(network string, height int64, rawParams, rawRetur
 		return parseControlReturn(rawParams, rawReturn, &legacyv4.GetControlAddressesReturn{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseControlReturn(rawParams, rawReturn, &legacyv3.GetControlAddressesReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseControlReturn(rawParams, rawReturn, &legacyv2.GetControlAddressesReturn{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseControlReturn(rawParams, rawReturn, &legacyv1.GetControlAddressesReturn{})
 	}
 
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

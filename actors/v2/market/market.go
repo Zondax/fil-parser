@@ -4,7 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/manifest"
+
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
 	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	v12Market "github.com/filecoin-project/go-state-types/builtin/v12/market"
@@ -13,7 +17,8 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/market"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/market"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/market"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/market"
@@ -25,7 +30,6 @@ import (
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"go.uber.org/zap"
 )
 
 type Market struct {
@@ -75,8 +79,10 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 		resp, err = parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &legacyv4.WithdrawBalanceParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		resp, err = parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &legacyv3.WithdrawBalanceParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		resp, err = parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &legacyv2.WithdrawBalanceParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv1.WithdrawBalanceParams{}, &legacyv1.WithdrawBalanceParams{})
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -117,8 +123,10 @@ func (*Market) PublishStorageDealsExported(network string, height int64, rawPara
 		return parseGeneric(rawParams, rawReturn, true, &legacyv4.PublishStorageDealsParams{}, &legacyv4.PublishStorageDealsReturn{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv3.PublishStorageDealsParams{}, &legacyv3.PublishStorageDealsReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv2.PublishStorageDealsParams{}, &legacyv2.PublishStorageDealsReturn{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, rawReturn, true, &legacyv1.PublishStorageDealsParams{}, &legacyv1.PublishStorageDealsReturn{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -151,8 +159,10 @@ func (*Market) VerifyDealsForActivationExported(network string, height int64, ra
 		return parseGeneric(rawParams, rawReturn, true, &legacyv4.VerifyDealsForActivationParams{}, &legacyv4.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv3.VerifyDealsForActivationParams{}, &legacyv3.VerifyDealsForActivationReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv2.VerifyDealsForActivationParams{}, &legacyv2.VerifyDealsForActivationReturn{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, rawReturn, true, &legacyv1.VerifyDealsForActivationParams{}, &legacyv1.VerifyDealsForActivationReturn{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -187,8 +197,10 @@ func (*Market) ActivateDealsExported(network string, height int64, rawParams, ra
 		return parseGeneric(rawParams, rawReturn, true, &legacyv4.ActivateDealsParams{}, &legacyv4.ActivateDealsParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv3.ActivateDealsParams{}, &legacyv3.ActivateDealsParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv2.ActivateDealsParams{}, &legacyv2.ActivateDealsParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, rawReturn, true, &legacyv1.ActivateDealsParams{}, &legacyv1.ActivateDealsParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -221,8 +233,10 @@ func (*Market) OnMinerSectorsTerminateExported(network string, height int64, raw
 		return parseGeneric(rawParams, nil, false, &legacyv4.OnMinerSectorsTerminateParams{}, &legacyv4.OnMinerSectorsTerminateParams{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.OnMinerSectorsTerminateParams{}, &legacyv3.OnMinerSectorsTerminateParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.OnMinerSectorsTerminateParams{}, &legacyv2.OnMinerSectorsTerminateParams{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.OnMinerSectorsTerminateParams{}, &legacyv1.OnMinerSectorsTerminateParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -249,8 +263,10 @@ func (*Market) ComputeDataCommitmentExported(network string, height int64, rawPa
 		return parseGeneric(rawParams, rawReturn, true, &legacyv4.ComputeDataCommitmentParams{}, &cbg.CborCid{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv3.ComputeDataCommitmentParams{}, &cbg.CborCid{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv2.ComputeDataCommitmentParams{}, &cbg.CborCid{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, rawReturn, true, &legacyv1.ComputeDataCommitmentParams{}, &cbg.CborCid{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

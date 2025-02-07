@@ -4,7 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-bitfield"
+	"github.com/filecoin-project/go-state-types/manifest"
+
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
@@ -13,23 +17,25 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
-	"github.com/filecoin-project/go-state-types/manifest"
-	builtinv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin"
+
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
-	builtinv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
-	builtinv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
-	builtinv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
-	builtinv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
-	builtinv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
+
+	builtinv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin"
+	builtinv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin"
+	builtinv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin"
+	builtinv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin"
+	builtinv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin"
+	builtinv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"go.uber.org/zap"
 )
 
 type Miner struct {
@@ -74,8 +80,10 @@ func (*Miner) TerminateSectors(network string, height int64, rawParams, rawRetur
 		return parseGeneric(rawParams, rawReturn, true, &legacyv4.TerminateSectorsParams{}, &legacyv4.TerminateSectorsReturn{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv3.TerminateSectorsParams{}, &legacyv3.TerminateSectorsReturn{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, rawReturn, true, &legacyv2.TerminateSectorsParams{}, &legacyv2.TerminateSectorsReturn{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, rawReturn, true, &legacyv1.TerminateSectorsParams{}, &legacyv1.TerminateSectorsReturn{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -108,8 +116,10 @@ func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map
 		return parseGeneric(rawParams, nil, false, &legacyv4.DeclareFaultsParams{}, &legacyv4.DeclareFaultsParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.DeclareFaultsParams{}, &legacyv3.DeclareFaultsParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.DeclareFaultsParams{}, &legacyv2.DeclareFaultsParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.DeclareFaultsParams{}, &legacyv1.DeclareFaultsParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("unsupported height: %d", height)
 }
@@ -142,8 +152,10 @@ func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []b
 		return parseGeneric(rawParams, nil, false, &legacyv4.DeclareFaultsRecoveredParams{}, &legacyv4.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.DeclareFaultsRecoveredParams{}, &legacyv3.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.DeclareFaultsRecoveredParams{}, &legacyv2.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.DeclareFaultsRecoveredParams{}, &legacyv1.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -310,8 +322,10 @@ func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byt
 		return parseGeneric(rawParams, nil, false, &legacyv4.ReportConsensusFaultParams{}, &legacyv4.ReportConsensusFaultParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.ReportConsensusFaultParams{}, &legacyv3.ReportConsensusFaultParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &legacyv2.ReportConsensusFaultParams{}, &legacyv2.ReportConsensusFaultParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ReportConsensusFaultParams{}, &legacyv1.ReportConsensusFaultParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

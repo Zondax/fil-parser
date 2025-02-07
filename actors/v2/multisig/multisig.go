@@ -17,6 +17,14 @@ import (
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/multisig"
+	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/multisig"
+	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/multisig"
+	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/multisig"
+	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/multisig"
+	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
+	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -24,8 +32,21 @@ import (
 
 func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parse(raw, &legacyv1.ConstructorParams{}, cborUnmarshaller[*legacyv1.ConstructorParams])
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
+		return parse(raw, &legacyv2.ConstructorParams{}, cborUnmarshaller[*legacyv2.ConstructorParams])
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parse(raw, &legacyv3.ConstructorParams{}, cborUnmarshaller[*legacyv3.ConstructorParams])
+	case tools.V12.IsSupported(network, height):
+		return parse(raw, &legacyv4.ConstructorParams{}, cborUnmarshaller[*legacyv4.ConstructorParams])
+	case tools.V13.IsSupported(network, height):
+		return parse(raw, &legacyv5.ConstructorParams{}, cborUnmarshaller[*legacyv5.ConstructorParams])
+	case tools.V14.IsSupported(network, height):
+		return parse(raw, &legacyv6.ConstructorParams{}, cborUnmarshaller[*legacyv6.ConstructorParams])
+	case tools.V15.IsSupported(network, height):
+		return parse(raw, &legacyv7.ConstructorParams{}, cborUnmarshaller[*legacyv7.ConstructorParams])
+
 	case tools.V16.IsSupported(network, height):
 		return parse(raw, &multisig8.ConstructorParams{}, cborUnmarshaller[*multisig8.ConstructorParams])
 	case tools.V17.IsSupported(network, height):
@@ -48,8 +69,18 @@ func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[stri
 
 func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+		return parseWithMsigParser[*legacyv2.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv2.ConstructorParams], false, nil)
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parseWithMsigParser[*legacyv3.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv3.ConstructorParams], false, nil)
+	case tools.V12.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv4.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv4.ConstructorParams], false, nil)
+	case tools.V13.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv5.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv5.ConstructorParams], false, nil)
+	case tools.V14.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv6.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv6.ConstructorParams], false, nil)
+	case tools.V15.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv7.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv7.ConstructorParams], false, nil)
 	case tools.V16.IsSupported(network, height):
 		return parseWithMsigParser[*multisig8.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*multisig8.ConstructorParams], false, nil)
 	case tools.V17.IsSupported(network, height):
@@ -72,8 +103,19 @@ func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64
 
 func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv2.ApproveReturn], true, &legacyv2.ApproveReturn{})
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv3.ApproveReturn], true, &legacyv3.ApproveReturn{})
+	case tools.V12.IsSupported(network, height):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv4.ApproveReturn], true, &legacyv4.ApproveReturn{})
+	case tools.V13.IsSupported(network, height):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv5.ApproveReturn], true, &legacyv5.ApproveReturn{})
+	case tools.V14.IsSupported(network, height):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv6.ApproveReturn], true, &legacyv6.ApproveReturn{})
+	case tools.V15.IsSupported(network, height):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv7.ApproveReturn], true, &legacyv7.ApproveReturn{})
+
 	case tools.V16.IsSupported(network, height):
 		return parseWithMsigParser(msg, height, key, parser, rawReturn, cborUnmarshaller[*multisig8.ApproveReturn], true, &multisig8.ApproveReturn{})
 	case tools.V17.IsSupported(network, height):
@@ -126,57 +168,27 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 }
 
 func (*Msig) Cancel(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V16.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V17.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V18.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V21.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V22.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V23.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V24.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
 }
 
 func (*Msig) RemoveSigner(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V16.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V17.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V18.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V21.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V22.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V23.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	case tools.V24.IsSupported(network, height):
-		return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
-	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return parseWithMsigParser[metadataWithCbor](msg, height, key, parser, rawReturn, noopUnmarshaller[metadataWithCbor], false, nil)
 }
 
 func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+		return parseWithMsigParser[*legacyv2.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv2.ChangeNumApprovalsThresholdParams], false, nil)
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parseWithMsigParser[*legacyv3.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv3.ChangeNumApprovalsThresholdParams], false, nil)
+	case tools.V12.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv4.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv4.ChangeNumApprovalsThresholdParams], false, nil)
+	case tools.V13.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv5.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv5.ChangeNumApprovalsThresholdParams], false, nil)
+	case tools.V14.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv6.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv6.ChangeNumApprovalsThresholdParams], false, nil)
+	case tools.V15.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv7.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv7.ChangeNumApprovalsThresholdParams], false, nil)
 	case tools.V16.IsSupported(network, height):
 		return parse(rawParams, &multisig8.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig8.ChangeNumApprovalsThresholdParams])
 	case tools.V17.IsSupported(network, height):
@@ -199,8 +211,18 @@ func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessag
 
 func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+		return parseWithMsigParser[*legacyv2.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv2.LockBalanceParams], false, nil)
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parseWithMsigParser[*legacyv3.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv3.LockBalanceParams], false, nil)
+	case tools.V12.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv4.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv4.LockBalanceParams], false, nil)
+	case tools.V13.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv5.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv5.LockBalanceParams], false, nil)
+	case tools.V14.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv6.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv6.LockBalanceParams], false, nil)
+	case tools.V15.IsSupported(network, height):
+		return parseWithMsigParser[*legacyv7.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv7.LockBalanceParams], false, nil)
 	case tools.V16.IsSupported(network, height):
 		return parse(rawParams, &multisig8.LockBalanceParams{}, cborUnmarshaller[*multisig8.LockBalanceParams])
 	case tools.V17.IsSupported(network, height):

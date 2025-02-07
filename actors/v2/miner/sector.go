@@ -12,12 +12,14 @@ import (
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/miner"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/miner"
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/miner"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -73,8 +75,10 @@ func (*Miner) PreCommitSector(network string, height int64, rawParams []byte) (m
 		return parseGeneric(rawParams, nil, false, &legacyv4.PreCommitSectorParams{}, &legacyv4.PreCommitSectorParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.PreCommitSectorParams{}, &legacyv3.PreCommitSectorParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.PreCommitSectorParams{}, &legacyv2.PreCommitSectorParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.SectorPreCommitInfo{}, &legacyv1.SectorPreCommitInfo{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -107,8 +111,10 @@ func (*Miner) ProveCommitSector(network string, height int64, rawParams []byte) 
 		return parseGeneric(rawParams, nil, false, &legacyv4.ProveCommitSectorParams{}, &legacyv4.ProveCommitSectorParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.ProveCommitSectorParams{}, &legacyv3.ProveCommitSectorParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.ProveCommitSectorParams{}, &legacyv2.ProveCommitSectorParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ProveCommitSectorParams{}, &legacyv1.ProveCommitSectorParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -155,8 +161,10 @@ func (*Miner) SubmitWindowedPoSt(network string, height int64, rawParams []byte)
 		return parseGeneric(rawParams, nil, false, &legacyv4.SubmitWindowedPoStParams{}, &legacyv4.SubmitWindowedPoStParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.SubmitWindowedPoStParams{}, &legacyv3.SubmitWindowedPoStParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.SubmitWindowedPoStParams{}, &legacyv2.SubmitWindowedPoStParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.SubmitWindowedPoStParams{}, &legacyv1.SubmitWindowedPoStParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -211,8 +219,10 @@ func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) 
 		return parseGeneric(rawParams, nil, false, &legacyv4.CheckSectorProvenParams{}, &legacyv4.CheckSectorProvenParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.CheckSectorProvenParams{}, &legacyv3.CheckSectorProvenParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.CheckSectorProvenParams{}, &legacyv2.CheckSectorProvenParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.CheckSectorProvenParams{}, &legacyv1.CheckSectorProvenParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -245,8 +255,10 @@ func (*Miner) ExtendSectorExpiration(network string, height int64, rawParams []b
 		return parseGeneric(rawParams, nil, false, &legacyv4.ExtendSectorExpirationParams{}, &legacyv4.ExtendSectorExpirationParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.ExtendSectorExpirationParams{}, &legacyv3.ExtendSectorExpirationParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.ExtendSectorExpirationParams{}, &legacyv2.ExtendSectorExpirationParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ExtendSectorExpirationParams{}, &legacyv1.ExtendSectorExpirationParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -279,8 +291,10 @@ func (*Miner) CompactSectorNumbers(network string, height int64, rawParams []byt
 		return parseGeneric(rawParams, nil, false, &legacyv4.CompactSectorNumbersParams{}, &legacyv4.CompactSectorNumbersParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.CompactSectorNumbersParams{}, &legacyv3.CompactSectorNumbersParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.CompactSectorNumbersParams{}, &legacyv2.CompactSectorNumbersParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.CompactSectorNumbersParams{}, &legacyv1.CompactSectorNumbersParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -313,8 +327,10 @@ func (*Miner) CompactPartitions(network string, height int64, rawParams []byte) 
 		return parseGeneric(rawParams, nil, false, &legacyv4.CompactPartitionsParams{}, &legacyv4.CompactPartitionsParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
 		return parseGeneric(rawParams, nil, false, &legacyv3.CompactPartitionsParams{}, &legacyv3.CompactPartitionsParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
 		return parseGeneric(rawParams, nil, false, &legacyv2.CompactPartitionsParams{}, &legacyv2.CompactPartitionsParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.CompactPartitionsParams{}, &legacyv1.CompactPartitionsParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

@@ -3,6 +3,7 @@ package cron
 import (
 	"fmt"
 
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/cron"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/cron"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/cron"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/cron"
@@ -26,10 +27,11 @@ import (
 func (c *Cron) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V10)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return cronConstructorLegacy(raw, &legacyv1.ConstructorParams{})
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return cronConstructorLegacy(raw, &legacyv2.ConstructorParams{})
-
-	case tools.V11.IsSupported(network, height):
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return cronConstructorLegacy(raw, &legacyv3.ConstructorParams{})
 	case tools.V12.IsSupported(network, height):
 		return cronConstructorLegacy(raw, &legacyv4.ConstructorParams{})
