@@ -59,9 +59,8 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 
 	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
-		return metadata, nil, err
+		return metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
 	}
-
 	actorParser, err := p.GetActor(actor)
 	if err != nil {
 		return nil, nil, parser.ErrNotValidActor

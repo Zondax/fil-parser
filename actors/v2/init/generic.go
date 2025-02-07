@@ -2,6 +2,7 @@ package init
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -23,11 +24,11 @@ func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawR
 	reader := bytes.NewReader(msg.Params)
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, nil, err
+		return metadata, nil, fmt.Errorf("error unmarshaling exec params: %w", err)
 	}
 	codeCid, tmp, err := execParams(params)
 	if err != nil {
-		return metadata, nil, err
+		return metadata, nil, fmt.Errorf("error parsing exec params: %w", err)
 	}
 	metadata[parser.ParamsKey] = tmp
 
@@ -36,7 +37,7 @@ func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawR
 		reader = bytes.NewReader(rawReturn)
 		err = r.UnmarshalCBOR(reader)
 		if err != nil {
-			return metadata, nil, err
+			return metadata, nil, fmt.Errorf("error unmarshaling exec return: %w", err)
 		}
 		createdActor = returnParams(msg, codeCid.String(), r)
 		metadata[parser.ReturnKey] = createdActor
