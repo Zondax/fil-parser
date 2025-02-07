@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-bitfield"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/manifest"
 
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
@@ -417,8 +418,10 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 		return parseGeneric(rawParams, nil, false, &builtinv4.ApplyRewardParams{}, &builtinv4.ApplyRewardParams{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parseGeneric(rawParams, nil, false, &builtinv3.ApplyRewardParams{}, &builtinv3.ApplyRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		return parseGeneric(rawParams, nil, false, &builtinv2.ApplyRewardParams{}, &builtinv2.ApplyRewardParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &abi.TokenAmount{}, &abi.TokenAmount{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
