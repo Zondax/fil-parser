@@ -42,6 +42,13 @@ var (
 	LatestVersion     version = V24
 )
 
+func ParseRawNetworkName(network string) string {
+	if network == "calibrationnet" {
+		return "calibration"
+	}
+	return network
+}
+
 // IsSupported returns true if the height is within the version range for a given network
 func (v version) IsSupported(network string, height int64) bool {
 	if network == "calibration" {

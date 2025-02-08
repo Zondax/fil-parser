@@ -86,6 +86,9 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 		{name: "V17 on calibration", version: V17, height: 16900, want: true},
 
 		{name: "V23 on calibration", version: V23, height: 1779094, want: true},
+		{name: "V23 on calibration", version: V21, height: 1419335, want: true},
+		{name: "V15 on calibration", version: V17, height: 1419335, want: false},
+		{name: "V14 on calibration", version: V17, height: 1419335, want: false},
 	}
 
 	for _, tt := range tests {
@@ -94,6 +97,7 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 		})
 	}
 
+	require.False(t, AnyIsSupported("calibration", 1419335, VersionsBefore(V17)...))
 	height := int64(782006)
 	switch {
 	case V15.IsSupported("calibration", height):
