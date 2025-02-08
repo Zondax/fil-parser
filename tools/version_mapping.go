@@ -45,27 +45,13 @@ var (
 // IsSupported returns true if the height is within the version range for a given network
 func (v version) IsSupported(network string, height int64) bool {
 	if network == "calibration" {
-		if height == 0 && v.calibration == 0 {
-			return true
-		}
-		if height >= LatestVersion.calibration {
-			return v == LatestVersion
-		}
-
-		// edge case: check if two new versions have the same calibration height
-		if v.calibration == v.next().calibration && !IsLatestVersion(v) {
-			return v.next().IsSupported(network, height)
-		}
-		// check if the height is greater than the current version  but less than the next version
-		if height >= v.calibration && height < v.next().calibration {
-			return true
-		}
+		return checkCalibrationEdgeCases(network, height, v)
 	} else {
 		if height == 0 && v.mainnet == 0 {
 			return true
 		}
 		if height >= LatestVersion.mainnet {
-			return v == LatestVersion
+			return true
 		}
 
 		// edge case: check if two new versions have the same mainnet height
@@ -77,7 +63,40 @@ func (v version) IsSupported(network string, height int64) bool {
 			return true
 		}
 	}
+	return false
+}
 
+func checkCalibrationEdgeCases(network string, height int64, v version) bool {
+	if height == 0 && v.calibration == 0 {
+		return true
+	}
+	if height >= LatestVersion.calibration {
+		return true
+	}
+	if v.nodeVersion < V17.nodeVersion {
+		if v.nodeVersion != V16.nodeVersion {
+			// on calibration, all versions before V16 are not used because of a calibration reset
+			return false
+		} else {
+			// if we are on V16 which is at a greater height than V17,
+			// we just need to check that the height is less than the network reset height.
+			// all heights below this are parsed with V16 .
+			return height < V17.calibration
+		}
+	}
+	if height < V17.calibration {
+		// parse all calibration heights before V17 with the v16 network version parsers because there was a calibration reset somewhere between V16 and V17.
+		return v.nodeVersion == V16.nodeVersion
+	}
+
+	// edge case: check if two new versions have the same calibration height
+	if v.calibration == v.next().calibration && !IsLatestVersion(v) {
+		return v.next().IsSupported(network, height)
+	}
+	// check if the height is greater than the current version  but less than the next version
+	if height >= v.calibration && height < v.next().calibration {
+		return true
+	}
 	return false
 }
 

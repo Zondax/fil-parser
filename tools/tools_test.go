@@ -65,6 +65,60 @@ func TestIsSupported(t *testing.T) {
 	}
 }
 
+func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
+	network := "calibration"
+
+	tests := []struct {
+		name    string
+		version version
+		height  int64
+		want    bool
+	}{
+		{name: "V1 on calibration", version: V1, height: 0, want: true},
+		{name: "V5 on calibration", version: V5, height: 193700, want: false},
+		{name: "V11 on calibration", version: V11, height: 193789, want: false},
+		{name: "V12 on calibration", version: V12, height: 193780, want: false},
+		{name: "V13 on calibration", version: V13, height: 312700, want: false},
+		{name: "V14 on calibration", version: V14, height: 312846, want: false},
+		{name: "V16 on calibration", version: V16, height: 1044661, want: false},
+
+		{name: "V16 on calibration", version: V16, height: 1000, want: true},
+		{name: "V17 on calibration", version: V17, height: 16900, want: true},
+
+		{name: "V23 on calibration", version: V23, height: 1779094, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.version.IsSupported(network, tt.height))
+		})
+	}
+
+	height := int64(782006)
+	switch {
+	case V15.IsSupported("calibration", height):
+		t.Fatalf("V15 should not be supported on calibration at height %d", height)
+	case V16.IsSupported("calibration", height):
+		t.Fatalf("V16 should not be supported on calibration at height %d", height)
+	case V17.IsSupported("calibration", height):
+		t.Fatalf("V17 should not be supported on calibration at height %d", height)
+	case V20.IsSupported("calibration", height):
+	default:
+		t.Fatalf("V20 should be supported on calibration at height %d", height)
+	}
+
+	height = int64(15800)
+	switch {
+	case V15.IsSupported("calibration", height):
+		t.Fatalf("V15 should not be supported on calibration at height %d", height)
+	case V16.IsSupported("calibration", height):
+	case V17.IsSupported("calibration", height):
+		t.Fatalf("V17 should not be supported on calibration at height %d", height)
+	default:
+		t.Fatalf("V16 should be supported on calibration at height %d", height)
+	}
+}
+
 /*
 func TestBuildCidFromMessageTrace(t *testing.T) {
 	h1, err := multihash.Sum([]byte("TEST"), multihash.SHA2_256, -1)
