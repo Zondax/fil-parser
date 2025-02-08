@@ -1,12 +1,15 @@
 package market
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 
+	cbg "github.com/whyrusleeping/cbor-gen"
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/manifest"
 
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
@@ -25,7 +28,10 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/market"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/market"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/market"
-	cbg "github.com/whyrusleeping/cbor-gen"
+
+	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
+	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
+	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -603,4 +609,105 @@ func (*Market) GetDealActivationExported(network string, height int64, rawParams
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Market) SettleDealPaymentsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v15Market.SettleDealPaymentsParams{}, &v15Market.SettleDealPaymentsReturn{})
+	case tools.V23.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v14Market.SettleDealPaymentsParams{}, &v14Market.SettleDealPaymentsReturn{})
+	case tools.V22.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v13Market.SettleDealPaymentsParams{}, &v13Market.SettleDealPaymentsReturn{})
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Market) SectorContentChanged(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := map[string]interface{}{}
+
+	// Parse params which is an array of SectorChanges
+	// SectorChanges does not implement UnmarshalCBOR
+	// So we need to parse the individual elements manually
+	params, err := parseCBORArray(network, height, rawParams, sectorContentChangedParams)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing CBOR array: %w", err)
+	}
+
+	metadata[parser.ParamsKey] = params
+	r, err := parseCBORArray(network, height, rawReturn, sectorContentChangedReturn)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing CBOR array: %w", err)
+	}
+	metadata[parser.ReturnKey] = r
+
+	return metadata, nil
+
+}
+
+func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshaler, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return &miner15.SectorChanges{}, nil
+	case tools.V23.IsSupported(network, height):
+		return &miner14.SectorChanges{}, nil
+	case tools.V22.IsSupported(network, height):
+		return &miner13.SectorChanges{}, nil
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+func sectorContentChangedReturn(network string, height int64) (cbg.CBORUnmarshaler, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return &miner15.PieceChange{}, nil
+	case tools.V23.IsSupported(network, height):
+		return &miner14.PieceChange{}, nil
+	case tools.V22.IsSupported(network, height):
+		return &miner13.PieceChange{}, nil
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Market) GetDealSectorExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata := map[string]interface{}{}
+	var extractedParams marketParam
+	var extractedReturn abi.SectorNumber
+
+	switch {
+	case tools.V24.IsSupported(network, height):
+		var params v15Market.GetDealSectorParams
+		extractedParams = &params
+	case tools.V23.IsSupported(network, height):
+		var params v14Market.GetDealSectorParams
+		extractedParams = &params
+	case tools.V22.IsSupported(network, height):
+		var params v13Market.GetDealSectorParams
+		extractedParams = &params
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
+		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+
+	err := extractedParams.UnmarshalCBOR(bytes.NewReader(rawParams))
+	if err != nil {
+		return metadata, err
+	}
+
+	metadata[parser.ParamsKey] = extractedParams
+
+	sectorNumber, err := abi.ParseUIntKey(string(rawReturn))
+	if err != nil {
+		return metadata, fmt.Errorf("error parsing return: %w", err)
+	}
+	extractedReturn = abi.SectorNumber(sectorNumber)
+
+	metadata[parser.ReturnKey] = extractedReturn.String()
+
+	return metadata, nil
+
 }

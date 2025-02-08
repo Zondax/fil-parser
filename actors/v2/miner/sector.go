@@ -3,6 +3,7 @@ package miner
 import (
 	"fmt"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
@@ -128,6 +129,18 @@ func (*Miner) ProveCommitSectors3(network string, height int64, rawParams, rawRe
 	case tools.V22.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner13.ProveCommitSectors3Params{}, &miner13.ProveCommitSectors3Return{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
+		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Miner) InternalSectorSetupForPreseal(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner15.InternalSectorSetupForPresealParams{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.V23.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner14.InternalSectorSetupForPresealParams{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V23)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -367,4 +380,16 @@ func (*Miner) PreCommitSectorBatch(network string, height int64, rawParams []byt
 
 func (*Miner) GetSectorSize(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	return nil, fmt.Errorf("unsupported height: %d", height)
+}
+
+func (*Miner) ProveCommitSectorsNI(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner15.ProveCommitSectorsNIParams{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.V23.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner14.ProveCommitSectorsNIParams{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V22)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return parseGeneric(rawParams, nil, false, &abi.EmptyValue{}, &abi.EmptyValue{}, parser.ParamsKey)
 }

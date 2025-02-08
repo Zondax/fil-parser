@@ -41,6 +41,12 @@ func (p *Power) Parse(network string, height int64, txType string, msg *parser.L
 		metadata, err = p.MinerCountExported(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodMinerConsensusCountExported:
 		metadata, err = p.MinerConsensusCountExported(network, msg, height, msg.Params, msgRct.Return)
+	case parser.MethodOnEpochTickEnd:
+		resp, err := actors.ParseEmptyParamsAndReturn()
+		return resp, nil, err
+	case parser.MethodOnConsensusFault:
+		metadata, err = p.OnConsensusFault(network, height, msg, msg.Params)
+		return metadata, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -67,6 +73,6 @@ func (p *Power) TransactionTypes() map[string]any {
 		parser.MethodMinerCountExported:          p.MinerCountExported,
 		parser.MethodMinerConsensusCountExported: p.MinerConsensusCountExported,
 		parser.MethodOnEpochTickEnd:              actors.ParseEmptyParamsAndReturn,
-		parser.MethodOnConsensusFault:            nil,
+		parser.MethodOnConsensusFault:            p.OnConsensusFault,
 	}
 }

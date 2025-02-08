@@ -307,6 +307,7 @@ func TestVersionCoverage(t *testing.T) {
 			for txType := range transactionTypes {
 				_, _, err := actor.Parse(network, tools.DeterministicTestHeight(version), txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
 				require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
+				require.Falsef(t, errors.Is(err, parser.ErrUnknownMethod), "Method missing in actor.Parse: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package miner
 import (
 	"fmt"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
@@ -99,4 +100,8 @@ func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams []
 		return parseGeneric(rawParams, nil, false, &legacyv1.WithdrawBalanceParams{}, &legacyv1.WithdrawBalanceParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Miner) AddLockedFund(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, nil, false, &abi.TokenAmount{}, &abi.TokenAmount{}, parser.ParamsKey)
 }

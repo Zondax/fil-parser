@@ -23,6 +23,7 @@ func New(logger *zap.Logger) *Datacap {
 func (d *Datacap) Name() string {
 	return manifest.DatacapKey
 }
+
 func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodConstructor:
@@ -88,9 +89,9 @@ func (d *Datacap) TransactionTypes() map[string]any {
 		parser.MethodNameExported:              d.NameExported,
 		parser.MethodSymbolExported:            d.SymbolExported,
 		parser.MethodTotalSupplyExported:       d.TotalSupplyExported,
-		parser.MethodBalanceExported:           nil,
+		parser.MethodBalanceExported:           d.BalanceExported,
 		parser.MethodTransferExported:          d.TransferExported,
-		parser.MethodTransferFromExported:      nil,
+		parser.MethodTransferFromExported:      d.TransferFromExported,
 		parser.MethodIncreaseAllowanceExported: d.IncreaseAllowanceExported,
 		parser.MethodDecreaseAllowanceExported: d.DecreaseAllowanceExported,
 		parser.MethodRevokeAllowanceExported:   d.RevokeAllowanceExported,

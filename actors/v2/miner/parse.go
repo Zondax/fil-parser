@@ -79,7 +79,6 @@ func (m *Miner) Parse(network string, height int64, txType string, msg *parser.L
 	case parser.MethodConfirmChangeWorkerAddress, parser.MethodConfirmChangeWorkerAddressExported:
 		resp, err := actors.ParseEmptyParamsAndReturn()
 		return resp, nil, err
-	case parser.MethodConfirmUpdateWorkerKey: // TODO: ?
 	case parser.MethodRepayDebt, parser.MethodRepayDebtExported:
 		resp, err := actors.ParseEmptyParamsAndReturn()
 		return resp, nil, err
@@ -134,6 +133,21 @@ func (m *Miner) Parse(network string, height int64, txType string, msg *parser.L
 	case parser.MethodGetMultiaddrs:
 		resp, err := m.GetMultiaddrsExported(network, height, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodAddLockedFund:
+		resp, err := m.AddLockedFund(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodProveReplicaUpdates3:
+		resp, err := m.ProveReplicaUpdates3(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodInternalSectorSetupForPreseal:
+		resp, err := m.InternalSectorSetupForPreseal(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodConfirmUpdateWorkerKey:
+		resp, err := m.ConfirmUpdateWorkerKey(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodProveCommitSectorsNI:
+		resp, err := m.ProveCommitSectorsNI(network, height, msg.Params)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -171,7 +185,7 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodCompactSectorNumbers:               m.CompactSectorNumbers,
 		parser.MethodConfirmChangeWorkerAddress:         actors.ParseEmptyParamsAndReturn,
 		parser.MethodConfirmChangeWorkerAddressExported: actors.ParseEmptyParamsAndReturn,
-		parser.MethodConfirmUpdateWorkerKey:             nil,
+		parser.MethodConfirmUpdateWorkerKey:             m.ConfirmUpdateWorkerKey,
 		parser.MethodRepayDebt:                          actors.ParseEmptyParamsAndReturn,
 		parser.MethodRepayDebtExported:                  actors.ParseEmptyParamsAndReturn,
 		parser.MethodChangeOwnerAddress:                 m.ChangeOwnerAddressExported,
@@ -193,8 +207,9 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodGetVestingFunds:                    m.GetVestingFundsExported,
 		parser.MethodGetPeerID:                          m.GetPeerIDExported,
 		parser.MethodGetMultiaddrs:                      m.GetMultiaddrsExported,
-		parser.MethodInternalSectorSetupForPreseal:      nil,
-		parser.MethodProveCommitSectorsNI:               nil,
-		parser.MethodProveReplicaUpdates3:               nil,
+		parser.MethodAddLockedFund:                      m.AddLockedFund,
+		parser.MethodInternalSectorSetupForPreseal:      m.InternalSectorSetupForPreseal,
+		parser.MethodProveCommitSectorsNI:               m.ProveCommitSectorsNI,
+		parser.MethodProveReplicaUpdates3:               m.ProveReplicaUpdates3,
 	}
 }

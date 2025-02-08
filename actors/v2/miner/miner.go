@@ -52,6 +52,9 @@ func New(logger *zap.Logger) *Miner {
 func (m *Miner) Name() string {
 	return manifest.MinerKey
 }
+func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, nil, false, &abi.EmptyValue{}, &abi.EmptyValue{}, parser.ParamsKey)
+}
 
 func (*Miner) TerminateSectors(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
@@ -231,6 +234,20 @@ func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawR
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
+func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	switch {
+	case tools.V24.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner15.ProveReplicaUpdates3Params{}, &miner15.ProveReplicaUpdates3Return{}, parser.ParamsKey)
+	case tools.V23.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner14.ProveReplicaUpdates3Params{}, &miner14.ProveReplicaUpdates3Return{}, parser.ParamsKey)
+	case tools.V22.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner13.ProveReplicaUpdates3Params{}, &miner13.ProveReplicaUpdates3Return{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
+		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
 func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
@@ -347,6 +364,7 @@ func (*Miner) ChangeBeneficiaryExported(network string, height int64, rawParams 
 		return parseGeneric(rawParams, nil, false, &miner10.ChangeBeneficiaryParams{}, &miner10.ChangeBeneficiaryParams{}, parser.ParamsKey)
 	case tools.V17.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner9.ChangeBeneficiaryParams{}, &miner9.ChangeBeneficiaryParams{}, parser.ParamsKey)
+	case tools.V16.IsSupported(network, height):
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
@@ -384,8 +402,20 @@ func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[s
 		return parseGeneric(rawParams, nil, false, &miner9.MinerConstructorParams{}, &miner9.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.V16.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner8.MinerConstructorParams{}, &miner8.MinerConstructorParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.V15.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &legacyv7.ConstructorParams{}, &legacyv7.ConstructorParams{}, parser.ParamsKey)
+	case tools.V14.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &legacyv6.ConstructorParams{}, &legacyv6.ConstructorParams{}, parser.ParamsKey)
+	case tools.V13.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &legacyv5.ConstructorParams{}, &legacyv5.ConstructorParams{}, parser.ParamsKey)
+	case tools.V12.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &legacyv4.ConstructorParams{}, &legacyv4.ConstructorParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
+		return parseGeneric(rawParams, nil, false, &legacyv3.ConstructorParams{}, &legacyv3.ConstructorParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
+		return parseGeneric(rawParams, nil, false, &legacyv2.ConstructorParams{}, &legacyv2.ConstructorParams{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.ConstructorParams{}, &legacyv1.ConstructorParams{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -444,8 +474,23 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 		return parseGeneric(rawParams, nil, false, &miner9.DeferredCronEventParams{}, &miner9.DeferredCronEventParams{}, parser.ParamsKey)
 	case tools.V16.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner8.DeferredCronEventParams{}, &miner8.DeferredCronEventParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+
+	// the difference in packages (builtin/legacy) is intentional and is how the underlying library is implemented
+	case tools.V15.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &builtinv7.DeferredCronEventParams{}, &builtinv7.DeferredCronEventParams{}, parser.ParamsKey)
+	case tools.V14.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &builtinv6.DeferredCronEventParams{}, &builtinv6.DeferredCronEventParams{}, parser.ParamsKey)
+	case tools.V13.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &legacyv5.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
+
+	case tools.V12.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &legacyv4.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
+		return parseGeneric(rawParams, nil, false, &legacyv3.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
+		return parseGeneric(rawParams, nil, false, &legacyv2.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+		return parseGeneric(rawParams, nil, false, &legacyv1.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

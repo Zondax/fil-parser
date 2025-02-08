@@ -73,6 +73,15 @@ func (p *Market) Parse(network string, height int64, txType string, msg *parser.
 	case parser.MethodGetDealActivation:
 		resp, err := p.GetDealActivationExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodGetDealSectorExported:
+		resp, err := p.GetDealSectorExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodSettleDealPaymentsExported:
+		resp, err := p.SettleDealPaymentsExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodSectorContentChanged:
+		resp, err := p.SectorContentChanged(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -106,8 +115,8 @@ func (p *Market) TransactionTypes() map[string]any {
 		parser.MethodGetDealProviderCollateral:   p.GetDealProviderCollateralExported,
 		parser.MethodGetDealVerified:             p.GetDealVerifiedExported,
 		parser.MethodGetDealActivation:           p.GetDealActivationExported,
-		parser.MethodGetDealSectorExported:       nil,
-		parser.MethodSettleDealPaymentsExported:  nil,
-		parser.MethodSectorContentChanged:        nil,
+		parser.MethodGetDealSectorExported:       p.GetDealSectorExported,
+		parser.MethodSettleDealPaymentsExported:  p.SettleDealPaymentsExported,
+		parser.MethodSectorContentChanged:        p.SectorContentChanged,
 	}
 }

@@ -91,6 +91,20 @@ func (*Power) SubmitPoRepForBulkVerify(network string, msg *parser.LotusMessage,
 	return data, err
 }
 
+func (*Power) OnConsensusFault(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	var err error
+	switch {
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	case tools.AnyIsSupported(network, height, tools.VersionsAfter(tools.V16)...):
+		return map[string]interface{}{}, nil
+	default:
+		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return data, err
+}
+
 func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	var err error

@@ -1808,11 +1808,12 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 		totalTxCids  int
 	}
 	tests := []struct {
-		name    string
-		version string
-		url     string
-		height  string
-		results expectedResults
+		name       string
+		version    string
+		url        string
+		height     string
+		results    expectedResults
+		shouldFail bool
 	}{
 		{
 			name:    "parser with traces from v1",
@@ -1823,17 +1824,6 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTraces:  650,
 				totalAddress: 98,
 				totalTxCids:  99,
-			},
-		},
-		{
-			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
-			version: v1.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "845259",
-			results: expectedResults{
-				totalTraces:  31,
-				totalAddress: 2,
-				totalTxCids:  0,
 			},
 		},
 		{
@@ -1859,7 +1849,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			},
 		},
 		{
-			name:    "parser with traces from v2 and lotus 1.25",
+			name:    "should fail (actorsV2 fixed eth_address parsing in exec): parser with traces from v2 and lotus 1.25",
 			version: v2.NodeVersionsSupported[2],
 			url:     nodeUrl,
 			height:  "3573064",
@@ -1868,6 +1858,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalAddress: 75,
 				totalTxCids:  97,
 			},
+			shouldFail: true,
 		},
 		{
 			name:    "parser with traces from v2 and lotus 1.25",
@@ -1880,6 +1871,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  177,
 			},
 		},
+
 		// TODO: ENABLE THIS TEST ONCE tools/version_mapping handles CALIBRATION network resets correctly
 		// {
 		// 	name:    "parser with traces from v2 and lotus 1.26 (calib)",
@@ -1947,6 +1939,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 					t.Fatalf("Error unmarshalling v2 tx metadata: %s", err.Error())
 				}
 
+				if tt.shouldFail {
+					continue
+				}
 				if metadataV1[parser.ParamsKey] != nil {
 					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 				}

@@ -120,7 +120,6 @@ func returnParams(msg *parser.LotusMessage, actorCID string, params execReturn) 
 	case *legacyInitv7.ExecReturn:
 		return setReturn(v.IDAddress, v.RobustAddress)
 	}
-	fmt.Println("RETURN NOT FOUND")
 	return &types.AddressInfo{}
 
 }

@@ -38,6 +38,9 @@ func (a *Account) Parse(network string, height int64, txType string, msg *parser
 	case parser.MethodAuthenticateMessage:
 		resp, err := a.AuthenticateMessage(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodUniversalReceiverHook, parser.MethodReceive:
+		resp, err := a.UniversalReceiverHook(network, height, msg.Params)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -51,6 +54,7 @@ func (a *Account) TransactionTypes() map[string]any {
 		parser.MethodConstructor:           actors.ParseConstructor,
 		parser.MethodPubkeyAddress:         a.PubkeyAddress,
 		parser.MethodAuthenticateMessage:   a.AuthenticateMessage,
-		parser.MethodUniversalReceiverHook: nil,
+		parser.MethodUniversalReceiverHook: a.UniversalReceiverHook,
+		parser.MethodReceive:               a.UniversalReceiverHook,
 	}
 }
