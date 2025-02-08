@@ -364,7 +364,6 @@ func (*Miner) ChangeBeneficiaryExported(network string, height int64, rawParams 
 		return parseGeneric(rawParams, nil, false, &miner10.ChangeBeneficiaryParams{}, &miner10.ChangeBeneficiaryParams{}, parser.ParamsKey)
 	case tools.V17.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner9.ChangeBeneficiaryParams{}, &miner9.ChangeBeneficiaryParams{}, parser.ParamsKey)
-	case tools.V16.IsSupported(network, height):
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
 		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
