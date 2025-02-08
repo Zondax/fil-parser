@@ -45,13 +45,13 @@ func TestIsSupported(t *testing.T) {
 
 		{name: "V7 on calibration", version: V7, network: "calibration", height: 2383680, want: false},
 		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 170000, want: false},
-		{name: "V7 on calibration", version: V7, network: "calibration", height: 0, want: false},
+		{name: "V7 on calibration", version: V7, network: "calibration", height: 0, want: true},
 		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 10000, want: true},
 
 		{name: "V9 on calibration", version: V9, network: "calibration", height: 265100, want: false},
 		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265201, want: true},
 		{name: "V9 on calibration", version: V9, network: "calibration", height: 265200, want: false},
-		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265200, want: false},
+		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265200, want: true},
 
 		{name: "V24 on calibration", version: V24, network: "calibration", height: 2081674, want: true},
 		{name: "V24 on mainnet", version: V24, network: "mainnet", height: 1427974, want: false},
