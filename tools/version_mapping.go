@@ -58,7 +58,7 @@ func (v version) IsSupported(network string, height int64) bool {
 			return true
 		}
 		if height >= LatestVersion.mainnet {
-			return true
+			return v.nodeVersion == LatestVersion.nodeVersion
 		}
 
 		// edge case: check if two new versions have the same mainnet height
@@ -78,7 +78,7 @@ func checkCalibrationEdgeCases(network string, height int64, v version) bool {
 		return true
 	}
 	if height >= LatestVersion.calibration {
-		return true
+		return v.nodeVersion == LatestVersion.nodeVersion
 	}
 	if v.nodeVersion < V17.nodeVersion {
 		if v.nodeVersion != V16.nodeVersion {

@@ -1871,19 +1871,17 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  177,
 			},
 		},
-
-		// TODO: ENABLE THIS TEST ONCE tools/version_mapping handles CALIBRATION network resets correctly
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.26 (calib)",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     calibNextNodeUrl,
-		// 	height:  "1419335",
-		// 	results: expectedResults{
-		// 		totalTraces:  37,
-		// 		totalAddress: 11,
-		// 		totalTxCids:  2,
-		// 	},
-		// },
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:  37,
+				totalAddress: 11,
+				totalTxCids:  2,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1891,6 +1889,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
+			fmt.Println("tipset", tipset.Height())
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
