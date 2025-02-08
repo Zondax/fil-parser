@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Zondax/zindexer/components/connections/data_store"
 	"github.com/filecoin-project/go-jsonrpc"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/api"
@@ -15,6 +16,8 @@ import (
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/zdb"
+	"github.com/zondax/golem/pkg/zdb/zdbconfig"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"go.uber.org/zap"
 )
@@ -82,28 +85,65 @@ func newFilecoinRPCClient(url string, token string) (*RPCClient, error) {
 
 }
 
-func getTraceFileByHeight(height uint64, lotusClient api.FullNode) (*api.ComputeStateOutput, error) {
-	tipset, err := lotusClient.ChainGetTipSetByHeight(context.Background(), abi.ChainEpoch(height), lotusChainTypes.EmptyTSK)
+func getDataStoreClient(config *Config) (*data_store.DataStoreClient, error) {
+	dsConf := data_store.DataStoreConfig{
+		Url:      config.S3Url,
+		UseHttps: config.S3Ssl,
+		User:     config.S3AccessKey,
+		Password: config.S3SecretKey,
+		Service:  config.S3Service,
+		DataPath: config.S3Bucket,
+	}
+	fmt.Println("dsConf", dsConf)
+	client, err := data_store.NewDataStoreClient(dsConf)
 	if err != nil {
+		return nil, fmt.Errorf("could not create data store: %v", err)
+	}
+	return &client, nil
+}
+
+func getDB(config *Config) (zdb.ZDatabase, error) {
+	dbConfig := zdbconfig.Config{
+		ConnectionParams: zdbconfig.ConnectionParams{
+			User:     config.DBUser,
+			Name:     config.DBName,
+			Password: config.DBPassword,
+			Host:     config.DBHost,
+			Port:     uint(config.DBPort),
+			Params:   config.DBParams,
+		},
+	}
+	dbInstance, err := zdb.NewInstance("clickhouse", &dbConfig)
+	if err != nil {
+		zap.S().Errorf("Failed to establish DB connection: %v", err)
 		return nil, err
 	}
+	return dbInstance, nil
+}
 
+func getTraceFileByHeight(height uint64, lotusClient api.FullNode) (*lotusChainTypes.TipSet, *api.ComputeStateOutput, error) {
+	tipset, err := lotusClient.ChainGetTipSetByHeight(context.Background(), abi.ChainEpoch(height), lotusChainTypes.EmptyTSK)
+	if err != nil {
+		return nil, nil, err
+	}
+	fmt.Println("tipset", tipset)
 	// Check that the retrieved tipset is not empty nor invalid
 	if tipset == nil || uint64(tipset.Height()) != height {
 		zap.S().Infof("no tipset data received for the specified height: %d", height)
-		return nil, nil
+		return nil, nil, nil
 	}
 
+	fmt.Println("calling StateCompute")
 	traces, err := lotusClient.StateCompute(context.Background(), abi.ChainEpoch(height), nil, tipset.Key())
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving traces for tipset %d: %+v", height, err)
+		return nil, nil, fmt.Errorf("error retrieving traces for tipset %d: %+v", height, err)
 	}
 
 	if traces == nil {
-		return nil, fmt.Errorf("nil trace received for tipset height: %d", height)
+		return nil, nil, fmt.Errorf("nil trace received for tipset height: %d", height)
 	}
 
-	return traces, nil
+	return tipset, traces, nil
 }
 
 func getTipsetFileByHeight(height uint64, key lotusChainTypes.TipSetKey, lotusClient api.FullNode) (*types.ExtendedTipSet, error) {

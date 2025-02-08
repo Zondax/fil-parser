@@ -16,6 +16,7 @@ func main() {
 	defer cli.Close()
 
 	cli.GetRoot().AddCommand(GetStartCommand(cli))
+	cli.GetRoot().AddCommand(GetActorParseCommand(cli))
 
 	cli.Run()
 }
