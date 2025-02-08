@@ -34,6 +34,7 @@ const (
 	MethodEpochTick                           = "EpochTick"                           // Cron
 	MethodPubkeyAddress                       = "PubkeyAddress"                       // MethodsAccount
 	MethodAuthenticateMessage                 = "AuthenticateMessage"                 // MethodsAccount
+	MethodReceive                             = "Receive"                             // MethodsAccount // exists only in built-in actors v9
 	MethodExec                                = "Exec"                                // MethodsInit
 	MethodExec4                               = "Exec4"                               // MethodsInit
 	MethodSwapSigner                          = "SwapSigner"                          // MethodsMultisig
@@ -118,6 +119,7 @@ const (
 	MethodGetVestingFunds                     = "GetVestingFundsExported"             // MethodsMiner
 	MethodGetPeerID                           = "GetPeerIDExported"                   // MethodsMiner
 	MethodGetMultiaddrs                       = "GetMultiaddrsExported"               // MethodsMiner
+	MethodAddLockedFund                       = "AddLockedFund"                       // MethodsMiner
 	MethodProveCommitSectors3                 = "ProveCommitSectors3"                 // MethodsMiner
 	MethodProveCommitSectorsNI                = "ProveCommitSectorsNI"                // MethodsMiner
 	MethodProveReplicaUpdates3                = "ProveReplicaUpdates3"                // MethodsMiner
