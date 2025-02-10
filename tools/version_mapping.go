@@ -5,6 +5,11 @@ import (
 	"math"
 )
 
+const (
+	CalibrationNetwork = "calibration"
+	MainnetNetwork     = "mainnet"
+)
+
 type version struct {
 	calibration int64
 	mainnet     int64
@@ -43,15 +48,15 @@ var (
 )
 
 func ParseRawNetworkName(network string) string {
-	if network == "calibrationnet" {
-		return "calibration"
+	if network == "calibrationnet" || network == CalibrationNetwork {
+		return CalibrationNetwork
 	}
-	return network
+	return MainnetNetwork
 }
 
 // IsSupported returns true if the height is within the version range for a given network
 func (v version) IsSupported(network string, height int64) bool {
-	if network == "calibration" {
+	if network == CalibrationNetwork {
 		return checkCalibrationEdgeCases(network, height, v)
 	} else {
 		if height == 0 && v.mainnet == 0 {
