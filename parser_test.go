@@ -1898,7 +1898,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+			pv2, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1908,9 +1910,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResultActorV1, err := p.ParseTransactions(context.Background(), txsData, false)
+			parsedResultActorV1, err := pv1.ParseTransactions(context.Background(), txsData, false)
 			require.NoError(t, err)
-			parsedResultActorV2, err := p.ParseTransactions(context.Background(), txsData, true)
+			parsedResultActorV2, err := pv2.ParseTransactions(context.Background(), txsData, true)
 			require.NoError(t, err)
 
 			require.NotNil(t, parsedResultActorV1.Txs)

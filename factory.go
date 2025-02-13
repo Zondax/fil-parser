@@ -32,12 +32,7 @@ var (
 )
 
 type FilecoinParser struct {
-	parserV1ActorV1 Parser
-	parserV1ActorV2 Parser
-
-	parserV2ActorV1 Parser
-	parserV2ActorV2 Parser
-
+	parser Parser
 	Helper *helper2.Helper
 	logger *zap.Logger
 }
@@ -62,21 +57,30 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
-
-	parserV1ActorV1 := v1.NewParser(helper, logger)
-	parserV1ActorV2 := v1.NewActorsV2Parser(helper, logger)
-
-	parserV2ActorV1 := v2.NewParser(helper, logger)
-	parserV2ActorV2 := v2.NewActorsV2Parser(helper, logger)
+	parser := v1.NewParser(helper, logger)
 
 	return &FilecoinParser{
-		parserV1ActorV1: parserV1ActorV1,
-		parserV1ActorV2: parserV1ActorV2,
+		parser: parser,
+		Helper: helper,
+		logger: logger,
+	}, nil
+}
 
-		parserV2ActorV1: parserV2ActorV1,
-		parserV2ActorV2: parserV2ActorV2,
-		Helper:          helper,
-		logger:          logger,
+func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+	logger = logger2.GetSafeLogger(logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
+	if err != nil {
+		logger.Sugar().Errorf("could not setup actors cache: %v", err)
+		return nil, err
+	}
+
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
+	parser := v2.NewParser(helper, logger)
+
+	return &FilecoinParser{
+		parser: parser,
+		Helper: helper,
+		logger: logger,
 	}, nil
 }
 
@@ -91,17 +95,9 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
-		if useActorV2 {
-			parsedResult, err = p.parserV1ActorV2.ParseTransactions(ctx, txsData)
-		} else {
-			parsedResult, err = p.parserV1ActorV1.ParseTransactions(ctx, txsData)
-		}
+		parsedResult, err = p.parser.ParseTransactions(ctx, txsData)
 	case v2.Version:
-		if useActorV2 {
-			parsedResult, err = p.parserV2ActorV2.ParseTransactions(ctx, txsData)
-		} else {
-			parsedResult, err = p.parserV2ActorV1.ParseTransactions(ctx, txsData)
-		}
+		parsedResult, err = p.parser.ParseTransactions(ctx, txsData)
 	default:
 		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
