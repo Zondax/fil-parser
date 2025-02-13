@@ -34,6 +34,7 @@ const (
 	MethodEpochTick                           = "EpochTick"                           // Cron
 	MethodPubkeyAddress                       = "PubkeyAddress"                       // MethodsAccount
 	MethodAuthenticateMessage                 = "AuthenticateMessage"                 // MethodsAccount
+	MethodReceive                             = "Receive"                             // MethodsAccount // exists only in built-in actors v9
 	MethodExec                                = "Exec"                                // MethodsInit
 	MethodExec4                               = "Exec4"                               // MethodsInit
 	MethodSwapSigner                          = "SwapSigner"                          // MethodsMultisig
@@ -69,6 +70,8 @@ const (
 	MethodMinerRawPowerExported               = "MinerRawPowerExported"               // MethodsPower
 	MethodMinerCountExported                  = "MinerCountExported"                  // MethodsPower
 	MethodMinerConsensusCountExported         = "MinerConsensusCountExported"         // MethodsPower
+	MethodOnEpochTickEnd                      = "OnEpochTickEnd"                      // MethodsPower
+	MethodOnConsensusFault                    = "OnConsensusFault"                    // MethodsPower
 	MethodOnDeferredCronEvent                 = "OnDeferredCronEvent"                 // MethodsMiner
 	MethodPreCommitSector                     = "PreCommitSector"                     // MethodsMiner
 	MethodProveCommitSector                   = "ProveCommitSector"                   // MethodsMiner - Deprecated
@@ -116,7 +119,11 @@ const (
 	MethodGetVestingFunds                     = "GetVestingFundsExported"             // MethodsMiner
 	MethodGetPeerID                           = "GetPeerIDExported"                   // MethodsMiner
 	MethodGetMultiaddrs                       = "GetMultiaddrsExported"               // MethodsMiner
+	MethodAddLockedFund                       = "AddLockedFund"                       // MethodsMiner
 	MethodProveCommitSectors3                 = "ProveCommitSectors3"                 // MethodsMiner
+	MethodProveCommitSectorsNI                = "ProveCommitSectorsNI"                // MethodsMiner
+	MethodProveReplicaUpdates3                = "ProveReplicaUpdates3"                // MethodsMiner
+	MethodInternalSectorSetupForPreseal       = "InternalSectorSetupForPreseal"       // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket
@@ -136,6 +143,9 @@ const (
 	MethodGetDealProviderCollateral           = "GetDealProviderCollateralExported"   // MethodsMarket
 	MethodGetDealVerified                     = "GetDealVerifiedExported"             // MethodsMarket
 	MethodGetDealActivation                   = "GetDealActivationExported"           // MethodsMarket
+	MethodGetDealSectorExported               = "GetDealSectorExported"               // MethodsMarket
+	MethodSettleDealPaymentsExported          = "SettleDealPaymentsExported"          // MethodsMarket
+	MethodSectorContentChanged                = "SectorContentChanged"                // MethodsMarket
 	MethodUpdateChannelState                  = "UpdateChannelState"                  // MethodsPaymentChannel
 	MethodSettle                              = "Settle"                              // MethodsPaymentChannel
 	MethodCollect                             = "Collect"                             // MethodsPaymentChannel
