@@ -275,7 +275,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResult, err := p.ParseTransactions(context.Background(), txsData, false)
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResult.Txs)
 			require.NotNil(t, parsedResult.Addresses)
@@ -375,13 +375,13 @@ func TestParser_InDepthCompare(t *testing.T) {
 				Traces:   traces,
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
 			}
-			parsedResultV1, err := p.ParseTransactions(context.Background(), txsData, false)
+			parsedResultV1, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResultV1.Txs)
 			require.NotNil(t, parsedResultV1.Addresses)
 
 			txsData.Metadata = types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}}
-			parsedResultV2, err := p.ParseTransactions(context.Background(), txsData, false)
+			parsedResultV2, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResultV2.Txs)
 			require.NotNil(t, parsedResultV2.Addresses)
@@ -1240,9 +1240,9 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 				fmt.Println(err)
 				return
 			}
-			assert.NoError(t, err)
-			assert.NotNil(t, events)
-			assert.NotEmpty(t, events.ParsedEvents)
+			require.NoError(t, err)
+			require.NotNil(t, events)
+			require.NotEmpty(t, events.ParsedEvents)
 
 			gotMetadata := map[string]any{}
 			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
@@ -1722,7 +1722,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResult, err := p.ParseTransactions(context.Background(), txsData, false)
+			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResult.Txs)
 
@@ -1910,9 +1910,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResultActorV1, err := pv1.ParseTransactions(context.Background(), txsData, false)
+			parsedResultActorV1, err := pv1.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
-			parsedResultActorV2, err := pv2.ParseTransactions(context.Background(), txsData, true)
+			parsedResultActorV2, err := pv2.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
 
 			require.NotNil(t, parsedResultActorV1.Txs)
