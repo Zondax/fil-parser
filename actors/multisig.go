@@ -259,15 +259,13 @@ func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams, height 
 
 	switch actorType {
 	case manifest.MinerKey:
-		switch propose.Method {
-		case builtin.MethodsMiner.ChangeOwnerAddress:
+		if propose.Method == builtin.MethodsMiner.ChangeOwnerAddress {
 			var params address.Address
 			err := params.UnmarshalCBOR(reader)
 			return parser.MethodChangeOwnerAddress, &params, err
 		}
 	case manifest.EvmKey:
-		switch propose.Method {
-		case builtin.MustGenerateFRCMethodNum("InvokeEVM"):
+		if propose.Method == builtin.MustGenerateFRCMethodNum("InvokeEVM") {
 			var params abi.CborBytes
 			err := params.UnmarshalCBOR(reader)
 			return parser.MethodInvokeContract, &params, err
