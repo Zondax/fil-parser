@@ -59,7 +59,7 @@ func TestActorParser_multisigWithParamsAndReturn(t *testing.T) {
 	tests := []struct {
 		name   string
 		txType string
-		f      func([]byte, []byte) (map[string]interface{}, error)
+		f      func([]byte, []byte, int64, filTypes.TipSetKey) (map[string]interface{}, error)
 	}{
 		{
 			name:   "Propose",
@@ -79,7 +79,10 @@ func TestActorParser_multisigWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, err := tt.f(rawParams, rawReturn)
+			tipset, err := deserializeTipset(manifest.MultisigKey, tt.txType)
+			require.NoError(t, err)
+
+			got, err := tt.f(rawParams, rawReturn, int64(tipset.Height()), tipset.Key())
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
