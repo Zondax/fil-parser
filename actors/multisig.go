@@ -207,7 +207,6 @@ func (p *ActorParser) universalReceiverHook(raw []byte) (map[string]interface{},
 
 func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams, height int64, key filTypes.TipSetKey) (string, cbor.Unmarshaler, error) {
 	reader := bytes.NewReader(propose.Params)
-
 	switch propose.Method {
 	case builtin.MethodSend:
 		if propose.Params == nil {
@@ -257,27 +256,41 @@ func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams, height 
 		return "", nil, err
 	}
 
+	return p.handleActorSpecificMethods(actorType, propose.Method, reader)
+}
+
+func (p *ActorParser) handleActorSpecificMethods(actorType string, method abi.MethodNum, reader *bytes.Reader) (string, cbor.Unmarshaler, error) {
 	switch actorType {
 	case manifest.MinerKey:
-		if propose.Method == builtin.MethodsMiner.ChangeOwnerAddress {
-			var params address.Address
-			err := params.UnmarshalCBOR(reader)
-			return parser.MethodChangeOwnerAddress, &params, err
-		}
+		return p.handleMinerMethods(method, reader)
 	case manifest.EvmKey:
-		if propose.Method == builtin.MustGenerateFRCMethodNum("InvokeEVM") {
-			var params abi.CborBytes
-			err := params.UnmarshalCBOR(reader)
-			return parser.MethodInvokeContract, &params, err
-		}
-	case manifest.AccountKey:
-		return parser.MethodSend, nil, nil
-	case manifest.MultisigKey:
-		return parser.MethodSend, nil, nil
-	case manifest.PlaceholderKey:
-		return parser.MethodSend, nil, nil
+		return p.handleEvmMethods(method, reader)
+	default:
+		return "", nil, parser.ErrUnknownMethod
 	}
+}
 
+func (p *ActorParser) handleMinerMethods(method abi.MethodNum, reader *bytes.Reader) (string, cbor.Unmarshaler, error) {
+	switch method {
+	case builtin.MethodsMiner.ChangeOwnerAddress:
+		var params address.Address
+		err := params.UnmarshalCBOR(reader)
+		return parser.MethodChangeOwnerAddress, &params, err
+	case builtin.MethodsMiner.WithdrawBalance:
+		var params miner.WithdrawBalanceParams
+		err := params.UnmarshalCBOR(reader)
+		return parser.MethodWithdrawBalance, &params, err
+	default:
+		return "", nil, parser.ErrUnknownMethod
+	}
+}
+
+func (p *ActorParser) handleEvmMethods(method abi.MethodNum, reader *bytes.Reader) (string, cbor.Unmarshaler, error) {
+	if method == builtin.MustGenerateFRCMethodNum("InvokeEVM") {
+		var params abi.CborBytes
+		err := params.UnmarshalCBOR(reader)
+		return parser.MethodInvokeContract, &params, err
+	}
 	return "", nil, parser.ErrUnknownMethod
 }
 
