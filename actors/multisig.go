@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -13,6 +14,7 @@ import (
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/cbor"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
@@ -30,7 +32,7 @@ func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msg
 	case parser.MethodSend:
 		return p.parseSend(msg), nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		return p.propose(msg.Params, msgRct.Return)
+		return p.propose(msg.Params, msgRct.Return, height, key)
 	case parser.MethodApprove, parser.MethodApproveExported:
 		return p.approve(msg, msgRct.Return, height, key)
 	case parser.MethodCancel, parser.MethodCancelExported:
@@ -76,7 +78,7 @@ func (p *ActorParser) msigParams(msg *parser.LotusMessage, height int64, key fil
 	return paramsMap, nil
 }
 
-func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (p *ActorParser) propose(rawParams, rawReturn []byte, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	var proposeParams multisig.ProposeParams
 	reader := bytes.NewReader(rawParams)
@@ -84,7 +86,7 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	if err != nil {
 		return metadata, err
 	}
-	method, innerParams, err := p.innerProposeParams(proposeParams)
+	method, innerParams, err := p.innerProposeParams(proposeParams, height, key)
 	if err != nil {
 		p.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
@@ -203,8 +205,9 @@ func (p *ActorParser) universalReceiverHook(raw []byte) (map[string]interface{},
 	return metadata, nil
 }
 
-func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams) (string, cbor.Unmarshaler, error) {
+func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams, height int64, key filTypes.TipSetKey) (string, cbor.Unmarshaler, error) {
 	reader := bytes.NewReader(propose.Params)
+
 	switch propose.Method {
 	case builtin.MethodSend:
 		if propose.Params == nil {
@@ -247,6 +250,36 @@ func (p *ActorParser) innerProposeParams(propose multisig.ProposeParams) (string
 		err := params.UnmarshalCBOR(reader)
 		return parser.MethodAddVerifier, &params, err
 	}
+
+	// For unknown methods, check actor type
+	actorType, err := p.helper.GetActorNameFromAddress(propose.To, height, key)
+	if err != nil {
+		return "", nil, err
+	}
+
+	switch actorType {
+	case manifest.MinerKey:
+		switch propose.Method {
+		case builtin.MethodsMiner.ChangeOwnerAddress:
+			var params address.Address
+			err := params.UnmarshalCBOR(reader)
+			return parser.MethodChangeOwnerAddress, &params, err
+		}
+	case manifest.EvmKey:
+		switch propose.Method {
+		case builtin.MustGenerateFRCMethodNum("InvokeEVM"):
+			var params abi.CborBytes
+			err := params.UnmarshalCBOR(reader)
+			return parser.MethodInvokeContract, &params, err
+		}
+	case manifest.AccountKey:
+		return parser.MethodSend, nil, nil
+	case manifest.MultisigKey:
+		return parser.MethodSend, nil, nil
+	case manifest.PlaceholderKey:
+		return parser.MethodSend, nil, nil
+	}
+
 	return "", nil, parser.ErrUnknownMethod
 }
 
