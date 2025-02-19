@@ -52,7 +52,7 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
-		metrics:                parsermetrics.NewClient(metrics, Version),
+		metrics:                parsermetrics.NewClient(metrics),
 	}
 
 	return p
@@ -270,7 +270,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
-	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -282,7 +282,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
-		if err := p.metrics.UpdateMetadataErrorMetric(txType, mErr); err != nil {
+		if err := p.metrics.UpdateMetadataErrorMetric(actor, txType, mErr); err != nil {
 			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating parsing_metadata_error %s", err.Error()))
 		}
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
@@ -307,7 +307,8 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType, err)
+		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
 	}
 
 	msgCid, err := tools.BuildCidFromMessageTrace(trace.Msg, mainMsgCid.String())
@@ -344,7 +345,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
 
 	minerAddress, err := tipset.GetBlockMiner(blockCid)

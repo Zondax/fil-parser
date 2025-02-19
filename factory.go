@@ -51,13 +51,6 @@ type Parser interface {
 }
 
 func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
-	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
-	if err != nil {
-		logger.Sugar().Errorf("could not setup actors cache: %v", err)
-		return nil, err
-	}
-
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.UnimplementedMetricsClient{},
 	}
@@ -65,7 +58,14 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		opt(&defaultOpts)
 	}
 
-	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
+	logger = logger2.GetSafeLogger(logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
+	if err != nil {
+		logger.Sugar().Errorf("could not setup actors cache: %v", err)
+		return nil, err
+	}
+
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
 	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics)
 	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics)
 
@@ -77,15 +77,22 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
+	defaultOpts := FilecoinParserOptions{
+		metrics: metrics.UnimplementedMetricsClient{},
+	}
+	for _, opt := range opts {
+		opt(&defaultOpts)
+	}
+
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
 	if err != nil {
 		logger.Sugar().Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
-	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
 	parserV1 := v1.NewActorsV2Parser(helper, logger)
 	parserV2 := v2.NewActorsV2Parser(helper, logger)
 

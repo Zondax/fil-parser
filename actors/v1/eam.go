@@ -36,7 +36,7 @@ func (p *ActorParser) ParseEam(txType string, msg *parser.LotusMessage, msgRct *
 	return metadata, nil, err
 }
 
-func (p *ActorParser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err error) {
+func (p *ActorParser) parseEamReturn(rawReturn []byte, method string) (cr eam.CreateReturn, err error) {
 	reader := bytes.NewReader(rawReturn)
 	err = cr.UnmarshalCBOR(reader)
 	if err != nil {
@@ -46,6 +46,7 @@ func (p *ActorParser) parseEamReturn(rawReturn []byte) (cr eam.CreateReturn, err
 	err = p.validateEamReturn(&cr)
 	if err != nil {
 		rawString := hex.EncodeToString(rawReturn)
+		_ = p.metrics.UpdateActorMethodErrorMetric("eam", method, err)
 		p.logger.Sugar().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
 	}
 
@@ -85,7 +86,7 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 	}
 	metadata[parser.ParamsKey] = params
 
-	createReturn, err := p.parseEamReturn(rawReturn)
+	createReturn, err := p.parseEamReturn(rawReturn, parser.MethodCreate)
 	if err != nil {
 		return metadata, nil, err
 	}
@@ -119,7 +120,7 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 	}
 	metadata[parser.ParamsKey] = params
 
-	createReturn, err := p.parseEamReturn(rawReturn)
+	createReturn, err := p.parseEamReturn(rawReturn, parser.MethodCreate2)
 	if err != nil {
 		return metadata, nil, err
 	}
@@ -148,9 +149,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
-		if err := p.metrics.UpdateDeserializeRawParamsErrorMetric("parseCreateExternal", err); err != nil {
-			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating actors_rawParams_deserialize_error %s", err.Error()))
-		}
+		_ = p.metrics.UpdateActorMethodErrorMetric("eam", parser.MethodCreateExternal, err)
 		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
@@ -158,7 +157,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 		metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(params)
 	}
 
-	createExternalReturn, err := p.parseEamReturn(rawReturn)
+	createExternalReturn, err := p.parseEamReturn(rawReturn, parser.MethodCreateExternal)
 	if err != nil {
 		return metadata, nil, err
 	}

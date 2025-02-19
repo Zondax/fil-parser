@@ -51,21 +51,23 @@ func NewActorParser(network string, helper *helper.Helper, logger *zap.Logger) a
 }
 
 func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-	height int64, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
-		return metadata, nil, nil
+		return "", metadata, nil, nil
 	}
 
 	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
-		return metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
+		return "", metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
 	}
 	actorParser, err := p.GetActor(actor)
 	if err != nil {
-		return nil, nil, parser.ErrNotValidActor
+		return actor, nil, nil, parser.ErrNotValidActor
 	}
-	return actorParser.Parse(p.network, height, txType, msg, msgRct, mainMsgCid, key)
+
+	metadata, addressInfo, err :=actorParser.Parse(p.network, height, txType, msg, msgRct, mainMsgCid, key)
+	return  actor, metadata, addressInfo, err
 }
 
 func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {

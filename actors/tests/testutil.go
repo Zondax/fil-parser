@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/zondax/fil-parser/metrics"
 	"net/http"
 	"os"
 
@@ -34,14 +35,14 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 	}
 	actorsCache, err := cache.SetupActorsCache(common.DataSource{
 		Node: lotusClient,
-	}, nil)
+	}, nil, metrics.UnimplementedMetricsClient{})
 
 	if err != nil {
 		return nil
 	}
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil)
+	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil, metrics.UnimplementedMetricsClient{})
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return nil

@@ -13,7 +13,7 @@ import (
 
 type ActorParserInterface interface {
 	GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-		height int64, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
+		height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error)
 }
 
 func ParseSend(msg *parser.LotusMessage) map[string]interface{} {

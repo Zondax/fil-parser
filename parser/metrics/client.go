@@ -6,13 +6,11 @@ import (
 
 type ParserMetricsClient struct {
 	metrics.MetricsClient
-	version string
 }
 
-func NewClient(metricsClient metrics.MetricsClient, version string) *ParserMetricsClient {
+func NewClient(metricsClient metrics.MetricsClient) *ParserMetricsClient {
 	s := &ParserMetricsClient{
 		MetricsClient: metrics.NewMetricsClient(metricsClient),
-		version:       version,
 	}
 
 	s.registerModuleMetrics()
@@ -21,5 +19,5 @@ func NewClient(metricsClient metrics.MetricsClient, version string) *ParserMetri
 }
 
 func (c *ParserMetricsClient) registerModuleMetrics() {
-	c.RegisterCustomMetrics(parsingMetadataErrorMetric, parsingMethodNameMetric)
+	c.RegisterCustomMetrics(parsingMetadataErrorMetric, parsingMethodNameMetric, parsingActorNameMetric, parsingBlockCidFromMsgCidMetric)
 }

@@ -32,13 +32,13 @@ func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msg
 	case parser.MethodPropose, parser.MethodProposeExported:
 		return p.propose(msg.Params, msgRct.Return)
 	case parser.MethodApprove, parser.MethodApproveExported:
-		return p.approve(msg, msgRct.Return, height, key)
+		return p.approve(msg, msgRct.Return, txType, key)
 	case parser.MethodCancel, parser.MethodCancelExported:
-		return p.cancel(msg, height, key)
+		return p.cancel(msg, txType, key)
 	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodSwapSigner, parser.MethodSwapSignerExported:
-		return p.msigParams(msg, height, key)
+		return p.msigParams(msg, txType, key)
 	case parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
-		return p.removeSigner(msg, height, key)
+		return p.removeSigner(msg, txType, key)
 	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
 		return p.changeNumApprovalsThreshold(msg.Params)
 	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
@@ -63,8 +63,8 @@ func (p *ActorParser) msigConstructor(raw []byte) (map[string]interface{}, error
 	return metadata, nil
 }
 
-func (p *ActorParser) msigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
-	params, err := p.parseMsigParams(msg, height, key)
+func (p *ActorParser) msigParams(msg *parser.LotusMessage, method string, key filTypes.TipSetKey) (map[string]interface{}, error) {
+	params, err := p.parseMsigParams(msg, method, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -86,6 +86,7 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	}
 	method, innerParams, err := p.innerProposeParams(proposeParams)
 	if err != nil {
+		_ = p.metrics.UpdateActorMethodErrorMetric("multisig", parser.MethodPropose, err)
 		p.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
 	metadata[parser.ParamsKey] = parser.Propose{
@@ -104,9 +105,9 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	return metadata, nil
 }
 
-func (p *ActorParser) approve(msg *parser.LotusMessage, rawReturn []byte, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) approve(msg *parser.LotusMessage, rawReturn []byte, method string, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := p.parseMsigParams(msg, height, key)
+	params, err := p.parseMsigParams(msg, method, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -121,9 +122,9 @@ func (p *ActorParser) approve(msg *parser.LotusMessage, rawReturn []byte, height
 	return metadata, nil
 }
 
-func (p *ActorParser) cancel(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) cancel(msg *parser.LotusMessage, method string, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := p.parseMsigParams(msg, height, key)
+	params, err := p.parseMsigParams(msg, method, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -131,9 +132,9 @@ func (p *ActorParser) cancel(msg *parser.LotusMessage, height int64, key filType
 	return metadata, nil
 }
 
-func (p *ActorParser) removeSigner(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (map[string]interface{}, error) {
+func (p *ActorParser) removeSigner(msg *parser.LotusMessage, method string, key filTypes.TipSetKey) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := p.parseMsigParams(msg, height, key)
+	params, err := p.parseMsigParams(msg, method, key)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -165,7 +166,7 @@ func (p *ActorParser) lockBalance(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
+func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, method string, key filTypes.TipSetKey) (string, error) {
 	msgSerial, err := msg.MarshalJSON() // TODO: this may not work properly
 	if err != nil {
 		p.logger.Sugar().Errorf("Could not parse params. Cannot serialize lotus message: %v", err)

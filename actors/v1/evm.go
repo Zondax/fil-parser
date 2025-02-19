@@ -54,9 +54,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]in
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
-		if err := p.metrics.UpdateDeserializeRawParamsErrorMetric("invokeContract", err); err != nil {
-			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating actors_rawParams_deserialize_error %s", err.Error()))
-		}
+		_ = p.metrics.UpdateActorMethodErrorMetric("evm", parser.MethodInvokeContract, err)
 		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
@@ -67,9 +65,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]in
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
-		if err := p.metrics.UpdateDeserializeRawReturnErrorMetric("invokeContract", err); err != nil {
-			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating actors_rawParams_deserialize_error %s", err.Error()))
-		}
+		_ = p.metrics.UpdateActorMethodErrorMetric("evm", parser.MethodInvokeContract, err)
 		p.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 

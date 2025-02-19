@@ -3,7 +3,10 @@ package helper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
+
+	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -27,6 +30,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
@@ -70,10 +74,17 @@ type Helper struct {
 	node       api.FullNode
 	actorCache *cache.ActorsCache
 	logger     *zap.Logger
+	metrics    *parsermetrics.ParserMetricsClient
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger) *Helper {
-	return &Helper{lib: lib, actorCache: actorsCache, node: node, logger: logger2.GetSafeLogger(logger)}
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger, metrics metrics.MetricsClient) *Helper {
+	return &Helper{
+		lib:        lib,
+		actorCache: actorsCache,
+		node:       node,
+		logger:     logger2.GetSafeLogger(logger),
+		metrics:    parsermetrics.NewClient(metrics),
+	}
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
@@ -164,7 +175,10 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	actorName, _ := h.GetActorNameFromAddress(msg.To, height, key)
+	actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	if err != nil {
+		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)), err)
+	}
 
 	actorMethods, ok := allMethods[actorName]
 	if !ok {

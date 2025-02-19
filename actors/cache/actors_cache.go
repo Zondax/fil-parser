@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	actormetrics "github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/metrics"
 	"net/http"
 	"strings"
 	"time"
@@ -32,7 +34,7 @@ var SystemActorsId = map[string]bool{
 	"f099": true,
 }
 
-func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger, metrics metrics.MetricsClient) (*ActorsCache, error) {
 	var offChainCache IActorsCache
 	var onChainCache impl.OnChain
 
@@ -59,6 +61,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger) (*Actors
 		badAddress:    cmap.New(),
 		logger:        logger,
 		httpClient:    resty.New().SetTimeout(30 * time.Second),
+		metrics:       actormetrics.NewClient(metrics),
 	}, nil
 }
 

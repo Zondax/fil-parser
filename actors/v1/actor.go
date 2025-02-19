@@ -5,7 +5,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
-	actormetrics "github.com/zondax/fil-parser/actors/v1/metrics"
+	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
@@ -29,15 +29,15 @@ func NewActorParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.M
 }
 
 func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-	height int64, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
-		return metadata, nil, nil
+		return "", metadata, nil, nil
 	}
 
 	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
-		return metadata, nil, err
+		return "", metadata, nil, err
 	}
 
 	var addressInfo *types.AddressInfo
@@ -75,5 +75,6 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	default:
 		err = parser.ErrNotValidActor
 	}
-	return metadata, addressInfo, err
+
+	return actor, metadata, addressInfo, err
 }

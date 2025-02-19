@@ -19,5 +19,5 @@ func NewClient(metricsClient metrics.MetricsClient) *ActorsMetricsClient {
 }
 
 func (c *ActorsMetricsClient) registerModuleMetrics() {
-	c.RegisterCustomMetrics(deserializeRawParamsMetric, deserializeRawReturnMetric)
+	c.RegisterCustomMetrics(parseActorMethodErrorMetric)
 }
