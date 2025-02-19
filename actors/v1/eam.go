@@ -148,6 +148,9 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
+		if err := p.metrics.UpdateDeserializeRawParamsErrorMetric("parseCreateExternal", err); err != nil {
+			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating actors_rawParams_deserialize_error %s", err.Error()))
+		}
 		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 

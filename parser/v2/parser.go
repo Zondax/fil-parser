@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"slices"
 	"strings"
@@ -13,8 +14,10 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	eventTools "github.com/zondax/fil-parser/tools/events"
@@ -39,16 +42,20 @@ type Parser struct {
 	helper                 *helper.Helper
 	logger                 *zap.Logger
 	multisigEventGenerator multisigTools.EventGenerator
+	metrics                *parsermetrics.ParserMetricsClient
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
-	return &Parser{
-		actorParser:            actorsV1.NewActorParser(helper, logger),
+func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+	p := &Parser{
+		actorParser:            actorsV1.NewActorParser(helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
+		metrics:                parsermetrics.NewClient(metrics, Version),
 	}
+
+	return p
 }
 
 func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
@@ -98,9 +105,6 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	if err != nil {
-		return nil, parser.ErrBlockHash
-	}
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
 			continue
@@ -259,8 +263,10 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
-	}
-	if err == nil && txType == parser.UnknownStr {
+	} else if txType == parser.UnknownStr {
+		if err := p.metrics.UpdateMethodNameErrorMetric(errors.New("could not get method name")); err != nil {
+			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating method_name_metric %s", err.Error())) // todo: to much verbosity?
+		}
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
@@ -276,6 +282,9 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
+		if err := p.metrics.UpdateMetadataErrorMetric(txType, mErr); err != nil {
+			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating parsing_metadata_error %s", err.Error()))
+		}
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {

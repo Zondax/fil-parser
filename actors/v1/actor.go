@@ -5,7 +5,9 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	actormetrics "github.com/zondax/fil-parser/actors/v1/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -13,14 +15,16 @@ import (
 )
 
 type ActorParser struct {
-	helper *helper.Helper
-	logger *zap.Logger
+	helper  *helper.Helper
+	logger  *zap.Logger
+	metrics *actormetrics.ActorsMetricsClient
 }
 
-func NewActorParser(helper *helper.Helper, logger *zap.Logger) actors.ActorParserInterface {
+func NewActorParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) actors.ActorParserInterface {
 	return &ActorParser{
-		helper: helper,
-		logger: logger2.GetSafeLogger(logger),
+		helper:  helper,
+		logger:  logger2.GetSafeLogger(logger),
+		metrics: actormetrics.NewClient(metrics),
 	}
 }
 

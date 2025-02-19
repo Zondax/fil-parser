@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zondax/fil-parser/metrics"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
@@ -49,7 +50,7 @@ type Parser interface {
 	IsNodeVersionSupported(ver string) bool
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
 	logger = logger2.GetSafeLogger(logger)
 	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
 	if err != nil {
@@ -57,9 +58,16 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		return nil, err
 	}
 
+	defaultOpts := FilecoinParserOptions{
+		metrics: metrics.UnimplementedMetricsClient{},
+	}
+	for _, opt := range opts {
+		opt(&defaultOpts)
+	}
+
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
-	parserV1 := v1.NewParser(helper, logger)
-	parserV2 := v2.NewParser(helper, logger)
+	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics)
+	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics)
 
 	return &FilecoinParser{
 		parserV1: parserV1,

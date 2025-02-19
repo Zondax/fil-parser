@@ -150,7 +150,6 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 }
 
 func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
-
 	if msg == nil {
 		return "", errors.New("malformed value")
 	}
@@ -171,10 +170,12 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 	if !ok {
 		return "", parser.ErrNotKnownActor
 	}
+
 	method, ok := actorMethods[msg.Method]
 	if !ok {
 		return parser.UnknownStr, nil
 	}
+
 	return method.Name, nil
 }
 
