@@ -38,3 +38,17 @@ func GetActorParseCommand(c *cli.CLI) *cobra.Command {
 	cmd.Flags().Bool("parseSubTxs", false, "--parseSubTxs true")
 	return cmd
 }
+
+func GetUploadCommand(c *cli.CLI) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "upload",
+		Short: "Upload",
+		Run: func(cmd *cobra.Command, args []string) {
+			upload(c, cmd, args)
+		},
+	}
+	cmd.Flags().String("traceFile", "", "--traceFile ./tmp.txt")
+	cmd.Flags().String("outPath", "", "--outPath /tmp/")
+
+	return cmd
+}

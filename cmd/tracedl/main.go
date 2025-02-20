@@ -17,6 +17,7 @@ func main() {
 
 	cli.GetRoot().AddCommand(GetStartCommand(cli))
 	cli.GetRoot().AddCommand(GetActorParseCommand(cli))
+	cli.GetRoot().AddCommand(GetUploadCommand(cli))
 
 	cli.Run()
 }
