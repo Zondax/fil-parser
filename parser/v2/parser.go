@@ -51,14 +51,14 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
 
 	return p
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
+func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Sugar().Error(err)
@@ -70,7 +70,7 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 	}
 }
 
@@ -143,7 +143,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 		}
 		if err != nil {
-			_ = p.metrics.UpdateParsingTranslateTxCidToTxHashMetric(err)
+			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric(err)
 		}
 	}
 
@@ -166,6 +166,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	for idx, nativeLog := range eventsData.NativeLog {
 		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
 		if err != nil {
+			_ = p.metrics.UpdateParseNativeEventsLogsMetric(err)
 			return nil, err
 		}
 
@@ -297,7 +298,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 
 	jsonMetadata, err := json.Marshal(metadata)
 	if err != nil {
-		_ = p.metrics.UpdateParsingJsonMarshalMetric("metadata", txType)
+		_ = p.metrics.UpdateJsonMarshalMetric("metadata", txType)
 	}
 
 	p.appendAddressInfo(&parser.LotusMessage{
@@ -378,7 +379,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 
 	metadata, err := json.Marshal(feesMetadata)
 	if err != nil {
-		_ = p.metrics.UpdateParsingJsonMarshalMetric("feesMetadata", txType)
+		_ = p.metrics.UpdateJsonMarshalMetric("feesMetadata", txType)
 	}
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())

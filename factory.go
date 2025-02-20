@@ -93,8 +93,8 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-	parserV1 := v1.NewActorsV2Parser(helper, logger)
-	parserV2 := v2.NewActorsV2Parser(helper, logger)
+	parserV1 := v1.NewActorsV2Parser(helper, logger, defaultOpts.metrics)
+	parserV2 := v2.NewActorsV2Parser(helper, logger, defaultOpts.metrics)
 
 	return &FilecoinParser{
 		parserV1: parserV1,

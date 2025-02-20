@@ -202,11 +202,13 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 	for _, tx := range txs {
 		addrTo, err := address.NewFromString(tx.TxTo)
 		if err != nil {
+			_ = h.metrics.UpdateParseAddressErrorMetric("to", "decode error")
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 		addrFrom, err := address.NewFromString(tx.TxFrom)
 		if err != nil {
+			_ = h.metrics.UpdateParseAddressErrorMetric("from", "decode error")
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
 		}

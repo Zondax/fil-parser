@@ -25,8 +25,8 @@ func NewClient(metricsClient metrics.MetricsClient, name string) *ParserMetricsC
 
 	s.registerModuleMetrics(
 		parsingMetadataErrorMetric, parsingMethodNameMetric, parsingActorNameMetric, parsingBlockCidFromMsgCidMetric,
-		parsingBuildCidFromMsgTraceMetric, parsingGetBlockMinerMetric, parsingJsonMarshalMetric,
-		parsingTranslateTxCidToTxHashMetric,
+		parsingBuildCidFromMsgTraceMetric, parsingGetBlockMinerMetric, parsingJsonMarshalMetric, parsingAddress,
+		parsingTranslateTxCidToTxHashMetric, parsingParseNativeEventsLogMetric,
 	)
 
 	return s

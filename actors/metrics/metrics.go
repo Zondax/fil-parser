@@ -7,7 +7,7 @@ import (
 	"github.com/zondax/golem/pkg/metrics/collectors"
 )
 
-const actorMethod = "filParser_actors_method_error"
+const actorMethod = "fil-parser_actors_method_error"
 
 // byteArrayTooLargeRegex matches error messages of the form "byte array too large (N)" where N is any number.
 // It is used to normalize these errors by stripping out the specific size numbers and reduce cardinality.
