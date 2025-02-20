@@ -136,7 +136,7 @@ func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams, rawReturn []byte, _ ParseFn) (map[string]interface{}, error) {
+func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, method string, key filTypes.TipSetKey, rawParams, rawReturn []byte, _ ParseFn) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	innerParamsRaw, methodNum, to, value, _, err := getProposeParams(network, height, rawParams)
 	if err != nil {
@@ -145,7 +145,7 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
-		_ = m.metrics.UpdateActorMethodErrorMetric("multisig", parser.MethodPropose, err)
+		_ = m.metrics.UpdateActorMethodErrorMetric("multisig", method, err)
 		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 

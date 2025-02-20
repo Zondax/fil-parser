@@ -66,7 +66,7 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metric
 	networkName := tools.ParseRawNetworkName(string(network))
 
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(networkName, helper, logger),
+		actorParser:            actorsV2.NewActorParser(networkName, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
@@ -285,9 +285,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
-		if err := p.metrics.UpdateMetadataErrorMetric(actor, txType, mErr); err != nil {
-			p.logger.Sugar().Warnf(fmt.Sprintf("Failed updating parsing_metadata_error %s", err.Error()))
-		}
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType, mErr)
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {

@@ -6,7 +6,6 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/metrics"
-	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -46,7 +45,7 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 		resp := actors.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		ret, err = p.Propose(network, msg, height, key, msg.Params, msgRct.Return, p.parseMsigParams)
+		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return, p.parseMsigParams)
 	case parser.MethodApprove, parser.MethodApproveExported:
 		ret, err = p.Approve(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.MethodCancel, parser.MethodCancelExported:
