@@ -2,6 +2,8 @@ package v2
 
 import (
 	"fmt"
+	actormetrics "github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -40,13 +42,15 @@ type ActorParser struct {
 	network string
 	helper  *helper.Helper
 	logger  *zap.Logger
+	metrics *actormetrics.ActorsMetricsClient
 }
 
-func NewActorParser(network string, helper *helper.Helper, logger *zap.Logger) actors.ActorParserInterface {
+func NewActorParser(network string, helper *helper.Helper, logger *zap.Logger, metrics metrics2.MetricsClient) actors.ActorParserInterface {
 	return &ActorParser{
 		network: network,
 		helper:  helper,
 		logger:  logger2.GetSafeLogger(logger),
+		metrics: actormetrics.NewClient(metrics, "actorV2"),
 	}
 }
 
@@ -61,13 +65,13 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	if err != nil {
 		return "", metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
 	}
-	actorParser, err := p.GetActor(actor)
+	actorParser, err := p.GetActor(actor, p.metrics)
 	if err != nil {
 		return actor, nil, nil, parser.ErrNotValidActor
 	}
 
-	metadata, addressInfo, err :=actorParser.Parse(p.network, height, txType, msg, msgRct, mainMsgCid, key)
-	return  actor, metadata, addressInfo, err
+	metadata, addressInfo, err := actorParser.Parse(p.network, height, txType, msg, msgRct, mainMsgCid, key)
+	return actor, metadata, addressInfo, err
 }
 
 func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
@@ -81,7 +85,7 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 	return 0, nil
 }
 
-func (p *ActorParser) GetActor(actor string) (Actor, error) {
+func (p *ActorParser) GetActor(actor string, metrics *actormetrics.ActorsMetricsClient) (Actor, error) {
 	switch actor {
 	case manifest.AccountKey:
 		return account.New(p.logger), nil
@@ -94,7 +98,7 @@ func (p *ActorParser) GetActor(actor string) (Actor, error) {
 	case manifest.EthAccountKey:
 		return ethaccount.New(p.logger), nil
 	case manifest.EvmKey:
-		return evm.New(p.logger), nil
+		return evm.New(p.logger, p.metrics), nil
 	case manifest.InitKey:
 		return initActor.New(p.logger), nil
 	case manifest.MarketKey:
@@ -102,7 +106,7 @@ func (p *ActorParser) GetActor(actor string) (Actor, error) {
 	case manifest.MinerKey:
 		return miner.New(p.logger), nil
 	case manifest.MultisigKey:
-		return multisig.New(p.helper, p.logger), nil
+		return multisig.New(p.helper, p.logger, metrics), nil
 	case manifest.PaychKey:
 		return paymentchannel.New(p.logger), nil
 	case manifest.PowerKey:

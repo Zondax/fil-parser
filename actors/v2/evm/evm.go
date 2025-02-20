@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/zondax/fil-parser/actors/metrics"
 
 	"github.com/filecoin-project/go-state-types/abi"
 
@@ -22,12 +23,14 @@ import (
 )
 
 type Evm struct {
-	logger *zap.Logger
+	logger  *zap.Logger
+	metrics *metrics.ActorsMetricsClient
 }
 
-func New(logger *zap.Logger) *Evm {
+func New(logger *zap.Logger, metrics *metrics.ActorsMetricsClient) *Evm {
 	return &Evm{
-		logger: logger,
+		logger:  logger,
+		metrics: metrics,
 	}
 }
 
@@ -35,7 +38,7 @@ func (e *Evm) Name() string {
 	return manifest.EvmKey
 }
 
-func (e *Evm) InvokeContract(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+func (e *Evm) InvokeContract(network string, height int64, method string, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(rawParams)
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(rawParams)
@@ -43,6 +46,7 @@ func (e *Evm) InvokeContract(network string, height int64, rawParams, rawReturn 
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
+		_ = e.metrics.UpdateActorMethodErrorMetric("evm", method, err)
 		e.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
@@ -53,6 +57,7 @@ func (e *Evm) InvokeContract(network string, height int64, rawParams, rawReturn 
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
+		_ = e.metrics.UpdateActorMethodErrorMetric("evm", method, err)
 		e.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 

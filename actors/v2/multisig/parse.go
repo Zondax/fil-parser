@@ -5,6 +5,8 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -12,14 +14,16 @@ import (
 )
 
 type Msig struct {
-	helper *helper.Helper
-	logger *zap.Logger
+	helper  *helper.Helper
+	logger  *zap.Logger
+	metrics *metrics.ActorsMetricsClient
 }
 
-func New(helper *helper.Helper, logger *zap.Logger) *Msig {
+func New(helper *helper.Helper, logger *zap.Logger, metrics *metrics.ActorsMetricsClient) *Msig {
 	return &Msig{
-		helper: helper,
-		logger: logger,
+		helper:  helper,
+		logger:  logger,
+		metrics: metrics,
 	}
 }
 
