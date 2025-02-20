@@ -24,7 +24,7 @@ func NewActorParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.M
 	return &ActorParser{
 		helper:  helper,
 		logger:  logger2.GetSafeLogger(logger),
-		metrics: actormetrics.NewClient(metrics),
+		metrics: actormetrics.NewClient(metrics, "actorV1"),
 	}
 }
 

@@ -52,7 +52,7 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
-		metrics:                parsermetrics.NewClient(metrics),
+		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
 
 	return p

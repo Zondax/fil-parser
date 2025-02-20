@@ -83,7 +83,7 @@ func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache 
 		actorCache: actorsCache,
 		node:       node,
 		logger:     logger2.GetSafeLogger(logger),
-		metrics:    parsermetrics.NewClient(metrics),
+		metrics:    parsermetrics.NewClient(metrics, "helper"),
 	}
 }
 

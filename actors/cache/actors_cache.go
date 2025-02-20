@@ -61,7 +61,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger, metrics 
 		badAddress:    cmap.New(),
 		logger:        logger,
 		httpClient:    resty.New().SetTimeout(30 * time.Second),
-		metrics:       actormetrics.NewClient(metrics),
+		metrics:       actormetrics.NewClient(metrics, "actorsCache"),
 	}, nil
 }
 

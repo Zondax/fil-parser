@@ -3,13 +3,9 @@ package metrics
 import "github.com/zondax/golem/pkg/metrics"
 
 var (
-	_ metrics.TaskMetrics = Client{}
-	_ MetricsClient       = Client{}
+	_ metrics.TaskMetrics = &Client{}
+	_ MetricsClient       = &Client{}
 )
-
-type HasMetrics interface {
-	SetMetrics(metrics.TaskMetrics)
-}
 
 type MetricsClient interface {
 	metrics.TaskMetrics
