@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"regexp"
+
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/metrics/collectors"
 )
@@ -16,10 +18,21 @@ const (
 	translateTxCidToTxHash = "fil-parser_parser_translate_tx_cid_to_tx_hash_error"
 
 	// helper metrics
-	parseActorName = "fil-parser_helper_actor_name_error"
-	parseAddress   = "fil-parser_helper_address_error"
+	parseActorName    = "fil-parser_helper_actor_name_error"
+	parseAddress      = "fil-parser_helper_address_error"
+	getEvmSelectorSig = "fil-parser_helper_get_evm_selector_sig_error"
 
-	parseNativeEventsLog = "fil-parser_parse_native_events_error"
+	parseNativeEventsLog = "fil-parser_parser_parse_native_events_error"
+
+	parseEthLog = "fil-parser_parser_parse_eth_error"
+)
+
+// Patterns to normalize error messages from GetEVMSelectorSig to reduce metric cardinality:
+// TODO: this is a hack to reduce metric cardinality, we should find a better solution in the future
+var (
+	errFrom4BytesPattern  = regexp.MustCompile(`error from 4bytes: .*`)
+	errSigNotFoundPattern = regexp.MustCompile(`signature not found: .*`)
+	errCacheStorePattern  = regexp.MustCompile(`error adding selector_sig to cache: .*`)
 )
 
 var (
@@ -79,16 +92,30 @@ var (
 		Handler: &collectors.Gauge{},
 	}
 
-	parsingAddress = metrics.Metric{
+	parsingAddressMetric = metrics.Metric{
 		Name:    parseAddress,
 		Help:    "parse address",
 		Labels:  []string{"address", "error"},
 		Handler: &collectors.Gauge{},
 	}
 
+	getEvmSelectorSigMetric = metrics.Metric{
+		Name:    getEvmSelectorSig,
+		Help:    "get evm selector signature",
+		Labels:  []string{"error"},
+		Handler: &collectors.Gauge{},
+	}
+
 	parsingParseNativeEventsLogMetric = metrics.Metric{
 		Name:    parseNativeEventsLog,
 		Help:    "parse native log",
+		Labels:  []string{"error"},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingParseEthLogMetric = metrics.Metric{
+		Name:    parseEthLog,
+		Help:    "parse eth log",
 		Labels:  []string{"error"},
 		Handler: &collectors.Gauge{},
 	}
@@ -108,6 +135,21 @@ func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string, err error)
 
 func (c *ParserMetricsClient) UpdateParseAddressErrorMetric(code, err string) error {
 	return c.IncrementMetric(parseAddress, code, err)
+}
+
+func (c *ParserMetricsClient) UpdateGetEvmSelectorSigMetric(err error) error {
+	errMsg := err.Error()
+
+	switch {
+	case errFrom4BytesPattern.MatchString(errMsg):
+		errMsg = "error from 4bytes"
+	case errSigNotFoundPattern.MatchString(errMsg):
+		errMsg = "signature not found"
+	case errCacheStorePattern.MatchString(errMsg):
+		errMsg = "error adding selector_sig to cache"
+	}
+
+	return c.IncrementMetric(getEvmSelectorSig, errMsg)
 }
 
 func (c *ParserMetricsClient) UpdateBlockCidFromMsgCidMetric(txType string, err error) error {
@@ -132,4 +174,8 @@ func (c *ParserMetricsClient) UpdateTranslateTxCidToTxHashMetric(err error) erro
 
 func (c *ParserMetricsClient) UpdateParseNativeEventsLogsMetric(err error) error {
 	return c.IncrementMetric(parseNativeEventsLog, err.Error())
+}
+
+func (c *ParserMetricsClient) UpdateParseEthLogMetric(err error) error {
+	return c.IncrementMetric(parseEthLog, err.Error())
 }

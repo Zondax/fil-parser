@@ -194,7 +194,11 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 }
 
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
-	return h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+	s, err := h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+	if err != nil {
+		_ = h.metrics.UpdateGetEvmSelectorSigMetric(err)
+	}
+	return s, err
 }
 
 func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey) ([]*types.Transaction, error) {
