@@ -142,8 +142,8 @@ func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string, err error)
 	case errBadAddressPattern.MatchString(errMsg):
 		errMsg = "address is flagged as bad"
 	}
-	
-	return c.IncrementMetric(parseActorName, code, err.Error())
+
+	return c.IncrementMetric(parseActorName, code, errMsg)
 }
 
 func (c *ParserMetricsClient) UpdateParseAddressErrorMetric(code, err string) error {
