@@ -30,9 +30,13 @@ const (
 // Patterns to normalize error messages from GetEVMSelectorSig to reduce metric cardinality:
 // TODO: this is a hack to reduce metric cardinality, we should find a better solution in the future
 var (
+	// get evm selector rules
 	errFrom4BytesPattern  = regexp.MustCompile(`error from 4bytes: .*`)
 	errSigNotFoundPattern = regexp.MustCompile(`signature not found: .*`)
 	errCacheStorePattern  = regexp.MustCompile(`error adding selector_sig to cache: .*`)
+	// helper actor name rules
+	errResolutionLookupPattern = regexp.MustCompile(`resolution lookup failed \([^)]+\): resolve address [^:]+: actor not found`)
+	errBadAddressPattern       = regexp.MustCompile(`address [^ ]+ is flagged as bad`)
 )
 
 var (
@@ -130,6 +134,15 @@ func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code, err string) erro
 }
 
 func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string, err error) error {
+	errMsg := err.Error()
+
+	switch {
+	case errResolutionLookupPattern.MatchString(errMsg):
+		errMsg = "resolution lookup failed: actor not found"
+	case errBadAddressPattern.MatchString(errMsg):
+		errMsg = "address is flagged as bad"
+	}
+	
 	return c.IncrementMetric(parseActorName, code, err.Error())
 }
 
