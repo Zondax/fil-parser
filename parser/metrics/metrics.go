@@ -125,8 +125,8 @@ func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, er
 	return c.IncrementMetric(parseMetadata, actor, txType, err.Error())
 }
 
-func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code string, err error) error {
-	return c.IncrementMetric(parseMethodName, code, err.Error())
+func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code, err string) error {
+	return c.IncrementMetric(parseMethodName, code, err)
 }
 
 func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string, err error) error {

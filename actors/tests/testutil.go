@@ -35,7 +35,7 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 	}
 	actorsCache, err := cache.SetupActorsCache(common.DataSource{
 		Node: lotusClient,
-	}, nil, metrics.UnimplementedMetricsClient{})
+	}, nil, &metrics.UnimplementedMetricsClient{})
 
 	if err != nil {
 		return nil
@@ -52,6 +52,10 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 		return fn(helper, logger)
 	case func(string, *helper2.Helper, *zap.Logger) actors.ActorParserInterface:
 		return fn(network, helper, logger)
+	case func(*helper2.Helper, *zap.Logger, metrics.MetricsClient) actors.ActorParserInterface:
+		return fn(helper, logger, &metrics.UnimplementedMetricsClient{})
+	case func(string, *helper2.Helper, *zap.Logger, metrics.MetricsClient) actors.ActorParserInterface:
+		return fn(network, helper, logger, &metrics.UnimplementedMetricsClient{})
 	default:
 		panic(fmt.Sprintf("invalid actor parser function: %T", actorParserFn))
 	}

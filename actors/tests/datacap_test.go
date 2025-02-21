@@ -2,6 +2,8 @@ package actortest
 
 import (
 	"fmt"
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -146,7 +148,7 @@ func TestActorParserV1_DatacapWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_DatacapWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.DatacapKey)
+	actor, err := p.GetActor(manifest.DatacapKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -174,7 +176,7 @@ func TestActorParserV2_DatacapWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_DatacapWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.DatacapKey)
+	actor, err := p.GetActor(manifest.DatacapKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

@@ -5,6 +5,8 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 	"os"
 	"path/filepath"
 	"strings"
@@ -274,7 +276,7 @@ func TestActorParserV1_ParseMultisigMetadata(t *testing.T) {
 
 func TestActorParserV2_MultisigApprove(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor(manifest.MultisigKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -301,7 +303,7 @@ func TestActorParserV2_MultisigApprove(t *testing.T) {
 
 func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor(manifest.MultisigKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -330,7 +332,7 @@ func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor(manifest.MultisigKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -359,7 +361,7 @@ func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_MultiSigParams(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor(manifest.MultisigKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -383,7 +385,7 @@ func TestActorParserV2_MultiSigParams(t *testing.T) {
 
 func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor(manifest.MultisigKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 	msigActor := actor.(*multisig.Msig)

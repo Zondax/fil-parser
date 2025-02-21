@@ -63,6 +63,7 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metric
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
 }
 
@@ -258,7 +259,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method), errors.New("could not get method name"))
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method), "could not get method name")
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
 	}
 
