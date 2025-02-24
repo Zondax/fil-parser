@@ -25,7 +25,12 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
 
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/account"
+	"github.com/zondax/fil-parser/actors/v2/evm"
+	"github.com/zondax/fil-parser/actors/v2/miner"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -145,7 +150,14 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
-		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
+		if method == "" {
+			_, metadata, err := m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, key)
+			if err != nil {
+				m.logger.Sugar().Errorf("RESULT: %v, could not decode multisig inner params. Method: %v. Err: %v", metadata, methodNum.String(), err)
+			}
+		} else {
+			m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
+		}
 	}
 
 	metadata[parser.ParamsKey] = parser.Propose{
@@ -271,4 +283,71 @@ func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTy
 	}
 
 	return parsedParams, nil
+}
+
+func (m *Msig) handleActorSpecificMethods(network string, height int64, method abi.MethodNum, proposeParams []byte, key filTypes.TipSetKey) (string, map[string]interface{}, error) {
+	_, _, to, _, _, err := getProposeParams(network, height, proposeParams)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]interface{}{
+		"method": method.String(),
+		"to":     to,
+	}
+
+	actor, err := address.NewFromString(to)
+	if err != nil {
+		return "", result, err
+	}
+
+	result["actor"] = actor
+
+	m.logger.Sugar().Infof("actor: %v", actor.String())
+
+	actorType, err := m.helper.GetActorNameFromAddress(actor, height, key)
+	if err != nil {
+		return "", result, err
+	}
+
+	result["actorType"] = actorType
+
+	m.logger.Sugar().Infof("actorType: %v", actorType)
+
+	if actorType == manifest.MultisigKey {
+		return "", result, parser.ErrUnknownMethod
+	}
+
+	msg := &parser.LotusMessage{
+		Params: proposeParams,
+	}
+	msgRct := &parser.LotusMessageReceipt{}
+
+	var metadata map[string]interface{}
+	var methodName string
+
+	switch actorType {
+	case manifest.AccountKey:
+		accountActor := account.New(m.logger)
+		metadata, _, err = accountActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.MinerKey:
+		minerActor := miner.New(m.logger)
+		metadata, _, err = minerActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.EvmKey:
+		evmActor := evm.New(m.logger)
+		metadata, _, err = evmActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+
+	default:
+		result["error"] = parser.ErrUnknownMethod
+		return "", result, parser.ErrUnknownMethod
+	}
+
+	m.logger.Sugar().Infof("metadata: %v", metadata)
+
+	if err == nil {
+		methodName = metadata["Method"].(string)
+		return methodName, result, nil
+	}
+
+	return "", result, err
 }

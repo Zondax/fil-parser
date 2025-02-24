@@ -1,6 +1,7 @@
 package actortest
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
@@ -10,9 +11,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	multisig1 "github.com/filecoin-project/go-state-types/builtin/v11/multisig"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
+	"github.com/filecoin-project/go-state-types/cbor"
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	"github.com/ipfs/go-cid"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -127,6 +133,26 @@ var multisigApproveTests = []struct {
 	{
 		name:   "Approve Exported",
 		method: parser.MethodApproveExported,
+	},
+}
+
+var multisigProposeTests = []struct {
+	name        string
+	txType      string
+	innerMethod int64
+	innerParams cbor.Marshaler
+}{
+	{
+		name:        "Propose with ChangeWorkerAddress",
+		txType:      parser.MethodPropose,
+		innerMethod: 0,
+		innerParams: &legacyv1.ChangeWorkerAddressParams{},
+	},
+	{
+		name:        "Propose with ChangeOwnerAddress",
+		txType:      parser.MethodPropose,
+		innerMethod: 23,
+		innerParams: &abi.CborBytes{},
 	},
 }
 
@@ -269,6 +295,42 @@ func TestActorParserV1_ParseMultisigMetadata(t *testing.T) {
 		resultJson, err := json.Marshal(resultMap)
 		require.NoError(t, err)
 		assert.Equal(t, string(expectedJson), string(resultJson), "Mismatch for other fields in txType %s", txType)
+	}
+}
+
+// WIP
+func TestActorParserV1_MultisigPropose(t *testing.T) {
+	p := getActorParser(actorsV1.NewActorParser).(*actorsV1.ActorParser)
+
+	for _, tt := range multisigProposeTests {
+		t.Run(tt.name, func(t *testing.T) {
+			addr, err := address.NewIDAddress(1)
+			require.NoError(t, err)
+
+			proposeParams := multisig1.ProposeParams{
+				To:     addr,
+				Value:  abi.NewTokenAmount(0),
+				Method: abi.MethodNum(tt.innerMethod),
+				Params: []byte{0x80},
+			}
+
+			var buf bytes.Buffer
+			err = proposeParams.MarshalCBOR(&buf)
+			require.NoError(t, err)
+
+			msg := &parser.LotusMessage{
+				Params: buf.Bytes(),
+			}
+
+			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.txType)
+			require.NoError(t, err)
+
+			got, err := p.ParseMultisig(tt.txType, msg, &parser.LotusMessageReceipt{
+				Return: nil,
+			}, int64(tipSet.Height()), tipSet.Key())
+			require.NoError(t, err)
+			require.NotNil(t, got)
+		})
 	}
 }
 
@@ -429,6 +491,48 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, string(expectedJson), string(resultJson), "Mismatch for other fields in txType %s \n expected: %s\ngot: %s", txType, string(expectedJson), string(resultJson))
 		// assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
+	}
+}
+
+func TestActorPraserV2_MultisigMethodParsing(t *testing.T) {
+}
+
+// WIP
+func TestActorParserV2_MultisigPropose(t *testing.T) {
+	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
+	actor, err := p.GetActor(manifest.MultisigKey)
+	require.NoError(t, err)
+	require.NotNil(t, actor)
+
+	for _, tt := range multisigProposeTests {
+		t.Run(tt.name, func(t *testing.T) {
+			addr, err := address.NewIDAddress(1)
+			require.NoError(t, err)
+
+			proposeParams := multisig2.ProposeParams{
+				To:     addr,
+				Value:  abi.NewTokenAmount(0),
+				Method: abi.MethodNum(tt.innerMethod),
+				Params: []byte{0x80},
+			}
+
+			var buf bytes.Buffer
+			err = proposeParams.MarshalCBOR(&buf)
+			require.NoError(t, err)
+
+			msg := &parser.LotusMessage{
+				Params: buf.Bytes(),
+			}
+
+			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.txType)
+			require.NoError(t, err)
+
+			got, _, err := actor.Parse(manifest.MultisigKey, int64(tipSet.Height()), tt.txType, msg, &parser.LotusMessageReceipt{
+				Return: nil,
+			}, msg.Cid, tipSet.Key())
+			require.NoError(t, err)
+			require.NotNil(t, got)
+		})
 	}
 }
 
