@@ -151,12 +151,12 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
 		if method == "" {
-			_, metadata, err := m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, key)
+			_, metadata, err := m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, to, key)
 			if err != nil {
 				m.logger.Sugar().Errorf("RESULT: %v, could not decode multisig inner params. Method: %v. Err: %v", metadata, methodNum.String(), err)
 			}
 		} else {
-			m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
+			m.logger.Sugar().Errorf("PARSE ERROR: could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 		}
 	}
 
@@ -285,14 +285,9 @@ func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTy
 	return parsedParams, nil
 }
 
-func (m *Msig) handleActorSpecificMethods(network string, height int64, method abi.MethodNum, proposeParams []byte, key filTypes.TipSetKey) (string, map[string]interface{}, error) {
-	_, _, to, _, _, err := getProposeParams(network, height, proposeParams)
-	if err != nil {
-		return "", nil, err
-	}
-
-	result := map[string]interface{}{
-		"method": method.String(),
+func (m *Msig) handleActorSpecificMethods(network string, height int64, method abi.MethodNum, proposeParams []byte, to string, key filTypes.TipSetKey) (string, map[string]interface{}, error) {
+	result := map[string]any{
+		"method": method,
 		"to":     to,
 	}
 

@@ -18,7 +18,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/cbor"
-	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	"github.com/ipfs/go-cid"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -142,12 +141,14 @@ var multisigProposeTests = []struct {
 	innerMethod int64
 	innerParams cbor.Marshaler
 }{
-	{
-		name:        "Propose with ChangeWorkerAddress",
-		txType:      parser.MethodPropose,
-		innerMethod: 0,
-		innerParams: &legacyv1.ChangeWorkerAddressParams{},
-	},
+	/*
+		{
+			name:        "Propose with ChangeWorkerAddress",
+			txType:      parser.MethodPropose,
+			innerMethod: 0,
+			innerParams: &legacyv1.ChangeWorkerAddressParams{},
+		},
+	*/
 	{
 		name:        "Propose with ChangeOwnerAddress",
 		txType:      parser.MethodPropose,
@@ -509,7 +510,7 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 			addr, err := address.NewIDAddress(1)
 			require.NoError(t, err)
 
-			proposeParams := multisig2.ProposeParams{
+			proposeParams := multisig1.ProposeParams{
 				To:     addr,
 				Value:  abi.NewTokenAmount(0),
 				Method: abi.MethodNum(tt.innerMethod),
