@@ -162,12 +162,12 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
 		if method == "" {
-			_, metadata, err := m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, to, key)
+			_, _, err := m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, to, key)
 			if err != nil {
-				m.logger.Sugar().Errorf("RESULT: %v, could not decode multisig inner params. Method: %v. Err: %v", metadata, methodNum.String(), err)
+				m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 			}
 		} else {
-			m.logger.Sugar().Errorf("PARSE ERROR: could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
+			m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 		}
 	}
 
@@ -297,6 +297,7 @@ func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTy
 }
 
 func (m *Msig) handleActorSpecificMethods(network string, height int64, method abi.MethodNum, proposeParams []byte, to string, key filTypes.TipSetKey) (string, map[string]interface{}, error) {
+	// TODO: for debugging, remove this
 	result := map[string]any{
 		"method": method,
 		"to":     to,
@@ -307,8 +308,8 @@ func (m *Msig) handleActorSpecificMethods(network string, height int64, method a
 		return "", result, err
 	}
 
+	// TODO: for debugging, remove this
 	result["actor"] = actor
-
 	m.logger.Sugar().Infof("actor: %v", actor.String())
 
 	actorType, err := m.helper.GetActorNameFromAddress(actor, height, key)
@@ -316,8 +317,8 @@ func (m *Msig) handleActorSpecificMethods(network string, height int64, method a
 		return "", result, err
 	}
 
+	// TODO: for debugging, remove this
 	result["actorType"] = actorType
-
 	m.logger.Sugar().Infof("actorType: %v", actorType)
 
 	if actorType == manifest.MultisigKey {
@@ -377,10 +378,12 @@ func (m *Msig) handleActorSpecificMethods(network string, height int64, method a
 		metadata, _, err = placeholderActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
 
 	default:
+		// TODO: for debugging, remove this
 		result["error"] = parser.ErrUnknownMethod
 		return "", result, parser.ErrUnknownMethod
 	}
 
+	// TODO: for debugging, remove this
 	m.logger.Sugar().Infof("metadata: %v", metadata)
 
 	if err == nil {
