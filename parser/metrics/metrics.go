@@ -172,8 +172,7 @@ func (c *ParserMetricsClient) UpdateGetEvmSelectorSigMetric(err error) error {
 func (c *ParserMetricsClient) UpdateBlockCidFromMsgCidMetric(txType string, err error) error {
 	errMsg := err.Error()
 
-	switch {
-	case errBlockMinedByNotFoundPattern.MatchString(errMsg):
+	if errBlockMinedByNotFoundPattern.MatchString(errMsg) {
 		errMsg = "block miner not found"
 	}
 
