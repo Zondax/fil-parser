@@ -34,6 +34,10 @@ var (
 	errFrom4BytesPattern  = regexp.MustCompile(`error from 4bytes: .*`)
 	errSigNotFoundPattern = regexp.MustCompile(`signature not found: .*`)
 	errCacheStorePattern  = regexp.MustCompile(`error adding selector_sig to cache: .*`)
+
+	// miner
+	errBlockMinedByNotFoundPattern = regexp.MustCompile(`could not find block mined by miner '[^']+'`)
+
 	// helper actor name rules
 	errResolutionLookupPattern = regexp.MustCompile(`resolution lookup failed \([^)]+\): resolve address [^:]+: actor not found`)
 	errBadAddressPattern       = regexp.MustCompile(`address [^ ]+ is flagged as bad`)
@@ -166,7 +170,14 @@ func (c *ParserMetricsClient) UpdateGetEvmSelectorSigMetric(err error) error {
 }
 
 func (c *ParserMetricsClient) UpdateBlockCidFromMsgCidMetric(txType string, err error) error {
-	return c.IncrementMetric(blockCidFromMsgCid, txType, err.Error())
+	errMsg := err.Error()
+
+	switch {
+	case errBlockMinedByNotFoundPattern.MatchString(errMsg):
+		errMsg = "block miner not found"
+	}
+
+	return c.IncrementMetric(blockCidFromMsgCid, txType, errMsg)
 }
 
 func (c *ParserMetricsClient) UpdateBuildCidFromMsgTraceMetric(txType string, err error) error {

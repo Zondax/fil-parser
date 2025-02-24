@@ -17,9 +17,14 @@ func TestRegexRules(t *testing.T) {
 			err:  "resolution lookup failed (f410fh6hh4552jjvzdhfcni57ro73ohko5gn5wvjhkbq): resolve address f410fh6hh4552jjvzdhfcni57ro73ohko5gn5wvjhkbq: actor not found",
 		},
 		{
-			name: "address flaged as bad",
+			name: "address flagged as bad",
 			expr: errBadAddressPattern,
 			err:  "address f410fh6hh4552jjvzdhfcni57ro73ohko5gn5wvjhkbq is flagged as bad",
+		},
+		{
+			name: "block miner not found",
+			expr: errBlockMinedByNotFoundPattern,
+			err:  "could not find block mined by miner 'f01214418'",
 		},
 	}
 	for _, tt := range tests {

@@ -19,7 +19,7 @@ type ParserMetricsClient struct {
 
 func NewClient(metricsClient metrics.MetricsClient, name string) *ParserMetricsClient {
 	s := &ParserMetricsClient{
-		MetricsClient: metrics.NewMetricsClient(metricsClient),
+		MetricsClient: metricsClient,
 		name:          name,
 	}
 

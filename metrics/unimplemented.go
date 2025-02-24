@@ -7,6 +7,8 @@ var (
 	_ MetricsClient       = UnimplementedMetricsClient{}
 )
 
+// UnimplementedMetricsClient is a no-op implementation of the MetricsClient interface.
+// It can be embedded in other types to get a default implementation of the interface.
 type UnimplementedMetricsClient struct{}
 
 func (u UnimplementedMetricsClient) Start() error {

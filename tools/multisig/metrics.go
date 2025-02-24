@@ -20,7 +20,7 @@ type multisigMetricsClient struct {
 
 func newClient(metricsClient metrics.MetricsClient, name string) *multisigMetricsClient {
 	s := &multisigMetricsClient{
-		MetricsClient: metrics.NewMetricsClient(metricsClient),
+		MetricsClient: metricsClient,
 		name:          name,
 	}
 

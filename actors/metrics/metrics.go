@@ -19,7 +19,7 @@ var (
 	parseActorMethodErrorMetric = metrics.Metric{
 		Name:    actorMethod,
 		Help:    "Parsing actor method",
-		Labels:  []string{"actor", "method", "Error"},
+		Labels:  []string{"actor", "method", "error"}, // TODO: method for txType?
 		Handler: &collectors.Gauge{},
 	}
 )
