@@ -29,8 +29,19 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/account"
+	"github.com/zondax/fil-parser/actors/v2/cron"
+	"github.com/zondax/fil-parser/actors/v2/datacap"
+	"github.com/zondax/fil-parser/actors/v2/eam"
+	"github.com/zondax/fil-parser/actors/v2/ethaccount"
 	"github.com/zondax/fil-parser/actors/v2/evm"
+	initActor "github.com/zondax/fil-parser/actors/v2/init"
+	"github.com/zondax/fil-parser/actors/v2/market"
 	"github.com/zondax/fil-parser/actors/v2/miner"
+	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
+	"github.com/zondax/fil-parser/actors/v2/placeholder"
+	"github.com/zondax/fil-parser/actors/v2/power"
+	"github.com/zondax/fil-parser/actors/v2/reward"
+	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -322,15 +333,48 @@ func (m *Msig) handleActorSpecificMethods(network string, height int64, method a
 	var methodName string
 
 	switch actorType {
+	case manifest.InitKey:
+		initActor := initActor.New(m.logger)
+		metadata, _, err = initActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.CronKey:
+		cronActor := cron.New(m.logger)
+		metadata, _, err = cronActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
 	case manifest.AccountKey:
 		accountActor := account.New(m.logger)
 		metadata, _, err = accountActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.PowerKey:
+		powerActor := power.New(m.logger)
+		metadata, _, err = powerActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
 	case manifest.MinerKey:
 		minerActor := miner.New(m.logger)
 		metadata, _, err = minerActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.MarketKey:
+		marketActor := market.New(m.logger)
+		metadata, _, err = marketActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.PaychKey:
+		paychActor := paymentchannel.New(m.logger)
+		metadata, _, err = paychActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.RewardKey:
+		rewardActor := reward.New(m.logger)
+		metadata, _, err = rewardActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.VerifregKey:
+		verifregActor := verifiedregistry.New(m.logger)
+		metadata, _, err = verifregActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
 	case manifest.EvmKey:
 		evmActor := evm.New(m.logger)
 		metadata, _, err = evmActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.EamKey:
+		eamActor := eam.New(m.logger)
+		metadata, _, err = eamActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.DatacapKey:
+		datacapActor := datacap.New(m.logger)
+		metadata, _, err = datacapActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.EthAccountKey:
+		ethAccountActor := ethaccount.New(m.logger)
+		metadata, _, err = ethAccountActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+	case manifest.PlaceholderKey:
+		placeholderActor := placeholder.New(m.logger)
+		metadata, _, err = placeholderActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
 
 	default:
 		result["error"] = parser.ErrUnknownMethod
