@@ -321,11 +321,11 @@ func TestAllActorsSupported(t *testing.T) {
 }
 
 func getActors(t *testing.T) []v2.Actor {
-	actorParser := v2.NewActorParser("mainnet", nil, l, metrics2.UnimplementedMetricsClient{}).(*v2.ActorParser)
+	actorParser := v2.NewActorParser("mainnet", nil, l, metrics2.NewNoopMetricsClient()).(*v2.ActorParser)
 	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
 	actors := []v2.Actor{}
 	for _, filActor := range filActors {
-		actor, err := actorParser.GetActor(filActor, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+		actor, err := actorParser.GetActor(filActor, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 		require.NoErrorf(t, err, "Actor %s is not supported", filActor)
 		actors = append(actors, actor)
 	}

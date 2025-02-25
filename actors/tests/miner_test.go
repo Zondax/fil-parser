@@ -298,7 +298,7 @@ func TestActorParserV1_MinerWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_MinerWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MinerKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.MinerKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 
 	require.NoError(t, err)
 	require.NotNil(t, actor)
@@ -329,7 +329,7 @@ func TestActorParserV2_MinerWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_MinerWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MinerKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.MinerKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

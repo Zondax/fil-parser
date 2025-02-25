@@ -57,7 +57,7 @@ func TestActorParserV1_Account(t *testing.T) {
 
 func TestActorParserV2_Account(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.AccountKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.AccountKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

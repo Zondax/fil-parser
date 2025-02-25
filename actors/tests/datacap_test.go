@@ -148,7 +148,7 @@ func TestActorParserV1_DatacapWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_DatacapWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.DatacapKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.DatacapKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -176,7 +176,7 @@ func TestActorParserV2_DatacapWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_DatacapWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.DatacapKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.DatacapKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

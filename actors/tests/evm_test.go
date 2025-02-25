@@ -190,7 +190,7 @@ func TestActorParserV1_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 
 func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -220,7 +220,7 @@ func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -248,7 +248,7 @@ func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -278,7 +278,7 @@ func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 
 func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -306,7 +306,7 @@ func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 
 func TestActorParserV2_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

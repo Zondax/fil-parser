@@ -35,14 +35,14 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 	}
 	actorsCache, err := cache.SetupActorsCache(common.DataSource{
 		Node: lotusClient,
-	}, nil, &metrics.UnimplementedMetricsClient{})
+	}, nil, metrics.NewNoopMetricsClient())
 
 	if err != nil {
 		return nil
 	}
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil, metrics.UnimplementedMetricsClient{})
+	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil, metrics.NewNoopMetricsClient())
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return nil
@@ -53,9 +53,9 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 	case func(string, *helper2.Helper, *zap.Logger) actors.ActorParserInterface:
 		return fn(network, helper, logger)
 	case func(*helper2.Helper, *zap.Logger, metrics.MetricsClient) actors.ActorParserInterface:
-		return fn(helper, logger, &metrics.UnimplementedMetricsClient{})
+		return fn(helper, logger, metrics.NewNoopMetricsClient())
 	case func(string, *helper2.Helper, *zap.Logger, metrics.MetricsClient) actors.ActorParserInterface:
-		return fn(network, helper, logger, &metrics.UnimplementedMetricsClient{})
+		return fn(network, helper, logger, metrics.NewNoopMetricsClient())
 	default:
 		panic(fmt.Sprintf("invalid actor parser function: %T", actorParserFn))
 	}

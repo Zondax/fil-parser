@@ -170,7 +170,7 @@ func TestActorParserV1_MarketWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_MarketWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MarketKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.MarketKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -195,7 +195,7 @@ func TestActorParserV2_MarketWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_MarketWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MarketKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.UnimplementedMetricsClient{}})
+	actor, err := p.GetActor(manifest.MarketKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

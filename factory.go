@@ -52,7 +52,7 @@ type Parser interface {
 
 func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
 	defaultOpts := FilecoinParserOptions{
-		metrics: &metrics.UnimplementedMetricsClient{},
+		metrics: metrics.NewNoopMetricsClient(),
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -79,7 +79,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 
 func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
 	defaultOpts := FilecoinParserOptions{
-		metrics: &metrics.UnimplementedMetricsClient{},
+		metrics: metrics.NewNoopMetricsClient(),
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
