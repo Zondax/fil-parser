@@ -12,6 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	actorsV1 "github.com/zondax/fil-parser/actors/v1"
+	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -27,7 +29,7 @@ const Version = "v1"
 var NodeVersionsSupported = []string{"v1.21", "v1.22"}
 
 type Parser struct {
-	actorParser            *actors.ActorParser
+	actorParser            actors.ActorParserInterface
 	addresses              *types.AddressInfoMap
 	txCidEquivalents       []types.TxCidTranslation
 	helper                 *helper.Helper
@@ -37,7 +39,21 @@ type Parser struct {
 
 func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
 	return &Parser{
-		actorParser:            actors.NewActorParser(helper, logger),
+		actorParser:            actorsV1.NewActorParser(helper, logger),
+		addresses:              types.NewAddressInfoMap(),
+		helper:                 helper,
+		logger:                 logger2.GetSafeLogger(logger),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
+	}
+}
+
+func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+	return &Parser{
+		actorParser:            actorsV2.NewActorParser(string(network), helper, logger),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),

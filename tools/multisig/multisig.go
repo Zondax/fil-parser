@@ -14,7 +14,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/actors/builtin/multisig"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	cbor "github.com/ipfs/go-ipld-cbor"
-	"github.com/zondax/fil-parser/actors"
+	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
@@ -197,7 +197,7 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 }
 
 func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.MultisigInfo, error) {
-	value, err := actors.ParseMultisigMetadata(tx.TxType, tx.TxMetadata)
+	value, err := actorsV1.ParseMultisigMetadata(tx.TxType, tx.TxMetadata)
 	if err != nil {
 		eg.logger.Sugar().Error(ctx, fmt.Sprintf("Multisig error parsing metadata: %s", err.Error()))
 		value = tx.TxMetadata // if there is an error then we need to store the raw metadata

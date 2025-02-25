@@ -69,6 +69,26 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
+func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+	logger = logger2.GetSafeLogger(logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
+	if err != nil {
+		logger.Sugar().Errorf("could not setup actors cache: %v", err)
+		return nil, err
+	}
+
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
+	parserV1 := v1.NewActorsV2Parser(helper, logger)
+	parserV2 := v2.NewActorsV2Parser(helper, logger)
+
+	return &FilecoinParser{
+		parserV1: parserV1,
+		parserV2: parserV2,
+		Helper:   helper,
+		logger:   logger,
+	}, nil
+}
+
 func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(txsData.Metadata)
 	if err != nil {
