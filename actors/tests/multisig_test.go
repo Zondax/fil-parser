@@ -507,7 +507,7 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 
 	for _, tt := range multisigProposeTests {
 		t.Run(tt.name, func(t *testing.T) {
-			addr, err := address.NewIDAddress(1)
+			addr, err := address.NewIDAddress(1000)
 			require.NoError(t, err)
 
 			proposeParams := multisig1.ProposeParams{
@@ -525,14 +525,32 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 				Params: buf.Bytes(),
 			}
 
-			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.txType)
+			proposeReturn := multisig1.ProposeReturn{
+				TxnID:   0,
+				Applied: false,
+				Code:    0,
+				Ret:     nil,
+			}
+			var returnBuf bytes.Buffer
+			err = proposeReturn.MarshalCBOR(&returnBuf)
 			require.NoError(t, err)
 
-			got, _, err := actor.Parse(manifest.MultisigKey, int64(tipSet.Height()), tt.txType, msg, &parser.LotusMessageReceipt{
-				Return: nil,
-			}, msg.Cid, tipSet.Key())
+			mockKey := filTypes.NewTipSetKey()
+
+			got, _, err := actor.Parse(manifest.MultisigKey, 1000000, tt.txType, msg, &parser.LotusMessageReceipt{
+				Return: returnBuf.Bytes(),
+			}, msg.Cid, mockKey)
+
 			require.NoError(t, err)
 			require.NotNil(t, got)
+
+			params, ok := got[parser.ParamsKey].(parser.Propose)
+			require.True(t, ok, "Expected params to be of type parser.Propose")
+
+			if tt.innerMethod == 23 {
+				require.Equal(t, parser.MethodChangeOwnerAddress, params.Method,
+					"Expected method name to be ChangeOwnerAddress")
+			}
 		})
 	}
 }
