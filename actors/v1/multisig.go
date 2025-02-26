@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/filecoin-project/go-state-types/manifest"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -86,7 +87,7 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	}
 	method, innerParams, err := p.innerProposeParams(proposeParams)
 	if err != nil {
-		_ = p.metrics.UpdateActorMethodErrorMetric("multisig", parser.MethodPropose, err)
+		_ = p.metrics.UpdateActorMethodErrorMetric(manifest.MultisigKey, parser.MethodPropose, err)
 		p.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
 	metadata[parser.ParamsKey] = parser.Propose{

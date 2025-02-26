@@ -3,6 +3,7 @@ package multisig
 import (
 	"bytes"
 	"fmt"
+	"github.com/filecoin-project/go-state-types/manifest"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
@@ -145,7 +146,7 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
-		_ = m.metrics.UpdateActorMethodErrorMetric("multisig", proposeKind, err)
+		_ = m.metrics.UpdateActorMethodErrorMetric(manifest.MultisigKey, proposeKind, err)
 		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 
