@@ -14,7 +14,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
-	multisig1 "github.com/filecoin-project/go-state-types/builtin/v11/multisig"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/cbor"
@@ -305,42 +304,6 @@ func TestActorParserV1_ParseMultisigMetadata(t *testing.T) {
 	}
 }
 
-// WIP
-func TestActorParserV1_MultisigPropose(t *testing.T) {
-	p := getActorParser(actorsV1.NewActorParser).(*actorsV1.ActorParser)
-
-	for _, tt := range multisigProposeTests {
-		t.Run(tt.name, func(t *testing.T) {
-			addr, err := address.NewIDAddress(1)
-			require.NoError(t, err)
-
-			proposeParams := multisig1.ProposeParams{
-				To:     addr,
-				Value:  abi.NewTokenAmount(0),
-				Method: abi.MethodNum(tt.innerMethod),
-				Params: []byte{0x80},
-			}
-
-			var buf bytes.Buffer
-			err = proposeParams.MarshalCBOR(&buf)
-			require.NoError(t, err)
-
-			msg := &parser.LotusMessage{
-				Params: buf.Bytes(),
-			}
-
-			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.txType)
-			require.NoError(t, err)
-
-			got, err := p.ParseMultisig(tt.txType, msg, &parser.LotusMessageReceipt{
-				Return: nil,
-			}, int64(tipSet.Height()), tipSet.Key())
-			require.NoError(t, err)
-			require.NotNil(t, got)
-		})
-	}
-}
-
 func TestActorParserV2_MultisigApprove(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
 	actor, err := p.GetActor(manifest.MultisigKey)
@@ -501,9 +464,6 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 	}
 }
 
-func TestActorPraserV2_MultisigMethodParsing(t *testing.T) {
-}
-
 // WIP
 func TestActorParserV2_MultisigPropose(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
@@ -516,7 +476,7 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 			addr, err := address.NewIDAddress(tt.addressId)
 			require.NoError(t, err)
 
-			proposeParams := multisig1.ProposeParams{
+			proposeParams := multisig2.ProposeParams{
 				To:     addr,
 				Value:  abi.NewTokenAmount(0),
 				Method: abi.MethodNum(tt.innerMethod),
@@ -526,12 +486,11 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 			var buf bytes.Buffer
 			err = proposeParams.MarshalCBOR(&buf)
 			require.NoError(t, err)
-
 			msg := &parser.LotusMessage{
 				Params: buf.Bytes(),
 			}
 
-			proposeReturn := multisig1.ProposeReturn{
+			proposeReturn := multisig2.ProposeReturn{
 				TxnID:   0,
 				Applied: false,
 				Code:    0,
@@ -543,15 +502,16 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 
 			mockKey := filTypes.NewTipSetKey()
 
-			got, _, err := actor.Parse(manifest.MultisigKey, 1000000, tt.txType, msg, &parser.LotusMessageReceipt{
+			got, _, _ := actor.Parse(manifest.MultisigKey, 1000000, tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: returnBuf.Bytes(),
 			}, msg.Cid, mockKey)
 
-			require.NoError(t, err)
 			require.NotNil(t, got)
 
-			_, ok := got[parser.ParamsKey].(parser.Propose)
+			params, ok := got[parser.ParamsKey].(parser.Propose)
+			fmt.Println(params)
 			require.True(t, ok, "Expected params to be of type parser.Propose")
+			require.Equal(t, tt.expectedMethodName, params.Method, "Expected method name to be %s", tt.expectedMethodName)
 		})
 	}
 }

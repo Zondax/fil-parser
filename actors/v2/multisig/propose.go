@@ -10,23 +10,8 @@ import (
 	"github.com/filecoin-project/go-state-types/cbor"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/actors/v2/account"
-	"github.com/zondax/fil-parser/actors/v2/cron"
-	"github.com/zondax/fil-parser/actors/v2/datacap"
-	"github.com/zondax/fil-parser/actors/v2/eam"
-	"github.com/zondax/fil-parser/actors/v2/ethaccount"
-	"github.com/zondax/fil-parser/actors/v2/evm"
-	initActor "github.com/zondax/fil-parser/actors/v2/init"
-	"github.com/zondax/fil-parser/actors/v2/market"
-	"github.com/zondax/fil-parser/actors/v2/miner"
-	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
-	"github.com/zondax/fil-parser/actors/v2/placeholder"
-	"github.com/zondax/fil-parser/actors/v2/power"
-	"github.com/zondax/fil-parser/actors/v2/reward"
-	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 
@@ -153,66 +138,7 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 		methodName = method.String()
 	}
 
-	msg := &parser.LotusMessage{
-		Params: proposeParams,
-	}
-	msgRct := &parser.LotusMessageReceipt{}
-
-	var metadata map[string]interface{}
-
-	switch actorType {
-	case manifest.InitKey:
-		initActor := initActor.New(msig.logger)
-		metadata, _, err = initActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.CronKey:
-		cronActor := cron.New(msig.logger)
-		metadata, _, err = cronActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.AccountKey:
-		accountActor := account.New(msig.logger)
-		metadata, _, err = accountActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.PowerKey:
-		powerActor := power.New(msig.logger)
-		metadata, _, err = powerActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.MinerKey:
-		minerActor := miner.New(msig.logger)
-		metadata, _, err = minerActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.MarketKey:
-		marketActor := market.New(msig.logger)
-		metadata, _, err = marketActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.PaychKey:
-		paychActor := paymentchannel.New(msig.logger)
-		metadata, _, err = paychActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.RewardKey:
-		rewardActor := reward.New(msig.logger)
-		metadata, _, err = rewardActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.VerifregKey:
-		verifregActor := verifiedregistry.New(msig.logger)
-		metadata, _, err = verifregActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.EvmKey:
-		evmActor := evm.New(msig.logger)
-		metadata, _, err = evmActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.EamKey:
-		eamActor := eam.New(msig.logger)
-		metadata, _, err = eamActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.DatacapKey:
-		datacapActor := datacap.New(msig.logger)
-		metadata, _, err = datacapActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.EthAccountKey:
-		ethAccountActor := ethaccount.New(msig.logger)
-		metadata, _, err = ethAccountActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.PlaceholderKey:
-		placeholderActor := placeholder.New(msig.logger)
-		metadata, _, err = placeholderActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	default:
-		return "", nil, parser.ErrUnknownMethod
-	}
-
-	if err == nil && metadata != nil && metadata["Method"] != nil {
-		returnMethodName := metadata["Method"].(string)
-		return returnMethodName, nil, nil
-	}
-
-	return "", nil, err
+	return methodName, params, nil
 }
 
 func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to, value string, params multisigParams, err error) {
