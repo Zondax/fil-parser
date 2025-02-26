@@ -162,7 +162,7 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
 		if method == "" {
-			_, _, err := m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, to, key)
+			method, _, err = m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, to, key)
 			if err != nil {
 				m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 			}
@@ -297,32 +297,32 @@ func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTy
 }
 
 func (m *Msig) handleActorSpecificMethods(network string, height int64, method abi.MethodNum, proposeParams []byte, to string, key filTypes.TipSetKey) (string, map[string]interface{}, error) {
-	// TODO: for debugging, remove this
-	result := map[string]any{
-		"method": method,
-		"to":     to,
-	}
-
 	actor, err := address.NewFromString(to)
 	if err != nil {
-		return "", result, err
+		return "", nil, err
 	}
 
-	// TODO: for debugging, remove this
-	result["actor"] = actor
 	m.logger.Sugar().Infof("actor: %v", actor.String())
 
 	actorType, err := m.helper.GetActorNameFromAddress(actor, height, key)
 	if err != nil {
-		return "", result, err
+		return "", nil, err
 	}
 
-	// TODO: for debugging, remove this
-	result["actorType"] = actorType
 	m.logger.Sugar().Infof("actorType: %v", actorType)
 
 	if actorType == manifest.MultisigKey {
-		return "", result, parser.ErrUnknownMethod
+		return "", nil, parser.ErrUnknownMethod
+	}
+
+	methodName, err := m.helper.GetMethodName(&parser.LotusMessage{
+		To:     actor,
+		Method: method,
+	}, height, key)
+
+	if err != nil {
+		m.logger.Sugar().Errorf("Failed to get method name: %v", err)
+		methodName = method.String()
 	}
 
 	msg := &parser.LotusMessage{
@@ -331,65 +331,62 @@ func (m *Msig) handleActorSpecificMethods(network string, height int64, method a
 	msgRct := &parser.LotusMessageReceipt{}
 
 	var metadata map[string]interface{}
-	var methodName string
+	var returnMethodName string
 
 	switch actorType {
 	case manifest.InitKey:
 		initActor := initActor.New(m.logger)
-		metadata, _, err = initActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = initActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.CronKey:
 		cronActor := cron.New(m.logger)
-		metadata, _, err = cronActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = cronActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.AccountKey:
 		accountActor := account.New(m.logger)
-		metadata, _, err = accountActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = accountActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.PowerKey:
 		powerActor := power.New(m.logger)
-		metadata, _, err = powerActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = powerActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.MinerKey:
 		minerActor := miner.New(m.logger)
-		metadata, _, err = minerActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = minerActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.MarketKey:
 		marketActor := market.New(m.logger)
-		metadata, _, err = marketActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = marketActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.PaychKey:
 		paychActor := paymentchannel.New(m.logger)
-		metadata, _, err = paychActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = paychActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.RewardKey:
 		rewardActor := reward.New(m.logger)
-		metadata, _, err = rewardActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = rewardActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.VerifregKey:
 		verifregActor := verifiedregistry.New(m.logger)
-		metadata, _, err = verifregActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = verifregActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.EvmKey:
 		evmActor := evm.New(m.logger)
-		metadata, _, err = evmActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = evmActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.EamKey:
 		eamActor := eam.New(m.logger)
-		metadata, _, err = eamActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = eamActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.DatacapKey:
 		datacapActor := datacap.New(m.logger)
-		metadata, _, err = datacapActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = datacapActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.EthAccountKey:
 		ethAccountActor := ethaccount.New(m.logger)
-		metadata, _, err = ethAccountActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
+		metadata, _, err = ethAccountActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	case manifest.PlaceholderKey:
 		placeholderActor := placeholder.New(m.logger)
-		metadata, _, err = placeholderActor.Parse(network, height, method.String(), msg, msgRct, cid.Undef, key)
-
+		metadata, _, err = placeholderActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
 	default:
-		// TODO: for debugging, remove this
-		result["error"] = parser.ErrUnknownMethod
-		return "", result, parser.ErrUnknownMethod
+		return "", nil, parser.ErrUnknownMethod
 	}
 
-	// TODO: for debugging, remove this
 	m.logger.Sugar().Infof("metadata: %v", metadata)
+	m.logger.Sugar().Infof("err: %v", err)
 
-	if err == nil {
-		methodName = metadata["Method"].(string)
-		return methodName, result, nil
+	if err == nil && metadata != nil && metadata["Method"] != nil {
+		returnMethodName = metadata["Method"].(string)
+		return returnMethodName, metadata, nil
 	}
 
-	return "", result, err
+	return "", nil, err
 }
