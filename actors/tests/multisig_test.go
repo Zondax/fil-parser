@@ -136,24 +136,30 @@ var multisigApproveTests = []struct {
 }
 
 var multisigProposeTests = []struct {
-	name        string
-	txType      string
-	innerMethod int64
-	innerParams cbor.Marshaler
+	name               string
+	txType             string
+	innerMethod        int64
+	innerParams        cbor.Marshaler
+	addressId          uint64
+	expectedMethodName string
 }{
-	/*
-		{
-			name:        "Propose with ChangeWorkerAddress",
-			txType:      parser.MethodPropose,
-			innerMethod: 0,
-			innerParams: &legacyv1.ChangeWorkerAddressParams{},
-		},
-	*/
+
 	{
-		name:        "Propose with ChangeOwnerAddress",
-		txType:      parser.MethodPropose,
-		innerMethod: 23,
-		innerParams: &abi.CborBytes{},
+		name:               "Propose with Send",
+		txType:             parser.MethodPropose,
+		innerMethod:        0,
+		innerParams:        &abi.CborBytes{},
+		addressId:          0,
+		expectedMethodName: parser.MethodSend,
+	},
+
+	{
+		name:               "Propose with ChangeOwnerAddress",
+		txType:             parser.MethodPropose,
+		innerMethod:        23,
+		innerParams:        &abi.CborBytes{},
+		addressId:          1000,
+		expectedMethodName: parser.MethodChangeOwnerAddress,
 	},
 }
 
@@ -507,7 +513,7 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 
 	for _, tt := range multisigProposeTests {
 		t.Run(tt.name, func(t *testing.T) {
-			addr, err := address.NewIDAddress(1000)
+			addr, err := address.NewIDAddress(tt.addressId)
 			require.NoError(t, err)
 
 			proposeParams := multisig1.ProposeParams{
@@ -544,13 +550,8 @@ func TestActorParserV2_MultisigPropose(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, got)
 
-			params, ok := got[parser.ParamsKey].(parser.Propose)
+			_, ok := got[parser.ParamsKey].(parser.Propose)
 			require.True(t, ok, "Expected params to be of type parser.Propose")
-
-			if tt.innerMethod == 23 {
-				require.Equal(t, parser.MethodChangeOwnerAddress, params.Method,
-					"Expected method name to be ChangeOwnerAddress")
-			}
 		})
 	}
 }

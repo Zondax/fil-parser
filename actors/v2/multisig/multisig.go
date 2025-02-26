@@ -302,14 +302,10 @@ func (m *Msig) handleActorSpecificMethods(network string, height int64, method a
 		return "", nil, err
 	}
 
-	m.logger.Sugar().Infof("actor: %v", actor.String())
-
 	actorType, err := m.helper.GetActorNameFromAddress(actor, height, key)
 	if err != nil {
 		return "", nil, err
 	}
-
-	m.logger.Sugar().Infof("actorType: %v", actorType)
 
 	if actorType == manifest.MultisigKey {
 		return "", nil, parser.ErrUnknownMethod
