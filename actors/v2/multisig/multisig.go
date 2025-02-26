@@ -25,23 +25,7 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
 
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/actors/v2/account"
-	"github.com/zondax/fil-parser/actors/v2/cron"
-	"github.com/zondax/fil-parser/actors/v2/datacap"
-	"github.com/zondax/fil-parser/actors/v2/eam"
-	"github.com/zondax/fil-parser/actors/v2/ethaccount"
-	"github.com/zondax/fil-parser/actors/v2/evm"
-	initActor "github.com/zondax/fil-parser/actors/v2/init"
-	"github.com/zondax/fil-parser/actors/v2/market"
-	"github.com/zondax/fil-parser/actors/v2/miner"
-	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
-	"github.com/zondax/fil-parser/actors/v2/placeholder"
-	"github.com/zondax/fil-parser/actors/v2/power"
-	"github.com/zondax/fil-parser/actors/v2/reward"
-	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -159,16 +143,9 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, k
 		return nil, err
 	}
 
-	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
+	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw, to, key, m)
 	if err != nil {
-		if method == "" {
-			method, _, err = m.handleActorSpecificMethods(network, height, methodNum, innerParamsRaw, to, key)
-			if err != nil {
-				m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
-			}
-		} else {
-			m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
-		}
+		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 
 	metadata[parser.ParamsKey] = parser.Propose{
@@ -294,95 +271,4 @@ func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTy
 	}
 
 	return parsedParams, nil
-}
-
-func (m *Msig) handleActorSpecificMethods(network string, height int64, method abi.MethodNum, proposeParams []byte, to string, key filTypes.TipSetKey) (string, map[string]interface{}, error) {
-	actor, err := address.NewFromString(to)
-	if err != nil {
-		return "", nil, err
-	}
-
-	actorType, err := m.helper.GetActorNameFromAddress(actor, height, key)
-	if err != nil {
-		return "", nil, err
-	}
-
-	if actorType == manifest.MultisigKey {
-		return "", nil, parser.ErrUnknownMethod
-	}
-
-	methodName, err := m.helper.GetMethodName(&parser.LotusMessage{
-		To:     actor,
-		Method: method,
-	}, height, key)
-
-	if err != nil {
-		m.logger.Sugar().Errorf("Failed to get method name: %v", err)
-		methodName = method.String()
-	}
-
-	msg := &parser.LotusMessage{
-		Params: proposeParams,
-	}
-	msgRct := &parser.LotusMessageReceipt{}
-
-	var metadata map[string]interface{}
-	var returnMethodName string
-
-	switch actorType {
-	case manifest.InitKey:
-		initActor := initActor.New(m.logger)
-		metadata, _, err = initActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.CronKey:
-		cronActor := cron.New(m.logger)
-		metadata, _, err = cronActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.AccountKey:
-		accountActor := account.New(m.logger)
-		metadata, _, err = accountActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.PowerKey:
-		powerActor := power.New(m.logger)
-		metadata, _, err = powerActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.MinerKey:
-		minerActor := miner.New(m.logger)
-		metadata, _, err = minerActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.MarketKey:
-		marketActor := market.New(m.logger)
-		metadata, _, err = marketActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.PaychKey:
-		paychActor := paymentchannel.New(m.logger)
-		metadata, _, err = paychActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.RewardKey:
-		rewardActor := reward.New(m.logger)
-		metadata, _, err = rewardActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.VerifregKey:
-		verifregActor := verifiedregistry.New(m.logger)
-		metadata, _, err = verifregActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.EvmKey:
-		evmActor := evm.New(m.logger)
-		metadata, _, err = evmActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.EamKey:
-		eamActor := eam.New(m.logger)
-		metadata, _, err = eamActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.DatacapKey:
-		datacapActor := datacap.New(m.logger)
-		metadata, _, err = datacapActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.EthAccountKey:
-		ethAccountActor := ethaccount.New(m.logger)
-		metadata, _, err = ethAccountActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	case manifest.PlaceholderKey:
-		placeholderActor := placeholder.New(m.logger)
-		metadata, _, err = placeholderActor.Parse(network, height, methodName, msg, msgRct, cid.Undef, key)
-	default:
-		return "", nil, parser.ErrUnknownMethod
-	}
-
-	m.logger.Sugar().Infof("metadata: %v", metadata)
-	m.logger.Sugar().Infof("err: %v", err)
-
-	if err == nil && metadata != nil && metadata["Method"] != nil {
-		returnMethodName = metadata["Method"].(string)
-		return returnMethodName, metadata, nil
-	}
-
-	return "", nil, err
 }
