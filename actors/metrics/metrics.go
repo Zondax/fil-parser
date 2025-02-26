@@ -9,6 +9,13 @@ import (
 
 const actorMethod = "fil-parser_actors_method_error"
 
+// Metrics labels
+const (
+	actorLabel  = "actor"
+	methodLabel = "method"
+	errorLabel  = "error"
+)
+
 // byteArrayTooLargeRegex matches error messages of the form "byte array too large (N)" where N is any number.
 // It is used to normalize these errors by stripping out the specific size numbers and reduce cardinality.
 // This error is commonly present on invokeContract.
@@ -19,7 +26,7 @@ var (
 	parseActorMethodErrorMetric = metrics.Metric{
 		Name:    actorMethod,
 		Help:    "Parsing actor method",
-		Labels:  []string{"actor", "method", "error"}, // TODO: method for txType?
+		Labels:  []string{actorLabel, methodLabel, errorLabel}, // TODO: method for txType?
 		Handler: &collectors.Gauge{},
 	}
 )

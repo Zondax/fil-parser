@@ -7,6 +7,7 @@ import (
 	"github.com/zondax/golem/pkg/metrics/collectors"
 )
 
+// Metrics names
 const (
 	// parser metrics
 	parseMetadata          = "fil-parser_parser_parse_tx_metadata_error"
@@ -27,7 +28,17 @@ const (
 	parseEthLog = "fil-parser_parser_parse_eth_error"
 )
 
-// Patterns to normalize error messages from GetEVMSelectorSig to reduce metric cardinality:
+// Metrics labels
+const (
+	actorLabel   = "actor"
+	txTypeLabel  = "txType"
+	errorLabel   = "error"
+	codeLabel    = "code"
+	kindLabel    = "kind"
+	addressLabel = "address"
+)
+
+// Patterns to normalize error messages
 // TODO: this is a hack to reduce metric cardinality, we should find a better solution in the future
 var (
 	// get evm selector rules
@@ -47,90 +58,99 @@ var (
 	parsingMetadataErrorMetric = metrics.Metric{
 		Name:    parseMetadata,
 		Help:    "parsing metadata error",
-		Labels:  []string{"actor", "txType", "error"},
+		Labels:  []string{actorLabel, txTypeLabel, errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingMethodNameMetric = metrics.Metric{
 		Name:    parseMethodName,
 		Help:    "parsing method name",
-		Labels:  []string{"code", "error"},
+		Labels:  []string{codeLabel, errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingBlockCidFromMsgCidMetric = metrics.Metric{
 		Name:    blockCidFromMsgCid,
 		Help:    "get block cid from message cid",
-		Labels:  []string{"txType", "error"},
+		Labels:  []string{txTypeLabel, errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingBuildCidFromMsgTraceMetric = metrics.Metric{
 		Name:    buildCidFromMsgTrace,
 		Help:    "build Cid From Message Trace",
-		Labels:  []string{"txType", "error"},
+		Labels:  []string{txTypeLabel, errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingGetBlockMinerMetric = metrics.Metric{
 		Name:    getBlockMiner,
 		Help:    "get Block Miner",
-		Labels:  []string{"code", "txType"},
+		Labels:  []string{codeLabel, txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingJsonMarshalMetric = metrics.Metric{
 		Name:    jsonMarshal,
 		Help:    "error while marshalling json",
-		Labels:  []string{"kind", "txType"},
+		Labels:  []string{kindLabel, txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingTranslateTxCidToTxHashMetric = metrics.Metric{
 		Name:    translateTxCidToTxHash,
 		Help:    "error while translate tx cid to tx hash",
-		Labels:  []string{"error"},
+		Labels:  []string{errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingActorNameMetric = metrics.Metric{
 		Name:    parseActorName,
 		Help:    "get actor name from address",
-		Labels:  []string{"code", "error"},
+		Labels:  []string{codeLabel, errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingAddressMetric = metrics.Metric{
 		Name:    parseAddress,
 		Help:    "parse address",
-		Labels:  []string{"address", "error"},
+		Labels:  []string{addressLabel, errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	getEvmSelectorSigMetric = metrics.Metric{
 		Name:    getEvmSelectorSig,
 		Help:    "get evm selector signature",
-		Labels:  []string{"error"},
+		Labels:  []string{errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingParseNativeEventsLogMetric = metrics.Metric{
 		Name:    parseNativeEventsLog,
 		Help:    "parse native log",
-		Labels:  []string{"error"},
+		Labels:  []string{errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingParseEthLogMetric = metrics.Metric{
 		Name:    parseEthLog,
 		Help:    "parse eth log",
-		Labels:  []string{"error"},
+		Labels:  []string{errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 )
 
 func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, err error) error {
-	return c.IncrementMetric(parseMetadata, actor, txType, err.Error())
+	errMsg := err.Error()
+
+	switch {
+	case errResolutionLookupPattern.MatchString(errMsg):
+		errMsg = "resolution lookup failed: actor not found"
+	case errBadAddressPattern.MatchString(errMsg):
+		errMsg = "address is flagged as bad"
+	}
+
+	return c.IncrementMetric(parseMetadata, actor, txType, errMsg)
 }
 
 func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code, err string) error {

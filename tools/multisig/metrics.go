@@ -13,6 +13,12 @@ var (
 
 const parserModule = "parser_module"
 
+// Labels const
+const (
+	errorLabel  = "error"
+	txTypeLabel = "txType"
+)
+
 type multisigMetricsClient struct {
 	metrics.MetricsClient
 	name string
@@ -56,28 +62,28 @@ var (
 	actorNameFromAddressMetric = metrics.Metric{
 		Name:    actorNameFromAddress,
 		Help:    "get actor name from address",
-		Labels:  []string{"error"},
+		Labels:  []string{errorLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parseTxMetadataMetric = metrics.Metric{
 		Name:    parseTxMetadata,
 		Help:    "error parsing tx metadata",
-		Labels:  []string{"txType"},
+		Labels:  []string{txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parseMultisigMetadataMetric = metrics.Metric{
 		Name:    parseMultisigMetadata,
 		Help:    "error parsing multisig metadata",
-		Labels:  []string{"txType"},
+		Labels:  []string{txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	marshalMultisigMetadataMetric = metrics.Metric{
 		Name:    marshalMultisigMetadata,
 		Help:    "error marshaling multisig metadata",
-		Labels:  []string{"txType"},
+		Labels:  []string{txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 )
