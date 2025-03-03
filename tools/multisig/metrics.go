@@ -15,7 +15,7 @@ const parserModule = "parser_module"
 
 // Labels const
 const (
-	//errorLabel  = "error"
+	// errorLabel  = "error"
 	txTypeLabel = "txType"
 )
 

@@ -1,8 +1,6 @@
 package metrics
 
 import (
-	"regexp"
-
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/metrics/collectors"
 )
@@ -15,13 +13,13 @@ const (
 	actorLabel     = "actor"
 	methodLabel    = "method"
 	methodNumLaber = "methodNum"
-	//errorLabel  = "error"
+	// errorLabel  = "error"
 )
 
 // byteArrayTooLargeRegex matches error messages of the form "byte array too large (N)" where N is any number.
 // It is used to normalize these errors by stripping out the specific size numbers and reduce cardinality.
 // This error is commonly present on invokeContract.
-var byteArrayTooLargeRegex = regexp.MustCompile(`byte array too large \(\d+\)`)
+// var byteArrayTooLargeRegex = regexp.MustCompile(`byte array too large \(\d+\)`)
 
 // metrics
 var (
@@ -42,11 +40,11 @@ var (
 
 func (c *ActorsMetricsClient) UpdateActorMethodErrorMetric(actor, method string) error {
 	// TODO: remove once errors are normalize
-	//errString := err.Error()
-	//// Strip out numbers from "byte array too large" errors
-	//if byteArrayTooLargeRegex.MatchString(errString) {
-	//	errString = "byte array too large"
-	//}
+	// errString := err.Error()
+	// // Strip out numbers from "byte array too large" errors
+	// if byteArrayTooLargeRegex.MatchString(errString) {
+	// 	errString = "byte array too large"
+	// }
 
 	return c.IncrementMetric(actorMethod, actor, method)
 }

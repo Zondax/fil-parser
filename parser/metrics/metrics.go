@@ -30,7 +30,7 @@ const (
 
 // Metrics labels
 const (
-	//errorLabel   = "error"
+	// errorLabel   = "error"
 	actorLabel   = "actor"
 	txTypeLabel  = "txType"
 	codeLabel    = "code"
@@ -42,9 +42,9 @@ const (
 // TODO: this is a hack to reduce metric cardinality, we should find a better solution in the future
 var (
 	// get evm selector rules
-	errFrom4BytesPattern  = regexp.MustCompile(`error from 4bytes: .*`)
-	errSigNotFoundPattern = regexp.MustCompile(`signature not found: .*`)
-	errCacheStorePattern  = regexp.MustCompile(`error adding selector_sig to cache: .*`)
+	// errFrom4BytesPattern  = regexp.MustCompile(`error from 4bytes: .*`)
+	// errSigNotFoundPattern = regexp.MustCompile(`signature not found: .*`)
+	// errCacheStorePattern  = regexp.MustCompile(`error adding selector_sig to cache: .*`)
 
 	// miner
 	errBlockMinedByNotFoundPattern = regexp.MustCompile(`could not find block mined by miner '[^']+'`)
@@ -142,13 +142,13 @@ var (
 
 func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) error {
 	// TODO: remove once errors are normalize
-	//errMsg := err.Error()
-	//switch {
-	//case errResolutionLookupPattern.MatchString(errMsg):
-	//	errMsg = "resolution lookup failed: actor not found"
-	//case errBadAddressPattern.MatchString(errMsg):
-	//	errMsg = "address is flagged as bad"
-	//}
+	// errMsg := err.Error()
+	// switch {
+	// case errResolutionLookupPattern.MatchString(errMsg):
+	// 	errMsg = "resolution lookup failed: actor not found"
+	// case errBadAddressPattern.MatchString(errMsg):
+	// 	errMsg = "address is flagged as bad"
+	// }
 
 	return c.IncrementMetric(parseMetadata, actor, txType)
 }
@@ -159,13 +159,13 @@ func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code string) error {
 
 func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string) error {
 	// TODO: remove once errors are normalize
-	//errMsg := err.Error()
-	//switch {
-	//case errResolutionLookupPattern.MatchString(errMsg):
-	//	errMsg = "resolution lookup failed: actor not found"
-	//case errBadAddressPattern.MatchString(errMsg):
-	//	errMsg = "address is flagged as bad"
-	//}
+	// errMsg := err.Error()
+	// switch {
+	// case errResolutionLookupPattern.MatchString(errMsg):
+	// 	errMsg = "resolution lookup failed: actor not found"
+	// case errBadAddressPattern.MatchString(errMsg):
+	// 	errMsg = "address is flagged as bad"
+	// }
 
 	return c.IncrementMetric(parseActorName, code)
 }
@@ -176,25 +176,25 @@ func (c *ParserMetricsClient) UpdateParseAddressErrorMetric(code string) error {
 
 func (c *ParserMetricsClient) UpdateGetEvmSelectorSigMetric() error {
 	// TODO: remove once errors are normalize
-	//errMsg := err.Error()
-	//switch {
-	//case errFrom4BytesPattern.MatchString(errMsg):
-	//	errMsg = "error from 4bytes"
-	//case errSigNotFoundPattern.MatchString(errMsg):
-	//	errMsg = "signature not found"
-	//case errCacheStorePattern.MatchString(errMsg):
-	//	errMsg = "error adding selector_sig to cache"
-	//}
+	// errMsg := err.Error()
+	// switch {
+	// case errFrom4BytesPattern.MatchString(errMsg):
+	// 	errMsg = "error from 4bytes"
+	// case errSigNotFoundPattern.MatchString(errMsg):
+	// 	errMsg = "signature not found"
+	// case errCacheStorePattern.MatchString(errMsg):
+	// 	errMsg = "error adding selector_sig to cache"
+	// }
 
 	return c.IncrementMetric(getEvmSelectorSig)
 }
 
 func (c *ParserMetricsClient) UpdateBlockCidFromMsgCidMetric(txType string) error {
 	// TODO: remove once errors are normalize
-	//errMsg := err.Error()
-	//if errBlockMinedByNotFoundPattern.MatchString(errMsg) {
-	//	errMsg = "block miner not found"
-	//}
+	// errMsg := err.Error()
+	// if errBlockMinedByNotFoundPattern.MatchString(errMsg) {
+	// 	errMsg = "block miner not found"
+	// }
 
 	return c.IncrementMetric(blockCidFromMsgCid, txType)
 }
