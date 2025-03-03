@@ -1240,9 +1240,9 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 				fmt.Println(err)
 				return
 			}
-			assert.NoError(t, err)
-			assert.NotNil(t, events)
-			assert.NotEmpty(t, events.ParsedEvents)
+			require.NoError(t, err)
+			require.NotNil(t, events)
+			require.NotEmpty(t, events.ParsedEvents)
 
 			gotMetadata := map[string]any{}
 			err = json.Unmarshal([]byte(events.ParsedEvents[0].Metadata), &gotMetadata)
@@ -1871,19 +1871,17 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  177,
 			},
 		},
-
-		// TODO: ENABLE THIS TEST ONCE tools/version_mapping handles CALIBRATION network resets correctly
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.26 (calib)",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     calibNextNodeUrl,
-		// 	height:  "1419335",
-		// 	results: expectedResults{
-		// 		totalTraces:  37,
-		// 		totalAddress: 11,
-		// 		totalTxCids:  2,
-		// 	},
-		// },
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:  37,
+				totalAddress: 11,
+				totalTxCids:  2,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1891,6 +1889,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
+			fmt.Println("tipset", tipset.Height())
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
@@ -1899,7 +1898,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			logger, err := zap.NewDevelopment()
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			require.NoError(t, err)
+			pv2, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), logger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1909,9 +1910,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResultActorV1, err := p.ParseTransactions(context.Background(), txsData, false)
+			parsedResultActorV1, err := pv1.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
-			parsedResultActorV2, err := p.ParseTransactions(context.Background(), txsData, true)
+			parsedResultActorV2, err := pv2.ParseTransactions(context.Background(), txsData)
 			require.NoError(t, err)
 
 			require.NotNil(t, parsedResultActorV1.Txs)

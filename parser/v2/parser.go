@@ -56,9 +56,10 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
 	if err != nil {
 		logger.Sugar().Error(err)
 	}
+	networkName := tools.ParseRawNetworkName(string(network))
 
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(string(network), helper, logger),
+		actorParser:            actorsV2.NewActorParser(networkName, helper, logger),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
