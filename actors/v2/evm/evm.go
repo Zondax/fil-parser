@@ -46,7 +46,7 @@ func (e *Evm) InvokeContract(network string, height int64, method string, rawPar
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
-		_ = e.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, method, err)
+		_ = e.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, method)
 		e.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
@@ -57,7 +57,7 @@ func (e *Evm) InvokeContract(network string, height int64, method string, rawPar
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
-		_ = e.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, method, err)
+		_ = e.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, method)
 		e.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 

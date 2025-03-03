@@ -177,7 +177,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 
 	actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
-		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)), err)
+		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
 	}
 
 	actorMethods, ok := allMethods[actorName]
@@ -196,7 +196,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
 	s, err := h.actorCache.GetEVMSelectorSig(ctx, selectorID)
 	if err != nil {
-		_ = h.metrics.UpdateGetEvmSelectorSigMetric(err)
+		_ = h.metrics.UpdateGetEvmSelectorSigMetric()
 	}
 	return s, err
 }
@@ -206,13 +206,13 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 	for _, tx := range txs {
 		addrTo, err := address.NewFromString(tx.TxTo)
 		if err != nil {
-			_ = h.metrics.UpdateParseAddressErrorMetric("to", "decode error")
+			_ = h.metrics.UpdateParseAddressErrorMetric("to")
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 		addrFrom, err := address.NewFromString(tx.TxFrom)
 		if err != nil {
-			_ = h.metrics.UpdateParseAddressErrorMetric("from", "decode error")
+			_ = h.metrics.UpdateParseAddressErrorMetric("from")
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
 		}

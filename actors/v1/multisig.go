@@ -88,7 +88,7 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	}
 	method, innerParams, err := p.innerProposeParams(proposeParams)
 	if err != nil {
-		_ = p.metrics.UpdateActorMethodErrorMetric(manifest.MultisigKey, parser.MethodPropose, err)
+		_ = p.metrics.UpdateMultisigProposeMetric(manifest.MultisigKey, parser.MethodPropose, fmt.Sprint(proposeParams.Method))
 		p.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
 	metadata[parser.ParamsKey] = parser.Propose{

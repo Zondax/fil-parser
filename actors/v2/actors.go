@@ -38,6 +38,8 @@ type Actor interface {
 	TransactionTypes() map[string]any
 }
 
+var _ actors.ActorParserInterface = &ActorParser{}
+
 type ActorParser struct {
 	network string
 	helper  *helper.Helper

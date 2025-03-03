@@ -118,7 +118,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 
 			blockCid, err := appTools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset)
 			if err != nil {
-				_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType, err)
+				_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
 				p.logger.Sugar().Errorf("Error when trying to get block cid from message,txType '%s': cid '%s': %v", txType, trace.MsgCid.String(), err)
 			}
 			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
@@ -256,11 +256,11 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	}, int64(tipset.Height()), tipset.Key())
 
 	if err != nil {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method), err.Error())
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method), "could not get method name")
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
 	}
 
@@ -276,7 +276,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType, mErr)
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {
@@ -289,7 +289,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	tipsetCid := tipset.GetCidString()
 	jsonMetadata, err := json.Marshal(metadata)
 	if err != nil {
-		_ = p.metrics.UpdateJsonMarshalMetric("metadata", txType)
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
 	p.appendAddressInfo(trace.Msg, tipset.Key())
@@ -297,7 +297,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
-		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType, err)
+		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
 	}
 
@@ -356,7 +356,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 
 	metadata, err := json.Marshal(feesMetadata)
 	if err != nil {
-		_ = p.metrics.UpdateJsonMarshalMetric("feesMetadata", txType)
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
 	}
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())

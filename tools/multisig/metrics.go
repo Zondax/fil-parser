@@ -15,7 +15,7 @@ const parserModule = "parser_module"
 
 // Labels const
 const (
-	errorLabel  = "error"
+	//errorLabel  = "error"
 	txTypeLabel = "txType"
 )
 
@@ -62,7 +62,7 @@ var (
 	actorNameFromAddressMetric = metrics.Metric{
 		Name:    actorNameFromAddress,
 		Help:    "get actor name from address",
-		Labels:  []string{errorLabel},
+		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
 
@@ -88,8 +88,8 @@ var (
 	}
 )
 
-func (c *multisigMetricsClient) UpdateActorNameFromAddressMetric(err error) error {
-	return c.IncrementMetric(actorNameFromAddress, err.Error())
+func (c *multisigMetricsClient) UpdateActorNameFromAddressMetric() error {
+	return c.IncrementMetric(actorNameFromAddress)
 }
 
 func (c *multisigMetricsClient) UpdateParseTxMetadataMetric(txType string) error {

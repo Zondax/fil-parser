@@ -12,6 +12,11 @@ var (
 
 const parserModule = "parser_module"
 
+const (
+	MetadataValue     = "metadata"
+	FeesMetadataValue = "feesMetadata"
+)
+
 type ParserMetricsClient struct {
 	metrics.MetricsClient
 	name string

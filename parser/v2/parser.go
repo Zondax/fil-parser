@@ -144,7 +144,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 		}
 		if err != nil {
-			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric(err)
+			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
 		}
 	}
 
@@ -167,7 +167,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	for idx, nativeLog := range eventsData.NativeLog {
 		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
 		if err != nil {
-			_ = p.metrics.UpdateParseNativeEventsLogsMetric(err)
+			_ = p.metrics.UpdateParseNativeEventsLogsMetric()
 			return nil, err
 		}
 
@@ -198,7 +198,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 	for idx, ethLog := range eventsData.EthLogs {
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
 		if err != nil {
-			_ = p.metrics.UpdateParseEthLogMetric(err)
+			_ = p.metrics.UpdateParseEthLogMetric()
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
 
@@ -267,11 +267,11 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	}, int64(tipset.Height()), tipset.Key())
 
 	if err != nil {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method), err.Error())
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method), "could not get method name")
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
@@ -286,7 +286,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
 	if mErr != nil {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType, mErr)
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 
@@ -299,7 +299,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 
 	jsonMetadata, err := json.Marshal(metadata)
 	if err != nil {
-		_ = p.metrics.UpdateJsonMarshalMetric("metadata", txType)
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
 	p.appendAddressInfo(&parser.LotusMessage{
@@ -313,13 +313,13 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
-		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType, err)
+		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
 	}
 
 	msgCid, err := tools.BuildCidFromMessageTrace(trace.Msg, mainMsgCid.String())
 	if err != nil {
-		_ = p.metrics.UpdateBuildCidFromMsgTraceMetric(txType, err)
+		_ = p.metrics.UpdateBuildCidFromMsgTraceMetric(txType)
 		p.logger.Sugar().Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
@@ -380,7 +380,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 
 	metadata, err := json.Marshal(feesMetadata)
 	if err != nil {
-		_ = p.metrics.UpdateJsonMarshalMetric("feesMetadata", txType)
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
 	}
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())

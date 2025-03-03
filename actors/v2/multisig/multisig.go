@@ -146,7 +146,7 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
-		_ = m.metrics.UpdateActorMethodErrorMetric(manifest.MultisigKey, proposeKind, err)
+		_ = m.metrics.UpdateMultisigProposeMetric(manifest.MultisigKey, proposeKind, fmt.Sprint(methodNum))
 		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 

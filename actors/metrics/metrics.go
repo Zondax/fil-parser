@@ -7,13 +7,15 @@ import (
 	"github.com/zondax/golem/pkg/metrics/collectors"
 )
 
-const actorMethod = "fil-parser_actors_method_error"
-
-// Metrics labels
 const (
-	actorLabel  = "actor"
-	methodLabel = "method"
-	errorLabel  = "error"
+	actorMethod     = "fil-parser_actors_method_error"
+	multisigPropose = "fil-parser_multisig_propose_error"
+
+	// Metrics labels
+	actorLabel     = "actor"
+	methodLabel    = "method"
+	methodNumLaber = "methodNum"
+	//errorLabel  = "error"
 )
 
 // byteArrayTooLargeRegex matches error messages of the form "byte array too large (N)" where N is any number.
@@ -26,18 +28,29 @@ var (
 	parseActorMethodErrorMetric = metrics.Metric{
 		Name:    actorMethod,
 		Help:    "Parsing actor method",
-		Labels:  []string{actorLabel, methodLabel, errorLabel}, // TODO: method for txType?
+		Labels:  []string{actorLabel, methodLabel}, // TODO: method for txType?
+		Handler: &collectors.Gauge{},
+	}
+
+	parseMultisigProposeMetric = metrics.Metric{
+		Name:    multisigPropose,
+		Help:    "Parsing multisig propose method",
+		Labels:  []string{actorLabel, methodLabel, methodNumLaber}, // TODO: method for txType?
 		Handler: &collectors.Gauge{},
 	}
 )
 
-func (c *ActorsMetricsClient) UpdateActorMethodErrorMetric(actor, method string, err error) error {
-	errString := err.Error()
+func (c *ActorsMetricsClient) UpdateActorMethodErrorMetric(actor, method string) error {
+	// TODO: remove once errors are normalize
+	//errString := err.Error()
+	//// Strip out numbers from "byte array too large" errors
+	//if byteArrayTooLargeRegex.MatchString(errString) {
+	//	errString = "byte array too large"
+	//}
 
-	// Strip out numbers from "byte array too large" errors
-	if byteArrayTooLargeRegex.MatchString(errString) {
-		errString = "byte array too large"
-	}
+	return c.IncrementMetric(actorMethod, actor, method)
+}
 
-	return c.IncrementMetric(actorMethod, actor, method, errString)
+func (c *ActorsMetricsClient) UpdateMultisigProposeMetric(actor, method, methodNum string) error {
+	return c.IncrementMetric(actorMethod, actor, method, methodNum)
 }

@@ -23,7 +23,7 @@ func NewClient(metricsClient metrics.MetricsClient, name string) *ActorsMetricsC
 		name:          name,
 	}
 
-	s.registerModuleMetrics(parseActorMethodErrorMetric)
+	s.registerModuleMetrics(parseActorMethodErrorMetric, parseMultisigProposeMetric)
 
 	return s
 }

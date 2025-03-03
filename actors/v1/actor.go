@@ -14,6 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var _ actors.ActorParserInterface = &ActorParser{}
+
 type ActorParser struct {
 	helper  *helper.Helper
 	logger  *zap.Logger

@@ -101,7 +101,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
-				_ = eg.metrics.UpdateActorNameFromAddressMetric(err)
+				_ = eg.metrics.UpdateActorNameFromAddressMetric()
 				eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
 				continue
 			}

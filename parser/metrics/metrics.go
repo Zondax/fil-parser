@@ -30,9 +30,9 @@ const (
 
 // Metrics labels
 const (
+	//errorLabel   = "error"
 	actorLabel   = "actor"
 	txTypeLabel  = "txType"
-	errorLabel   = "error"
 	codeLabel    = "code"
 	kindLabel    = "kind"
 	addressLabel = "address"
@@ -58,28 +58,28 @@ var (
 	parsingMetadataErrorMetric = metrics.Metric{
 		Name:    parseMetadata,
 		Help:    "parsing metadata error",
-		Labels:  []string{actorLabel, txTypeLabel, errorLabel},
+		Labels:  []string{actorLabel, txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingMethodNameMetric = metrics.Metric{
 		Name:    parseMethodName,
 		Help:    "parsing method name",
-		Labels:  []string{codeLabel, errorLabel},
+		Labels:  []string{codeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingBlockCidFromMsgCidMetric = metrics.Metric{
 		Name:    blockCidFromMsgCid,
 		Help:    "get block cid from message cid",
-		Labels:  []string{txTypeLabel, errorLabel},
+		Labels:  []string{txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingBuildCidFromMsgTraceMetric = metrics.Metric{
 		Name:    buildCidFromMsgTrace,
 		Help:    "build Cid From Message Trace",
-		Labels:  []string{txTypeLabel, errorLabel},
+		Labels:  []string{txTypeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
@@ -100,107 +100,107 @@ var (
 	parsingTranslateTxCidToTxHashMetric = metrics.Metric{
 		Name:    translateTxCidToTxHash,
 		Help:    "error while translate tx cid to tx hash",
-		Labels:  []string{errorLabel},
+		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingActorNameMetric = metrics.Metric{
 		Name:    parseActorName,
 		Help:    "get actor name from address",
-		Labels:  []string{codeLabel, errorLabel},
+		Labels:  []string{codeLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingAddressMetric = metrics.Metric{
 		Name:    parseAddress,
 		Help:    "parse address",
-		Labels:  []string{addressLabel, errorLabel},
+		Labels:  []string{addressLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	getEvmSelectorSigMetric = metrics.Metric{
 		Name:    getEvmSelectorSig,
 		Help:    "get evm selector signature",
-		Labels:  []string{errorLabel},
+		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingParseNativeEventsLogMetric = metrics.Metric{
 		Name:    parseNativeEventsLog,
 		Help:    "parse native log",
-		Labels:  []string{errorLabel},
+		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingParseEthLogMetric = metrics.Metric{
 		Name:    parseEthLog,
 		Help:    "parse eth log",
-		Labels:  []string{errorLabel},
+		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
 )
 
-func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, err error) error {
-	errMsg := err.Error()
+func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) error {
+	// TODO: remove once errors are normalize
+	//errMsg := err.Error()
+	//switch {
+	//case errResolutionLookupPattern.MatchString(errMsg):
+	//	errMsg = "resolution lookup failed: actor not found"
+	//case errBadAddressPattern.MatchString(errMsg):
+	//	errMsg = "address is flagged as bad"
+	//}
 
-	switch {
-	case errResolutionLookupPattern.MatchString(errMsg):
-		errMsg = "resolution lookup failed: actor not found"
-	case errBadAddressPattern.MatchString(errMsg):
-		errMsg = "address is flagged as bad"
-	}
-
-	return c.IncrementMetric(parseMetadata, actor, txType, errMsg)
+	return c.IncrementMetric(parseMetadata, actor, txType)
 }
 
-func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code, err string) error {
-	return c.IncrementMetric(parseMethodName, code, err)
+func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(code string) error {
+	return c.IncrementMetric(parseMethodName, code)
 }
 
-func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string, err error) error {
-	errMsg := err.Error()
+func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string) error {
+	// TODO: remove once errors are normalize
+	//errMsg := err.Error()
+	//switch {
+	//case errResolutionLookupPattern.MatchString(errMsg):
+	//	errMsg = "resolution lookup failed: actor not found"
+	//case errBadAddressPattern.MatchString(errMsg):
+	//	errMsg = "address is flagged as bad"
+	//}
 
-	switch {
-	case errResolutionLookupPattern.MatchString(errMsg):
-		errMsg = "resolution lookup failed: actor not found"
-	case errBadAddressPattern.MatchString(errMsg):
-		errMsg = "address is flagged as bad"
-	}
-
-	return c.IncrementMetric(parseActorName, code, errMsg)
+	return c.IncrementMetric(parseActorName, code)
 }
 
-func (c *ParserMetricsClient) UpdateParseAddressErrorMetric(code, err string) error {
-	return c.IncrementMetric(parseAddress, code, err)
+func (c *ParserMetricsClient) UpdateParseAddressErrorMetric(code string) error {
+	return c.IncrementMetric(parseAddress, code)
 }
 
-func (c *ParserMetricsClient) UpdateGetEvmSelectorSigMetric(err error) error {
-	errMsg := err.Error()
+func (c *ParserMetricsClient) UpdateGetEvmSelectorSigMetric() error {
+	// TODO: remove once errors are normalize
+	//errMsg := err.Error()
+	//switch {
+	//case errFrom4BytesPattern.MatchString(errMsg):
+	//	errMsg = "error from 4bytes"
+	//case errSigNotFoundPattern.MatchString(errMsg):
+	//	errMsg = "signature not found"
+	//case errCacheStorePattern.MatchString(errMsg):
+	//	errMsg = "error adding selector_sig to cache"
+	//}
 
-	switch {
-	case errFrom4BytesPattern.MatchString(errMsg):
-		errMsg = "error from 4bytes"
-	case errSigNotFoundPattern.MatchString(errMsg):
-		errMsg = "signature not found"
-	case errCacheStorePattern.MatchString(errMsg):
-		errMsg = "error adding selector_sig to cache"
-	}
-
-	return c.IncrementMetric(getEvmSelectorSig, errMsg)
+	return c.IncrementMetric(getEvmSelectorSig)
 }
 
-func (c *ParserMetricsClient) UpdateBlockCidFromMsgCidMetric(txType string, err error) error {
-	errMsg := err.Error()
+func (c *ParserMetricsClient) UpdateBlockCidFromMsgCidMetric(txType string) error {
+	// TODO: remove once errors are normalize
+	//errMsg := err.Error()
+	//if errBlockMinedByNotFoundPattern.MatchString(errMsg) {
+	//	errMsg = "block miner not found"
+	//}
 
-	if errBlockMinedByNotFoundPattern.MatchString(errMsg) {
-		errMsg = "block miner not found"
-	}
-
-	return c.IncrementMetric(blockCidFromMsgCid, txType, errMsg)
+	return c.IncrementMetric(blockCidFromMsgCid, txType)
 }
 
-func (c *ParserMetricsClient) UpdateBuildCidFromMsgTraceMetric(txType string, err error) error {
-	return c.IncrementMetric(buildCidFromMsgTrace, txType, err.Error())
+func (c *ParserMetricsClient) UpdateBuildCidFromMsgTraceMetric(txType string) error {
+	return c.IncrementMetric(buildCidFromMsgTrace, txType)
 }
 
 func (c *ParserMetricsClient) UpdateGetBlockMinerMetric(code, txType string) error {
@@ -211,14 +211,14 @@ func (c *ParserMetricsClient) UpdateJsonMarshalMetric(kind, txType string) error
 	return c.IncrementMetric(jsonMarshal, kind, txType)
 }
 
-func (c *ParserMetricsClient) UpdateTranslateTxCidToTxHashMetric(err error) error {
-	return c.IncrementMetric(translateTxCidToTxHash, err.Error())
+func (c *ParserMetricsClient) UpdateTranslateTxCidToTxHashMetric() error {
+	return c.IncrementMetric(translateTxCidToTxHash)
 }
 
-func (c *ParserMetricsClient) UpdateParseNativeEventsLogsMetric(err error) error {
-	return c.IncrementMetric(parseNativeEventsLog, err.Error())
+func (c *ParserMetricsClient) UpdateParseNativeEventsLogsMetric() error {
+	return c.IncrementMetric(parseNativeEventsLog)
 }
 
-func (c *ParserMetricsClient) UpdateParseEthLogMetric(err error) error {
-	return c.IncrementMetric(parseEthLog, err.Error())
+func (c *ParserMetricsClient) UpdateParseEthLogMetric() error {
+	return c.IncrementMetric(parseEthLog)
 }
