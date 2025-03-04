@@ -36,6 +36,7 @@ const Version = "v2"
 var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26", "v1.27", "v1.28", "v1.29", "v1.30", "v1.31"}
 
 type Parser struct {
+	network                string
 	actorParser            actors.ActorParserInterface
 	addresses              *types.AddressInfoMap
 	txCidEquivalents       []types.TxCidTranslation
@@ -46,7 +47,13 @@ type Parser struct {
 }
 
 func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+	networkName := tools.ParseRawNetworkName(string(network))
 	p := &Parser{
+		network:                networkName,
 		actorParser:            actorsV1.NewActorParser(helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
@@ -66,6 +73,7 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metric
 	networkName := tools.ParseRawNetworkName(string(network))
 
 	return &Parser{
+		network:                networkName,
 		actorParser:            actorsV2.NewActorParser(networkName, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
@@ -431,7 +439,7 @@ func (p *Parser) getTxType(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, t
 		if err != nil {
 			p.logger.Sugar().Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}
-		txType, err = actorsV2.GetMethodName(msg.Method, actorName, int64(tipset.Height()), "", p.helper, p.logger)
+		txType, err = actorsV2.GetMethodName(msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 		if err != nil {
 			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
