@@ -37,12 +37,14 @@ import (
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
+	"github.com/zondax/fil-parser/metrics"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 
 	"github.com/zondax/fil-parser/actors/cache"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
+	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	"github.com/zondax/fil-parser/types"
 )
 

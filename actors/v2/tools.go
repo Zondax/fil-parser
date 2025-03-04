@@ -27,11 +27,11 @@ func GetMethodName(methodNum abi.MethodNum, actorName string, height int64, netw
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
 func ActorMethods(actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
 	mActorName := actorName
-	actorParser := &ActorParser{network, helper, logger}
+	actorParser := &ActorParser{network, helper, logger, nil}
 	if actorName == manifest.EthAccountKey || actorName == manifest.PlaceholderKey {
 		mActorName = manifest.EvmKey
 	}
-	actor, err := actorParser.GetActor(mActorName)
+	actor, err := actorParser.GetActor(mActorName, nil)
 	if err != nil {
 		return nil, err
 	}
