@@ -330,6 +330,40 @@ func getActors(t *testing.T) []v2.Actor {
 	return actors
 }
 
+// TestABIMethodNumberToMethodName tests that the method number is mapped to the correct method name for every version
+func TestABIMethodNumberToMethodName(t *testing.T) {
+	network := "mainnet"
+
+	versions := tools.GetSupportedVersions(network)
+	require.NotEmpty(t, versions)
+
+	actorParsers := getActors(t)
+	require.NotEmpty(t, actorParsers)
+
+	for _, version := range versions {
+		height := tools.DeterministicTestHeight(version)
+		for _, actor := range actorParsers {
+			transactionTypes := actor.TransactionTypes()
+			// Placeholder actor has no methods
+			if actor.Name() == manifest.PlaceholderKey {
+				continue
+			}
+			require.NotEmptyf(t, transactionTypes, "Transaction types are empty for actor: %s version: %s height: %d", actor.Name(), version, height)
+			methods, err := actor.Methods(network, height)
+			if actor.StartNetworkHeight() > height {
+				continue
+			}
+			require.NoErrorf(t, err, "Failed to get methods for actor: %s version: %s height: %d", actor.Name(), version, height)
+			require.NotEmptyf(t, methods, "Methods are empty for actor: %s version: %s height: %d", actor.Name(), version, height)
+
+			for methodNum := range methods {
+				methodName := methods[methodNum].Name
+				assert.Containsf(t, transactionTypes, methodName, "Method name: %s is not in transaction types for actor: %s version: %s height: %d", methodName, actor.Name(), version, height)
+			}
+		}
+	}
+}
+
 // TestMethodCoverage tests that all actor methods are supported for all actor versions
 func TestMethodCoverage(t *testing.T) {
 	tb := map[v2.Actor][]any{
