@@ -5,10 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"slices"
 	"strings"
 
+	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
@@ -20,12 +27,6 @@ import (
 	eventTools "github.com/zondax/fil-parser/tools/events"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
-
-	"github.com/bytedance/sonic"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/google/uuid"
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
 )
 
 const Version = "v2"
@@ -250,17 +251,12 @@ func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.C
 }
 
 func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
-	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
-		To:     trace.Msg.To,
-		From:   trace.Msg.From,
-		Method: trace.Msg.Method,
-	}, int64(tipset.Height()), tipset.Key())
-
+	txType, err := p.getTxType(trace, mainMsgCid, tipset, parentId)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
-		txType = parser.UnknownStr
+		return nil, err
 	}
-	if err == nil && txType == parser.UnknownStr {
+
+	if txType == parser.UnknownStr {
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
@@ -389,4 +385,40 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
 	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
+}
+
+func (p *Parser) getTxType(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (string, error) {
+	var (
+		actorName string
+		txType    string
+		err       error
+	)
+
+	msg := &parser.LotusMessage{
+		To:     trace.Msg.To,
+		From:   trace.Msg.From,
+		Method: trace.Msg.Method,
+	}
+	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	if err != nil {
+		return "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+
+	}
+
+	if txType == "" {
+		actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+		if err != nil {
+			p.logger.Sugar().Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
+		}
+		txType, err = actorsV2.GetMethodName(msg.Method, actorName, int64(tipset.Height()), "", p.helper, p.logger)
+		if err != nil {
+			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+			txType = parser.UnknownStr
+		}
+	}
+
+	if err == nil && txType == parser.UnknownStr {
+		return "", fmt.Errorf("could not get method name in transaction '%s'", mainMsgCid.String())
+	}
+	return txType, nil
 }

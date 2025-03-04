@@ -178,23 +178,36 @@ const (
 	MethodCreate                              = "Create"                              // MethodsEam
 	MethodCreate2                             = "Create2"                             // MethodsEam
 	MethodCreateExternal                      = "CreateExternal"                      // MethodsEam
+	MethodMint                                = "Mint"                                // MethodsDatacap: v9
 	MethodMintExported                        = "MintExported"                        // MethodsDatacap
+	MethodDestroy                             = "Destroy"                             // MethodsDatacap: v9
 	MethodDestroyExported                     = "DestroyExported"                     // MethodsDatacap
+	MethodName                                = "Name"                                // MethodsDatacap: v9
 	MethodNameExported                        = "NameExported"                        // MethodsDatacap
+	MethodSymbol                              = "Symbol"                              // MethodsDatacap: v9
 	MethodSymbolExported                      = "SymbolExported"                      // MethodsDatacap
+	MethodTotalSupply                         = "TotalSupply"                         // MethodsDatacap: v9
 	MethodTotalSupplyExported                 = "TotalSupplyExported"                 // MethodsDatacap
 	MethodBalanceExported                     = "BalanceExported"                     // MethodsDatacap
+	MethodTransfer                            = "Transfer"                            // MethodsDatacap: v9
 	MethodTransferExported                    = "TransferExported"                    // MethodsDatacap
+	MethodTransferFrom                        = "TransferFrom"                        // MethodsDatacap: v9
 	MethodTransferFromExported                = "TransferFromExported"                // MethodsDatacap
+	MethodIncreaseAllowance                   = "IncreaseAllowance"                   // MethodsDatacap: v9
 	MethodIncreaseAllowanceExported           = "IncreaseAllowanceExported"           // MethodsDatacap
+	MethodDecreaseAllowance                   = "DecreaseAllowance"                   // MethodsDatacap: v9
 	MethodDecreaseAllowanceExported           = "DecreaseAllowanceExported"           // MethodsDatacap
+	MethodRevokeAllowance                     = "RevokeAllowance"                     // MethodsDatacap: v9
 	MethodRevokeAllowanceExported             = "RevokeAllowanceExported"             // MethodsDatacap
+	MethodBurn                                = "Burn"                                // MethodsDatacap: v9
 	MethodBurnExported                        = "BurnExported"                        // MethodsDatacap
+	MethodBurnFrom                            = "BurnFrom"                            // MethodsDatacap: v9
 	MethodBurnFromExported                    = "BurnFromExported"                    // MethodsDatacap
+	MethodAllowance                           = "Allowance"                           // MethodsDatacap: v9
 	MethodAllowanceExported                   = "AllowanceExported"                   // MethodsDatacap
 	MethodGranularityExported                 = "GranularityExported"                 // MethodsDatacap
-
-	MethodUnknown = "Unknown" // Common
+	MethodBalanceOf                           = "BalanceOf"                           // MethodsDatacap
+	MethodUnknown                             = "Unknown"                             // Common
 )
 
 // SupportedOperations operations that will be parsed

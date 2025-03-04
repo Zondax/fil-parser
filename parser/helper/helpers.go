@@ -5,16 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors/cache"
-	logger2 "github.com/zondax/fil-parser/logger"
-	"github.com/zondax/fil-parser/parser"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"github.com/zondax/rosetta-filecoin-lib/actors"
 	"go.uber.org/zap"
 
 	// The following import is necessary to ensure that the init() function
@@ -25,8 +16,57 @@ import (
 	// with initialization, such as errors when searching for actorNameByCid.
 	_ "github.com/filecoin-project/lotus/build"
 
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v10/eam"
+	"github.com/filecoin-project/go-state-types/builtin/v10/evm"
+	filInit "github.com/filecoin-project/go-state-types/builtin/v11/init"
+	"github.com/filecoin-project/go-state-types/builtin/v8/account"
+	"github.com/filecoin-project/go-state-types/builtin/v8/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v8/market"
+	"github.com/filecoin-project/go-state-types/builtin/v8/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v8/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v8/paych"
+	"github.com/filecoin-project/go-state-types/builtin/v8/power"
+	"github.com/filecoin-project/go-state-types/builtin/v8/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
+
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"github.com/zondax/rosetta-filecoin-lib/actors"
+
+	"github.com/zondax/fil-parser/actors/cache"
+	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
+
+// Deprecated: Use v2/tools.ActorMethods instead
+var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
+	manifest.InitKey:     filInit.Methods,
+	manifest.CronKey:     cron.Methods,
+	manifest.AccountKey:  account.Methods,
+	manifest.PowerKey:    power.Methods,
+	manifest.MinerKey:    miner.Methods,
+	manifest.MarketKey:   market.Methods,
+	manifest.PaychKey:    paych.Methods,
+	manifest.MultisigKey: multisig.Methods,
+	manifest.RewardKey:   reward.Methods,
+	manifest.VerifregKey: verifreg.Methods,
+	manifest.EvmKey:      evm.Methods,
+	manifest.EamKey:      eam.Methods,
+	manifest.DatacapKey:  datacap.Methods,
+
+	// EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
+	// We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
+	// this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
+	manifest.PlaceholderKey: evm.Methods,
+	manifest.EthAccountKey:  evm.Methods,
+}
 
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
@@ -112,6 +152,7 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 	}
 }
 
+// Deprecated: Use v2/tools.GetMethodName instead
 func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
 
 	if msg == nil {
@@ -130,16 +171,34 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 
 	actorName, _ := h.GetActorNameFromAddress(msg.To, height, key)
 
-	actorMethods, err := allMethods(height, "", actorName)
-	if err != nil {
-		return "", err
+	actorMethods, ok := allMethods[actorName]
+	if !ok {
+		return "", parser.ErrNotKnownActor
 	}
-
 	method, ok := actorMethods[msg.Method]
 	if !ok {
 		return parser.UnknownStr, nil
 	}
 	return method.Name, nil
+}
+
+// CheckCommonMethods returns the method name for the given message if Send Or Constructor, otherwise returns an empty string
+func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
+	if msg == nil {
+		return "", errors.New("malformed value")
+	}
+
+	// Shortcut 1 - Method "0" corresponds to "MethodSend"
+	if msg.Method == 0 {
+		return parser.MethodSend, nil
+	}
+
+	// Shortcut 2 - Method "1" corresponds to "MethodConstructor"
+	if msg.Method == 1 {
+		return parser.MethodConstructor, nil
+	}
+
+	return "", nil
 }
 
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
