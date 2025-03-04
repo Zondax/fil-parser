@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/zondax/fil-parser/metrics"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
@@ -53,14 +54,16 @@ type EventGenerator interface {
 }
 
 type eventGenerator struct {
-	helper *helper.Helper
-	logger *zap.Logger
+	helper  *helper.Helper
+	logger  *zap.Logger
+	metrics *multisigMetricsClient
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *zap.Logger) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) EventGenerator {
 	return &eventGenerator{
-		helper: helper,
-		logger: logger,
+		helper:  helper,
+		logger:  logger,
+		metrics: newClient(metrics, "multisigEventGenerator"),
 	}
 }
 
@@ -78,6 +81,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 		metadata, err := tools.ParseTxMetadata(tx.TxMetadata)
 		if err != nil {
+			_ = eg.metrics.UpdateParseTxMetadataMetric(tx.TxType)
 			return nil, err
 		}
 
@@ -97,6 +101,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
+				_ = eg.metrics.UpdateActorNameFromAddressMetric()
 				eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
 				continue
 			}
@@ -106,7 +111,6 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			multisigInfo, err := eg.createMultisigInfo(ctx, tx, tipsetCid)
 			if err != nil {
-				// TODO: Metric
 				continue
 			}
 			events.MultisigInfo = append(events.MultisigInfo, multisigInfo)
@@ -199,12 +203,14 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.MultisigInfo, error) {
 	value, err := actorsV1.ParseMultisigMetadata(tx.TxType, tx.TxMetadata)
 	if err != nil {
+		_ = eg.metrics.UpdateParseMultisigMetadataMetric(tx.TxType)
 		eg.logger.Sugar().Error(ctx, fmt.Sprintf("Multisig error parsing metadata: %s", err.Error()))
 		value = tx.TxMetadata // if there is an error then we need to store the raw metadata
 	}
 
 	b, err := json.Marshal(value)
 	if err != nil {
+		_ = eg.metrics.UpdateMarshalMultisigMetadataMetric(tx.TxType)
 		eg.logger.Sugar().Error(ctx, fmt.Sprintf("Multisig error marshaling value: %s", err.Error()))
 		return nil, err
 	}

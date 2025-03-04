@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/filecoin-project/go-state-types/manifest"
 
 	"github.com/zondax/fil-parser/parser"
 
@@ -54,6 +55,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]in
 
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
+		_ = p.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, parser.MethodInvokeContract)
 		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
@@ -64,6 +66,7 @@ func (p *ActorParser) invokeContract(rawParams, rawReturn []byte) (map[string]in
 	reader = bytes.NewReader(rawReturn)
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
+		_ = p.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, parser.MethodInvokeContract)
 		p.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
 	}
 

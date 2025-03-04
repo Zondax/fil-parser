@@ -3,6 +3,8 @@ package v2_test
 import (
 	"errors"
 	"fmt"
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 	"os"
 	"testing"
 
@@ -319,11 +321,11 @@ func TestAllActorsSupported(t *testing.T) {
 }
 
 func getActors(t *testing.T) []v2.Actor {
-	actorParser := v2.NewActorParser("mainnet", nil, l).(*v2.ActorParser)
+	actorParser := v2.NewActorParser("mainnet", nil, l, metrics2.NewNoopMetricsClient()).(*v2.ActorParser)
 	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
 	actors := []v2.Actor{}
 	for _, filActor := range filActors {
-		actor, err := actorParser.GetActor(filActor)
+		actor, err := actorParser.GetActor(filActor, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 		require.NoErrorf(t, err, "Actor %s is not supported", filActor)
 		actors = append(actors, actor)
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/zondax/fil-parser/parser"
@@ -90,11 +91,11 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 
 	blockCids, ok := tipset.BlockMessages[msgCid]
 	if !ok {
-		return blockCid, fmt.Errorf("could not find block hash for message cid '%s'", msgCid)
+		return blockCid, errors.New("could not find block hash for message cid")
 	}
 
 	if len(blockCids) == 0 {
-		return blockCid, fmt.Errorf("could not find block hash for message cid '%s'. Slice is empty", msgCid)
+		return blockCid, errors.New("could not find block hash for message cid. Slice is empty")
 	} else {
 		blockCid = blockCids[0].Cid
 	}

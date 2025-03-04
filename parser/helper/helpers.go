@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/ipfs/go-cid"
@@ -73,10 +74,17 @@ type Helper struct {
 	node       api.FullNode
 	actorCache *cache.ActorsCache
 	logger     *zap.Logger
+	metrics    *parsermetrics.ParserMetricsClient
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger) *Helper {
-	return &Helper{lib: lib, actorCache: actorsCache, node: node, logger: logger2.GetSafeLogger(logger)}
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger, metrics metrics.MetricsClient) *Helper {
+	return &Helper{
+		lib:        lib,
+		actorCache: actorsCache,
+		node:       node,
+		logger:     logger2.GetSafeLogger(logger),
+		metrics:    parsermetrics.NewClient(metrics, "helper"),
+	}
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
@@ -154,7 +162,6 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 
 // Deprecated: Use v2/tools.GetMethodName instead
 func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
-
 	if msg == nil {
 		return "", errors.New("malformed value")
 	}
@@ -169,16 +176,21 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	actorName, _ := h.GetActorNameFromAddress(msg.To, height, key)
+	actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	if err != nil {
+		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
+	}
 
 	actorMethods, ok := allMethods[actorName]
 	if !ok {
 		return "", parser.ErrNotKnownActor
 	}
+
 	method, ok := actorMethods[msg.Method]
 	if !ok {
 		return parser.UnknownStr, nil
 	}
+
 	return method.Name, nil
 }
 
@@ -202,7 +214,11 @@ func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key 
 }
 
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
-	return h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+	s, err := h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+	if err != nil {
+		_ = h.metrics.UpdateGetEvmSelectorSigMetric()
+	}
+	return s, err
 }
 
 func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey) ([]*types.Transaction, error) {
@@ -210,11 +226,13 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 	for _, tx := range txs {
 		addrTo, err := address.NewFromString(tx.TxTo)
 		if err != nil {
+			_ = h.metrics.UpdateParseAddressErrorMetric("to")
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 		addrFrom, err := address.NewFromString(tx.TxFrom)
 		if err != nil {
+			_ = h.metrics.UpdateParseAddressErrorMetric("from")
 			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
 			continue
 		}

@@ -20,8 +20,10 @@ import (
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	eventTools "github.com/zondax/fil-parser/tools/events"
@@ -40,19 +42,23 @@ type Parser struct {
 	helper                 *helper.Helper
 	logger                 *zap.Logger
 	multisigEventGenerator multisigTools.EventGenerator
+	metrics                *parsermetrics.ParserMetricsClient
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger) *Parser {
-	return &Parser{
-		actorParser:            actorsV1.NewActorParser(helper, logger),
+func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+	p := &Parser{
+		actorParser:            actorsV1.NewActorParser(helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
+
+	return p
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
+func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Sugar().Error(err)
@@ -60,11 +66,12 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger) *Parser {
 	networkName := tools.ParseRawNetworkName(string(network))
 
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(networkName, helper, logger),
+		actorParser:            actorsV2.NewActorParser(networkName, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
 }
 
@@ -99,9 +106,6 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	if err != nil {
-		return nil, parser.ErrBlockHash
-	}
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
 			continue
@@ -139,6 +143,9 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		if err == nil && txHash != "" {
 			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 		}
+		if err != nil {
+			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+		}
 	}
 
 	transactions = tools.SetNodeMetadata(transactions, txsData.Metadata, Version)
@@ -160,6 +167,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	for idx, nativeLog := range eventsData.NativeLog {
 		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
 		if err != nil {
+			_ = p.metrics.UpdateParseNativeEventsLogsMetric()
 			return nil, err
 		}
 
@@ -190,6 +198,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 	for idx, ethLog := range eventsData.EthLogs {
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
 		if err != nil {
+			_ = p.metrics.UpdateParseEthLogMetric()
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
 
@@ -253,14 +262,15 @@ func (p *Parser) parseSubTxs(subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.C
 func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
 	txType, err := p.getTxType(trace, mainMsgCid, tipset, parentId)
 	if err != nil {
-		return nil, err
-	}
-
-	if txType == parser.UnknownStr {
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
+		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+		txType = parser.UnknownStr
+	} else if txType == parser.UnknownStr {
+		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
-	metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -270,10 +280,11 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
-
 	if mErr != nil {
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
+
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
@@ -281,7 +292,10 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
-	jsonMetadata, _ := json.Marshal(metadata)
+	jsonMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
+	}
 
 	p.appendAddressInfo(&parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -294,11 +308,13 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
+		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
 	}
 
 	msgCid, err := tools.BuildCidFromMessageTrace(trace.Msg, mainMsgCid.String())
 	if err != nil {
+		_ = p.metrics.UpdateBuildCidFromMsgTraceMetric(txType)
 		p.logger.Sugar().Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
@@ -331,11 +347,13 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s': %v", txType, err)
+		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
 
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
+		// added a new error to avoid cardinality of GetBlockMiner error results which include cid
+		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
@@ -355,7 +373,11 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		},
 	}
 
-	metadata, _ := json.Marshal(feesMetadata)
+	metadata, err := json.Marshal(feesMetadata)
+	if err != nil {
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
+	}
+
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
 	return &types.Transaction{
