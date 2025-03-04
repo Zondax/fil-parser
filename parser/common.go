@@ -94,7 +94,7 @@ func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string
 	ctx := context.Background()
 	ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
 	if err != nil || ethHash == nil {
-		return "", nil
+		return "", err
 	}
 
 	return ethHash.String(), nil

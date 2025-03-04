@@ -18,7 +18,7 @@ func (p *Evm) Parse(network string, height int64, txType string, msg *parser.Lot
 		resp, err := p.Resurrect(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodInvokeContract, parser.MethodInvokeContractReadOnly:
-		resp, err := p.InvokeContract(network, height, msg.Params, msgRct.Return)
+		resp, err := p.InvokeContract(network, height, txType, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodInvokeContractDelegate:
 		resp, err := p.InvokeContractDelegate(network, height, msg.Params, msgRct.Return)

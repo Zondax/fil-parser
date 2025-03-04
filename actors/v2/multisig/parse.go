@@ -5,6 +5,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -12,14 +13,16 @@ import (
 )
 
 type Msig struct {
-	helper *helper.Helper
-	logger *zap.Logger
+	helper  *helper.Helper
+	logger  *zap.Logger
+	metrics *metrics.ActorsMetricsClient
 }
 
-func New(helper *helper.Helper, logger *zap.Logger) *Msig {
+func New(helper *helper.Helper, logger *zap.Logger, metrics *metrics.ActorsMetricsClient) *Msig {
 	return &Msig{
-		helper: helper,
-		logger: logger,
+		helper:  helper,
+		logger:  logger,
+		metrics: metrics,
 	}
 }
 
@@ -42,7 +45,7 @@ func (p *Msig) Parse(network string, height int64, txType string, msg *parser.Lo
 		resp := actors.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		ret, err = p.Propose(network, msg, height, key, msg.Params, msgRct.Return, p.parseMsigParams)
+		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return, p.parseMsigParams)
 	case parser.MethodApprove, parser.MethodApproveExported:
 		ret, err = p.Approve(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.MethodCancel, parser.MethodCancelExported:

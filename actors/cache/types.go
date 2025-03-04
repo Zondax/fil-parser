@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	"github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/types"
 	"go.uber.org/zap"
 )
@@ -32,6 +33,7 @@ type ActorsCache struct {
 	badAddress    cmap.ConcurrentMap
 	logger        *zap.Logger
 	httpClient    *resty.Client
+	metrics       *metrics.ActorsMetricsClient
 }
 
 // FourBytesSignatureResult represents the response from SignatureDBURL

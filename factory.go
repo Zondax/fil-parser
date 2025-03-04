@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zondax/fil-parser/metrics"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
@@ -49,17 +50,24 @@ type Parser interface {
 	IsNodeVersionSupported(ver string) bool
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
+	defaultOpts := FilecoinParserOptions{
+		metrics: metrics.NewNoopMetricsClient(),
+	}
+	for _, opt := range opts {
+		opt(&defaultOpts)
+	}
+
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
 	if err != nil {
 		logger.Sugar().Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
-	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
-	parserV1 := v1.NewParser(helper, logger)
-	parserV2 := v2.NewParser(helper, logger)
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
+	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics)
+	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -69,17 +77,24 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger) (*FilecoinParser, error) {
+func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
+	defaultOpts := FilecoinParserOptions{
+		metrics: metrics.NewNoopMetricsClient(),
+	}
+	for _, opt := range opts {
+		opt(&defaultOpts)
+	}
+
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
 	if err != nil {
 		logger.Sugar().Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
-	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger)
-	parserV1 := v1.NewActorsV2Parser(helper, logger)
-	parserV2 := v2.NewActorsV2Parser(helper, logger)
+	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
+	parserV1 := v1.NewActorsV2Parser(helper, logger, defaultOpts.metrics)
+	parserV2 := v2.NewActorsV2Parser(helper, logger, defaultOpts.metrics)
 
 	return &FilecoinParser{
 		parserV1: parserV1,

@@ -24,7 +24,7 @@ var commonErrors = errorsMap{
 	"25": "ErrReadOnly",
 }
 
-// CheckCheCommonError given an ExitCode.String() checks if is a common error
+// CheckExitCodeCommonError given an ExitCode.String() checks if is a common error
 func CheckExitCodeCommonError(code string) string {
 	e, ok := commonErrors[code]
 	if !ok {
