@@ -8,7 +8,9 @@ import (
 
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -52,6 +54,86 @@ func New(logger *zap.Logger) *Miner {
 func (m *Miner) Name() string {
 	return manifest.MinerKey
 }
+
+func (*Miner) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (*Miner) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsMiner.Constructor: {
+				Name: "Constructor",
+			},
+			legacyBuiltin.MethodsMiner.ControlAddresses: {
+				Name: "ControlAddresses",
+			},
+			legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
+				Name: "ChangeWorkerAddress",
+			},
+			legacyBuiltin.MethodsMiner.ChangePeerID: {
+				Name: "ChangePeerID",
+			},
+			legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
+				Name: "SubmitWindowedPoSt",
+			},
+			legacyBuiltin.MethodsMiner.PreCommitSector: {
+				Name: "PreCommitSector",
+			},
+			legacyBuiltin.MethodsMiner.ProveCommitSector: {
+				Name: "ProveCommitSector",
+			},
+			nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
+				Name: "ExtendSectorExpiration",
+			},
+			legacyBuiltin.MethodsMiner.TerminateSectors: {
+				Name: "TerminateSectors",
+			},
+			legacyBuiltin.MethodsMiner.DeclareFaults: {
+				Name: "DeclareFaults",
+			},
+			legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
+				Name: "DeclareFaultsRecovered",
+			},
+			legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
+				Name: "OnDeferredCronEvent",
+			},
+			legacyBuiltin.MethodsMiner.CheckSectorProven: {
+				Name: "CheckSectorProven",
+			},
+			legacyBuiltin.MethodsMiner.AddLockedFund: {
+				Name: "AddLockedFund",
+			},
+			legacyBuiltin.MethodsMiner.ReportConsensusFault: {
+				Name: "ReportConsensusFault",
+			},
+			legacyBuiltin.MethodsMiner.WithdrawBalance: {
+				Name: "WithdrawBalance",
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return miner8.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return miner9.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return miner10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return miner11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return miner12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return miner13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return miner14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return miner15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+}
+
 func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	return parseGeneric(rawParams, nil, false, &abi.EmptyValue{}, &abi.EmptyValue{}, parser.ParamsKey)
 }

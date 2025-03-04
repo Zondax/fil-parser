@@ -6,7 +6,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
@@ -38,8 +41,58 @@ func New(logger *zap.Logger) *VerifiedRegistry {
 		logger: logger,
 	}
 }
+
 func (v *VerifiedRegistry) Name() string {
 	return manifest.VerifregKey
+}
+
+func (*VerifiedRegistry) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (*VerifiedRegistry) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
+				Name: "Constructor",
+			},
+			legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
+				Name: "AddVerifier",
+			},
+			legacyBuiltin.MethodsVerifiedRegistry.RemoveVerifier: {
+				Name: "RemoveVerifier",
+			},
+			legacyBuiltin.MethodsVerifiedRegistry.AddVerifiedClient: {
+				Name: "AddVerifiedClient",
+			},
+			legacyBuiltin.MethodsVerifiedRegistry.UseBytes: {
+				Name: "UseBytes",
+			},
+			legacyBuiltin.MethodsVerifiedRegistry.RestoreBytes: {
+				Name: "RestoreBytes",
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return verifregv8.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return verifregv9.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return verifregv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return verifregv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return verifregv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return verifregv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return verifregv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return verifregv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
 }
 
 func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {

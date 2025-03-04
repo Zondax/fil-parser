@@ -5,7 +5,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	builtinInitv11 "github.com/filecoin-project/go-state-types/builtin/v11/init"
@@ -42,6 +45,43 @@ func New(logger *zap.Logger) *Init {
 
 func (i *Init) Name() string {
 	return manifest.InitKey
+}
+
+func (*Init) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (i *Init) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsInit.Constructor: {
+				Name: "Constructor",
+			},
+			legacyBuiltin.MethodsInit.Exec: {
+				Name: "Exec",
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return builtinInitv8.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return builtinInitv9.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return builtinInitv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return builtinInitv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return builtinInitv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return builtinInitv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return builtinInitv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return builtinInitv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
 }
 
 func (*Init) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {

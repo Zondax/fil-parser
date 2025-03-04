@@ -68,3 +68,7 @@ func (*Datacap) TransferFromExported(network string, height int64, raw, rawRetur
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
+
+func (*Datacap) BalanceOf(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+	return parse(raw, rawReturn, true, &address.Address{}, &abi.TokenAmount{}, parser.ParamsKey)
+}

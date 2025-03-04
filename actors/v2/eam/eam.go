@@ -5,19 +5,25 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
+
 	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
 	eamv11 "github.com/filecoin-project/go-state-types/builtin/v11/eam"
 	eamv12 "github.com/filecoin-project/go-state-types/builtin/v12/eam"
 	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/chain/types/ethtypes"
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
 
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -33,6 +39,32 @@ func New(logger *zap.Logger) *Eam {
 
 func (e *Eam) Name() string {
 	return manifest.EamKey
+}
+
+func (*Eam) StartNetworkHeight() int64 {
+	return tools.V18.Height()
+}
+
+func (e *Eam) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	case tools.V18.IsSupported(network, height):
+		return eamv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return eamv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return eamv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return eamv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return eamv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return eamv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
 }
 
 func newEamCreate(r createReturn, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {

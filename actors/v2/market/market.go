@@ -10,7 +10,9 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
 	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
@@ -49,6 +51,64 @@ func New(logger *zap.Logger) *Market {
 }
 func (m *Market) Name() string {
 	return manifest.MarketKey
+}
+
+func (*Market) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (*Market) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsMarket.Constructor: {
+				Name: "Constructor",
+			},
+			legacyBuiltin.MethodsMarket.AddBalance: {
+				Name: "AddBalance",
+			},
+			legacyBuiltin.MethodsMarket.WithdrawBalance: {
+				Name: "WithdrawBalance",
+			},
+			legacyBuiltin.MethodsMarket.PublishStorageDeals: {
+				Name: "PublishStorageDeals",
+			},
+			legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
+				Name: "VerifyDealsForActivation",
+			},
+			legacyBuiltin.MethodsMarket.ActivateDeals: {
+				Name: "ActivateDeals",
+			},
+			legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
+				Name: "OnMinerSectorsTerminate",
+			},
+			legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
+				Name: "ComputeDataCommitment",
+			},
+			legacyBuiltin.MethodsMarket.CronTick: {
+				Name: "CronTick",
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return v8Market.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return v9Market.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return v10Market.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return v11Market.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return v12Market.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return v13Market.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return v14Market.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return v15Market.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
 }
 
 func (*Market) AddBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

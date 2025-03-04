@@ -5,7 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/manifest"
 
 	evmv10 "github.com/filecoin-project/go-state-types/builtin/v10/evm"
 	evmv11 "github.com/filecoin-project/go-state-types/builtin/v11/evm"
@@ -13,12 +17,10 @@ import (
 	evmv13 "github.com/filecoin-project/go-state-types/builtin/v13/evm"
 	evmv14 "github.com/filecoin-project/go-state-types/builtin/v14/evm"
 	evmv15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
-	"github.com/filecoin-project/go-state-types/manifest"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"go.uber.org/zap"
 )
 
 type Evm struct {
@@ -33,6 +35,32 @@ func New(logger *zap.Logger) *Evm {
 
 func (e *Evm) Name() string {
 	return manifest.EvmKey
+}
+
+func (*Evm) StartNetworkHeight() int64 {
+	return tools.V18.Height()
+}
+
+func (e *Evm) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	case tools.V18.IsSupported(network, height):
+		return evmv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return evmv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return evmv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return evmv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return evmv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return evmv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
 }
 
 func (e *Evm) InvokeContract(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {

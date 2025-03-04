@@ -1,13 +1,16 @@
 package account
 
 import (
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 type Account struct {
@@ -22,6 +25,10 @@ func New(logger *zap.Logger) *Account {
 
 func (a *Account) Name() string {
 	return manifest.AccountKey
+}
+
+func (*Account) StartNetworkHeight() int64 {
+	return tools.V1.Height()
 }
 
 func (a *Account) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {

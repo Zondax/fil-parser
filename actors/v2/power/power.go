@@ -6,8 +6,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/proof"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
 	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
@@ -43,6 +45,64 @@ func New(logger *zap.Logger) *Power {
 }
 func (p *Power) Name() string {
 	return manifest.PowerKey
+}
+
+func (*Power) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (*Power) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsPower.Constructor: {
+				Name: "Constructor",
+			},
+			legacyBuiltin.MethodsPower.CreateMiner: {
+				Name: "CreateMiner",
+			},
+			legacyBuiltin.MethodsPower.UpdateClaimedPower: {
+				Name: "UpdateClaimedPower",
+			},
+			legacyBuiltin.MethodsPower.EnrollCronEvent: {
+				Name: "EnrollCronEvent",
+			},
+			legacyBuiltin.MethodsPower.OnEpochTickEnd: {
+				Name: "OnEpochTickEnd",
+			},
+			legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
+				Name: "UpdatePledgeTotal",
+			},
+			legacyBuiltin.MethodsPower.OnConsensusFault: {
+				Name: "OnConsensusFault",
+			},
+			legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
+				Name: "SubmitPoRepForBulkVerify",
+			},
+			legacyBuiltin.MethodsPower.CurrentTotalPower: {
+				Name: "CurrentTotalPower",
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return powerv8.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return powerv9.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return powerv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return powerv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return powerv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return powerv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return powerv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return powerv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
 }
 
 func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
