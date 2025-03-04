@@ -424,7 +424,6 @@ func (p *Parser) getTxType(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, t
 	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
 	if err != nil {
 		return "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
-
 	}
 
 	if txType == "" {
