@@ -1,4 +1,4 @@
-package paymentchannel
+package paymentChannel
 
 import (
 	"fmt"

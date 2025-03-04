@@ -1,4 +1,4 @@
-package paymentchannel
+package paymentChannel
 
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"

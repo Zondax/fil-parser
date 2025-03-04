@@ -2,6 +2,7 @@ package v2
 
 import (
 	"fmt"
+
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
@@ -24,12 +25,12 @@ import (
 	"github.com/zondax/fil-parser/actors/v2/market"
 	"github.com/zondax/fil-parser/actors/v2/miner"
 	"github.com/zondax/fil-parser/actors/v2/multisig"
-	"github.com/zondax/fil-parser/actors/v2/paymentchannel"
+	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
 	"github.com/zondax/fil-parser/actors/v2/placeholder"
 	"github.com/zondax/fil-parser/actors/v2/power"
 	"github.com/zondax/fil-parser/actors/v2/reward"
 	"github.com/zondax/fil-parser/actors/v2/system"
-	"github.com/zondax/fil-parser/actors/v2/verifiedregistry"
+	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"

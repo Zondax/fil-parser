@@ -1,4 +1,4 @@
-package verifiedregistry
+package verifiedRegistry
 
 import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
