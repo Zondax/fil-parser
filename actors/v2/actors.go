@@ -3,9 +3,14 @@ package v2
 import (
 	"fmt"
 
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/account"
 	"github.com/zondax/fil-parser/actors/v2/cron"
@@ -23,17 +28,19 @@ import (
 	"github.com/zondax/fil-parser/actors/v2/reward"
 	"github.com/zondax/fil-parser/actors/v2/system"
 	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
+
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 type Actor interface {
 	Name() string
 	Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
+	StartNetworkHeight() int64
 	TransactionTypes() map[string]any
+	Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error)
 }
 
 type ActorParser struct {
