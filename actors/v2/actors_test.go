@@ -100,6 +100,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
 	// all eam version imports
 	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
@@ -422,6 +423,7 @@ func TestMethodCoverage(t *testing.T) {
 			cronv15.Methods,
 		},
 		&datacap.Datacap{}: {
+			datacapv9.Methods,
 			datacapv10.Methods,
 			datacapv11.Methods,
 			datacapv12.Methods,
