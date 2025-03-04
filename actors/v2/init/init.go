@@ -57,10 +57,10 @@ func (i *Init) Methods(network string, height int64) (map[abi.MethodNum]nonLegac
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsInit.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsInit.Exec: {
-				Name: "Exec",
+				Name: parser.MethodExec,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

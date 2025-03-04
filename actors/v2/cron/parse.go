@@ -51,10 +51,10 @@ func (c *Cron) Methods(network string, height int64) (map[abi.MethodNum]nonLegac
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsCron.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsCron.EpochTick: {
-				Name: "EpochTick",
+				Name: parser.MethodEpochTick,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

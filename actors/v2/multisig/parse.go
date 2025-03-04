@@ -54,31 +54,31 @@ func (*Msig) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyB
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMultisig.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsMultisig.Propose: {
-				Name: "Propose",
+				Name: parser.MethodPropose,
 			},
 			legacyBuiltin.MethodsMultisig.Approve: {
-				Name: "Approve",
+				Name: parser.MethodApprove,
 			},
 			legacyBuiltin.MethodsMultisig.Cancel: {
-				Name: "Cancel",
+				Name: parser.MethodCancel,
 			},
 			legacyBuiltin.MethodsMultisig.AddSigner: {
-				Name: "AddSigner",
+				Name: parser.MethodAddSigner,
 			},
 			legacyBuiltin.MethodsMultisig.RemoveSigner: {
-				Name: "RemoveSigner",
+				Name: parser.MethodRemoveSigner,
 			},
 			legacyBuiltin.MethodsMultisig.SwapSigner: {
-				Name: "SwapSigner",
+				Name: parser.MethodSwapSigner,
 			},
 			legacyBuiltin.MethodsMultisig.ChangeNumApprovalsThreshold: {
-				Name: "ChangeNumApprovalsThreshold",
+				Name: parser.MethodChangeNumApprovalsThreshold,
 			},
 			legacyBuiltin.MethodsMultisig.LockBalance: {
-				Name: "LockBalance",
+				Name: parser.MethodLockBalance,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

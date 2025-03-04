@@ -65,52 +65,52 @@ func (*Miner) Methods(network string, height int64) (map[abi.MethodNum]nonLegacy
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMiner.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsMiner.ControlAddresses: {
-				Name: "ControlAddresses",
+				Name: parser.MethodControlAddresses,
 			},
 			legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
-				Name: "ChangeWorkerAddress",
+				Name: parser.MethodChangeWorkerAddress,
 			},
 			legacyBuiltin.MethodsMiner.ChangePeerID: {
-				Name: "ChangePeerID",
+				Name: parser.MethodChangePeerID,
 			},
 			legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
-				Name: "SubmitWindowedPoSt",
+				Name: parser.MethodSubmitWindowedPoSt,
 			},
 			legacyBuiltin.MethodsMiner.PreCommitSector: {
-				Name: "PreCommitSector",
+				Name: parser.MethodPreCommitSector,
 			},
 			legacyBuiltin.MethodsMiner.ProveCommitSector: {
-				Name: "ProveCommitSector",
+				Name: parser.MethodProveCommitSector,
 			},
 			nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
-				Name: "ExtendSectorExpiration",
+				Name: parser.MethodExtendSectorExpiration,
 			},
 			legacyBuiltin.MethodsMiner.TerminateSectors: {
-				Name: "TerminateSectors",
+				Name: parser.MethodTerminateSectors,
 			},
 			legacyBuiltin.MethodsMiner.DeclareFaults: {
-				Name: "DeclareFaults",
+				Name: parser.MethodDeclareFaults,
 			},
 			legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
-				Name: "DeclareFaultsRecovered",
+				Name: parser.MethodDeclareFaultsRecovered,
 			},
 			legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
-				Name: "OnDeferredCronEvent",
+				Name: parser.MethodOnDeferredCronEvent,
 			},
 			legacyBuiltin.MethodsMiner.CheckSectorProven: {
-				Name: "CheckSectorProven",
+				Name: parser.MethodCheckSectorProven,
 			},
 			legacyBuiltin.MethodsMiner.AddLockedFund: {
-				Name: "AddLockedFund",
+				Name: parser.MethodAddLockedFund,
 			},
 			legacyBuiltin.MethodsMiner.ReportConsensusFault: {
-				Name: "ReportConsensusFault",
+				Name: parser.MethodReportConsensusFault,
 			},
 			legacyBuiltin.MethodsMiner.WithdrawBalance: {
-				Name: "WithdrawBalance",
+				Name: parser.MethodWithdrawBalance,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

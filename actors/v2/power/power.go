@@ -57,31 +57,31 @@ func (*Power) Methods(network string, height int64) (map[abi.MethodNum]nonLegacy
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsPower.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsPower.CreateMiner: {
-				Name: "CreateMiner",
+				Name: parser.MethodCreateMiner,
 			},
 			legacyBuiltin.MethodsPower.UpdateClaimedPower: {
-				Name: "UpdateClaimedPower",
+				Name: parser.MethodUpdateClaimedPower,
 			},
 			legacyBuiltin.MethodsPower.EnrollCronEvent: {
-				Name: "EnrollCronEvent",
+				Name: parser.MethodEnrollCronEvent,
 			},
 			legacyBuiltin.MethodsPower.OnEpochTickEnd: {
-				Name: "OnEpochTickEnd",
+				Name: parser.MethodOnEpochTickEnd,
 			},
 			legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
-				Name: "UpdatePledgeTotal",
+				Name: parser.MethodUpdatePledgeTotal,
 			},
 			legacyBuiltin.MethodsPower.OnConsensusFault: {
-				Name: "OnConsensusFault",
+				Name: parser.MethodOnConsensusFault,
 			},
 			legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
-				Name: "SubmitPoRepForBulkVerify",
+				Name: parser.MethodSubmitPoRepForBulkVerify,
 			},
 			legacyBuiltin.MethodsPower.CurrentTotalPower: {
-				Name: "CurrentTotalPower",
+				Name: parser.MethodCurrentTotalPower,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

@@ -29,6 +29,7 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/verifreg"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -56,22 +57,22 @@ func (*VerifiedRegistry) Methods(network string, height int64) (map[abi.MethodNu
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
-				Name: "AddVerifier",
+				Name: parser.MethodAddVerifier,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.RemoveVerifier: {
-				Name: "RemoveVerifier",
+				Name: parser.MethodRemoveVerifier,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.AddVerifiedClient: {
-				Name: "AddVerifiedClient",
+				Name: parser.MethodAddVerifiedClient,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.UseBytes: {
-				Name: "UseBytes",
+				Name: parser.MethodUseBytes,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.RestoreBytes: {
-				Name: "RestoreBytes",
+				Name: parser.MethodRestoreBytes,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

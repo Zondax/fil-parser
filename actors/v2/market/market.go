@@ -63,31 +63,31 @@ func (*Market) Methods(network string, height int64) (map[abi.MethodNum]nonLegac
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMarket.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsMarket.AddBalance: {
-				Name: "AddBalance",
+				Name: parser.MethodAddBalance,
 			},
 			legacyBuiltin.MethodsMarket.WithdrawBalance: {
-				Name: "WithdrawBalance",
+				Name: parser.MethodWithdrawBalance,
 			},
 			legacyBuiltin.MethodsMarket.PublishStorageDeals: {
-				Name: "PublishStorageDeals",
+				Name: parser.MethodPublishStorageDeals,
 			},
 			legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
-				Name: "VerifyDealsForActivation",
+				Name: parser.MethodVerifyDealsForActivation,
 			},
 			legacyBuiltin.MethodsMarket.ActivateDeals: {
-				Name: "ActivateDeals",
+				Name: parser.MethodActivateDeals,
 			},
 			legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
-				Name: "OnMinerSectorsTerminate",
+				Name: parser.MethodOnMinerSectorsTerminate,
 			},
 			legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
-				Name: "ComputeDataCommitment",
+				Name: parser.MethodComputeDataCommitment,
 			},
 			legacyBuiltin.MethodsMarket.CronTick: {
-				Name: "CronTick",
+				Name: parser.MethodCronTick,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

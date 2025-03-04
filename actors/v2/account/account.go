@@ -32,10 +32,10 @@ func (a *Account) Methods(network string, height int64) (map[abi.MethodNum]nonLe
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsAccount.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsAccount.PubkeyAddress: {
-				Name: "PubkeyAddress",
+				Name: parser.MethodPubkeyAddress,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

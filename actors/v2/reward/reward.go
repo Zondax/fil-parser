@@ -60,16 +60,16 @@ func (*Reward) Methods(network string, height int64) (map[abi.MethodNum]nonLegac
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsReward.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsReward.AwardBlockReward: {
-				Name: "AwardBlockReward",
+				Name: parser.MethodAwardBlockReward,
 			},
 			legacyBuiltin.MethodsReward.ThisEpochReward: {
-				Name: "ThisEpochReward",
+				Name: parser.MethodThisEpochReward,
 			},
 			legacyBuiltin.MethodsReward.UpdateNetworkKPI: {
-				Name: "UpdateNetworkKPI",
+				Name: parser.MethodUpdateNetworkKPI,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
