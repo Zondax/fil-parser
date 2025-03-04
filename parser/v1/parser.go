@@ -110,6 +110,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		// TODO find a way to not having this special case handled outside func parseTrace
 		if ok := hasExecutionTrace(trace); !ok {
 			// Create tx
+			//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
 			txType, _ := p.helper.GetMethodName(&parser.LotusMessage{
 				To:     trace.Msg.To,
 				From:   trace.Msg.From,
@@ -249,6 +250,7 @@ func (p *Parser) parseSubTxs(subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.C
 }
 
 func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
+	//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
