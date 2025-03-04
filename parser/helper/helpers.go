@@ -6,21 +6,6 @@ import (
 	"strings"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v12/account"
-	"github.com/filecoin-project/go-state-types/builtin/v12/cron"
-	"github.com/filecoin-project/go-state-types/builtin/v12/datacap"
-	"github.com/filecoin-project/go-state-types/builtin/v12/eam"
-	"github.com/filecoin-project/go-state-types/builtin/v12/evm"
-	filInit "github.com/filecoin-project/go-state-types/builtin/v12/init"
-	"github.com/filecoin-project/go-state-types/builtin/v12/market"
-	"github.com/filecoin-project/go-state-types/builtin/v12/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v12/multisig"
-	"github.com/filecoin-project/go-state-types/builtin/v12/paych"
-	"github.com/filecoin-project/go-state-types/builtin/v12/power"
-	"github.com/filecoin-project/go-state-types/builtin/v12/reward"
-	"github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -42,28 +27,6 @@ import (
 
 	"github.com/zondax/fil-parser/types"
 )
-
-var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
-	manifest.InitKey:     filInit.Methods,
-	manifest.CronKey:     cron.Methods,
-	manifest.AccountKey:  account.Methods,
-	manifest.PowerKey:    power.Methods,
-	manifest.MinerKey:    miner.Methods,
-	manifest.MarketKey:   market.Methods,
-	manifest.PaychKey:    paych.Methods,
-	manifest.MultisigKey: multisig.Methods,
-	manifest.RewardKey:   reward.Methods,
-	manifest.VerifregKey: verifreg.Methods,
-	manifest.EvmKey:      evm.Methods,
-	manifest.EamKey:      eam.Methods,
-	manifest.DatacapKey:  datacap.Methods,
-
-	// EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
-	// We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
-	// this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
-	manifest.PlaceholderKey: evm.Methods,
-	manifest.EthAccountKey:  evm.Methods,
-}
 
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
@@ -167,10 +130,11 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 
 	actorName, _ := h.GetActorNameFromAddress(msg.To, height, key)
 
-	actorMethods, ok := allMethods[actorName]
-	if !ok {
-		return "", parser.ErrNotKnownActor
+	actorMethods, err := allMethods(height, "", actorName)
+	if err != nil {
+		return "", err
 	}
+
 	method, ok := actorMethods[msg.Method]
 	if !ok {
 		return parser.UnknownStr, nil
