@@ -449,5 +449,5 @@ func (p *Parser) getTxType(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, t
 	if err == nil && txType == parser.UnknownStr {
 		return "", fmt.Errorf("could not get method name in transaction '%s'", mainMsgCid.String())
 	}
-	return txType, nil
+	return txType, err
 }
