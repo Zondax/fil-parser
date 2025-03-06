@@ -138,6 +138,10 @@ func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height
 		data, err = parse(rawReturn, nil, false, &powerv13.CurrentTotalPowerReturn{}, &powerv13.CurrentTotalPowerReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
 		data, err = parse(rawReturn, nil, false, &powerv14.CurrentTotalPowerReturn{}, &powerv14.CurrentTotalPowerReturn{}, parser.ReturnKey)
+		if err != nil {
+			// try to parse with V24 ( 2 extra fields added)
+			data, err = parse(rawReturn, nil, false, &powerv15.CurrentTotalPowerReturn{}, &powerv15.CurrentTotalPowerReturn{}, parser.ReturnKey)
+		}
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(rawReturn, nil, false, &powerv15.CurrentTotalPowerReturn{}, &powerv15.CurrentTotalPowerReturn{}, parser.ReturnKey)
 	default:

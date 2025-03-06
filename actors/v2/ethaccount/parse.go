@@ -80,6 +80,7 @@ func (e *EthAccount) Parse(network string, height int64, txType string, msg *par
 func (e *EthAccount) TransactionTypes() map[string]any {
 	return map[string]any{
 		parser.MethodConstructor: e.Constructor,
+		parser.MethodSend:        actors.ParseSend,
 	}
 }
 

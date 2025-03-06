@@ -76,6 +76,9 @@ func (s *System) Parse(network string, height int64, txType string, msg *parser.
 	var resp map[string]interface{}
 	var err error
 	switch txType {
+	case parser.MethodSend:
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err = s.Constructor()
 	default:
@@ -87,6 +90,7 @@ func (s *System) Parse(network string, height int64, txType string, msg *parser.
 
 func (s *System) TransactionTypes() map[string]any {
 	return map[string]any{
+		parser.MethodSend:        actors.ParseSend,
 		parser.MethodConstructor: s.Constructor,
 	}
 }

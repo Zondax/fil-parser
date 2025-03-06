@@ -80,6 +80,9 @@ func (c *Cron) Methods(network string, height int64) (map[abi.MethodNum]nonLegac
 
 func (c *Cron) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
+	case parser.MethodSend:
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := c.Constructor(network, height, msg.Params)
 		return resp, nil, err
@@ -95,6 +98,7 @@ func (c *Cron) Parse(network string, height int64, txType string, msg *parser.Lo
 
 func (c *Cron) TransactionTypes() map[string]any {
 	return map[string]any{
+		parser.MethodSend:        actors.ParseSend,
 		parser.MethodConstructor: c.Constructor,
 		parser.MethodEpochTick:   actors.ParseEmptyParamsAndReturn,
 	}

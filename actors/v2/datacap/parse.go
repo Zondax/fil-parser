@@ -69,6 +69,9 @@ func (d *Datacap) Methods(network string, height int64) (map[abi.MethodNum]nonLe
 
 func (p *Datacap) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
+	case parser.MethodSend:
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := actors.ParseConstructor(msg.Params)
 		return resp, nil, err
@@ -129,6 +132,7 @@ func (p *Datacap) Parse(network string, height int64, txType string, msg *parser
 
 func (d *Datacap) TransactionTypes() map[string]any {
 	return map[string]any{
+		parser.MethodSend:                      actors.ParseSend,
 		parser.MethodConstructor:               actors.ParseConstructor,
 		parser.MethodMint:                      d.MintExported,
 		parser.MethodMintExported:              d.MintExported,

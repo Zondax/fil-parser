@@ -12,6 +12,9 @@ func (p *Eam) Parse(network string, height int64, txType string, msg *parser.Lot
 	metadata := make(map[string]interface{})
 	var err error
 	switch txType {
+	case parser.MethodSend:
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := actors.ParseEmptyParamsAndReturn()
 		return resp, nil, err
@@ -32,6 +35,7 @@ func (p *Eam) Parse(network string, height int64, txType string, msg *parser.Lot
 
 func (p *Eam) TransactionTypes() map[string]any {
 	return map[string]any{
+		parser.MethodSend:           actors.ParseSend,
 		parser.MethodConstructor:    actors.ParseEmptyParamsAndReturn,
 		parser.MethodCreate:         p.Create,
 		parser.MethodCreate2:        p.Create2,

@@ -120,35 +120,35 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 	var err error
 	switch {
 	case tools.V24.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v15Market.WithdrawBalanceParams{}, &v15Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v15Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v14Market.WithdrawBalanceParams{}, &v14Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v14Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v13Market.WithdrawBalanceParams{}, &v13Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v13Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v12Market.WithdrawBalanceParams{}, &v12Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v12Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		resp, err = parseGeneric(rawParams, nil, false, &v11Market.WithdrawBalanceParams{}, &v11Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v11Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v10Market.WithdrawBalanceParams{}, &v10Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v10Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v9Market.WithdrawBalanceParams{}, &v9Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v9Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v8Market.WithdrawBalanceParams{}, &v8Market.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &v8Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv7.WithdrawBalanceParams{}, &legacyv7.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv7.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv6.WithdrawBalanceParams{}, &legacyv6.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv6.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv5.WithdrawBalanceParams{}, &legacyv5.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv5.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &legacyv4.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &legacyv3.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &legacyv2.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv1.WithdrawBalanceParams{}, &legacyv1.WithdrawBalanceParams{})
+		resp, err = parseGeneric(rawParams, nil, false, &legacyv1.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -198,39 +198,60 @@ func (*Market) PublishStorageDealsExported(network string, height int64, rawPara
 }
 
 func (*Market) VerifyDealsForActivationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	var resp map[string]interface{}
+	var err error
+
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v15Market.VerifyDealsForActivationParams{}, &v15Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V24")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v15Market.VerifyDealsForActivationParams{}, &v15Market.VerifyDealsForActivationReturn{})
 	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v14Market.VerifyDealsForActivationParams{}, &v14Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V23")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v14Market.VerifyDealsForActivationParams{}, &v14Market.VerifyDealsForActivationReturn{})
 	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v13Market.VerifyDealsForActivationParams{}, &v13Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V22")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v13Market.VerifyDealsForActivationParams{}, &v13Market.VerifyDealsForActivationReturn{})
 	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v12Market.VerifyDealsForActivationParams{}, &v12Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V21")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v12Market.VerifyDealsForActivationParams{}, &v12Market.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, rawReturn, true, &v11Market.VerifyDealsForActivationParams{}, &v11Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V19-20")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v11Market.VerifyDealsForActivationParams{}, &v11Market.VerifyDealsForActivationReturn{})
 	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v10Market.VerifyDealsForActivationParams{}, &v10Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V18")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v10Market.VerifyDealsForActivationParams{}, &v10Market.VerifyDealsForActivationReturn{})
 	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v9Market.VerifyDealsForActivationParams{}, &v9Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V17")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v9Market.VerifyDealsForActivationParams{}, &v9Market.VerifyDealsForActivationReturn{})
+
 	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v8Market.VerifyDealsForActivationParams{}, &v8Market.VerifyDealsForActivationReturn{})
+		fmt.Println("V16")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &v8Market.VerifyDealsForActivationParams{}, &v8Market.VerifyDealsForActivationReturn{})
 	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv7.VerifyDealsForActivationParams{}, &legacyv7.VerifyDealsForActivationReturn{})
+		fmt.Println("V15")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv7.VerifyDealsForActivationParams{}, &legacyv7.VerifyDealsForActivationReturn{})
 	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv6.VerifyDealsForActivationParams{}, &legacyv6.VerifyDealsForActivationReturn{})
+		fmt.Println("V14")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv6.VerifyDealsForActivationParams{}, &legacyv6.VerifyDealsForActivationReturn{})
 	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv5.VerifyDealsForActivationParams{}, &legacyv5.VerifyDealsForActivationReturn{})
+		fmt.Println("V13")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv5.VerifyDealsForActivationParams{}, &legacyv5.VerifyDealsForActivationReturn{})
 	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv4.VerifyDealsForActivationParams{}, &legacyv4.VerifyDealsForActivationReturn{})
+		fmt.Println("V12")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv4.VerifyDealsForActivationParams{}, &legacyv4.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv3.VerifyDealsForActivationParams{}, &legacyv3.VerifyDealsForActivationReturn{})
+		fmt.Println("V11-10")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv3.VerifyDealsForActivationParams{}, &legacyv3.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv2.VerifyDealsForActivationParams{}, &legacyv2.VerifyDealsForActivationReturn{})
+		fmt.Println("V8-9")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv2.VerifyDealsForActivationParams{}, &legacyv2.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv1.VerifyDealsForActivationParams{}, &legacyv1.VerifyDealsForActivationReturn{})
+		fmt.Println("V7-")
+		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv1.VerifyDealsForActivationParams{}, &legacyv1.VerifyDealsForActivationReturn{})
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return resp, err
 }
 
 func (*Market) ActivateDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
@@ -252,21 +273,21 @@ func (*Market) ActivateDealsExported(network string, height int64, rawParams, ra
 
 	// the method used to return an empty value before
 	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v8Market.ActivateDealsParams{}, &v8Market.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &v8Market.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv7.ActivateDealsParams{}, &legacyv7.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv7.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv6.ActivateDealsParams{}, &legacyv6.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv6.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv5.ActivateDealsParams{}, &legacyv5.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv5.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv4.ActivateDealsParams{}, &legacyv4.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv4.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv3.ActivateDealsParams{}, &legacyv3.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv3.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv2.ActivateDealsParams{}, &legacyv2.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv2.ActivateDealsParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv1.ActivateDealsParams{}, &legacyv1.ActivateDealsParams{})
+		return parseGeneric(rawParams, rawReturn, true, &legacyv1.ActivateDealsParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -274,35 +295,35 @@ func (*Market) ActivateDealsExported(network string, height int64, rawParams, ra
 func (*Market) OnMinerSectorsTerminateExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v15Market.OnMinerSectorsTerminateParams{}, &v15Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v15Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v14Market.OnMinerSectorsTerminateParams{}, &v14Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v14Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v13Market.OnMinerSectorsTerminateParams{}, &v13Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v13Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v12Market.OnMinerSectorsTerminateParams{}, &v12Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v12Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &v11Market.OnMinerSectorsTerminateParams{}, &v11Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v11Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v10Market.OnMinerSectorsTerminateParams{}, &v10Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v10Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v9Market.OnMinerSectorsTerminateParams{}, &v9Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v9Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v8Market.OnMinerSectorsTerminateParams{}, &v8Market.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &v8Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.OnMinerSectorsTerminateParams{}, &legacyv7.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv7.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.OnMinerSectorsTerminateParams{}, &legacyv6.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv6.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.OnMinerSectorsTerminateParams{}, &legacyv5.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv5.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.OnMinerSectorsTerminateParams{}, &legacyv4.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv4.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.OnMinerSectorsTerminateParams{}, &legacyv3.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv3.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, nil, false, &legacyv2.OnMinerSectorsTerminateParams{}, &legacyv2.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv2.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, nil, false, &legacyv1.OnMinerSectorsTerminateParams{}, &legacyv1.OnMinerSectorsTerminateParams{})
+		return parseGeneric(rawParams, nil, false, &legacyv1.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

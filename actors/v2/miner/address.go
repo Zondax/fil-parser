@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
@@ -109,39 +110,39 @@ func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byt
 func (*Miner) ChangeWorkerAddressExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner15.ChangeWorkerAddressParams{}, &miner15.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner15.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner14.ChangeWorkerAddressParams{}, &miner14.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner14.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner13.ChangeWorkerAddressParams{}, &miner13.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner13.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner12.ChangeWorkerAddressParams{}, &miner12.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner12.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &miner11.ChangeWorkerAddressParams{}, &miner11.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner11.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 
 	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner10.ChangeWorkerAddressParams{}, &miner10.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner10.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner9.ChangeWorkerAddressParams{}, &miner9.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner9.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner8.ChangeWorkerAddressParams{}, &miner8.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &miner8.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.ChangeWorkerAddressParams{}, &legacyv7.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv7.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.ChangeWorkerAddressParams{}, &legacyv6.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv6.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.ChangeWorkerAddressParams{}, &legacyv5.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv5.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.ChangeWorkerAddressParams{}, &legacyv4.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv4.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.ChangeWorkerAddressParams{}, &legacyv3.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv3.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, nil, false, &legacyv2.ChangeWorkerAddressParams{}, &legacyv2.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv2.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, nil, false, &legacyv1.ChangeWorkerAddressParams{}, &legacyv1.ChangeWorkerAddressParams{}, parser.ParamsKey)
+		return parseGeneric(rawParams, nil, false, &legacyv1.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

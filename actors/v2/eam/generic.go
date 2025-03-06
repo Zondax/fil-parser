@@ -34,7 +34,7 @@ func parseCreate[T createParams, R createReturn](rawParams, rawReturn []byte, ms
 
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return metadata, nil, err
+			return metadata, nil, fmt.Errorf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams))
 		}
 		metadata[parser.ParamsKey] = params
 	}
@@ -75,7 +75,7 @@ func handleReturnValue[R createReturn](rawReturn []byte, metadata map[string]int
 	ethHash, createdEvmActor, cr, err := newEamCreate(createReturn, msgCid)
 	metadata[parser.ReturnKey] = cr
 	if err != nil {
-		return metadata, nil, err
+		return metadata, nil, fmt.Errorf("error parsing createReturn: %s", err)
 	}
 	metadata[parser.EthHashKey] = ethHash
 

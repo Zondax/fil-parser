@@ -77,7 +77,7 @@ func newEamCreate(r createReturn, msgCid cid.Cid) (string, *types.AddressInfo, p
 
 		ethHash, err := ethtypes.EthHashFromCid(msgCid)
 		if err != nil {
-			return "", nil, createReturn, err
+			return "", nil, createReturn, fmt.Errorf("error getting ethHash: %s", err)
 		}
 
 		return ethHash.String(), &types.AddressInfo{
