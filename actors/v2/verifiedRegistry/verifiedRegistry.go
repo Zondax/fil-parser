@@ -99,35 +99,35 @@ func (*VerifiedRegistry) Methods(network string, height int64) (map[abi.MethodNu
 func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv15.AddVerifierParams{}, &verifregv15.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv15.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv14.AddVerifierParams{}, &verifregv14.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv14.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv13.AddVerifierParams{}, &verifregv13.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv13.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv12.AddVerifierParams{}, &verifregv12.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv12.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, nil, false, &verifregv11.AddVerifierParams{}, &verifregv11.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv11.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv10.AddVerifierParams{}, &verifregv10.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv10.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv9.AddVerifierParams{}, &verifregv9.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv9.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv8.AddVerifierParams{}, &verifregv8.AddVerifierParams{})
+		return parse(raw, nil, false, &verifregv8.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv7.AddVerifierParams{}, &legacyv7.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv7.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv6.AddVerifierParams{}, &legacyv6.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv6.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv5.AddVerifierParams{}, &legacyv5.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv5.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv4.AddVerifierParams{}, &legacyv4.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv4.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, nil, false, &legacyv3.AddVerifierParams{}, &legacyv3.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv3.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, nil, false, &legacyv2.AddVerifierParams{}, &legacyv2.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv2.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, nil, false, &legacyv1.AddVerifierParams{}, &legacyv1.AddVerifierParams{})
+		return parse(raw, nil, false, &legacyv1.AddVerifierParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -140,35 +140,35 @@ func (*VerifiedRegistry) RemoveVerifier(network string, height int64, raw []byte
 func (*VerifiedRegistry) AddVerifiedClientExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv15.AddVerifiedClientParams{}, &verifregv15.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv15.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv14.AddVerifiedClientParams{}, &verifregv14.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv14.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv13.AddVerifiedClientParams{}, &verifregv13.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv13.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv12.AddVerifiedClientParams{}, &verifregv12.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv12.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, nil, false, &verifregv11.AddVerifiedClientParams{}, &verifregv11.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv11.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv10.AddVerifiedClientParams{}, &verifregv10.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv10.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv9.AddVerifiedClientParams{}, &verifregv9.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv9.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv8.AddVerifiedClientParams{}, &verifregv8.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &verifregv8.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv7.AddVerifiedClientParams{}, &legacyv7.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv7.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv6.AddVerifiedClientParams{}, &legacyv6.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv6.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv5.AddVerifiedClientParams{}, &legacyv5.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv5.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv4.AddVerifiedClientParams{}, &legacyv4.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv4.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, nil, false, &legacyv3.AddVerifiedClientParams{}, &legacyv3.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv3.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, nil, false, &legacyv2.AddVerifiedClientParams{}, &legacyv2.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv2.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, nil, false, &legacyv1.AddVerifiedClientParams{}, &legacyv1.AddVerifiedClientParams{})
+		return parse(raw, nil, false, &legacyv1.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -176,35 +176,35 @@ func (*VerifiedRegistry) AddVerifiedClientExported(network string, height int64,
 func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv15.UseBytesParams{}, &verifregv15.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv15.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv14.UseBytesParams{}, &verifregv14.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv14.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv13.UseBytesParams{}, &verifregv13.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv13.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv12.UseBytesParams{}, &verifregv12.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv12.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, nil, false, &verifregv11.UseBytesParams{}, &verifregv11.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv11.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv10.UseBytesParams{}, &verifregv10.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv10.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv9.UseBytesParams{}, &verifregv9.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv9.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv8.UseBytesParams{}, &verifregv8.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv8.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv7.UseBytesParams{}, &legacyv7.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv7.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv6.UseBytesParams{}, &legacyv6.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv6.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv5.UseBytesParams{}, &legacyv5.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv5.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv4.UseBytesParams{}, &legacyv4.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv4.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, nil, false, &legacyv3.UseBytesParams{}, &legacyv3.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv3.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, nil, false, &legacyv2.UseBytesParams{}, &legacyv2.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv2.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, nil, false, &legacyv1.UseBytesParams{}, &legacyv1.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv1.UseBytesParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -212,35 +212,35 @@ func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map
 func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv15.RestoreBytesParams{}, &verifregv15.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv15.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv14.RestoreBytesParams{}, &verifregv14.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv14.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv13.RestoreBytesParams{}, &verifregv13.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv13.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv12.RestoreBytesParams{}, &verifregv12.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv12.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, nil, false, &verifregv11.RestoreBytesParams{}, &verifregv11.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv11.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv10.RestoreBytesParams{}, &verifregv10.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv10.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv9.RestoreBytesParams{}, &verifregv9.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv9.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv8.RestoreBytesParams{}, &verifregv8.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv8.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv7.RestoreBytesParams{}, &legacyv7.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv7.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv6.RestoreBytesParams{}, &legacyv6.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv6.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv5.RestoreBytesParams{}, &legacyv5.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv5.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv4.RestoreBytesParams{}, &legacyv4.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv4.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, nil, false, &legacyv3.RestoreBytesParams{}, &legacyv3.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv3.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, nil, false, &legacyv2.RestoreBytesParams{}, &legacyv2.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv2.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, nil, false, &legacyv1.RestoreBytesParams{}, &legacyv1.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv1.RestoreBytesParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -306,35 +306,35 @@ func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height
 func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv15.RestoreBytesParams{}, &verifregv15.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv15.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv14.RestoreBytesParams{}, &verifregv14.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv14.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv13.RestoreBytesParams{}, &verifregv13.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv13.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv12.RestoreBytesParams{}, &verifregv12.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv12.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, nil, false, &verifregv11.RestoreBytesParams{}, &verifregv11.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv11.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv10.RestoreBytesParams{}, &verifregv10.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv10.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv9.RestoreBytesParams{}, &verifregv9.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv9.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv8.RestoreBytesParams{}, &verifregv8.RestoreBytesParams{})
+		return parse(raw, nil, false, &verifregv8.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv7.RestoreBytesParams{}, &legacyv7.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv7.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv6.RestoreBytesParams{}, &legacyv6.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv6.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv5.RestoreBytesParams{}, &legacyv5.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv5.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv4.RestoreBytesParams{}, &legacyv4.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv4.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, nil, false, &legacyv3.RestoreBytesParams{}, &legacyv3.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv3.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, nil, false, &legacyv2.RestoreBytesParams{}, &legacyv2.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv2.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, nil, false, &legacyv1.RestoreBytesParams{}, &legacyv1.RestoreBytesParams{})
+		return parse(raw, nil, false, &legacyv1.RestoreBytesParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -342,35 +342,35 @@ func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (
 func (*VerifiedRegistry) Deprecated2(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
 	case tools.V24.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv15.UseBytesParams{}, &verifregv15.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv15.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv14.UseBytesParams{}, &verifregv14.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv14.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V22.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv13.UseBytesParams{}, &verifregv13.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv13.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V21.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv12.UseBytesParams{}, &verifregv12.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv12.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, nil, false, &verifregv11.UseBytesParams{}, &verifregv11.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv11.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V18.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv10.UseBytesParams{}, &verifregv10.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv10.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V17.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv9.UseBytesParams{}, &verifregv9.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv9.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V16.IsSupported(network, height):
-		return parse(raw, nil, false, &verifregv8.UseBytesParams{}, &verifregv8.UseBytesParams{})
+		return parse(raw, nil, false, &verifregv8.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V15.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv7.UseBytesParams{}, &legacyv7.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv7.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V14.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv6.UseBytesParams{}, &legacyv6.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv6.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V13.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv5.UseBytesParams{}, &legacyv5.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv5.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V12.IsSupported(network, height):
-		return parse(raw, nil, false, &legacyv4.UseBytesParams{}, &legacyv4.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv4.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, nil, false, &legacyv3.UseBytesParams{}, &legacyv3.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv3.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, nil, false, &legacyv2.UseBytesParams{}, &legacyv2.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv2.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, nil, false, &legacyv1.UseBytesParams{}, &legacyv1.UseBytesParams{})
+		return parse(raw, nil, false, &legacyv1.UseBytesParams{}, &abi.EmptyValue{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
