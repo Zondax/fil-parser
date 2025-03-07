@@ -27,6 +27,7 @@ import (
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
 	eventTools "github.com/zondax/fil-parser/tools/events"
+	minerTools "github.com/zondax/fil-parser/tools/miner"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 )
@@ -43,6 +44,7 @@ type Parser struct {
 	helper                 *helper.Helper
 	logger                 *zap.Logger
 	multisigEventGenerator multisigTools.EventGenerator
+	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 }
 
@@ -59,6 +61,7 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
 
@@ -79,6 +82,7 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metric
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 	}
 }
@@ -220,6 +224,10 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 
 func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MultisigEvents, error) {
 	return p.multisigEventGenerator.GenerateMultisigEvents(ctx, multisigTxs, tipsetCid, tipsetKey)
+}
+
+func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
+	return p.minerEventGenerator.GenerateMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
