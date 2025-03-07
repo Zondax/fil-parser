@@ -1,12 +1,16 @@
 package v2
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
-	"go.uber.org/zap"
 )
 
 func GetMethodName(methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (string, error) {
@@ -26,12 +30,13 @@ func GetMethodName(methodNum abi.MethodNum, actorName string, height int64, netw
 // We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
 func ActorMethods(actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
+	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NoopMetricsClient{}}
 	mActorName := actorName
-	actorParser := &ActorParser{network, helper, logger, nil}
+	actorParser := &ActorParser{network, helper, logger, metricsClient}
 	if actorName == manifest.EthAccountKey || actorName == manifest.PlaceholderKey {
 		mActorName = manifest.EvmKey
 	}
-	actor, err := actorParser.GetActor(mActorName, nil)
+	actor, err := actorParser.GetActor(mActorName, metricsClient)
 	if err != nil {
 		return nil, err
 	}
