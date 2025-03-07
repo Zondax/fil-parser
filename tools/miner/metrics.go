@@ -3,7 +3,7 @@ package miner
 import (
 	"github.com/zondax/fil-parser/metrics"
 	metrics2 "github.com/zondax/golem/pkg/metrics"
-	// "github.com/zondax/golem/pkg/metrics/collectors"
+	"github.com/zondax/golem/pkg/metrics/collectors"
 )
 
 var (
@@ -15,8 +15,8 @@ const parserModule = "parser_module"
 
 // Labels const
 const (
-	// errorLabel  = "error"
-	txTypeLabel = "txType"
+// errorLabel  = "error"
+// txTypeLabel = "txType"
 )
 
 type minerMetricsClient struct {
@@ -30,10 +30,23 @@ func newClient(metricsClient metrics.MetricsClient, name string) *minerMetricsCl
 		name:          name,
 	}
 
-	s.registerModuleMetrics()
+	s.registerModuleMetrics(actorNameFromAddressMetric)
 
 	return s
 }
+
+const (
+	actorNameFromAddress = "fil-parser_miner_actor_name_from_address"
+)
+
+var (
+	actorNameFromAddressMetric = metrics.Metric{
+		Name:    actorNameFromAddress,
+		Help:    "get actor name from address",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+)
 
 func (c *minerMetricsClient) registerModuleMetrics(metrics ...metrics.Metric) {
 	commonLabels := []string{parserModule}
@@ -47,4 +60,8 @@ func (c *minerMetricsClient) registerModuleMetrics(metrics ...metrics.Metric) {
 func (c *minerMetricsClient) IncrementMetric(name string, labels ...string) error {
 	labels = append(labels, c.name)
 	return c.MetricsClient.IncrementMetric(name, labels...)
+}
+
+func (c *minerMetricsClient) UpdateActorNameFromAddressMetric() error {
+	return c.IncrementMetric(actorNameFromAddress)
 }
