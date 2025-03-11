@@ -42,6 +42,7 @@ func TestIsSupported(t *testing.T) {
 		height  int64
 		want    bool
 	}{
+		{name: "V13 on calibration", version: V18, network: "calibration", height: 151, want: true},
 
 		{name: "V7 on calibration", version: V7, network: "calibration", height: 2383680, want: false},
 		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 170000, want: false},
@@ -82,8 +83,9 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 		{name: "V14 on calibration", version: V14, height: 312846, want: false},
 		{name: "V16 on calibration", version: V16, height: 1044661, want: false},
 
-		{name: "V16 on calibration", version: V16, height: 1000, want: true},
-		{name: "V17 on calibration", version: V17, height: 16900, want: true},
+		{name: "V16 on calibration", version: V16, height: 1000, want: false},
+		{name: "V17 on calibration", version: V17, height: 16900, want: false},
+		{name: "V18 on calibration", version: V18, height: 1000, want: true},
 
 		{name: "V23 on calibration", version: V23, height: 1779094, want: true},
 		{name: "V23 on calibration", version: V21, height: 1419335, want: true},
@@ -106,7 +108,19 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 		t.Fatalf("V16 should not be supported on calibration at height %d", height)
 	case V17.IsSupported("calibration", height):
 		t.Fatalf("V17 should not be supported on calibration at height %d", height)
+	case V18.IsSupported("calibration", height):
+		t.Fatalf("V18 should be supported on calibration at height %d", height)
+	case V19.IsSupported("calibration", height):
+		t.Fatalf("V19 should not be supported on calibration at height %d", height)
 	case V20.IsSupported("calibration", height):
+	case V21.IsSupported("calibration", height):
+		t.Fatalf("V21 should not be supported on calibration at height %d", height)
+	case V22.IsSupported("calibration", height):
+		t.Fatalf("V22 should not be supported on calibration at height %d", height)
+	case V23.IsSupported("calibration", height):
+		t.Fatalf("V23 should not be supported on calibration at height %d", height)
+	case V24.IsSupported("calibration", height):
+		t.Fatalf("V24 should be supported on calibration at height %d", height)
 	default:
 		t.Fatalf("V20 should be supported on calibration at height %d", height)
 	}
@@ -116,8 +130,10 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 	case V15.IsSupported("calibration", height):
 		t.Fatalf("V15 should not be supported on calibration at height %d", height)
 	case V16.IsSupported("calibration", height):
+		t.Fatalf("V16 should not be supported on calibration at height %d", height)
 	case V17.IsSupported("calibration", height):
 		t.Fatalf("V17 should not be supported on calibration at height %d", height)
+	case V18.IsSupported("calibration", height):
 	default:
 		t.Fatalf("V16 should be supported on calibration at height %d", height)
 	}

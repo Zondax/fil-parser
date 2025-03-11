@@ -1,16 +1,18 @@
 package actortest
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/fil-parser/actors/metrics"
-	metrics2 "github.com/zondax/fil-parser/metrics"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
@@ -292,7 +294,7 @@ func TestActorParserV2_MultisigApprove(t *testing.T) {
 			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.method)
 			require.NoError(t, err)
 
-			got, _, err := actor.Parse(manifest.MultisigKey, int64(tipSet.Height()), tt.method, msg, &parser.LotusMessageReceipt{
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, int64(tipSet.Height()), tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, msg.Cid, tipSet.Key())
 			require.NoError(t, err)
@@ -314,7 +316,7 @@ func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(manifest.MultisigKey, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -350,7 +352,7 @@ func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(manifest.MultisigKey, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -374,7 +376,7 @@ func TestActorParserV2_MultiSigParams(t *testing.T) {
 			tipset, err := deserializeTipset(manifest.MultisigKey, tt.txType)
 			require.NoError(t, err)
 
-			got, _, err := actor.Parse(manifest.MultisigKey, int64(tipset.Height()), tt.txType, msg, &parser.LotusMessageReceipt{
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, int64(tipset.Height()), tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: nil,
 			}, msg.Cid, tipset.Key())
 			require.NoError(t, err)
