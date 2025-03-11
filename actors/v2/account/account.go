@@ -2,6 +2,7 @@ package account
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 
@@ -26,7 +27,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (a *Account) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):

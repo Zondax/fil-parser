@@ -1,6 +1,7 @@
 package v2_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -309,7 +310,7 @@ func TestVersionCoverage(t *testing.T) {
 		for _, actor := range actorParsers {
 			transactionTypes := actor.TransactionTypes()
 			for txType := range transactionTypes {
-				_, _, err := actor.Parse(network, tools.DeterministicTestHeight(version), txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
+				_, _, err := actor.Parse(context.Background(), network, tools.DeterministicTestHeight(version), txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
 				require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
 				require.Falsef(t, errors.Is(err, parser.ErrUnknownMethod), "Method missing in actor.Parse: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
 			}
@@ -353,7 +354,7 @@ func TestABIMethodNumberToMethodName(t *testing.T) {
 				continue
 			}
 			require.NotEmptyf(t, transactionTypes, "Transaction types are empty for actor: %s version: %s height: %d", actor.Name(), version, height)
-			methods, err := actor.Methods(network, height)
+			methods, err := actor.Methods(context.Background(), network, height)
 			if actor.StartNetworkHeight() > height {
 				continue
 			}

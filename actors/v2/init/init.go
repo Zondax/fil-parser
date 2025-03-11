@@ -1,6 +1,7 @@
 package init
 
 import (
+	"context"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -51,7 +52,7 @@ func (*Init) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (i *Init) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):

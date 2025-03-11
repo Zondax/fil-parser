@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ipfs/go-cid"
@@ -43,7 +44,7 @@ func (*System) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*System) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (*System) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
@@ -72,7 +73,7 @@ func (*System) Methods(network string, height int64) (map[abi.MethodNum]nonLegac
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 }
-func (s *System) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (s *System) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	var resp map[string]interface{}
 	var err error
 	switch txType {

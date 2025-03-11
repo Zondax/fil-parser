@@ -1,6 +1,7 @@
 package paymentChannel
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -29,6 +30,7 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/paych"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -49,22 +51,22 @@ func (*PaymentChannel) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*PaymentChannel) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (*PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsPaych.Constructor: {
-				Name: "Constructor",
+				Name: parser.MethodConstructor,
 			},
 			legacyBuiltin.MethodsPaych.UpdateChannelState: {
-				Name: "UpdateChannelState",
+				Name: parser.MethodUpdateChannelState,
 			},
 			legacyBuiltin.MethodsPaych.Settle: {
-				Name: "Settle",
+				Name: parser.MethodSettle,
 			},
 			legacyBuiltin.MethodsPaych.Collect: {
-				Name: "Collect",
+				Name: parser.MethodCollect,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

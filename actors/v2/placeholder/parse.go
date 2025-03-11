@@ -1,6 +1,7 @@
 package placeholder
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ipfs/go-cid"
@@ -41,7 +42,7 @@ func (*Placeholder) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
-func (*Placeholder) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (*Placeholder) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
@@ -63,7 +64,7 @@ func (*Placeholder) Methods(network string, height int64) (map[abi.MethodNum]non
 	}
 }
 
-func (p *Placeholder) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Placeholder) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	resp, err := p.parsePlaceholderAny(msg.Params, msgRct.Return)
 	return resp, nil, err
 }

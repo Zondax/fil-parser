@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 
@@ -59,7 +60,7 @@ func (*Miner) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Miner) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (*Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):

@@ -85,7 +85,7 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
+func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV1.ComputeStateOutputV1{}
 	err := sonic.UnmarshalString(string(txsData.Traces), &computeState)
@@ -150,7 +150,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String())
+		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String())
 		if err != nil {
 			continue
 		}
@@ -159,7 +159,7 @@ func (p *Parser) ParseTransactions(_ context.Context, txsData types.TxsData) (*t
 
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
+			subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
 				trace.Msg.Cid().String(), transaction.Id, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
@@ -237,23 +237,23 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 	return baseFee.Uint64(), nil
 }
 
-func (p *Parser) parseSubTxs(subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
+func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
 	parentId string, level uint16) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(subTx, mainMsgCid, tipSet, parentId)
+		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
+		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
 	//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
 	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -270,7 +270,7 @@ func (p *Parser) parseTrace(trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, 
 		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
 	}
 
-	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(txType, &parser.LotusMessage{
+	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,

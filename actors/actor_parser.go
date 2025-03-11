@@ -2,6 +2,7 @@ package actors
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 
 	"github.com/filecoin-project/go-address"
@@ -12,7 +13,7 @@ import (
 )
 
 type ActorParserInterface interface {
-	GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+	GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 		height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error)
 }
 

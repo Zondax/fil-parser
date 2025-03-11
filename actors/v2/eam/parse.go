@@ -1,6 +1,8 @@
 package eam
 
 import (
+	"context"
+
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
@@ -8,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Eam) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Eam) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	var err error
 	switch txType {

@@ -1,6 +1,8 @@
 package market
 
 import (
+	"context"
+
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
@@ -8,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Market) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Market) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
 		resp := actors.ParseSend(msg)
