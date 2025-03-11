@@ -1,10 +1,12 @@
 package actortest
 
 import (
+	"context"
 	"fmt"
+	"testing"
+
 	"github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
-	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -188,7 +190,7 @@ func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -210,7 +212,7 @@ func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -241,7 +243,7 @@ func TestActorParserV2_ParseCreateMiner(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, msg)
 
-			got, addr, err := actor.Parse(network, tools.LatestVersion.Height(), tt.method, msg, &parser.LotusMessageReceipt{
+			got, addr, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, cid.Undef, filTypes.EmptyTSK)
 

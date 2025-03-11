@@ -1,4 +1,4 @@
-package verifiedregistry
+package verifiedRegistry
 
 import (
 	"bytes"

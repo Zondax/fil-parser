@@ -1,6 +1,8 @@
 package evm
 
 import (
+	"context"
+
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
@@ -8,9 +10,12 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Evm) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Evm) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
+	case parser.MethodSend:
+		resp := actors.ParseSend(msg)
+		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := p.Constructor(network, height, msg.Params)
 		return resp, nil, err
@@ -41,6 +46,7 @@ func (p *Evm) Parse(network string, height int64, txType string, msg *parser.Lot
 
 func (p *Evm) TransactionTypes() map[string]any {
 	return map[string]any{
+		parser.MethodSend:                   actors.ParseSend,
 		parser.MethodConstructor:            p.Constructor,
 		parser.MethodResurrect:              p.Resurrect,
 		parser.MethodInvokeContract:         p.InvokeContract,

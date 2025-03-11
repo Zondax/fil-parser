@@ -1,13 +1,16 @@
 package power
 
 import (
+	"context"
 	"fmt"
 
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/proof"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
 	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
@@ -45,6 +48,64 @@ func (p *Power) Name() string {
 	return manifest.PowerKey
 }
 
+func (*Power) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (*Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsPower.Constructor: {
+				Name: parser.MethodConstructor,
+			},
+			legacyBuiltin.MethodsPower.CreateMiner: {
+				Name: parser.MethodCreateMiner,
+			},
+			legacyBuiltin.MethodsPower.UpdateClaimedPower: {
+				Name: parser.MethodUpdateClaimedPower,
+			},
+			legacyBuiltin.MethodsPower.EnrollCronEvent: {
+				Name: parser.MethodEnrollCronEvent,
+			},
+			legacyBuiltin.MethodsPower.OnEpochTickEnd: {
+				Name: parser.MethodOnEpochTickEnd,
+			},
+			legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
+				Name: parser.MethodUpdatePledgeTotal,
+			},
+			legacyBuiltin.MethodsPower.OnConsensusFault: {
+				Name: parser.MethodOnConsensusFault,
+			},
+			legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
+				Name: parser.MethodSubmitPoRepForBulkVerify,
+			},
+			legacyBuiltin.MethodsPower.CurrentTotalPower: {
+				Name: parser.MethodCurrentTotalPower,
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return powerv8.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return powerv9.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return powerv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return powerv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return powerv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return powerv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return powerv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return powerv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+}
+
 func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	var err error
@@ -78,6 +139,10 @@ func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height
 		data, err = parse(rawReturn, nil, false, &powerv13.CurrentTotalPowerReturn{}, &powerv13.CurrentTotalPowerReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
 		data, err = parse(rawReturn, nil, false, &powerv14.CurrentTotalPowerReturn{}, &powerv14.CurrentTotalPowerReturn{}, parser.ReturnKey)
+		if err != nil {
+			// try to parse with V24 ( 2 extra fields added)
+			data, err = parse(rawReturn, nil, false, &powerv15.CurrentTotalPowerReturn{}, &powerv15.CurrentTotalPowerReturn{}, parser.ReturnKey)
+		}
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(rawReturn, nil, false, &powerv15.CurrentTotalPowerReturn{}, &powerv15.CurrentTotalPowerReturn{}, parser.ReturnKey)
 	default:

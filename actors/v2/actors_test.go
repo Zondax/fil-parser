@@ -1,12 +1,14 @@
 package v2_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/zondax/fil-parser/actors/metrics"
-	metrics2 "github.com/zondax/fil-parser/metrics"
 	"os"
 	"testing"
+
+	"github.com/zondax/fil-parser/actors/metrics"
+	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/assert"
@@ -99,6 +101,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
 	// all eam version imports
 	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
@@ -307,7 +310,7 @@ func TestVersionCoverage(t *testing.T) {
 		for _, actor := range actorParsers {
 			transactionTypes := actor.TransactionTypes()
 			for txType := range transactionTypes {
-				_, _, err := actor.Parse(network, tools.DeterministicTestHeight(version), txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
+				_, _, err := actor.Parse(context.Background(), network, tools.DeterministicTestHeight(version), txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
 				require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
 				require.Falsef(t, errors.Is(err, parser.ErrUnknownMethod), "Method missing in actor.Parse: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
 			}
@@ -330,6 +333,40 @@ func getActors(t *testing.T) []v2.Actor {
 		actors = append(actors, actor)
 	}
 	return actors
+}
+
+// TestABIMethodNumberToMethodName tests that the method number is mapped to the correct method name for every version
+func TestABIMethodNumberToMethodName(t *testing.T) {
+	network := "mainnet"
+
+	versions := tools.GetSupportedVersions(network)
+	require.NotEmpty(t, versions)
+
+	actorParsers := getActors(t)
+	require.NotEmpty(t, actorParsers)
+
+	for _, version := range versions {
+		height := tools.DeterministicTestHeight(version)
+		for _, actor := range actorParsers {
+			transactionTypes := actor.TransactionTypes()
+			// Placeholder actor has no methods
+			if actor.Name() == manifest.PlaceholderKey {
+				continue
+			}
+			require.NotEmptyf(t, transactionTypes, "Transaction types are empty for actor: %s version: %s height: %d", actor.Name(), version, height)
+			methods, err := actor.Methods(context.Background(), network, height)
+			if actor.StartNetworkHeight() > height {
+				continue
+			}
+			require.NoErrorf(t, err, "Failed to get methods for actor: %s version: %s height: %d", actor.Name(), version, height)
+			require.NotEmptyf(t, methods, "Methods are empty for actor: %s version: %s height: %d", actor.Name(), version, height)
+
+			for methodNum := range methods {
+				methodName := methods[methodNum].Name
+				assert.Containsf(t, transactionTypes, methodName, "Method name: %s is not in transaction types for actor: %s version: %s height: %d", methodName, actor.Name(), version, height)
+			}
+		}
+	}
 }
 
 // TestMethodCoverage tests that all actor methods are supported for all actor versions
@@ -387,6 +424,7 @@ func TestMethodCoverage(t *testing.T) {
 			cronv15.Methods,
 		},
 		&datacap.Datacap{}: {
+			datacapv9.Methods,
 			datacapv10.Methods,
 			datacapv11.Methods,
 			datacapv12.Methods,

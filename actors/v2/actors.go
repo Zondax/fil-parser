@@ -1,13 +1,20 @@
 package v2
 
 import (
+	"context"
 	"fmt"
+
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/account"
 	"github.com/zondax/fil-parser/actors/v2/cron"
@@ -25,17 +32,19 @@ import (
 	"github.com/zondax/fil-parser/actors/v2/reward"
 	"github.com/zondax/fil-parser/actors/v2/system"
 	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
+
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 type Actor interface {
 	Name() string
-	Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
+	Parse(ctx context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
+	StartNetworkHeight() int64
 	TransactionTypes() map[string]any
+	Methods(ctx context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error)
 }
 
 var _ actors.ActorParserInterface = &ActorParser{}
@@ -56,7 +65,7 @@ func NewActorParser(network string, helper *helper.Helper, logger *zap.Logger, m
 	}
 }
 
-func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+func (p *ActorParser) GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
@@ -71,8 +80,7 @@ func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainM
 	if err != nil {
 		return actor, nil, nil, parser.ErrNotValidActor
 	}
-
-	metadata, addressInfo, err := actorParser.Parse(p.network, height, txType, msg, msgRct, mainMsgCid, key)
+	metadata, addressInfo, err := actorParser.Parse(ctx, p.network, height, txType, msg, msgRct, mainMsgCid, key)
 	return actor, metadata, addressInfo, err
 }
 
