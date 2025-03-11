@@ -1,6 +1,7 @@
 package eam
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -45,7 +46,7 @@ func (*Eam) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
-func (e *Eam) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):

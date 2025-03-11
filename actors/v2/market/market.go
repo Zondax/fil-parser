@@ -2,6 +2,7 @@ package market
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 
@@ -57,7 +58,7 @@ func (*Market) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Market) Methods(network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (*Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
@@ -203,50 +204,35 @@ func (*Market) VerifyDealsForActivationExported(network string, height int64, ra
 
 	switch {
 	case tools.V24.IsSupported(network, height):
-		fmt.Println("V24")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v15Market.VerifyDealsForActivationParams{}, &v15Market.VerifyDealsForActivationReturn{})
 	case tools.V23.IsSupported(network, height):
-		fmt.Println("V23")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v14Market.VerifyDealsForActivationParams{}, &v14Market.VerifyDealsForActivationReturn{})
 	case tools.V22.IsSupported(network, height):
-		fmt.Println("V22")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v13Market.VerifyDealsForActivationParams{}, &v13Market.VerifyDealsForActivationReturn{})
 	case tools.V21.IsSupported(network, height):
-		fmt.Println("V21")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v12Market.VerifyDealsForActivationParams{}, &v12Market.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		fmt.Println("V19-20")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v11Market.VerifyDealsForActivationParams{}, &v11Market.VerifyDealsForActivationReturn{})
 	case tools.V18.IsSupported(network, height):
-		fmt.Println("V18")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v10Market.VerifyDealsForActivationParams{}, &v10Market.VerifyDealsForActivationReturn{})
 	case tools.V17.IsSupported(network, height):
-		fmt.Println("V17")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v9Market.VerifyDealsForActivationParams{}, &v9Market.VerifyDealsForActivationReturn{})
 
 	case tools.V16.IsSupported(network, height):
-		fmt.Println("V16")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v8Market.VerifyDealsForActivationParams{}, &v8Market.VerifyDealsForActivationReturn{})
 	case tools.V15.IsSupported(network, height):
-		fmt.Println("V15")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv7.VerifyDealsForActivationParams{}, &legacyv7.VerifyDealsForActivationReturn{})
 	case tools.V14.IsSupported(network, height):
-		fmt.Println("V14")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv6.VerifyDealsForActivationParams{}, &legacyv6.VerifyDealsForActivationReturn{})
 	case tools.V13.IsSupported(network, height):
-		fmt.Println("V13")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv5.VerifyDealsForActivationParams{}, &legacyv5.VerifyDealsForActivationReturn{})
 	case tools.V12.IsSupported(network, height):
-		fmt.Println("V12")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv4.VerifyDealsForActivationParams{}, &legacyv4.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		fmt.Println("V11-10")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv3.VerifyDealsForActivationParams{}, &legacyv3.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		fmt.Println("V8-9")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv2.VerifyDealsForActivationParams{}, &legacyv2.VerifyDealsForActivationReturn{})
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		fmt.Println("V7-")
 		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv1.VerifyDealsForActivationParams{}, &legacyv1.VerifyDealsForActivationReturn{})
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

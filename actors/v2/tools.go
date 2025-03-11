@@ -1,6 +1,8 @@
 package v2
 
 import (
+	"context"
+
 	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -13,8 +15,8 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 )
 
-func GetMethodName(methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (string, error) {
-	actorMethods, err := ActorMethods(actorName, height, network, helper, logger)
+func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (string, error) {
+	actorMethods, err := ActorMethods(ctx, actorName, height, network, helper, logger)
 	if err != nil {
 		return "", err
 	}
@@ -29,7 +31,7 @@ func GetMethodName(methodNum abi.MethodNum, actorName string, height int64, netw
 // EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
 // We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
-func ActorMethods(actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
+func ActorMethods(ctx context.Context, actorName string, height int64, network string, helper *helper.Helper, logger *zap.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
 	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NoopMetricsClient{}}
 	mActorName := actorName
 	actorParser := &ActorParser{network, helper, logger, metricsClient}
@@ -41,7 +43,7 @@ func ActorMethods(actorName string, height int64, network string, helper *helper
 		return nil, err
 	}
 
-	actorMethods, err = actor.Methods(network, height)
+	actorMethods, err = actor.Methods(ctx, network, height)
 	if err != nil {
 		return nil, err
 	}
