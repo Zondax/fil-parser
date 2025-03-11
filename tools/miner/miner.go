@@ -101,6 +101,9 @@ func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	case strings.EqualFold(actorName, manifest.PowerKey):
 		return strings.EqualFold(txType, parser.MethodCurrentTotalPower)
 
+	case strings.EqualFold(actorName, manifest.RewardKey):
+		return (strings.EqualFold(txType, parser.MethodThisEpochReward) ||
+			strings.EqualFold(txType, parser.MethodAwardBlockReward))
 	}
 
 	return false
