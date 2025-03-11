@@ -1,9 +1,11 @@
 package actortest
 
 import (
+	"context"
+	"testing"
+
 	"github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
-	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -75,7 +77,7 @@ func TestActorParserV2_EamCreates(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, msg)
 
-			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, msg, &parser.LotusMessageReceipt{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, msg.Cid, filTypes.EmptyTSK)
 			require.NoError(t, err)

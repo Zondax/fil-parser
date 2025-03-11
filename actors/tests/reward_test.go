@@ -1,10 +1,12 @@
 package actortest
 
 import (
+	"context"
 	"fmt"
+	"testing"
+
 	"github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
-	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -91,7 +93,7 @@ func TestActorParserV2_RewardWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(network, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
