@@ -41,7 +41,7 @@ func NewEventGenerator(helper *helper.Helper, logger *zap.Logger, metrics metric
 func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
 	events := &types.MinerEvents{
 		MinerInfo:    []*types.MinerInfo{},
-		MinerSectors: []*types.MinerSector{},
+		MinerSectors: []*types.MinerSectorEvent{},
 	}
 
 	for _, tx := range transactions {
@@ -75,12 +75,12 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		events.MinerInfo = append(events.MinerInfo, minerInfo)
 
 		if eg.isMinerSectorMessage(actorName, tx.TxType) {
-			minerSector, err := eg.createMinerSector(ctx, tx, tipsetCid)
+			minerSectors, err := eg.createSectorEvents(ctx, tx, tipsetCid)
 			if err != nil {
 				eg.logger.Sugar().Errorf("could not create miner sector. Err: %s", err)
 				continue
 			}
-			events.MinerSectors = append(events.MinerSectors, minerSector)
+			events.MinerSectors = append(events.MinerSectors, minerSectors...)
 		}
 
 	}
@@ -90,7 +90,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
 	case strings.EqualFold(actorName, manifest.MinerKey):
-		return true
+		return (!strings.EqualFold(txType, parser.MethodOnDeferredCronEvent))
 
 	case strings.EqualFold(actorName, manifest.MarketKey):
 		return (strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate) ||
