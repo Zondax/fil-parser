@@ -6,7 +6,16 @@ import (
 	"fmt"
 	"strings"
 
-	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
+	// The following import is necessary to ensure that the init() function
+	// from the lotus build package is invoked.
+	// In a recent refactor (v1.30.0), some build packages were modularized to reduce
+	// unnecessary dependencies. As a result, if this package is not explicitly
+	// imported, its init() will not be triggered, potentially causing issues
+	// with initialization, such as errors when searching for actorNameByCid.
+	_ "github.com/filecoin-project/lotus/build"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -27,26 +36,19 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors/cache"
-	logger2 "github.com/zondax/fil-parser/logger"
+
 	"github.com/zondax/fil-parser/metrics"
-	"github.com/zondax/fil-parser/parser"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
-	"go.uber.org/zap"
 
-	// The following import is necessary to ensure that the init() function
-	// from the lotus build package is invoked.
-	// In a recent refactor (v1.30.0), some build packages were modularized to reduce
-	// unnecessary dependencies. As a result, if this package is not explicitly
-	// imported, its init() will not be triggered, potentially causing issues
-	// with initialization, such as errors when searching for actorNameByCid.
-	_ "github.com/filecoin-project/lotus/build"
-
+	"github.com/zondax/fil-parser/actors/cache"
+	logger2 "github.com/zondax/fil-parser/logger"
+	"github.com/zondax/fil-parser/parser"
+	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	"github.com/zondax/fil-parser/types"
 )
 
+// Deprecated: Use v2/tools.ActorMethods instead
 var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.InitKey:     filInit.Methods,
 	manifest.CronKey:     cron.Methods,
@@ -160,6 +162,7 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 	}
 }
 
+// Deprecated: Use v2/tools.GetMethodName instead
 func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
 	if msg == nil {
 		return "", errors.New("malformed value")
@@ -191,6 +194,25 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 	}
 
 	return method.Name, nil
+}
+
+// CheckCommonMethods returns the method name for the given message if Send Or Constructor, otherwise returns an empty string
+func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
+	if msg == nil {
+		return "", errors.New("malformed value")
+	}
+
+	// Shortcut 1 - Method "0" corresponds to "MethodSend"
+	if msg.Method == 0 {
+		return parser.MethodSend, nil
+	}
+
+	// Shortcut 2 - Method "1" corresponds to "MethodConstructor"
+	if msg.Method == 1 {
+		return parser.MethodConstructor, nil
+	}
+
+	return "", nil
 }
 
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {

@@ -1,6 +1,8 @@
 package actors
 
 import (
+	"context"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
@@ -30,7 +32,7 @@ func NewActorParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.M
 	}
 }
 
-func (p *ActorParser) GetMetadata(txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+func (p *ActorParser) GetMetadata(_ context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {

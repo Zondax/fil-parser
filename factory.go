@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zondax/fil-parser/metrics"
 	"strings"
+
+	"github.com/zondax/fil-parser/metrics"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
@@ -45,6 +46,7 @@ type Parser interface {
 	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error)
+	ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error)
 	ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
@@ -186,6 +188,14 @@ func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.T
 		return nil, err
 	}
 	return p.parserV2.ParseMultisigEvents(ctx, multisigTxs, tipsetCid, tipsetKey)
+}
+
+func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
+	minerTxs, err := p.Helper.FilterTxsByActorType(ctx, txs, manifest.MinerKey, tipsetKey)
+	if err != nil {
+		return nil, err
+	}
+	return p.parserV2.ParseMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
 }
 
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {

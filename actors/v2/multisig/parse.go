@@ -1,15 +1,33 @@
 package multisig
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/ipfs/go-cid"
+	"go.uber.org/zap"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
+
+	multisigv10 "github.com/filecoin-project/go-state-types/builtin/v10/multisig"
+	multisigv11 "github.com/filecoin-project/go-state-types/builtin/v11/multisig"
+	multisigv12 "github.com/filecoin-project/go-state-types/builtin/v12/multisig"
+	multisigv13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
+	multisigv14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
+	multisigv15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisigv8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
+	multisigv9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 type Msig struct {
@@ -30,12 +48,70 @@ func (p *Msig) Name() string {
 	return manifest.MultisigKey
 }
 
+func (*Msig) StartNetworkHeight() int64 {
+	return tools.V1.Height()
+}
+
+func (*Msig) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	switch {
+	// all legacy version
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+			legacyBuiltin.MethodsMultisig.Constructor: {
+				Name: parser.MethodConstructor,
+			},
+			legacyBuiltin.MethodsMultisig.Propose: {
+				Name: parser.MethodPropose,
+			},
+			legacyBuiltin.MethodsMultisig.Approve: {
+				Name: parser.MethodApprove,
+			},
+			legacyBuiltin.MethodsMultisig.Cancel: {
+				Name: parser.MethodCancel,
+			},
+			legacyBuiltin.MethodsMultisig.AddSigner: {
+				Name: parser.MethodAddSigner,
+			},
+			legacyBuiltin.MethodsMultisig.RemoveSigner: {
+				Name: parser.MethodRemoveSigner,
+			},
+			legacyBuiltin.MethodsMultisig.SwapSigner: {
+				Name: parser.MethodSwapSigner,
+			},
+			legacyBuiltin.MethodsMultisig.ChangeNumApprovalsThreshold: {
+				Name: parser.MethodChangeNumApprovalsThreshold,
+			},
+			legacyBuiltin.MethodsMultisig.LockBalance: {
+				Name: parser.MethodLockBalance,
+			},
+		}, nil
+	case tools.V16.IsSupported(network, height):
+		return multisigv8.Methods, nil
+	case tools.V17.IsSupported(network, height):
+		return multisigv9.Methods, nil
+	case tools.V18.IsSupported(network, height):
+		return multisigv10.Methods, nil
+	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+		return multisigv11.Methods, nil
+	case tools.V21.IsSupported(network, height):
+		return multisigv12.Methods, nil
+	case tools.V22.IsSupported(network, height):
+		return multisigv13.Methods, nil
+	case tools.V23.IsSupported(network, height):
+		return multisigv14.Methods, nil
+	case tools.V24.IsSupported(network, height):
+		return multisigv15.Methods, nil
+	default:
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+}
+
 /*
 Still needs to parse:
 
 	Receive
 */
-func (p *Msig) Parse(network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Msig) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	var ret map[string]interface{}
 	var err error
 	switch txType {

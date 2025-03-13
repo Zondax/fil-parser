@@ -2,6 +2,7 @@ package market
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/zondax/fil-parser/parser"
 )
@@ -11,7 +12,7 @@ func parseGeneric[T marketParam, R marketReturn](rawParams, rawReturn []byte, re
 	reader := bytes.NewReader(rawParams)
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		return metadata, err
+		return metadata, fmt.Errorf("error unmarshalling params: %w", err)
 	}
 
 	metadata[parser.ParamsKey] = params
@@ -25,7 +26,7 @@ func parseGeneric[T marketParam, R marketReturn](rawParams, rawReturn []byte, re
 		reader = bytes.NewReader(rawReturn)
 		err = r.UnmarshalCBOR(reader)
 		if err != nil {
-			return metadata, err
+			return metadata, fmt.Errorf("error unmarshalling return: %w", err)
 		}
 		metadata[parser.ReturnKey] = r
 	}
