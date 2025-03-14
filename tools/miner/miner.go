@@ -62,11 +62,18 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 			eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
 			continue
 		}
+
+		actorAddress := tx.TxTo
 		if !eg.isMinerStateMessage(actorName, tx.TxType) {
 			continue
 		}
 
-		minerInfo, err := eg.createMinerInfo(tx, tipsetCid)
+		// this is executed by(from) the miner actor
+		if tx.TxType == parser.MethodUpdateClaimedPower {
+			actorAddress = tx.TxFrom
+		}
+
+		minerInfo, err := eg.createMinerInfo(tx, tipsetCid, actorAddress)
 		if err != nil {
 			eg.logger.Sugar().Errorf("could not create miner info. Err: %s", err)
 			continue
@@ -91,7 +98,8 @@ func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
 	case strings.EqualFold(actorName, manifest.MinerKey):
 		return (!strings.EqualFold(txType, parser.MethodOnDeferredCronEvent))
-
+	case strings.EqualFold(txType, parser.MethodUpdateClaimedPower):
+		return true
 	case strings.EqualFold(actorName, manifest.MarketKey):
 		return (strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate) ||
 			strings.EqualFold(txType, parser.MethodPublishStorageDeals) ||

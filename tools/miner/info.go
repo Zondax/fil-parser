@@ -7,10 +7,10 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (eg *eventGenerator) createMinerInfo(tx *types.Transaction, tipsetCid string) (*types.MinerInfo, error) {
+func (eg *eventGenerator) createMinerInfo(tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {
 	minerInfo := &types.MinerInfo{
 		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-		ActorAddress: tx.TxTo,
+		ActorAddress: actorAddress,
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   tx.TxType,
