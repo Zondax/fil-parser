@@ -13,6 +13,9 @@ func getBigInt(value map[string]interface{}, key string, canBeNil bool) (*big.In
 	if err != nil {
 		return nil, err
 	}
+	if canBeNil && bigIntString == "" {
+		return nil, nil
+	}
 	bigIntValue, ok := big.NewInt(0).SetString(bigIntString, 10)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert string %s to big.Int", bigIntString)
