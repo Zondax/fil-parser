@@ -7,8 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var key = "key"
+
 func TestGetBigInt(t *testing.T) {
-	key := "key"
 	tests := []struct {
 		name     string
 		params   map[string]interface{}
@@ -29,7 +30,6 @@ func TestGetBigInt(t *testing.T) {
 }
 
 func TestGetInteger(t *testing.T) {
-	key := "key"
 	tests := []struct {
 		name     string
 		params   map[string]interface{}
@@ -50,7 +50,6 @@ func TestGetInteger(t *testing.T) {
 }
 
 func TestGetIntegerSlice(t *testing.T) {
-	key := "key"
 	tests := []struct {
 		name     string
 		params   map[string]interface{}
