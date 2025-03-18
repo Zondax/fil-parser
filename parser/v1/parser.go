@@ -282,13 +282,18 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		if !trace.MsgRct.ExitCode.IsError() {
+			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+			p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		}
 	}
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if trace.MsgRct.ExitCode.IsError() {
+		if metadata == nil {
+			metadata = make(map[string]interface{})
+		}
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
