@@ -205,6 +205,9 @@ func (eg *eventGenerator) parsePreCommitStage(_ context.Context, tx *types.Trans
 		}
 		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
 			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+			TxCid:        tx.TxCid,
+			Height:       tx.Height,
+			ActionType:   tx.TxType,
 			MinerAddress: tx.TxTo,
 			SectorNumber: sectorNumber,
 			Data:         string(jsonData),
