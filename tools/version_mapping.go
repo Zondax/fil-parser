@@ -88,6 +88,12 @@ func isSupported(network string, height int64, iter *VersionIterator) bool {
 	if network == CalibrationNetwork {
 		return checkCalibrationEdgeCases(network, height, iter)
 	} else {
+		// edge case: the calibration upgrade is done before mainnet.
+		// so if the version is greater than the latest mainnet version, it is not supported
+		if v.nodeVersion > LatestMainnetVersion.nodeVersion {
+			return false
+		}
+
 		if height == 0 && v.mainnet == 0 {
 			return true
 		}

@@ -6,23 +6,17 @@ import "container/list"
 type VersionIterator struct {
 	current *list.Element
 	network string
+	from    version
 }
 
 // NewVersionIterator creates a new iterator starting at the beginning of the list
 func NewVersionIterator(from version, network string) *VersionIterator {
-	current := supportedVersionsList.Front()
-	for current != nil && current.Value.(version).nodeVersion < from.nodeVersion {
-		// skip versions that are before the start version
-		// stop if we reach the latest version
-		if current.Value.(version).nodeVersion == LatestVersion(network).nodeVersion {
-			break
-		}
-		current = current.Next()
-	}
-	return &VersionIterator{
-		current: current,
+	v := &VersionIterator{
 		network: network,
+		from:    from,
 	}
+	v.Reset()
+	return v
 }
 
 // Next moves to and returns the next version
@@ -71,5 +65,14 @@ func (vi *VersionIterator) Begin() (version, bool) {
 
 // Reset moves the iterator back to the start of the list
 func (vi *VersionIterator) Reset() {
-	vi.current = supportedVersionsList.Front()
+	current := supportedVersionsList.Front()
+	for current != nil && current.Value.(version).nodeVersion < vi.from.nodeVersion {
+		// skip versions that are before the start version
+		// stop if we reach the latest version
+		if current.Value.(version).nodeVersion == LatestVersion(vi.network).nodeVersion {
+			break
+		}
+		current = current.Next()
+	}
+	vi.current = current
 }
