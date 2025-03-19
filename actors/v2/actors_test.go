@@ -301,21 +301,33 @@ func TestMain(m *testing.M) {
 
 // TestVersionCoverage tests that all actor methods are supported for all supported network versions
 func TestVersionCoverage(t *testing.T) {
-	network := "mainnet"
-	versions := tools.GetSupportedVersions(network)
-	actorParsers := getActors(t)
-
-	for _, version := range versions {
-		height := tools.DeterministicTestHeight(version)
-		for _, actor := range actorParsers {
-			transactionTypes := actor.TransactionTypes()
-			for txType := range transactionTypes {
-				_, _, err := actor.Parse(context.Background(), network, tools.DeterministicTestHeight(version), txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
-				require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
-				require.Falsef(t, errors.Is(err, parser.ErrUnknownMethod), "Method missing in actor.Parse: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
-			}
-		}
+	tests := []struct {
+		name    string
+		network string
+	}{
+		{name: "mainnet", network: "mainnet"},
+		{name: "calibration", network: "calibration"},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			versions := tools.GetSupportedVersions(tt.network)
+			actorParsers := getActors(t)
+
+			for _, version := range versions {
+				height := tools.DeterministicTestHeight(version)
+				for _, actor := range actorParsers {
+					transactionTypes := actor.TransactionTypes()
+					for txType := range transactionTypes {
+						_, _, err := actor.Parse(context.Background(), tt.network, height, txType, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
+						require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
+						require.Falsef(t, errors.Is(err, parser.ErrUnknownMethod), "Method missing in actor.Parse: %s, actor: %s version: %s height: %d", txType, actor.Name(), version, height)
+					}
+				}
+			}
+		})
+
+	}
+
 }
 
 // TestAllActorsSupported tests that all actors are supported for the latest actor version

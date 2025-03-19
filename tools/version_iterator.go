@@ -14,10 +14,10 @@ func NewVersionIterator(from version, network string) *VersionIterator {
 	for current != nil && current.Value.(version).nodeVersion < from.nodeVersion {
 		// skip versions that are before the start version
 		// stop if we reach the latest version
-		current = current.Next()
-		if current.Value.(version).nodeVersion == LatestVersion(current.Value.(version).currentNetwork).nodeVersion {
+		if current.Value.(version).nodeVersion == LatestVersion(network).nodeVersion {
 			break
 		}
+		current = current.Next()
 	}
 	return &VersionIterator{
 		current: current,
@@ -32,6 +32,7 @@ func (vi *VersionIterator) Next() (version, bool) {
 		return version{}, false
 	}
 	v := vi.current.Value.(version)
+	v.currentNetwork = vi.network
 	if v.nodeVersion > LatestVersion(vi.network).nodeVersion {
 		return version{}, false
 	}
@@ -44,7 +45,9 @@ func (vi *VersionIterator) Peek() (version, bool) {
 	if vi.current == nil {
 		return version{}, false
 	}
-	return vi.current.Value.(version), true
+	v := vi.current.Value.(version)
+	v.currentNetwork = vi.network
+	return v, true
 }
 
 // PeekNext returns the next version in the list without advancing the iterator
@@ -52,7 +55,12 @@ func (vi *VersionIterator) PeekNext() (version, bool) {
 	if vi.current == nil {
 		return version{}, false
 	}
-	return vi.current.Next().Value.(version), true
+	if vi.current.Next() == nil {
+		return version{}, false
+	}
+	v := vi.current.Next().Value.(version)
+	v.currentNetwork = vi.network
+	return v, true
 }
 
 // Begin moves the iterator to the first version to be returned for a for-loop init

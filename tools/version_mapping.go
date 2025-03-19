@@ -124,17 +124,14 @@ func checkCalibrationEdgeCases(network string, height int64, iter *VersionIterat
 	}
 	if v.nodeVersion < V19.nodeVersion {
 		if v.nodeVersion != V18.nodeVersion {
-			// on calibration, all versions before V16 are not used because of a calibration reset
+			// on calibration, all versions before V18 are not used because of a calibration reset
 			return false
-		} else {
-			// if we are on V16 which is at a greater height than V17,
-			// we just need to check that the height is less than the network reset height.
-			// all heights below this are parsed with V16 .
-			return height < V18.calibration
 		}
 	}
+
 	if height < V19.calibration {
-		// parse all calibration heights before V17 with the v16 network version parsers because there was a calibration reset somewhere between V16 and V17.
+		// parse all calibration heights before V19 with the V18 network version parsers because there was a calibration reset somewhere between V16 and V17.
+		// and through testing we have determined there was a reset in V18
 		return v.nodeVersion == V18.nodeVersion
 	}
 

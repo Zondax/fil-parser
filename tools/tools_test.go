@@ -84,6 +84,10 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 		{name: "V13 on calibration", version: V13, height: 312700, want: false},
 		{name: "V14 on calibration", version: V14, height: 312846, want: false},
 		{name: "V16 on calibration", version: V16, height: 1044661, want: false},
+		{name: "V10 on calibration", version: V10, height: 332640, want: false},
+		{name: "V18 on calibration", version: V18, height: 332640, want: true},
+		{name: "V22 on calibration", version: V22, height: 2791307, want: false},
+		{name: "V25 on calibration", version: V25, height: 2791307, want: true},
 
 		{name: "V16 on calibration", version: V16, height: 1000, want: false},
 		{name: "V17 on calibration", version: V17, height: 16900, want: false},
