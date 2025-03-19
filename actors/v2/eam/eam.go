@@ -93,12 +93,17 @@ func newEamCreate(r createReturn, msgCid cid.Cid) (string, *types.AddressInfo, p
 
 	}
 	switch v := r.(type) {
+	case *eamv16.CreateReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv16.Create2Return:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv16.CreateExternalReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+
 	case *eamv15.CreateReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
-
 	case *eamv15.Create2Return:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
-
 	case *eamv15.CreateExternalReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 
@@ -157,6 +162,13 @@ func validateEamReturn(ret createReturn) error {
 	}
 
 	switch v := ret.(type) {
+	case *eamv16.CreateReturn:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv16.Create2Return:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv16.CreateExternalReturn:
+		return checkAndSetAddress(&v.RobustAddress)
+
 	case *eamv15.CreateReturn:
 		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv15.Create2Return:
