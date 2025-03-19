@@ -61,58 +61,74 @@ func (*Miner) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMiner.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: m.Constructor,
 			},
 			legacyBuiltin.MethodsMiner.ControlAddresses: {
-				Name: parser.MethodControlAddresses,
+				Name:   parser.MethodControlAddresses,
+				Method: m.ControlAddresses,
 			},
 			legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
-				Name: parser.MethodChangeWorkerAddress,
+				Name:   parser.MethodChangeWorkerAddress,
+				Method: m.ChangeWorkerAddressExported,
 			},
 			legacyBuiltin.MethodsMiner.ChangePeerID: {
-				Name: parser.MethodChangePeerID,
+				Name:   parser.MethodChangePeerID,
+				Method: m.ChangePeerIDExported,
 			},
 			legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
-				Name: parser.MethodSubmitWindowedPoSt,
+				Name:   parser.MethodSubmitWindowedPoSt,
+				Method: m.SubmitWindowedPoSt,
 			},
 			legacyBuiltin.MethodsMiner.PreCommitSector: {
-				Name: parser.MethodPreCommitSector,
+				Name:   parser.MethodPreCommitSector,
+				Method: m.PreCommitSector,
 			},
 			legacyBuiltin.MethodsMiner.ProveCommitSector: {
-				Name: parser.MethodProveCommitSector,
+				Name:   parser.MethodProveCommitSector,
+				Method: m.ProveCommitSector,
 			},
 			nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
-				Name: parser.MethodExtendSectorExpiration,
+				Name:   parser.MethodExtendSectorExpiration,
+				Method: m.ExtendSectorExpiration,
 			},
 			legacyBuiltin.MethodsMiner.TerminateSectors: {
-				Name: parser.MethodTerminateSectors,
+				Name:   parser.MethodTerminateSectors,
+				Method: m.TerminateSectors,
 			},
 			legacyBuiltin.MethodsMiner.DeclareFaults: {
-				Name: parser.MethodDeclareFaults,
+				Name:   parser.MethodDeclareFaults,
+				Method: m.DeclareFaults,
 			},
 			legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
-				Name: parser.MethodDeclareFaultsRecovered,
+				Name:   parser.MethodDeclareFaultsRecovered,
+				Method: m.DeclareFaultsRecovered,
 			},
 			legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
-				Name: parser.MethodOnDeferredCronEvent,
+				Name:   parser.MethodOnDeferredCronEvent,
+				Method: m.OnDeferredCronEvent,
 			},
 			legacyBuiltin.MethodsMiner.CheckSectorProven: {
-				Name: parser.MethodCheckSectorProven,
+				Name:   parser.MethodCheckSectorProven,
+				Method: m.CheckSectorProven,
 			},
 			legacyBuiltin.MethodsMiner.AddLockedFund: {
-				Name: parser.MethodAddLockedFund,
+				Name:   parser.MethodAddLockedFund,
+				Method: m.AddLockedFund,
 			},
 			legacyBuiltin.MethodsMiner.ReportConsensusFault: {
-				Name: parser.MethodReportConsensusFault,
+				Name:   parser.MethodReportConsensusFault,
+				Method: m.ReportConsensusFault,
 			},
 			legacyBuiltin.MethodsMiner.WithdrawBalance: {
-				Name: parser.MethodWithdrawBalance,
+				Name:   parser.MethodWithdrawBalance,
+				Method: m.WithdrawBalanceExported,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

@@ -53,37 +53,46 @@ func (*Power) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (p *Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsPower.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsPower.CreateMiner: {
-				Name: parser.MethodCreateMiner,
+				Name:   parser.MethodCreateMiner,
+				Method: p.CreateMinerExported,
 			},
 			legacyBuiltin.MethodsPower.UpdateClaimedPower: {
-				Name: parser.MethodUpdateClaimedPower,
+				Name:   parser.MethodUpdateClaimedPower,
+				Method: p.UpdateClaimedPower,
 			},
 			legacyBuiltin.MethodsPower.EnrollCronEvent: {
-				Name: parser.MethodEnrollCronEvent,
+				Name:   parser.MethodEnrollCronEvent,
+				Method: p.EnrollCronEvent,
 			},
 			legacyBuiltin.MethodsPower.OnEpochTickEnd: {
-				Name: parser.MethodOnEpochTickEnd,
+				Name:   parser.MethodOnEpochTickEnd,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 			legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
-				Name: parser.MethodUpdatePledgeTotal,
+				Name:   parser.MethodUpdatePledgeTotal,
+				Method: p.UpdatePledgeTotal,
 			},
 			legacyBuiltin.MethodsPower.OnConsensusFault: {
-				Name: parser.MethodOnConsensusFault,
+				Name:   parser.MethodOnConsensusFault,
+				Method: p.OnConsensusFault,
 			},
 			legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
-				Name: parser.MethodSubmitPoRepForBulkVerify,
+				Name:   parser.MethodSubmitPoRepForBulkVerify,
+				Method: p.SubmitPoRepForBulkVerify,
 			},
 			legacyBuiltin.MethodsPower.CurrentTotalPower: {
-				Name: parser.MethodCurrentTotalPower,
+				Name:   parser.MethodCurrentTotalPower,
+				Method: p.CurrentTotalPower,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

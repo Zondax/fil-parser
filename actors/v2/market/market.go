@@ -60,37 +60,49 @@ func (*Market) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	if height == 2523454 {
+		fmt.Printf("network: %s height: %d\n", network, height)
+	}
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMarket.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsMarket.AddBalance: {
-				Name: parser.MethodAddBalance,
+				Name:   parser.MethodAddBalance,
+				Method: m.AddBalance,
 			},
 			legacyBuiltin.MethodsMarket.WithdrawBalance: {
-				Name: parser.MethodWithdrawBalance,
+				Name:   parser.MethodWithdrawBalance,
+				Method: m.WithdrawBalance,
 			},
 			legacyBuiltin.MethodsMarket.PublishStorageDeals: {
-				Name: parser.MethodPublishStorageDeals,
+				Name:   parser.MethodPublishStorageDeals,
+				Method: m.PublishStorageDealsExported,
 			},
 			legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
-				Name: parser.MethodVerifyDealsForActivation,
+				Name:   parser.MethodVerifyDealsForActivation,
+				Method: m.VerifyDealsForActivationExported,
 			},
 			legacyBuiltin.MethodsMarket.ActivateDeals: {
-				Name: parser.MethodActivateDeals,
+				Name:   parser.MethodActivateDeals,
+				Method: m.ActivateDealsExported,
 			},
 			legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
-				Name: parser.MethodOnMinerSectorsTerminate,
+				Name:   parser.MethodOnMinerSectorsTerminate,
+				Method: m.OnMinerSectorsTerminateExported,
 			},
 			legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
-				Name: parser.MethodComputeDataCommitment,
+				Name:   parser.MethodComputeDataCommitment,
+				Method: m.ComputeDataCommitmentExported,
 			},
 			legacyBuiltin.MethodsMarket.CronTick: {
-				Name: parser.MethodCronTick,
+				Name:   parser.MethodCronTick,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -663,6 +675,10 @@ func (*Market) GetDealProviderCollateralExported(network string, height int64, r
 
 func (*Market) GetDealVerifiedExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealVerifiedParams
+		var r v16Market.GetDealVerifiedReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealVerifiedParams
 		var r v15Market.GetDealVerifiedReturn

@@ -52,22 +52,26 @@ func (*PaymentChannel) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (p *PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsPaych.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsPaych.UpdateChannelState: {
-				Name: parser.MethodUpdateChannelState,
+				Name:   parser.MethodUpdateChannelState,
+				Method: p.UpdateChannelState,
 			},
 			legacyBuiltin.MethodsPaych.Settle: {
-				Name: parser.MethodSettle,
+				Name:   parser.MethodSettle,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 			legacyBuiltin.MethodsPaych.Collect: {
-				Name: parser.MethodCollect,
+				Name:   parser.MethodCollect,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):

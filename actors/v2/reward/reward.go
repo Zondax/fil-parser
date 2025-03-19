@@ -56,22 +56,26 @@ func (*Reward) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Reward) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (r *Reward) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsReward.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsReward.AwardBlockReward: {
-				Name: parser.MethodAwardBlockReward,
+				Name:   parser.MethodAwardBlockReward,
+				Method: r.AwardBlockReward,
 			},
 			legacyBuiltin.MethodsReward.ThisEpochReward: {
-				Name: parser.MethodThisEpochReward,
+				Name:   parser.MethodThisEpochReward,
+				Method: r.ThisEpochReward,
 			},
 			legacyBuiltin.MethodsReward.UpdateNetworkKPI: {
-				Name: parser.MethodUpdateNetworkKPI,
+				Name:   parser.MethodUpdateNetworkKPI,
+				Method: r.UpdateNetworkKPI,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
