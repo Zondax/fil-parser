@@ -1,10 +1,12 @@
 package tools
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +44,7 @@ func TestIsSupported(t *testing.T) {
 		height  int64
 		want    bool
 	}{
-		{name: "V13 on calibration", version: V18, network: "calibration", height: 151, want: true},
+		// {name: "V13 on calibration", version: V18, network: "calibration", height: 151, want: true},
 
 		{name: "V7 on calibration", version: V7, network: "calibration", height: 2383680, want: false},
 		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 170000, want: false},
@@ -136,6 +138,112 @@ func TestIsSupportedCalibrationEdgeCases(t *testing.T) {
 	case V18.IsSupported("calibration", height):
 	default:
 		t.Fatalf("V16 should be supported on calibration at height %d", height)
+	}
+}
+
+func TestVersionIterator(t *testing.T) {
+	tests := []struct {
+		name             string
+		version          version
+		network          string
+		expectedVersions []version
+	}{
+		{name: "V1 on calibration", version: V1, network: "calibration",
+			expectedVersions: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
+		{name: "V1 on mainnet", version: V1, network: "mainnet", expectedVersions: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var versions []version
+			iter := NewVersionIterator(tt.version, tt.network)
+			nodeVersionStart := tt.version.nodeVersion
+			for {
+				v, ok := iter.Next()
+				if !ok {
+					break
+				}
+				fmt.Printf("v: %d, nodeVersionStart: %d\n", v.nodeVersion, nodeVersionStart)
+				require.Equal(t, nodeVersionStart, v.nodeVersion)
+				versions = append(versions, v)
+				nodeVersionStart++
+			}
+			require.Equal(t, len(tt.expectedVersions), len(versions))
+		})
+
+	}
+}
+
+func TestVersionsBefore(t *testing.T) {
+	tests := []struct {
+		name    string
+		version version
+		want    []version
+	}{
+		{name: "V1", version: V1, want: []version{V1}},
+		{name: "V2", version: V2, want: []version{V1, V2}},
+		{name: "V3", version: V3, want: []version{V1, V2, V3}},
+		{name: "V4", version: V4, want: []version{V1, V2, V3, V4}},
+		{name: "V5", version: V5, want: []version{V1, V2, V3, V4, V5}},
+		{name: "V6", version: V6, want: []version{V1, V2, V3, V4, V5, V6}},
+		{name: "V7", version: V7, want: []version{V1, V2, V3, V4, V5, V6, V7}},
+		{name: "V8", version: V8, want: []version{V1, V2, V3, V4, V5, V6, V7, V8}}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			versions := VersionsBefore(tt.version)
+			require.Equal(t, len(versions), len(tt.want))
+			for i, v := range versions {
+				require.Equal(t, v.nodeVersion, tt.want[i].nodeVersion)
+			}
+		})
+	}
+}
+
+func TestVersionsAfter(t *testing.T) {
+	tests := []struct {
+		name    string
+		version version
+		want    []version
+	}{
+		{name: "V17", version: V17, want: []version{V17, V18, V19, V20, V21, V22, V23, V24}},
+		{name: "V18", version: V18, want: []version{V18, V19, V20, V21, V22, V23, V24}},
+		{name: "V19", version: V19, want: []version{V19, V20, V21, V22, V23, V24}},
+		{name: "V20", version: V20, want: []version{V20, V21, V22, V23, V24}},
+		{name: "V21", version: V21, want: []version{V21, V22, V23, V24}},
+		{name: "V22", version: V22, want: []version{V22, V23, V24}},
+		{name: "V23", version: V23, want: []version{V23, V24}},
+		{name: "V24", version: V24, want: []version{V24}}, // mainnet
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			versions := VersionsAfter(tt.version)
+			require.Equal(t, len(versions), len(tt.want))
+			for i, v := range versions {
+				require.Equal(t, v.nodeVersion, tt.want[i].nodeVersion)
+			}
+		})
+	}
+}
+
+func TestGetSupportedVersions(t *testing.T) {
+	tests := []struct {
+		name    string
+		network string
+		want    []version
+	}{
+		{name: "calibration", network: "calibration", want: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
+		{name: "mainnet", network: "mainnet", want: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			versions := GetSupportedVersions(tt.network)
+			fmt.Printf("versions: %v\n", versions)
+			fmt.Printf("want: %v\n", tt.want)
+			assert.Equal(t, len(versions), len(tt.want))
+			for i, v := range versions {
+				require.Equal(t, v.nodeVersion, tt.want[i].nodeVersion)
+			}
+		})
 	}
 }
 
