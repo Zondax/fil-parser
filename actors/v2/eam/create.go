@@ -10,7 +10,7 @@ import (
 	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-
+	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors"
@@ -20,6 +20,8 @@ import (
 
 func (*Eam) CreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv16.CreateExternalReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv15.CreateExternalReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -40,6 +42,8 @@ func (*Eam) CreateExternal(network string, height int64, rawParams, rawReturn []
 
 func (*Eam) Create(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.CreateParams{}, &eamv16.CreateReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseCreate(rawParams, rawReturn, msgCid, &eamv15.CreateParams{}, &eamv15.CreateReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -60,6 +64,8 @@ func (*Eam) Create(network string, height int64, rawParams, rawReturn []byte, ms
 
 func (*Eam) Create2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.Create2Params{}, &eamv16.Create2Return{})
 	case tools.V24.IsSupported(network, height):
 		return parseCreate(rawParams, rawReturn, msgCid, &eamv15.Create2Params{}, &eamv15.Create2Return{})
 	case tools.V23.IsSupported(network, height):

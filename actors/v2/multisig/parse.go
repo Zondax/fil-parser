@@ -19,6 +19,7 @@ import (
 	multisigv13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
 	multisigv14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisigv15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisigv16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisigv8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisigv9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
@@ -101,6 +102,8 @@ func (*Msig) Methods(_ context.Context, network string, height int64) (map[abi.M
 		return multisigv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return multisigv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return multisigv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

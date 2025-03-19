@@ -19,6 +19,7 @@ import (
 	cronv13 "github.com/filecoin-project/go-state-types/builtin/v13/cron"
 	cronv14 "github.com/filecoin-project/go-state-types/builtin/v14/cron"
 	cronv15 "github.com/filecoin-project/go-state-types/builtin/v15/cron"
+	cronv16 "github.com/filecoin-project/go-state-types/builtin/v16/cron"
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
 
@@ -74,6 +75,8 @@ func (c *Cron) Methods(_ context.Context, network string, height int64) (map[abi
 		return cronv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return cronv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return cronv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

@@ -19,6 +19,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -130,6 +131,8 @@ func (*Miner) Methods(_ context.Context, network string, height int64) (map[abi.
 		return miner14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return miner15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return miner16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -141,6 +144,8 @@ func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []b
 
 func (*Miner) TerminateSectors(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.TerminateSectorsParams{}, &miner16.TerminateSectorsReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.TerminateSectorsParams{}, &miner15.TerminateSectorsReturn{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -177,6 +182,8 @@ func (*Miner) TerminateSectors(network string, height int64, rawParams, rawRetur
 
 func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DeclareFaultsParams{}, &miner16.DeclareFaultsParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DeclareFaultsParams{}, &miner15.DeclareFaultsParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -213,6 +220,8 @@ func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map
 
 func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DeclareFaultsRecoveredParams{}, &miner16.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DeclareFaultsRecoveredParams{}, &miner15.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -249,6 +258,8 @@ func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []b
 
 func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ProveReplicaUpdatesParams{}, &miner16.ProveReplicaUpdatesParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ProveReplicaUpdatesParams{}, &miner15.ProveReplicaUpdatesParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -275,6 +286,8 @@ func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte
 
 func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.PreCommitSectorBatchParams2{}, &miner16.PreCommitSectorBatchParams2{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.PreCommitSectorBatchParams2{}, &miner15.PreCommitSectorBatchParams2{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -297,6 +310,8 @@ func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []by
 
 func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.ProveReplicaUpdatesParams2{}, &bitfield.BitField{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.ProveReplicaUpdatesParams2{}, &bitfield.BitField{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -319,6 +334,8 @@ func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawR
 
 func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.ProveReplicaUpdates3Params{}, &miner16.ProveReplicaUpdates3Return{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.ProveReplicaUpdates3Params{}, &miner15.ProveReplicaUpdates3Return{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -333,6 +350,8 @@ func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawR
 
 func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ProveCommitAggregateParams{}, &miner16.ProveCommitAggregateParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ProveCommitAggregateParams{}, &miner15.ProveCommitAggregateParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -363,6 +382,8 @@ func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byt
 
 func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DisputeWindowedPoStParams{}, &miner16.DisputeWindowedPoStParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DisputeWindowedPoStParams{}, &miner15.DisputeWindowedPoStParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -397,6 +418,8 @@ func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte
 
 func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ReportConsensusFaultParams{}, &miner16.ReportConsensusFaultParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ReportConsensusFaultParams{}, &miner15.ReportConsensusFaultParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -433,6 +456,8 @@ func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byt
 
 func (*Miner) ChangeBeneficiaryExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ChangeBeneficiaryParams{}, &miner16.ChangeBeneficiaryParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ChangeBeneficiaryParams{}, &miner15.ChangeBeneficiaryParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -468,6 +493,8 @@ func (*Miner) GetBeneficiary(network string, height int64, rawParams, rawReturn 
 
 func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.MinerConstructorParams{}, &miner16.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.MinerConstructorParams{}, &miner15.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -504,6 +531,8 @@ func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[s
 
 func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ApplyRewardParams{}, &miner16.ApplyRewardParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ApplyRewardParams{}, &miner15.ApplyRewardParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -540,6 +569,8 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 
 func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DeferredCronEventParams{}, &miner16.DeferredCronEventParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DeferredCronEventParams{}, &miner15.DeferredCronEventParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):

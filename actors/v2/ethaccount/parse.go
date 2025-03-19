@@ -18,6 +18,7 @@ import (
 	ethaccountv13 "github.com/filecoin-project/go-state-types/builtin/v13/ethaccount"
 	ethaccountv14 "github.com/filecoin-project/go-state-types/builtin/v14/ethaccount"
 	ethaccountv15 "github.com/filecoin-project/go-state-types/builtin/v15/ethaccount"
+	ethaccountv16 "github.com/filecoin-project/go-state-types/builtin/v16/ethaccount"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -60,6 +61,8 @@ func (e *EthAccount) Methods(_ context.Context, network string, height int64) (m
 		return ethaccountv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return ethaccountv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return ethaccountv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

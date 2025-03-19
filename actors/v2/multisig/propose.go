@@ -18,6 +18,7 @@ import (
 	multisig13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
 	multisig14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisig16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
@@ -35,6 +36,7 @@ import (
 	verifregv13 "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
 	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
+	verifregv16 "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
@@ -52,6 +54,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -222,6 +225,12 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 			break
 		}
 		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+	case tools.V25.IsSupported(network, height):
+		tmp := &multisig16.ProposeParams{}
+		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
+		if err != nil {
+			break
+		}
 	default:
 		return nil, 0, "", "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -261,6 +270,8 @@ func proposeReturn(network string, height int64) (multisigParams, error) {
 		return &multisig14.ProposeReturn{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.ProposeReturn{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.ProposeReturn{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -298,6 +309,8 @@ func txnIDParams(network string, height int64) (multisigParams, error) {
 		return &multisig14.TxnIDParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.TxnIDParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.TxnIDParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -334,6 +347,8 @@ func addSignerParams(network string, height int64) (multisigParams, error) {
 		return &multisig14.AddSignerParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.AddSignerParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.AddSignerParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -370,6 +385,8 @@ func removeSignerParams(network string, height int64) (multisigParams, error) {
 		return &multisig14.RemoveSignerParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.RemoveSignerParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.RemoveSignerParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -406,6 +423,8 @@ func swapSignerParams(network string, height int64) (multisigParams, error) {
 		return &multisig14.SwapSignerParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.SwapSignerParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.SwapSignerParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -442,6 +461,8 @@ func changeNumApprovalsThresholdParams(network string, height int64) (multisigPa
 		return &multisig14.ChangeNumApprovalsThresholdParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.ChangeNumApprovalsThresholdParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.ChangeNumApprovalsThresholdParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -477,6 +498,8 @@ func lockBalanceParams(network string, height int64) (multisigParams, error) {
 		return &multisig14.LockBalanceParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &multisig15.LockBalanceParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &multisig16.LockBalanceParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -512,6 +535,8 @@ func withdrawBalanceParams(network string, height int64) (multisigParams, error)
 		return &miner14.WithdrawBalanceParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &miner15.WithdrawBalanceParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &miner16.WithdrawBalanceParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -547,6 +572,8 @@ func verifierParams(network string, height int64) (multisigParams, error) {
 		return &verifregv14.AddVerifierParams{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &verifregv15.AddVerifierParams{}, nil
+	case tools.V25.IsSupported(network, height):
+		return &verifregv16.AddVerifierParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

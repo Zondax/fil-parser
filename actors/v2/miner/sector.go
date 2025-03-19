@@ -10,6 +10,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -28,6 +29,8 @@ import (
 
 func (*Miner) ExtendSectorExpiration2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ExtendSectorExpiration2Params{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ExtendSectorExpiration2Params{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -50,6 +53,8 @@ func (*Miner) ExtendSectorExpiration2(network string, height int64, rawParams []
 
 func (*Miner) PreCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.PreCommitSectorParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.PreCommitSectorParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -86,6 +91,8 @@ func (*Miner) PreCommitSector(network string, height int64, rawParams []byte) (m
 
 func (*Miner) ProveCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ProveCommitSectorParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ProveCommitSectorParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -122,6 +129,8 @@ func (*Miner) ProveCommitSector(network string, height int64, rawParams []byte) 
 
 func (*Miner) ProveCommitSectors3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.ProveCommitSectors3Params{}, &miner16.ProveCommitSectors3Return{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.ProveCommitSectors3Params{}, &miner15.ProveCommitSectors3Return{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -136,6 +145,8 @@ func (*Miner) ProveCommitSectors3(network string, height int64, rawParams, rawRe
 
 func (*Miner) InternalSectorSetupForPreseal(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.InternalSectorSetupForPresealParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.InternalSectorSetupForPresealParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -148,6 +159,8 @@ func (*Miner) InternalSectorSetupForPreseal(network string, height int64, rawPar
 
 func (*Miner) SubmitWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.SubmitWindowedPoStParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.SubmitWindowedPoStParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -206,6 +219,8 @@ func (*Miner) ConfirmSectorProofsValid(network string, height int64, rawParams [
 
 func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.CheckSectorProvenParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.CheckSectorProvenParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -242,6 +257,8 @@ func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) 
 
 func (*Miner) ExtendSectorExpiration(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ExtendSectorExpirationParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ExtendSectorExpirationParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -278,6 +295,8 @@ func (*Miner) ExtendSectorExpiration(network string, height int64, rawParams []b
 
 func (*Miner) CompactSectorNumbers(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.CompactSectorNumbersParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.CompactSectorNumbersParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -314,6 +333,8 @@ func (*Miner) CompactSectorNumbers(network string, height int64, rawParams []byt
 
 func (*Miner) CompactPartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.CompactPartitionsParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.CompactPartitionsParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -350,6 +371,8 @@ func (*Miner) CompactPartitions(network string, height int64, rawParams []byte) 
 
 func (*Miner) PreCommitSectorBatch(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.PreCommitSectorBatchParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.PreCommitSectorBatchParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -384,6 +407,8 @@ func (*Miner) GetSectorSize(network string, height int64, rawReturn []byte) (map
 
 func (*Miner) ProveCommitSectorsNI(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ProveCommitSectorsNIParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ProveCommitSectorsNIParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):

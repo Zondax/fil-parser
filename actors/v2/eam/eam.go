@@ -21,7 +21,7 @@ import (
 	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-
+	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -63,6 +63,8 @@ func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.
 		return eamv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return eamv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return eamv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

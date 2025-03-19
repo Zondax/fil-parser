@@ -17,6 +17,7 @@ import (
 	rewardv13 "github.com/filecoin-project/go-state-types/builtin/v13/reward"
 	rewardv14 "github.com/filecoin-project/go-state-types/builtin/v14/reward"
 	rewardv15 "github.com/filecoin-project/go-state-types/builtin/v15/reward"
+	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 
@@ -89,6 +90,8 @@ func (*Reward) Methods(_ context.Context, network string, height int64) (map[abi
 		return rewardv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return rewardv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return rewardv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -96,6 +99,8 @@ func (*Reward) Methods(_ context.Context, network string, height int64) (map[abi
 
 func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, &rewardv16.AwardBlockRewardParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, &rewardv15.AwardBlockRewardParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -136,6 +141,8 @@ func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[s
 
 func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, &rewardv16.ThisEpochRewardReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, &rewardv15.ThisEpochRewardReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):

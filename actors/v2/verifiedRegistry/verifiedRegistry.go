@@ -18,6 +18,7 @@ import (
 	verifregv13 "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
 	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
+	verifregv16 "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
@@ -92,6 +93,8 @@ func (*VerifiedRegistry) Methods(_ context.Context, network string, height int64
 		return verifregv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return verifregv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return verifregv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -99,6 +102,8 @@ func (*VerifiedRegistry) Methods(_ context.Context, network string, height int64
 
 func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):

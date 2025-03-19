@@ -3,6 +3,7 @@ package multisig
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -15,6 +16,7 @@ import (
 	multisig13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
 	multisig14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisig16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
@@ -64,6 +66,8 @@ func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[stri
 		return parse(raw, &multisig14.ConstructorParams{}, cborUnmarshaller[*multisig14.ConstructorParams])
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, &multisig15.ConstructorParams{}, cborUnmarshaller[*multisig15.ConstructorParams])
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, &multisig16.ConstructorParams{}, cborUnmarshaller[*multisig16.ConstructorParams])
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -98,6 +102,8 @@ func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64
 		return parseWithMsigParser[*multisig14.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*multisig14.ConstructorParams], false, nil)
 	case tools.V24.IsSupported(network, height):
 		return parseWithMsigParser[*multisig15.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*multisig15.ConstructorParams], false, nil)
+	case tools.V25.IsSupported(network, height):
+		return parseWithMsigParser[*multisig16.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*multisig16.ConstructorParams], false, nil)
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -133,6 +139,8 @@ func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key
 		return parseWithMsigParser(msg, height, key, parser, rawReturn, cborUnmarshaller[*multisig14.ApproveReturn], true, &multisig14.ApproveReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseWithMsigParser(msg, height, key, parser, rawReturn, cborUnmarshaller[*multisig15.ApproveReturn], true, &multisig15.ApproveReturn{})
+	case tools.V25.IsSupported(network, height):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, cborUnmarshaller[*multisig16.ApproveReturn], true, &multisig16.ApproveReturn{})
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -207,6 +215,8 @@ func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessag
 		return parse(rawParams, &multisig14.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig14.ChangeNumApprovalsThresholdParams])
 	case tools.V24.IsSupported(network, height):
 		return parse(rawParams, &multisig15.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig15.ChangeNumApprovalsThresholdParams])
+	case tools.V25.IsSupported(network, height):
+		return parse(rawParams, &multisig16.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig16.ChangeNumApprovalsThresholdParams])
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -241,6 +251,8 @@ func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64,
 		return parse(rawParams, &multisig14.LockBalanceParams{}, cborUnmarshaller[*multisig14.LockBalanceParams])
 	case tools.V24.IsSupported(network, height):
 		return parse(rawParams, &multisig15.LockBalanceParams{}, cborUnmarshaller[*multisig15.LockBalanceParams])
+	case tools.V25.IsSupported(network, height):
+		return parse(rawParams, &multisig16.LockBalanceParams{}, cborUnmarshaller[*multisig16.LockBalanceParams])
 	}
 	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

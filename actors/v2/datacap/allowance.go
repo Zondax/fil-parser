@@ -10,6 +10,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
 	"github.com/zondax/fil-parser/actors"
@@ -36,6 +37,8 @@ func (*Datacap) IncreaseAllowanceExported(network string, height int64, raw, raw
 		return parse(raw, rawReturn, true, &datacapv14.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -59,6 +62,8 @@ func (*Datacap) DecreaseAllowanceExported(network string, height int64, raw, raw
 		return parse(raw, rawReturn, true, &datacapv14.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -82,6 +87,8 @@ func (*Datacap) RevokeAllowanceExported(network string, height int64, raw, rawRe
 		return parse(raw, rawReturn, true, &datacapv14.RevokeAllowanceParams{}, &r, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.RevokeAllowanceParams{}, &r, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.RevokeAllowanceParams{}, &r, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -105,6 +112,8 @@ func (*Datacap) AllowanceExported(network string, height int64, raw, rawReturn [
 		return parse(raw, rawReturn, true, &datacapv14.GetAllowanceParams{}, &r, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.GetAllowanceParams{}, &r, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.GetAllowanceParams{}, &r, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

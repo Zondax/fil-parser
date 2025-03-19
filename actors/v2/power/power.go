@@ -18,6 +18,7 @@ import (
 	powerv13 "github.com/filecoin-project/go-state-types/builtin/v13/power"
 	powerv14 "github.com/filecoin-project/go-state-types/builtin/v14/power"
 	powerv15 "github.com/filecoin-project/go-state-types/builtin/v15/power"
+	powerv16 "github.com/filecoin-project/go-state-types/builtin/v16/power"
 	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
 
@@ -101,6 +102,8 @@ func (*Power) Methods(_ context.Context, network string, height int64) (map[abi.
 		return powerv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return powerv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return powerv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -145,6 +148,8 @@ func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height
 		}
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(rawReturn, nil, false, &powerv15.CurrentTotalPowerReturn{}, &powerv15.CurrentTotalPowerReturn{}, parser.ReturnKey)
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(rawReturn, nil, false, &powerv16.CurrentTotalPowerReturn{}, &powerv16.CurrentTotalPowerReturn{}, parser.ReturnKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -204,6 +209,8 @@ func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage
 		data, err = parse(raw, nil, false, &powerv14.MinerConstructorParams{}, &powerv14.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(raw, nil, false, &powerv15.MinerConstructorParams{}, &powerv15.MinerConstructorParams{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(raw, nil, false, &powerv16.MinerConstructorParams{}, &powerv16.MinerConstructorParams{}, parser.ParamsKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -246,7 +253,8 @@ func (*Power) CreateMinerExported(network string, msg *parser.LotusMessage, heig
 		data, addressInfo, err = parseCreateMiner(msg, raw, rawReturn, &powerv14.CreateMinerParams{}, &powerv14.CreateMinerReturn{})
 	case tools.V24.IsSupported(network, height):
 		data, addressInfo, err = parseCreateMiner(msg, raw, rawReturn, &powerv15.CreateMinerParams{}, &powerv15.CreateMinerReturn{})
-
+	case tools.V25.IsSupported(network, height):
+		data, addressInfo, err = parseCreateMiner(msg, raw, rawReturn, &powerv16.CreateMinerParams{}, &powerv16.CreateMinerReturn{})
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -288,7 +296,8 @@ func (*Power) EnrollCronEvent(network string, msg *parser.LotusMessage, height i
 		data, err = parse(raw, rawReturn, false, &powerv14.EnrollCronEventParams{}, &powerv14.EnrollCronEventParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(raw, rawReturn, false, &powerv15.EnrollCronEventParams{}, &powerv15.EnrollCronEventParams{}, parser.ParamsKey)
-
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(raw, rawReturn, false, &powerv16.EnrollCronEventParams{}, &powerv16.EnrollCronEventParams{}, parser.ParamsKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -329,6 +338,8 @@ func (*Power) UpdateClaimedPower(network string, msg *parser.LotusMessage, heigh
 		data, err = parse(raw, rawReturn, false, &powerv14.UpdateClaimedPowerParams{}, &powerv14.UpdateClaimedPowerParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(raw, rawReturn, false, &powerv15.UpdateClaimedPowerParams{}, &powerv15.UpdateClaimedPowerParams{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(raw, rawReturn, false, &powerv16.UpdateClaimedPowerParams{}, &powerv16.UpdateClaimedPowerParams{}, parser.ParamsKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -359,6 +370,8 @@ func (*Power) NetworkRawPowerExported(network string, msg *parser.LotusMessage, 
 		data, err = parse(rawReturn, nil, false, &powerv14.NetworkRawPowerReturn{}, &powerv14.NetworkRawPowerReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(rawReturn, nil, false, &powerv15.NetworkRawPowerReturn{}, &powerv15.NetworkRawPowerReturn{}, parser.ReturnKey)
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(rawReturn, nil, false, &powerv16.NetworkRawPowerReturn{}, &powerv16.NetworkRawPowerReturn{}, parser.ReturnKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -389,6 +402,9 @@ func (*Power) MinerRawPowerExported(network string, msg *parser.LotusMessage, he
 	case tools.V24.IsSupported(network, height):
 		var params powerv15.MinerRawPowerParams
 		data, err = parse(raw, rawReturn, true, &params, &powerv15.MinerRawPowerReturn{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		var params powerv16.MinerRawPowerParams
+		data, err = parse(raw, rawReturn, true, &params, &powerv16.MinerRawPowerReturn{}, parser.ParamsKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -419,6 +435,9 @@ func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, heigh
 	case tools.V24.IsSupported(network, height):
 		var params powerv15.MinerCountReturn
 		data, err = parse(rawReturn, nil, false, &params, &params, parser.ReturnKey)
+	case tools.V25.IsSupported(network, height):
+		var params powerv16.MinerCountReturn
+		data, err = parse(rawReturn, nil, false, &params, &params, parser.ReturnKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -448,6 +467,9 @@ func (*Power) MinerConsensusCountExported(network string, msg *parser.LotusMessa
 		data, err = parse(rawReturn, nil, false, &params, &params, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		var params powerv15.MinerConsensusCountReturn
+		data, err = parse(rawReturn, nil, false, &params, &params, parser.ReturnKey)
+	case tools.V25.IsSupported(network, height):
+		var params powerv16.MinerConsensusCountReturn
 		data, err = parse(rawReturn, nil, false, &params, &params, parser.ReturnKey)
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
