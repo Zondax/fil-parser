@@ -403,7 +403,6 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string) string {
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
-		// added a new error to avoid cardinality of GetBlockMiner error results which include cid
 		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}

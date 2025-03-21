@@ -345,7 +345,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
 
-	metadata := p.feesMetadata(msg, tipset, txType, parentTxId)
+	metadata := p.feesMetadata(msg, tipset, txType, blockCid)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
