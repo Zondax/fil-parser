@@ -2,8 +2,6 @@ package parser
 
 import (
 	"encoding/json"
-	"math/big"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
@@ -81,10 +79,11 @@ type BurnFee struct {
 }
 
 type FeesMetadata struct {
+	TxType                string `json:"TxType,omitempty"`
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee
-	Amount                *big.Int
+	TotalCost             string
 }
 
 type LotusMessage struct {

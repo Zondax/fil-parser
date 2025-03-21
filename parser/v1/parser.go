@@ -39,9 +39,10 @@ type Parser struct {
 	logger                 *zap.Logger
 	multisigEventGenerator multisigTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
+	config                 parser.Config
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	return &Parser{
 		actorParser:            actorsV1.NewActorParser(helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
@@ -49,10 +50,11 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
+		config:                 config,
 	}
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Sugar().Error(err)
@@ -63,7 +65,8 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metric
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
-		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
+		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
+		config:                 config,
 	}
 }
 
@@ -157,17 +160,22 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		transaction.GasUsed = trace.GasCost.GasUsed.Uint64()
 		transactions = append(transactions, transaction)
 
-		// Fees
-		if trace.GasCost.TotalCost.Uint64() > 0 {
-			transaction.Fee = p.feesTransactions(trace, txsData.Tipset, transaction.TxType)
-		}
-
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
 				trace.Msg.Cid().String(), transaction.Id, 0)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
+			}
+		}
+
+		// Fees
+		if trace.GasCost.TotalCost.Uint64() > 0 {
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
+			if p.config.FeesAsColumn {
+				transaction.FeeData = feeTx.TxMetadata
+			} else {
+				transactions = append(transactions, feeTx)
 			}
 		}
 
@@ -329,20 +337,52 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType string) string {
+func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
+	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
 
+	metadata := p.feesMetadata(msg, tipset, txType, parentTxId)
+
+	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
+
+	return &types.Transaction{
+		TxBasicBlockData: types.TxBasicBlockData{
+			BasicBlockData: types.BasicBlockData{
+				Height:    uint64(tipset.Height()),
+				TipsetCid: tipset.GetCidString(),
+			},
+			BlockCid: blockCid,
+		},
+		Id:          feeID,
+		ParentId:    parentTxId,
+		TxTimestamp: timestamp,
+		TxCid:       msg.MsgCid.String(),
+		TxFrom:      msg.Msg.From.String(),
+		Amount:      msg.GasCost.TotalCost.Int,
+		Status:      "Ok",
+		TxType:      parser.TotalFeeOp,
+		TxMetadata:  metadata,
+	}
+}
+
+func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, blockCid string) string {
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
+		// added a new error to avoid cardinality of GetBlockMiner error results which include cid
 		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
+	if p.config.FeesAsColumn {
+		txType = ""
+	}
+
 	feesMetadata := parser.FeesMetadata{
+		TxType: txType,
 		MinerFee: parser.MinerFee{
 			MinerAddress: minerAddress,
 			Amount:       msg.GasCost.MinerTip.String(),
@@ -355,7 +395,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 			BurnAddress: parser.BurnAddress,
 			Amount:      msg.GasCost.BaseFeeBurn.String(),
 		},
-		Amount: msg.GasCost.TotalCost.Int,
+		TotalCost: msg.GasCost.TotalCost.String(),
 	}
 
 	metadata, err := json.Marshal(feesMetadata)
