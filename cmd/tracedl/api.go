@@ -83,12 +83,14 @@ func newFilecoinRPCClient(url string, token string) (*RPCClient, error) {
 }
 
 func getTraceFileByHeight(height uint64, lotusClient api.FullNode) (*api.ComputeStateOutput, error) {
+	// #nosec G115
 	tipset, err := lotusClient.ChainGetTipSetByHeight(context.Background(), abi.ChainEpoch(height), lotusChainTypes.EmptyTSK)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check that the retrieved tipset is not empty nor invalid
+	// #nosec G115
 	if tipset == nil || uint64(tipset.Height()) != height {
 		zap.S().Infof("no tipset data received for the specified height: %d", height)
 		return nil, nil

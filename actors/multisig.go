@@ -498,6 +498,7 @@ func parseUniversalReceiverHookValue(txMetadata string) (interface{}, error) {
 	}
 
 	result := UniversalReceiverHookValue{
+		// #nosec G115
 		Type:    uint64(params.Type_),
 		Payload: params.Payload,
 		Return:  tx.Return,
