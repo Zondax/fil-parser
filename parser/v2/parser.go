@@ -296,6 +296,7 @@ func (p *Parser) parseTrace(trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, 
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipsetCid,
 			},
@@ -349,6 +350,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipset.GetCidString(),
 			},

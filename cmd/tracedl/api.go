@@ -95,7 +95,7 @@ func getTraceFileByHeight(height uint64, lotusClient api.FullNode) (*api.Compute
 		zap.S().Infof("no tipset data received for the specified height: %d", height)
 		return nil, nil
 	}
-
+	// #nosec G115
 	traces, err := lotusClient.StateCompute(context.Background(), abi.ChainEpoch(height), nil, tipset.Key())
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving traces for tipset %d: %+v", height, err)
@@ -137,6 +137,7 @@ func getTipsetFileByHeight(height uint64, key lotusChainTypes.TipSetKey, lotusCl
 }
 
 func getNativeLogsByHeight(height uint64, lotusClient api.FullNode) ([]*lotusChainTypes.ActorEvent, error) {
+	// #nosec G115
 	currentChainEpoch := abi.ChainEpoch(height)
 	res, err := lotusClient.GetActorEventsRaw(context.Background(), &lotusChainTypes.ActorEventFilter{
 		FromHeight: &currentChainEpoch,
