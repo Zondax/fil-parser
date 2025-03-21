@@ -373,6 +373,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipset.GetCidString(),
 			},

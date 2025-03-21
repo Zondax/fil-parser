@@ -34,6 +34,7 @@ const (
 func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEvent, logIndex uint64) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = actorEvent.MsgCid.String()
+	// #nosec G115
 	event.Height = uint64(tipset.Height())
 	event.TipsetCid = tipset.GetCidString()
 	event.Reverted = actorEvent.Reverted
@@ -133,6 +134,7 @@ func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *help
 	// we set a custom logIndex to avoid duplicates.
 	// ethLog.LogIndex is only unique within the same ethLog.TransactionIndex.
 	event.LogIndex = logIndex
+	// #nosec G115
 	event.Height = uint64(tipset.Height())
 	event.TipsetCid = tipset.GetCidString()
 	event.EventTimestamp = parser.GetTimestamp(tipset.MinTimestamp())
