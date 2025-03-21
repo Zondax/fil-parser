@@ -291,6 +291,7 @@ func (*Msig) ParseUniversalReceiverHookValue(network string, height int64, txMet
 	}
 
 	result := UniversalReceiverHookValue{
+		// #nosec G115
 		Type:    uint64(params.Type_),
 		Payload: params.Payload,
 		Return:  tx.Return,
