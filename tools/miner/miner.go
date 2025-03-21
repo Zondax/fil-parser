@@ -99,6 +99,8 @@ func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
 	case strings.EqualFold(actorName, manifest.MinerKey):
 		return (!strings.EqualFold(txType, parser.MethodOnDeferredCronEvent))
+	case strings.EqualFold(txType, parser.MethodAwardBlockReward):
+		return true
 	case strings.EqualFold(txType, parser.MethodUpdateClaimedPower):
 		return true
 	case strings.EqualFold(actorName, manifest.MarketKey):
@@ -111,8 +113,7 @@ func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 		return strings.EqualFold(txType, parser.MethodCurrentTotalPower)
 
 	case strings.EqualFold(actorName, manifest.RewardKey):
-		return (strings.EqualFold(txType, parser.MethodThisEpochReward) ||
-			strings.EqualFold(txType, parser.MethodAwardBlockReward))
+		return (strings.EqualFold(txType, parser.MethodThisEpochReward))
 	}
 
 	return false
