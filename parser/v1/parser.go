@@ -157,6 +157,11 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		transaction.GasUsed = trace.GasCost.GasUsed.Uint64()
 		transactions = append(transactions, transaction)
 
+		// Fees
+		if trace.GasCost.TotalCost.Uint64() > 0 {
+			transaction.Fee = p.feesTransactions(trace, txsData.Tipset, transaction.TxType)
+		}
+
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
@@ -164,12 +169,6 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
-		}
-
-		// Fees
-		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
-			transactions = append(transactions, feeTx)
 		}
 
 		// TxCid <-> TxHash
@@ -330,8 +329,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
-	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
+func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType string) string {
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
@@ -345,7 +343,6 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 	}
 
 	feesMetadata := parser.FeesMetadata{
-		TxType: txType,
 		MinerFee: parser.MinerFee{
 			MinerAddress: minerAddress,
 			Amount:       msg.GasCost.MinerTip.String(),
@@ -358,6 +355,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 			BurnAddress: parser.BurnAddress,
 			Amount:      msg.GasCost.BaseFeeBurn.String(),
 		},
+		Amount: msg.GasCost.TotalCost.Int,
 	}
 
 	metadata, err := json.Marshal(feesMetadata)
@@ -365,26 +363,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
 	}
 
-	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
-
-	return &types.Transaction{
-		TxBasicBlockData: types.TxBasicBlockData{
-			BasicBlockData: types.BasicBlockData{
-				Height:    uint64(tipset.Height()),
-				TipsetCid: tipset.GetCidString(),
-			},
-			BlockCid: blockCid,
-		},
-		Id:          feeID,
-		ParentId:    parentTxId,
-		TxTimestamp: timestamp,
-		TxCid:       msg.MsgCid.String(),
-		TxFrom:      msg.Msg.From.String(),
-		Amount:      msg.GasCost.TotalCost.Int,
-		Status:      "Ok",
-		TxType:      parser.TotalFeeOp,
-		TxMetadata:  string(metadata),
-	}
+	return string(metadata)
 }
 
 func hasMessage(trace *typesV1.InvocResultV1) bool {

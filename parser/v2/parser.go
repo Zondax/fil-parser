@@ -135,6 +135,11 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		// If we need the gas usage of all sub-txs, we need to also parse GasCharges (today is very inefficient)
 		transaction.GasUsed = trace.GasCost.GasUsed.Uint64()
 
+		// Fees
+		if trace.GasCost.TotalCost.Uint64() > 0 {
+			transaction.Fee = p.feesTransactions(trace, txsData.Tipset, transaction.TxType)
+		}
+
 		transactions = append(transactions, transaction)
 
 		// Only process sub-calls if the parent call was successfully executed
@@ -144,12 +149,6 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
-		}
-
-		// Fees
-		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
-			transactions = append(transactions, feeTx)
 		}
 
 		// TxCid <-> TxHash
@@ -360,8 +359,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
-	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
+func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType string) string {
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
@@ -370,13 +368,11 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
-		// added a new error to avoid cardinality of GetBlockMiner error results which include cid
 		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
 	feesMetadata := parser.FeesMetadata{
-		TxType: txType,
 		MinerFee: parser.MinerFee{
 			MinerAddress: minerAddress,
 			Amount:       msg.GasCost.MinerTip.String(),
@@ -389,6 +385,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 			BurnAddress: parser.BurnAddress,
 			Amount:      msg.GasCost.BaseFeeBurn.String(),
 		},
+		Amount: msg.GasCost.TotalCost.Int,
 	}
 
 	metadata, err := json.Marshal(feesMetadata)
@@ -396,26 +393,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
 	}
 
-	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
-
-	return &types.Transaction{
-		TxBasicBlockData: types.TxBasicBlockData{
-			BasicBlockData: types.BasicBlockData{
-				Height:    uint64(tipset.Height()),
-				TipsetCid: tipset.GetCidString(),
-			},
-			BlockCid: blockCid,
-		},
-		Id:          feeID,
-		ParentId:    parentTxId,
-		TxTimestamp: timestamp,
-		TxCid:       msg.MsgCid.String(),
-		TxFrom:      msg.Msg.From.String(),
-		Amount:      msg.GasCost.TotalCost.Int,
-		Status:      "Ok",
-		TxType:      parser.TotalFeeOp,
-		TxMetadata:  string(metadata),
-	}
+	return string(metadata)
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {
