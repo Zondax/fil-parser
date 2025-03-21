@@ -127,18 +127,20 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			badTx := &types.Transaction{
 				TxBasicBlockData: types.TxBasicBlockData{
 					BasicBlockData: types.BasicBlockData{
+						// #nosec G115
 						Height:    uint64(txsData.Tipset.Height()),
 						TipsetCid: tipsetCid,
 					},
 					BlockCid: blockCid,
 				},
-				Id:          messageUuid,
-				ParentId:    uuid.Nil.String(),
-				TxCid:       trace.MsgCid.String(),
-				TxFrom:      trace.Msg.From.String(),
-				TxTo:        trace.Msg.To.String(),
-				TxType:      txType,
-				Amount:      trace.Msg.Value.Int,
+				Id:       messageUuid,
+				ParentId: uuid.Nil.String(),
+				TxCid:    trace.MsgCid.String(),
+				TxFrom:   trace.Msg.From.String(),
+				TxTo:     trace.Msg.To.String(),
+				TxType:   txType,
+				Amount:   trace.Msg.Value.Int,
+				// #nosec G115
 				GasUsed:     uint64(trace.MsgRct.GasUsed),
 				Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 				TxMetadata:  trace.Error,
@@ -312,6 +314,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipsetCid,
 			},

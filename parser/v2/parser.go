@@ -179,6 +179,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	var parsed []*types.Event
 	nativeEventsTotal, evmEventsTotal := 0, 0
 	for idx, nativeLog := range eventsData.NativeLog {
+		// #nosec G115
 		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
 		if err != nil {
 			_ = p.metrics.UpdateParseNativeEventsLogsMetric()
@@ -210,6 +211,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 	})
 
 	for idx, ethLog := range eventsData.EthLogs {
+		// #nosec G115
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
 		if err != nil {
 			_ = p.metrics.UpdateParseEthLogMetric()
@@ -342,6 +344,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipsetCid,
 			},
@@ -401,6 +404,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipset.GetCidString(),
 			},
