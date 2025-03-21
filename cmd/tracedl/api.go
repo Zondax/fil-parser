@@ -109,6 +109,7 @@ func getTraceFileByHeight(height uint64, lotusClient api.FullNode) (*api.Compute
 }
 
 func getTipsetFileByHeight(height uint64, key lotusChainTypes.TipSetKey, lotusClient api.FullNode) (*types.ExtendedTipSet, error) {
+	// #nosec G115
 	chainEpoch := abi.ChainEpoch(height)
 	tipset, err := lotusClient.ChainGetTipSetByHeight(context.Background(), chainEpoch, key)
 	if err != nil {
