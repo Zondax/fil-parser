@@ -8,18 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//func ConsolidateRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *zap.Logger) (string, error) {
-//	var err error
-//	addressStr := address.String()
-//	if config != nil && config.ConsolidateAddressesToRobust.Enable {
-//		if addressStr, err = EnsureRobustAddress(address, actorCache, logger); err != nil && !config.ConsolidateAddressesToRobust.BestEffort {
-//			return "", err
-//		}
-//	}
-//
-//	return addressStr, nil
-//}
-
 func ConsolidateRobustAddress(address address.Address, actorCache *cache.ActorsCache, logger *zap.Logger) (string, error) {
 	if isRobust, _ := common.IsRobustAddress(address); isRobust {
 		return address.String(), nil
