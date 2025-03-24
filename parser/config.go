@@ -1,5 +1,6 @@
 package parser
 
 type Config struct {
-	FeesAsColumn bool
+	FeesAsColumn             bool
+	ConsolidateRobustAddress bool
 }
