@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"strings"
 
 	"github.com/zondax/fil-parser/metrics"
@@ -25,7 +26,6 @@ import (
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
 )
 
 var (
@@ -37,7 +37,7 @@ type FilecoinParser struct {
 	parserV1 Parser
 	parserV2 Parser
 	Helper   *helper2.Helper
-	logger   *zap.Logger
+	logger   *logger.Logger
 }
 
 type Parser interface {
@@ -52,7 +52,7 @@ type Parser interface {
 	IsNodeVersionSupported(ver string) bool
 }
 
-func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
+func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *logger.Logger, opts ...Option) (*FilecoinParser, error) {
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
@@ -66,7 +66,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	logger = logger2.GetSafeLogger(logger)
 	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
 	if err != nil {
-		logger.Sugar().Errorf("could not setup actors cache: %v", err)
+		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}, nil
 }
 
-func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
+func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *logger.Logger, opts ...Option) (*FilecoinParser, error) {
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
@@ -96,7 +96,7 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	logger = logger2.GetSafeLogger(logger)
 	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
 	if err != nil {
-		logger.Sugar().Errorf("could not setup actors cache: %v", err)
+		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
@@ -120,14 +120,14 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 
 	var parsedResult *types.TxsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
 		parsedResult, err = p.parserV1.ParseTransactions(ctx, txsData)
 	case v2.Version:
 		parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
 	}
 
@@ -148,12 +148,12 @@ func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types
 
 	var parsedResult *types.EventsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
 		parsedResult, err = p.parserV2.ParseNativeEvents(ctx, eventsData)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
 	}
 
@@ -172,12 +172,12 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.Even
 
 	var parsedResult *types.EventsParsedResult
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
 		parsedResult, err = p.parserV2.ParseEthLogs(ctx, eventsData)
 	default:
-		p.logger.Sugar().Errorf("[parser] implementation not supported: %s", parserVersion)
+		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
 	}
 
@@ -212,7 +212,7 @@ func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.Block
 	case p.parserV2.IsNodeVersionSupported(metadata.NodeMajorMinorVersion):
 		return v2.Version, nil
 	default:
-		p.logger.Sugar().Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
+		p.logger.Errorf("[parser] unsupported node version: %s", metadata.NodeFullVersion)
 		return "", fmt.Errorf("node version not supported %s", metadata.NodeFullVersion)
 	}
 }
@@ -237,7 +237,7 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata,
 		return 0, errUnknownVersion
 	}
 
-	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
+	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
 		return p.parserV1.GetBaseFee(traces, tipset)
@@ -307,14 +307,14 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		// parse address
 		addr, err := address.NewFromString(addrStr)
 		if err != nil {
-			p.logger.Sugar().Errorf("could not parse address: %s. err: %s", addrStr, err)
+			p.logger.Errorf("could not parse address: %s. err: %s", addrStr, err)
 			continue
 		}
 
 		// get actor name from address
 		actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
 		if err != nil {
-			p.logger.Sugar().Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
+			p.logger.Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
 			continue
 		}
 

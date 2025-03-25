@@ -147,7 +147,7 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 	method, innerParams, err := innerProposeParams(network, height, methodNum, innerParamsRaw)
 	if err != nil {
 		_ = m.metrics.UpdateMultisigProposeMetric(manifest.MultisigKey, proposeKind, fmt.Sprint(methodNum))
-		m.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
+		m.logger.Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 
 	metadata[parser.ParamsKey] = parser.Propose{
@@ -252,7 +252,7 @@ func (*Msig) UniversalReceiverHook(network string, msg *parser.LotusMessage, hei
 func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
 	msgSerial, err := msg.MarshalJSON() // TODO: this may not work properly
 	if err != nil {
-		// m.helper.GetLogger().Sugar().Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
+		// m.helper.GetLogger().Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
 		return "", err
 	}
 
@@ -263,12 +263,12 @@ func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTy
 
 	c, err := cid.Parse(actorCode)
 	if err != nil {
-		// m.helper.GetLogger().Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+		// m.helper.GetLogger().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		return "", err
 	}
 	parsedParams, err := m.helper.GetFilecoinLib().ParseParamsMultisigTx(string(msgSerial), c)
 	if err != nil {
-		// m.helper.GetLogger().Sugar().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
+		// m.helper.GetLogger().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
 		return "", err
 	}
 

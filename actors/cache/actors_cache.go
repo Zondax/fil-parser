@@ -82,11 +82,11 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 		}
 	}
 
-	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
 	actorCode, err := a.onChainCache.GetActorCode(add, key)
 	if err != nil {
-		a.logger.Sugar().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
 			a.badAddress.Set(add.String(), true)
 		}
@@ -100,7 +100,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	})
 
 	if err != nil {
-		a.logger.Sugar().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
 		return "", err
 	}
 
@@ -123,12 +123,12 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 		return "", fmt.Errorf("address %s is flagged as bad", add.String())
 	}
 
-	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
 	robust, err = a.onChainCache.GetRobustAddress(add)
 	if err != nil {
-		a.logger.Sugar().Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
@@ -138,7 +138,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	})
 
 	if err != nil {
-		a.logger.Sugar().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
 		return "", err
 	}
 
@@ -157,12 +157,12 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 		return "", fmt.Errorf("address %s is flagged as bad", add.String())
 	}
 
-	a.logger.Sugar().Debugf("[ActorsCache] - Unable to retrieve short address from offchain cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve short address from offchain cache for address %s. Trying on-chain cache", add.String())
 
 	// Try on-chain cache
 	short, err = a.onChainCache.GetShortAddress(add)
 	if err != nil {
-		a.logger.Sugar().Error("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
@@ -172,7 +172,7 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	})
 
 	if err != nil {
-		a.logger.Sugar().Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to store address info: %s", err.Error())
 		return "", err
 	}
 

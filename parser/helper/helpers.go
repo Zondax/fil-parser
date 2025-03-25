@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"strings"
 
 	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
-
 	// The following import is necessary to ensure that the init() function
 	// from the lotus build package is invoked.
 	// In a recent refactor (v1.30.0), some build packages were modularized to reduce
@@ -75,11 +74,11 @@ type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
 	node       api.FullNode
 	actorCache *cache.ActorsCache
-	logger     *zap.Logger
+	logger     *logger.Logger
 	metrics    *parsermetrics.ParserMetricsClient
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger, metrics metrics.MetricsClient) *Helper {
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
 	return &Helper{
 		lib:        lib,
 		actorCache: actorsCache,
@@ -107,18 +106,18 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 	if err != nil {
-		h.logger.Sugar().Errorf("could not get actor code from address. Err: %s", err)
+		h.logger.Errorf("could not get actor code from address. Err: %s", err)
 	} else {
 		c, err := cid.Parse(addInfo.ActorCid)
 		if err != nil {
-			h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		}
 		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
-		h.logger.Sugar().Errorf("could not get short address for %s. Err: %v", add.String(), err)
+		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	// Ignore searching robust addresses for Msig and miners
@@ -128,7 +127,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
-		h.logger.Sugar().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
+		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
 	return addInfo
@@ -145,7 +144,7 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 
 		c, err := cid.Parse(actorCode)
 		if err != nil {
-			h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 			return actors.UnknownStr, err
 		}
 
@@ -229,19 +228,19 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 		addrTo, err := address.NewFromString(tx.TxTo)
 		if err != nil {
 			_ = h.metrics.UpdateParseAddressErrorMetric("to")
-			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			h.logger.Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 		addrFrom, err := address.NewFromString(tx.TxFrom)
 		if err != nil {
 			_ = h.metrics.UpdateParseAddressErrorMetric("from")
-			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			h.logger.Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 
 		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)
 		if err != nil {
-			h.logger.Sugar().Errorf("could not get actor type from address. Err: %s", err)
+			h.logger.Errorf("could not get actor type from address. Err: %s", err)
 			continue
 		}
 		if !isType {
