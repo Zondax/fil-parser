@@ -35,6 +35,13 @@ func NewMetricsClient(taskMetrics metrics.TaskMetrics, component string) *Client
 	}
 }
 
+func NewNoopMetricsClient() *Client {
+	return &Client{
+		TaskMetrics: metrics.NewNoopMetrics(),
+		component:   "",
+	}
+}
+
 func (c *Client) RegisterCustomMetrics(customMetrics ...Metric) {
 	for _, metric := range customMetrics {
 		// TODO: do something with the errors

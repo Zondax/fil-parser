@@ -31,7 +31,7 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 // We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
 func ActorMethods(ctx context.Context, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
-	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NoopMetricsClient{}}
+	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()}
 	mActorName := actorName
 	actorParser := &ActorParser{network, helper, logger, metricsClient}
 	if actorName == manifest.EthAccountKey || actorName == manifest.PlaceholderKey {
