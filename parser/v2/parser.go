@@ -46,9 +46,11 @@ type Parser struct {
 	multisigEventGenerator multisigTools.EventGenerator
 	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
+
+	config parser.Config
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -64,12 +66,13 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
+		config:                 config,
 	}
 
 	return p
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) *Parser {
+func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -86,6 +89,7 @@ func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metric
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
+		config:                 config,
 	}
 }
 
@@ -149,7 +153,11 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
 			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
-			transactions = append(transactions, feeTx)
+			if p.config.FeesAsColumn {
+				transaction.FeeData = feeTx.TxMetadata
+			} else {
+				transactions = append(transactions, feeTx)
+			}
 		}
 
 		// TxCid <-> TxHash
@@ -371,33 +379,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
 
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
-		// added a new error to avoid cardinality of GetBlockMiner error results which include cid
-		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
-		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
-	}
-
-	feesMetadata := parser.FeesMetadata{
-		TxType: txType,
-		MinerFee: parser.MinerFee{
-			MinerAddress: minerAddress,
-			Amount:       msg.GasCost.MinerTip.String(),
-		},
-		OverEstimationBurnFee: parser.OverEstimationBurnFee{
-			BurnAddress: parser.BurnAddress,
-			Amount:      msg.GasCost.OverEstimationBurn.String(),
-		},
-		BurnFee: parser.BurnFee{
-			BurnAddress: parser.BurnAddress,
-			Amount:      msg.GasCost.BaseFeeBurn.String(),
-		},
-	}
-
-	metadata, err := json.Marshal(feesMetadata)
-	if err != nil {
-		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
-	}
+	metadata := p.feesMetadata(msg, tipset, txType, blockCid)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
@@ -418,8 +400,44 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		Amount:      msg.GasCost.TotalCost.Int,
 		Status:      "Ok",
 		TxType:      parser.TotalFeeOp,
-		TxMetadata:  string(metadata),
+		TxMetadata:  metadata,
 	}
+}
+
+func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string) string {
+	minerAddress, err := tipset.GetBlockMiner(blockCid)
+	if err != nil {
+		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
+		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+	}
+
+	if p.config.FeesAsColumn {
+		txType = ""
+	}
+
+	feesMetadata := parser.FeesMetadata{
+		TxType: txType,
+		MinerFee: parser.MinerFee{
+			MinerAddress: minerAddress,
+			Amount:       msg.GasCost.MinerTip.String(),
+		},
+		OverEstimationBurnFee: parser.OverEstimationBurnFee{
+			BurnAddress: parser.BurnAddress,
+			Amount:      msg.GasCost.OverEstimationBurn.String(),
+		},
+		BurnFee: parser.BurnFee{
+			BurnAddress: parser.BurnAddress,
+			Amount:      msg.GasCost.BaseFeeBurn.String(),
+		},
+		TotalCost: msg.GasCost.TotalCost.String(),
+	}
+
+	metadata, err := json.Marshal(feesMetadata)
+	if err != nil {
+		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.FeesMetadataValue, txType)
+	}
+
+	return string(metadata)
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {

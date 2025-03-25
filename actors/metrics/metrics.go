@@ -50,5 +50,5 @@ func (c *ActorsMetricsClient) UpdateActorMethodErrorMetric(actor, method string)
 }
 
 func (c *ActorsMetricsClient) UpdateMultisigProposeMetric(actor, method, methodNum string) error {
-	return c.IncrementMetric(actorMethod, actor, method, methodNum)
+	return c.IncrementMetric(multisigPropose, actor, method, methodNum)
 }
