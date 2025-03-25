@@ -3,14 +3,13 @@ package ethaccount
 import (
 	"context"
 	"fmt"
-
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
 
 	ethaccountv10 "github.com/filecoin-project/go-state-types/builtin/v10/ethaccount"
 	ethaccountv11 "github.com/filecoin-project/go-state-types/builtin/v11/ethaccount"
@@ -26,10 +25,10 @@ import (
 )
 
 type EthAccount struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *EthAccount {
+func New(logger *logger.Logger) *EthAccount {
 	return &EthAccount{
 		logger: logger,
 	}

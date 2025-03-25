@@ -9,7 +9,9 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	logger2 "github.com/zondax/fil-parser/logger"
+
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/logger"
 	"github.com/zondax/golem/pkg/zcache"
 	"go.uber.org/zap"
 )
@@ -29,12 +31,12 @@ type ZCache struct {
 	robustShortMap     zcache.ZCache
 	shortRobustMap     zcache.ZCache
 	selectorHashSigMap zcache.ZCache
-	logger             *zap.Logger
+	logger             *logger.Logger
 	cacheType          string
 	ttl                int
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
 	var err error
 	m.logger = logger2.GetSafeLogger(logger)
 
@@ -140,7 +142,7 @@ func (m *ZCache) BackFill() error {
 func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
-		m.logger.Sugar().Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
+		m.logger.Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
 		return cid.Undef.String(), common.ErrKeyNotFound
 	}
 
@@ -227,7 +229,7 @@ func (m *ZCache) StoreEVMSelectorSig(ctx context.Context, selectorHash, selector
 
 func (m *ZCache) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -239,7 +241,7 @@ func (m *ZCache) storeRobustShort(robust string, short string) {
 
 func (m *ZCache) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
@@ -257,7 +259,7 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 
 func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty cid or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
 

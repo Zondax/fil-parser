@@ -30,6 +30,7 @@ import (
 	minerTools "github.com/zondax/fil-parser/tools/miner"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/logger"
 )
 
 const Version = "v2"
@@ -42,7 +43,7 @@ type Parser struct {
 	addresses              *types.AddressInfoMap
 	txCidEquivalents       []types.TxCidTranslation
 	helper                 *helper.Helper
-	logger                 *zap.Logger
+	logger                 *logger.Logger
 	multisigEventGenerator multisigTools.EventGenerator
 	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
@@ -50,7 +51,7 @@ type Parser struct {
 	config parser.Config
 }
 
-func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
+func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -72,7 +73,7 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 	return p
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
+func NewActorsV2Parser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -116,7 +117,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	computeState := &typesV2.ComputeStateOutputV2{}
 	err := sonic.UnmarshalString(string(txsData.Traces), &computeState)
 	if err != nil {
-		p.logger.Sugar().Error(err)
+		p.logger.Error(err.Error())
 		return nil, errors.New("could not decode")
 	}
 
@@ -244,7 +245,7 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
 	if err := sonic.UnmarshalString(string(traces), &computeState); err != nil {
-		p.logger.Sugar().Error(err)
+		p.logger.Error(err.Error())
 		return 0, errors.New("could not decode")
 	}
 
@@ -289,11 +290,11 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset, parentId)
 	if err != nil {
 		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
-		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+		p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
 		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
-		p.logger.Sugar().Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
+		p.logger.Errorf("Could not get method name in transaction '%s'", mainMsgCid.String())
 	}
 
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
@@ -308,7 +309,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	}, int64(tipset.Height()), tipset.Key())
 	if mErr != nil {
 		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 
 	if addressInfo != nil {
@@ -335,13 +336,13 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
 	if err != nil {
 		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
+		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
 	}
 
 	msgCid, err := tools.BuildCidFromMessageTrace(trace.Msg, mainMsgCid.String())
 	if err != nil {
 		_ = p.metrics.UpdateBuildCidFromMsgTraceMetric(txType)
-		p.logger.Sugar().Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
+		p.logger.Errorf("Error when trying to build message cid in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
 	tipsetCid := tipset.GetCidString()
@@ -373,7 +374,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 	appTools := tools.Tools{Logger: p.logger}
 	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
+		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
 
 	metadata := p.feesMetadata(msg, tipset, txType, blockCid)
@@ -404,7 +405,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 	minerAddress, err := tipset.GetBlockMiner(blockCid)
 	if err != nil {
 		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
-		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+		p.logger.Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
 	if p.config.FeesAsColumn {
@@ -465,11 +466,11 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	if txType == "" {
 		actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
 		if err != nil {
-			p.logger.Sugar().Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
+			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}
 		txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 		if err != nil {
-			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+			p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
 		}
 	}

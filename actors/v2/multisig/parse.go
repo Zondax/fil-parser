@@ -3,15 +3,14 @@ package multisig
 import (
 	"context"
 	"fmt"
-
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
+	"github.com/ipfs/go-cid"
 
 	multisigv10 "github.com/filecoin-project/go-state-types/builtin/v10/multisig"
 	multisigv11 "github.com/filecoin-project/go-state-types/builtin/v11/multisig"
@@ -32,11 +31,11 @@ import (
 
 type Msig struct {
 	helper  *helper.Helper
-	logger  *zap.Logger
+	logger  *logger.Logger
 	metrics *metrics.ActorsMetricsClient
 }
 
-func New(helper *helper.Helper, logger *zap.Logger, metrics *metrics.ActorsMetricsClient) *Msig {
+func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient) *Msig {
 	return &Msig{
 		helper:  helper,
 		logger:  logger,

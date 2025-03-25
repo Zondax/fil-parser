@@ -42,4 +42,9 @@ func (u NoopMetricsClient) Name() string {
 func (u NoopMetricsClient) Stop() error {
 	return nil
 }
+
 func (u NoopMetricsClient) RegisterCustomMetrics(_ ...Metric) {}
+
+func (u NoopMetricsClient) AppName() string {
+	return ""
+}

@@ -2,12 +2,11 @@ package account
 
 import (
 	"context"
-
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -16,10 +15,10 @@ import (
 )
 
 type Account struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Account {
+func New(logger *logger.Logger) *Account {
 	return &Account{
 		logger: logger,
 	}

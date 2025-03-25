@@ -8,7 +8,6 @@ import (
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -32,6 +31,7 @@ import (
 	"github.com/zondax/fil-parser/actors/v2/reward"
 	"github.com/zondax/fil-parser/actors/v2/system"
 	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
+	"github.com/zondax/golem/pkg/logger"
 
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
@@ -52,11 +52,11 @@ var _ actors.ActorParserInterface = &ActorParser{}
 type ActorParser struct {
 	network string
 	helper  *helper.Helper
-	logger  *zap.Logger
+	logger  *logger.Logger
 	metrics *actormetrics.ActorsMetricsClient
 }
 
-func NewActorParser(network string, helper *helper.Helper, logger *zap.Logger, metrics metrics2.MetricsClient) actors.ActorParserInterface {
+func NewActorParser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics2.MetricsClient) actors.ActorParserInterface {
 	return &ActorParser{
 		network: network,
 		helper:  helper,

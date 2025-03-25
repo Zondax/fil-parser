@@ -6,6 +6,7 @@ import (
 	"fmt"
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/golem/pkg/logger"
 	"net/http"
 	"strings"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 // SystemActorsId Map to identify system actors which don't have an associated robust address
@@ -34,7 +34,7 @@ var SystemActorsId = map[string]bool{
 	"f099": true,
 }
 
-func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger, metrics metrics.MetricsClient) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient) (*ActorsCache, error) {
 	var offChainCache IActorsCache
 	var onChainCache impl.OnChain
 
@@ -47,13 +47,13 @@ func SetupActorsCache(dataSource common.DataSource, logger *zap.Logger, metrics 
 
 	var combinedCache impl.ZCache
 	if err = combinedCache.NewImpl(dataSource, logger); err != nil {
-		logger.Sugar().Errorf("[ActorsCache] - Unable to initialize combined cache: %s", err.Error())
+		logger.Errorf("[ActorsCache] - Unable to initialize combined cache: %s", err.Error())
 		return nil, err
 	}
 
 	offChainCache = &combinedCache
 
-	logger.Sugar().Infof("[ActorsCache] - Actors cache initialized. Off chain cache implementation: %s", offChainCache.ImplementationType())
+	logger.Infof("[ActorsCache] - Actors cache initialized. Off chain cache implementation: %s", offChainCache.ImplementationType())
 
 	return &ActorsCache{
 		offChainCache: offChainCache,

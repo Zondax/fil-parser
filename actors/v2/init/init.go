@@ -3,8 +3,7 @@ package init
 import (
 	"context"
 	"fmt"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -35,10 +34,10 @@ import (
 )
 
 type Init struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Init {
+func New(logger *logger.Logger) *Init {
 	return &Init{
 		logger: logger,
 	}

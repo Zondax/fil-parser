@@ -4,16 +4,15 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"strconv"
-
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
+	"github.com/ipfs/go-cid"
 
 	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
 	eamv11 "github.com/filecoin-project/go-state-types/builtin/v11/eam"
@@ -29,10 +28,10 @@ import (
 )
 
 type Eam struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Eam {
+func New(logger *logger.Logger) *Eam {
 	return &Eam{
 		logger: logger,
 	}
