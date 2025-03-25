@@ -262,7 +262,12 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 	m.storeShortRobust(info.Short, info.Robust)
 	m.storeActorCode(info.Short, info.ActorCid)
 
-	isEvm := strings.EqualFold(info.ActorType, manifest.EvmKey)
+	evmTypes := map[string]bool{
+		manifest.EvmKey:        true,
+		manifest.EamKey:        true,
+		manifest.EthAccountKey: true,
+	}
+	isEvm := evmTypes[info.ActorType]
 	isEvmAndAddressIsF4 := isEvm && strings.HasPrefix(info.Robust, addressTypePrefixF4)
 
 	// Only store the mapping for addresses that are not related to EVM actors,
