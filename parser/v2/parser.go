@@ -186,7 +186,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 	var parsed []*types.Event
 	nativeEventsTotal, evmEventsTotal := 0, 0
 	for idx, nativeLog := range eventsData.NativeLog {
-		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx))
+		event, err := eventTools.ParseNativeLog(eventsData.Tipset, nativeLog, uint64(idx), p.logger)
 		if err != nil {
 			_ = p.metrics.UpdateParseNativeEventsLogsMetric()
 			return nil, err
