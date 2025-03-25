@@ -2,6 +2,7 @@ package fil_parser
 
 import (
 	metrics2 "github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/golem/pkg/metrics"
 )
 
@@ -9,6 +10,7 @@ import (
 type FilecoinParserOptions struct {
 	// metrics is the metrics client used to track parser metrics and statistics.
 	metrics metrics2.MetricsClient
+	config  parser.Config
 }
 
 // Option is a function type that modifies FilecoinParserOptions.
@@ -20,5 +22,12 @@ type Option func(*FilecoinParserOptions)
 func WithMetrics(metrics metrics.TaskMetrics, component string) Option {
 	return func(o *FilecoinParserOptions) {
 		o.metrics = metrics2.NewMetricsClient(metrics, component)
+	}
+}
+
+// WithConfig returns an Option that configures the parser config.
+func WithConfig(config parser.Config) Option {
+	return func(o *FilecoinParserOptions) {
+		o.config = config
 	}
 }
