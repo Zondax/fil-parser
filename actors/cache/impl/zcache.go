@@ -13,7 +13,6 @@ import (
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
 	"github.com/zondax/golem/pkg/zcache"
-	"go.uber.org/zap"
 )
 
 const (
@@ -33,7 +32,6 @@ type ZCache struct {
 	selectorHashSigMap zcache.ZCache
 	logger             *logger.Logger
 	cacheType          string
-	ttl                int
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
@@ -46,13 +44,11 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error 
 	cacheConfig := source.Config.Cache
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
-		m.ttl = NoTtl
 		if err := m.initMapsLocalCache(); err != nil {
 			return err
 		}
 	} else {
 		m.cacheType = ZCacheCombined
-		m.ttl = cacheConfig.GlobalTtlSeconds
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
@@ -78,7 +74,6 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 	var err error
 	robustShortMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
@@ -87,7 +82,6 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
@@ -96,7 +90,6 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 
 	selectorHashSigMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, SelectorHash2SigMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
