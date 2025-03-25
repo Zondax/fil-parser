@@ -22,7 +22,6 @@ require (
 	github.com/zondax/golem v0.20.0
 	github.com/zondax/rosetta-filecoin-lib v1.3100.0
 	github.com/zondax/znats v0.1.1
-	go.uber.org/zap v1.27.0
 	gorm.io/gorm v1.25.12
 	gotest.tools v2.2.0+incompatible
 )
@@ -72,6 +71,7 @@ require (
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
 )
 
