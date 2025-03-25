@@ -4,8 +4,8 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 )
 
-func GetSafeLogger(zapLogger *logger.Logger) *logger.Logger {
-	if zapLogger == nil {
+func GetSafeLogger(lg *logger.Logger) *logger.Logger {
+	if lg == nil {
 		productionLogger := logger.NewLogger(logger.Config{
 			Level:    "info",
 			Encoding: "json",
@@ -13,5 +13,5 @@ func GetSafeLogger(zapLogger *logger.Logger) *logger.Logger {
 		return productionLogger
 	}
 
-	return zapLogger
+	return lg
 }

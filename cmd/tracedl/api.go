@@ -15,9 +15,11 @@ import (
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/logger"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
 )
+
+var l = logger.NewDevelopmentLogger()
 
 type RPCClient struct {
 	url          string
@@ -61,12 +63,12 @@ func newFilecoinRPCClient(url string, token string) (*RPCClient, error) {
 	// Get node version
 	nodeFullVersion, err := lotusAPI.Version(ctx)
 	if err != nil {
-		zap.S().Error(fmt.Sprintf("Error getting node version: %s", err))
+		l.Error(fmt.Sprintf("Error getting node version: %s", err))
 		return nil, err
 	}
 	nodeInfo, err := processNodeVersion(nodeFullVersion.Version)
 	if err != nil {
-		zap.S().Error(fmt.Sprintf("Error processing node version: %s", err))
+		l.Error(fmt.Sprintf("Error processing node version: %s", err))
 		return nil, err
 	}
 
@@ -90,7 +92,7 @@ func getTraceFileByHeight(height uint64, lotusClient api.FullNode) (*api.Compute
 
 	// Check that the retrieved tipset is not empty nor invalid
 	if tipset == nil || uint64(tipset.Height()) != height {
-		zap.S().Infof("no tipset data received for the specified height: %d", height)
+		l.Infof("no tipset data received for the specified height: %d", height)
 		return nil, nil
 	}
 
@@ -120,14 +122,14 @@ func getTipsetFileByHeight(height uint64, key lotusChainTypes.TipSetKey, lotusCl
 
 	// Check that the retrieved tipset is valid
 	if tipset == nil || tipset.Height() != chainEpoch {
-		zap.S().Infof("no tipset data received for the specified height: %d", height)
+		l.Infof("no tipset data received for the specified height: %d", height)
 		return nil, nil
 	}
 
 	// Get messages CIDs stored on each block
 	extendedTipset, err := fetchBlockMessagesCids(tipset, lotusClient)
 	if err != nil {
-		zap.S().Error(err)
+		l.Error(err.Error())
 		return nil, err
 	}
 
@@ -178,7 +180,7 @@ func getEthLogsByHeight(height uint64, lotusClient api.FullNode) ([]types.EthLog
 		// Get the ethHash <-> filCID mapping
 		txCid, err := getCIDFromEthHashMappings(log.TransactionHash.String(), lotusClient)
 		if err != nil {
-			zap.S().Errorf("Could not get filCid from ethHash. Height %d, hash %s", height, log.TransactionHash.String())
+			l.Errorf("Could not get filCid from ethHash. Height %d, hash %s", height, log.TransactionHash.String())
 		} else {
 			log.TransactionCid = txCid
 		}
@@ -207,7 +209,7 @@ func fetchBlockMessagesCids(tipset *lotusChainTypes.TipSet, lotusClient api.Full
 	for _, header := range tipset.Blocks() {
 		blockMessages, err := lotusClient.ChainGetBlockMessages(context.Background(), header.Cid())
 		if err != nil {
-			zap.S().Errorf("error while calling lotus 'ChainGetBlockMessages': %v", err)
+			l.Errorf("error while calling lotus 'ChainGetBlockMessages': %v", err)
 			continue
 		}
 
@@ -228,13 +230,13 @@ func fetchBlockMessagesCids(tipset *lotusChainTypes.TipSet, lotusClient api.Full
 func getCIDFromEthHashMappings(hash string, lotusClient api.FullNode) (string, error) {
 	ethHash, err := ethtypes.ParseEthHash(hash)
 	if err != nil {
-		zap.S().Errorf("Error while trying to parse ethHash '%v'", hash)
+		l.Errorf("Error while trying to parse ethHash '%v'", hash)
 		return "", err
 	}
 
 	txCid, err := lotusClient.EthGetMessageCidByTransactionHash(context.Background(), &ethHash)
 	if err != nil || txCid == nil {
-		zap.S().Errorf("Error while trying to get hash mapping from node: %s", err)
+		l.Errorf("Error while trying to get hash mapping from node: %s", err)
 		return "", err
 	}
 

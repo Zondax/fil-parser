@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"strings"
 
 	"github.com/zondax/fil-parser/parser"
@@ -17,7 +18,6 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 	parsedEntryFlags = "flags"
 )
 
-func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEvent, logIndex uint64) (*types.Event, error) {
+func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEvent, logIndex uint64, logger *logger.Logger) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = actorEvent.MsgCid.String()
 	event.Height = uint64(tipset.Height())
@@ -142,10 +142,10 @@ func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *help
 		var err error
 		event.SelectorSig, err = helper.GetEVMSelectorSig(context.Background(), event.SelectorID)
 		if err != nil {
-			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+			logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
 	} else {
-		zap.S().Debugf("empty selector_id for event: %v", *event)
+		logger.Debugf("empty selector_id for event: %v", *event)
 	}
 
 	metaDataBytes, err := buildEVMEventMetaData[ethtypes.EthHash](ethLog.Data, ethLog.Topics)
@@ -230,7 +230,7 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 				)
 				parsedValue, err = decode(entry)
 				if err != nil {
-					zap.S().Error("error ipld decode native event: ", err, entry.Key, entry.Codec, entry.Value)
+					logger.Errorf("error ipld decode native event: %v %s %d %v", err, entry.Key, entry.Codec, entry.Value)
 					return nil, fmt.Errorf("error decoding native event: %w ", err)
 				}
 

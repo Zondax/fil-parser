@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	logger2 "github.com/zondax/fil-parser/logger"
 	"io"
 	"io/fs"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"github.com/klauspost/compress/s2"
 	"github.com/spf13/cobra"
 	"github.com/zondax/golem/pkg/cli"
-	"go.uber.org/zap"
 )
 
 func GetStartCommand(c *cli.CLI) *cobra.Command {
@@ -33,37 +33,38 @@ func GetStartCommand(c *cli.CLI) *cobra.Command {
 }
 
 func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
-	zap.S().Infof(c.GetVersionString())
+	logger := logger2.GetSafeLogger(nil)
+	logger.Infof(c.GetVersionString())
 
 	config, err := cli.LoadConfig[Config]()
 	if err != nil {
-		zap.S().Errorf("Error loading config: %s", err)
+		logger.Errorf("Error loading config: %s", err)
 		return
 	}
 	logType, err := cmd.Flags().GetString("type")
 	if err != nil {
-		zap.S().Errorf("Error loading type: %s", err)
+		logger.Errorf("Error loading type: %s", err)
 		return
 	}
 	outPath, err := cmd.Flags().GetString("outPath")
 	if err != nil {
-		zap.S().Errorf("Error loading outPath: %s", err)
+		logger.Errorf("Error loading outPath: %s", err)
 		return
 	}
 	format, err := cmd.Flags().GetString("compress")
 	if err != nil {
-		zap.S().Errorf("Error loading compress: %s", err)
+		logger.Errorf("Error loading compress: %s", err)
 		return
 	}
 	height, err := cmd.Flags().GetUint64("height")
 	if err != nil {
-		zap.S().Errorf("Error loading height: %s", err)
+		logger.Errorf("Error loading height: %s", err)
 		return
 	}
 
 	rpcClient, err := newFilecoinRPCClient(config.NodeURL, config.NodeToken)
 	if err != nil {
-		zap.S().Error(err)
+		logger.Error(err.Error())
 		return
 	}
 
@@ -82,13 +83,13 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 	}
 
 	if err != nil {
-		zap.S().Error(err)
+		logger.Error(err.Error())
 		return
 	}
 
 	dataJson, err := sonic.Marshal(data)
 	if err != nil {
-		zap.S().Error(err)
+		logger.Error(err.Error())
 		return
 	}
 
@@ -97,14 +98,14 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 	if format != "" {
 		out, err = compress(format, dataJson)
 		if err != nil {
-			zap.S().Error(err)
+			logger.Error(err.Error())
 			return
 		}
 		fname = fmt.Sprintf("%s_%d.json.%s", logType, height, format)
 	}
 
 	if err := writeToFile(outPath, fname, out); err != nil {
-		zap.S().Error(err)
+		logger.Error(err.Error())
 		return
 	}
 

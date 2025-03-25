@@ -17,8 +17,8 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/logger"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"go.uber.org/zap"
 )
 
 const (
@@ -43,19 +43,16 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
 	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil, metrics.NewNoopMetricsClient())
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		return nil
-	}
+	gLogger := logger.NewDevelopmentLogger()
 	switch fn := actorParserFn.(type) {
-	case func(*helper2.Helper, *zap.Logger) actors.ActorParserInterface:
-		return fn(helper, logger)
-	case func(string, *helper2.Helper, *zap.Logger) actors.ActorParserInterface:
-		return fn(network, helper, logger)
-	case func(*helper2.Helper, *zap.Logger, metrics.MetricsClient) actors.ActorParserInterface:
-		return fn(helper, logger, metrics.NewNoopMetricsClient())
-	case func(string, *helper2.Helper, *zap.Logger, metrics.MetricsClient) actors.ActorParserInterface:
-		return fn(network, helper, logger, metrics.NewNoopMetricsClient())
+	case func(*helper2.Helper, *logger.Logger) actors.ActorParserInterface:
+		return fn(helper, gLogger)
+	case func(string, *helper2.Helper, *logger.Logger) actors.ActorParserInterface:
+		return fn(network, helper, gLogger)
+	case func(*helper2.Helper, *logger.Logger, metrics.MetricsClient) actors.ActorParserInterface:
+		return fn(helper, gLogger, metrics.NewNoopMetricsClient())
+	case func(string, *helper2.Helper, *logger.Logger, metrics.MetricsClient) actors.ActorParserInterface:
+		return fn(network, helper, gLogger, metrics.NewNoopMetricsClient())
 	default:
 		panic(fmt.Sprintf("invalid actor parser function: %T", actorParserFn))
 	}

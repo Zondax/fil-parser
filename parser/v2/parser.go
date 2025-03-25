@@ -11,11 +11,9 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
-
-	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
@@ -222,7 +220,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
 		if err != nil {
 			_ = p.metrics.UpdateParseEthLogMetric()
-			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+			p.logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
 
 		parsed = append(parsed, event)

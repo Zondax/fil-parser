@@ -4,20 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"os"
 	"testing"
 
 	"github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
-	"github.com/ipfs/go-cid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
-
 	builtinActors "github.com/filecoin-project/go-state-types/actors"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zondax/fil-parser/actors"
 	v2 "github.com/zondax/fil-parser/actors/v2"
@@ -281,7 +280,7 @@ import (
 )
 
 var latestBuiltinActorVersion uint64
-var l *zap.Logger
+var l *logger.Logger
 
 func TestMain(m *testing.M) {
 	version, err := v2.LatestBuiltinActorVersion()
@@ -291,11 +290,7 @@ func TestMain(m *testing.M) {
 	fmt.Printf("latestBuiltinActorVersion: %d\n", version)
 	latestBuiltinActorVersion = version
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
-	l = logger2.GetSafeLogger(logger)
+	l = logger2.GetSafeLogger(logger.NewDevelopmentLogger())
 	os.Exit(m.Run())
 }
 
