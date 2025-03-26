@@ -38,6 +38,7 @@ type FilecoinParser struct {
 	parserV2 Parser
 	Helper   *helper2.Helper
 	logger   *zap.Logger
+	network  string
 }
 
 type Parser interface {
@@ -71,6 +72,12 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
+
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+
 	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
 	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
 
@@ -79,6 +86,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		parserV2: parserV2,
 		Helper:   helper,
 		logger:   logger,
+		network:  tools.ParseRawNetworkName(string(network)),
 	}, nil
 }
 
@@ -101,14 +109,22 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-	parserV1 := v1.NewActorsV2Parser(helper, logger, defaultOpts.metrics, defaultOpts.config)
-	parserV2 := v2.NewActorsV2Parser(helper, logger, defaultOpts.metrics, defaultOpts.config)
+
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+	networkName := tools.ParseRawNetworkName(string(network))
+
+	parserV1 := v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV2 := v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
 		parserV2: parserV2,
 		Helper:   helper,
 		logger:   logger,
+		network:  networkName,
 	}, nil
 }
 
@@ -123,7 +139,13 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
+		// trace files already use executiontracev2 because of a resync and calibration resets
+		if p.network == tools.CalibrationNetwork {
+			parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
+			break
+		}
 		parsedResult, err = p.parserV1.ParseTransactions(ctx, txsData)
+
 	case v2.Version:
 		parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
 	default:

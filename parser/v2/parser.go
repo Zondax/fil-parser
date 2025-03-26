@@ -72,17 +72,10 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 	return p
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
-	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
-	if err != nil {
-		logger.Fatal(err.Error())
-		return nil
-	}
-	networkName := tools.ParseRawNetworkName(string(network))
-
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	return &Parser{
-		network:                networkName,
-		actorParser:            actorsV2.NewActorParser(networkName, helper, logger, metrics),
+		network:                network,
+		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
