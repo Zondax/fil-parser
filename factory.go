@@ -116,8 +116,17 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 	networkName := tools.ParseRawNetworkName(string(network))
 
-	parserV1 := v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
-	parserV2 := v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	var parserV1 Parser
+	var parserV2 Parser
+
+	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	if networkName == tools.CalibrationNetwork {
+		// trace files already use executiontracev2 because of a resync and calibration resets
+		// so we need to use the new parser regardless of the height
+		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	}
+
+	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -139,13 +148,7 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 	p.logger.Sugar().Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
-		// trace files already use executiontracev2 because of a resync and calibration resets
-		if p.network == tools.CalibrationNetwork {
-			parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
-			break
-		}
 		parsedResult, err = p.parserV1.ParseTransactions(ctx, txsData)
-
 	case v2.Version:
 		parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
 	default:
