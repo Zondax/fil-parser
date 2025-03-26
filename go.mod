@@ -1,14 +1,13 @@
 module github.com/zondax/fil-parser
 
 go 1.22.7
-
-toolchain go1.23.4
+toolchain go1.24.1
 
 require (
 	github.com/bytedance/sonic v1.13.1
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
-	github.com/filecoin-project/go-state-types v0.16.0-rc2
+	github.com/filecoin-project/go-state-types v0.16.0-rc9
 	github.com/filecoin-project/lotus v1.31.1
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
@@ -178,13 +177,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
 	golang.org/x/mod v0.23.0
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
