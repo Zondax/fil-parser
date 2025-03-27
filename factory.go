@@ -55,6 +55,9 @@ type Parser interface {
 func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
+		config: parser.Config{
+			FeesAsColumn: false,
+		},
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -68,8 +71,8 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics)
-	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics)
+	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -82,6 +85,9 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *zap.Logger, opts ...Option) (*FilecoinParser, error) {
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
+		config: parser.Config{
+			FeesAsColumn: false,
+		},
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -95,8 +101,8 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-	parserV1 := v1.NewActorsV2Parser(helper, logger, defaultOpts.metrics)
-	parserV2 := v2.NewActorsV2Parser(helper, logger, defaultOpts.metrics)
+	parserV1 := v1.NewActorsV2Parser(helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV2 := v2.NewActorsV2Parser(helper, logger, defaultOpts.metrics, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
