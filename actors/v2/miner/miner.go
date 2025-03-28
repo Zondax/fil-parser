@@ -9,6 +9,7 @@ import (
 
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
@@ -61,11 +62,15 @@ func (*Miner) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+// implemented in the rust builtin-actors but not the golang version
+var initialPledgeMethodNum = abi.MethodNum(builtin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
+
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		data = map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMiner.Constructor: {
 				Name:   parser.MethodConstructor,
 				Method: m.Constructor,
@@ -130,28 +135,33 @@ func (m *Miner) Methods(_ context.Context, network string, height int64) (map[ab
 				Name:   parser.MethodWithdrawBalance,
 				Method: m.WithdrawBalanceExported,
 			},
-		}, nil
+		}
 	case tools.V16.IsSupported(network, height):
-		return miner8.Methods, nil
+		data = miner8.Methods
 	case tools.V17.IsSupported(network, height):
-		return miner9.Methods, nil
+		data = miner9.Methods
 	case tools.V18.IsSupported(network, height):
-		return miner10.Methods, nil
+		data = miner10.Methods
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return miner11.Methods, nil
+		data = miner11.Methods
 	case tools.V21.IsSupported(network, height):
-		return miner12.Methods, nil
+		data = miner12.Methods
 	case tools.V22.IsSupported(network, height):
-		return miner13.Methods, nil
+		data = miner13.Methods
 	case tools.V23.IsSupported(network, height):
-		return miner14.Methods, nil
+		data = miner14.Methods
 	case tools.V24.IsSupported(network, height):
-		return miner15.Methods, nil
+		data = miner15.Methods
 	case tools.V25.IsSupported(network, height):
-		return miner16.Methods, nil
+		data = miner16.Methods
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	data[initialPledgeMethodNum] = nonLegacyBuiltin.MethodMeta{
+		Name:   parser.MethodInitialPledge,
+		Method: m.InitialPledgeExported,
+	}
+	return data, nil
 }
 
 func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -622,4 +632,8 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 		return parseGeneric(rawParams, nil, false, &legacyv1.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Miner) InitialPledgeExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, nil, false, &InitialPledgeReturn{}, &InitialPledgeReturn{}, parser.ReturnKey)
 }

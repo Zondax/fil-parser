@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	KeyMiner = "miner"
+	KeyMiner = "Miner"
 )
 
 func (eg *eventGenerator) createMinerInfo(tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {

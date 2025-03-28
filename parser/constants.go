@@ -124,6 +124,8 @@ const (
 	MethodProveCommitSectorsNI                = "ProveCommitSectorsNI"                // MethodsMiner
 	MethodProveReplicaUpdates3                = "ProveReplicaUpdates3"                // MethodsMiner
 	MethodInternalSectorSetupForPreseal       = "InternalSectorSetupForPreseal"       // MethodsMiner
+	MethodInitialPledge                       = "InitialPledge"                       // MethodsMiner
+	MethodInitialPledgeExported               = "InitialPledgeExported"               // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket
