@@ -311,11 +311,14 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
-	if trace.MsgRct.ExitCode.IsError() {
-		if metadata == nil {
-			metadata = make(map[string]interface{})
+	if metadata == nil {
+		metadata = map[string]interface{}{
+			parser.ParamsRawKey: trace.Msg.Params,
+			parser.ReturnRawKey: trace.MsgRct.Return,
 		}
-		metadata["Error"] = trace.MsgRct.ExitCode.Error()
+	}
+	if trace.MsgRct.ExitCode.IsError() {
+		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
 
 	jsonMetadata, err := json.Marshal(metadata)
@@ -469,15 +472,28 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 		if err != nil {
 			p.logger.Sugar().Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}
-		txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+		if actorName != "" {
+			txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+			if err != nil {
+				p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
+				txType = parser.UnknownStr
+			}
+		}
+	}
+
+	// fallback to depracated method
+	if txType == parser.UnknownStr || txType == "" {
+		//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
+		txType, err = p.helper.GetMethodName(&parser.LotusMessage{
+			To:     trace.Msg.To,
+			From:   trace.Msg.From,
+			Method: trace.Msg.Method,
+		}, int64(tipset.Height()), tipset.Key())
 		if err != nil {
-			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s' using v1: %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
 		}
 	}
 
-	if err == nil && txType == parser.UnknownStr {
-		return "", fmt.Errorf("could not get method name in transaction '%s'", mainMsgCid.String())
-	}
 	return txType, err
 }
