@@ -33,7 +33,7 @@ func LockedRewardFactorNum(network string, height int64) *big.Int {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V11)...):
 		return legacyv3.LockedRewardFactorNum.Int
 	}
-	return nil
+	return legacyv7.LockedRewardFactorNum.Int
 }
 
 func LockedRewardFactorDenom(network string, height int64) *big.Int {
@@ -49,7 +49,7 @@ func LockedRewardFactorDenom(network string, height int64) *big.Int {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V11)...):
 		return legacyv3.LockedRewardFactorDenom.Int
 	}
-	return nil
+	return legacyv7.LockedRewardFactorDenom.Int
 }
 
 func VerifiedDealWeightMultiplier(network string, height int64) *big.Int {
@@ -69,7 +69,7 @@ func VerifiedDealWeightMultiplier(network string, height int64) *big.Int {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
 		return builtinv2.VerifiedDealWeightMultiplier.Int
 	}
-	return nil
+	return builtin.VerifiedDealWeightMultiplier.Int
 }
 
 func QualityBaseMultiplier(network string, height int64) *big.Int {
@@ -89,5 +89,5 @@ func QualityBaseMultiplier(network string, height int64) *big.Int {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
 		return builtinv2.QualityBaseMultiplier.Int
 	}
-	return nil
+	return builtin.QualityBaseMultiplier.Int
 }
