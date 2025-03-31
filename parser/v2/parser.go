@@ -15,6 +15,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
 
+	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
@@ -398,6 +399,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		TxTimestamp: timestamp,
 		TxCid:       msg.MsgCid.String(),
 		TxFrom:      msg.Msg.From.String(),
+		TxTo:        parser.BurnAddress,
 		Amount:      msg.GasCost.TotalCost.Int,
 		Status:      "Ok",
 		TxType:      parser.TotalFeeOp,
@@ -445,9 +447,14 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
-	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
+	if msg.From != address.Undef {
+		fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
+		parser.AppendToAddressesMap(p.addresses, fromAdd)
+	}
+	if msg.To != address.Undef {
+		toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+		parser.AppendToAddressesMap(p.addresses, toAdd)
+	}
 }
 
 func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (string, error) {

@@ -52,7 +52,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 		actorAddress := tx.TxTo
 		// this is executed by(from) the miner actor
-		if tx.TxType == parser.MethodUpdateClaimedPower {
+		if tx.TxType == parser.MethodUpdateClaimedPower || tx.TxType == parser.TotalFeeOp {
 			actorAddress = tx.TxFrom
 		}
 
