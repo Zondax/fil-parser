@@ -50,28 +50,27 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 			continue
 		}
 
-		addrTo, err := address.NewFromString(tx.TxTo)
+		actorAddress := tx.TxTo
+		// this is executed by(from) the miner actor
+		if tx.TxType == parser.MethodUpdateClaimedPower {
+			actorAddress = tx.TxFrom
+		}
+
+		addr, err := address.NewFromString(actorAddress)
 		if err != nil {
 			eg.logger.Sugar().Errorf("could not parse address. Err: %s", err)
-			continue
 		}
 
 		// #nosec G115
-		actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
+		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
 			continue
 		}
 
-		actorAddress := tx.TxTo
 		if !eg.isMinerStateMessage(actorName, tx.TxType) {
 			continue
-		}
-
-		// this is executed by(from) the miner actor
-		if tx.TxType == parser.MethodUpdateClaimedPower {
-			actorAddress = tx.TxFrom
 		}
 
 		minerInfo, err := eg.createMinerInfo(tx, tipsetCid, actorAddress)
@@ -103,17 +102,15 @@ func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 		return true
 	case strings.EqualFold(txType, parser.MethodUpdateClaimedPower):
 		return true
-	case strings.EqualFold(actorName, manifest.MarketKey):
-		return (strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate) ||
-			strings.EqualFold(txType, parser.MethodPublishStorageDeals) ||
-			strings.EqualFold(txType, parser.MethodPublishStorageDealsExported) ||
-			strings.EqualFold(txType, parser.MethodActivateDeals))
-
-	case strings.EqualFold(actorName, manifest.PowerKey):
-		return strings.EqualFold(txType, parser.MethodCurrentTotalPower)
-
-	case strings.EqualFold(actorName, manifest.RewardKey):
-		return (strings.EqualFold(txType, parser.MethodThisEpochReward))
+	case strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate),
+		strings.EqualFold(txType, parser.MethodPublishStorageDeals),
+		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported),
+		strings.EqualFold(txType, parser.MethodActivateDeals):
+		return true
+	case strings.EqualFold(txType, parser.MethodCurrentTotalPower):
+		return true
+	case strings.EqualFold(txType, parser.MethodThisEpochReward):
+		return true
 	}
 
 	return false

@@ -222,11 +222,7 @@ func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.T
 }
 
 func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
-	minerTxs, err := p.Helper.FilterTxsByActorType(ctx, txs, manifest.MinerKey, tipsetKey)
-	if err != nil {
-		return nil, err
-	}
-	return p.parserV2.ParseMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
+	return p.parserV2.ParseMinerEvents(ctx, txs, tipsetCid, tipsetKey)
 }
 
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {
