@@ -145,7 +145,7 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 	}
 
 	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
-	
+
 	return metadata, createdEvmActor, nil
 }
 
