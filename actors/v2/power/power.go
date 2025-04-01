@@ -31,16 +31,19 @@ import (
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
 
 type Power struct {
+	helper *helper.Helper
 	logger *zap.Logger
 }
 
-func New(logger *zap.Logger) *Power {
+func New(helper *helper.Helper, logger *zap.Logger) *Power {
 	return &Power{
+		helper: helper,
 		logger: logger,
 	}
 }
@@ -210,7 +213,7 @@ func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage
 	return data, err
 }
 
-func (*Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	var data map[string]interface{}
 	var addressInfo *types.AddressInfo
 	var err error
@@ -250,6 +253,11 @@ func (*Power) CreateMinerExported(network string, msg *parser.LotusMessage, heig
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	if addressInfo != nil {
+		p.helper.GetActorsCache().StoreAddressInfoAddress(*addressInfo)
+	}
+
 	return data, addressInfo, err
 }
 

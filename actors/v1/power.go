@@ -109,6 +109,9 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 		CreationTxCid: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor
+
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdActor)
+	
 	return metadata, createdActor, nil
 }
 

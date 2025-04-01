@@ -388,7 +388,7 @@ func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.Extended
 			p.logger.Sugar().Errorf("Error when trying to parse miner address: %v", err)
 		}
 
-		minerAddress, err = actors.ConsolidateRobustAddress(minerAddr, p.helper.GetActorsCache(), p.logger)
+		minerAddress, err = actors.ConsolidateRobustAddress(minerAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
 			p.logger.Sugar().Errorf("Error when trying to consolidate miner address to robust: %v", err)
 		}
@@ -428,12 +428,12 @@ func (p *Parser) getFromToRobustAddresses(from, to address.Address) (string, str
 	txFrom := from.String()
 	txTo := to.String()
 	if p.config.ConsolidateRobustAddress {
-		txFrom, err = actors.ConsolidateRobustAddress(from, p.helper.GetActorsCache(), p.logger)
+		txFrom, err = actors.ConsolidateRobustAddress(from, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
 			txFrom = from.String()
 			p.logger.Sugar().Warnf("Could not consolidate robust address: %v", err)
 		}
-		txTo, err = actors.ConsolidateRobustAddress(to, p.helper.GetActorsCache(), p.logger)
+		txTo, err = actors.ConsolidateRobustAddress(to, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
 			txTo = to.String()
 			p.logger.Sugar().Warnf("Could not consolidate robust address: %v", err)

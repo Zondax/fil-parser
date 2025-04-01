@@ -107,6 +107,9 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 		ActorType:     "evm",
 		CreationTxCid: msgCid.String(),
 	}
+
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+
 	return metadata, createdEvmActor, nil
 }
 
@@ -140,6 +143,9 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 		ActorType:     "evm",
 		CreationTxCid: msgCid.String(),
 	}
+
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+	
 	return metadata, createdEvmActor, nil
 }
 
@@ -177,5 +183,8 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 		ActorType:     "evm",
 		CreationTxCid: msgCid.String(),
 	}
+
+	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+
 	return metadata, createdEvmActor, nil
 }
