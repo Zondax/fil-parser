@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
+	"github.com/filecoin-project/go-address"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
@@ -199,6 +200,16 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 			nativeEventsTotal++
 		}
 
+		if p.config.ConsolidateRobustAddress {
+			eventAddr, err := address.NewFromString(event.Emitter)
+			if err != nil {
+				return nil, err
+			}
+			if consolidatedAddr, err := actors.ConsolidateRobustAddress(eventAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort); err == nil {
+				event.Emitter = consolidatedAddr
+			}
+		}
+
 		parsed = append(parsed, event)
 	}
 
@@ -222,6 +233,16 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 		if err != nil {
 			_ = p.metrics.UpdateParseEthLogMetric()
 			zap.S().Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+		}
+
+		if p.config.ConsolidateRobustAddress {
+			eventAddr, err := address.NewFromString(event.Emitter)
+			if err != nil {
+				return nil, err
+			}
+			if consolidatedAddr, err := actors.ConsolidateRobustAddress(eventAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort); err == nil {
+				event.Emitter = consolidatedAddr
+			}
 		}
 
 		parsed = append(parsed, event)
@@ -347,6 +368,8 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
+	txFrom, txTo := p.getFromToRobustAddresses(trace.Msg.From, trace.Msg.To)
+
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
@@ -359,8 +382,8 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		Id:          messageUuid,
 		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
 		TxCid:       mainMsgCid.String(),
-		TxFrom:      trace.Msg.From.String(),
-		TxTo:        trace.Msg.To.String(),
+		TxFrom:      txFrom,
+		TxTo:        txTo,
 		Amount:      trace.Msg.Value.Int,
 		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 		TxType:      txType,
@@ -407,6 +430,18 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 		p.logger.Sugar().Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
 	}
 
+	if p.config.ConsolidateRobustAddress && err == nil {
+		minerAddr, err := address.NewFromString(minerAddress)
+		if err != nil {
+			p.logger.Sugar().Errorf("Error when trying to parse miner address: %v", err)
+		}
+
+		minerAddress, err = actors.ConsolidateRobustAddress(minerAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
+		if err != nil {
+			p.logger.Sugar().Errorf("Error when trying to consolidate miner address to robust: %v", err)
+		}
+	}
+
 	if p.config.FeesAsColumn {
 		txType = ""
 	}
@@ -434,6 +469,26 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 	}
 
 	return string(metadata)
+}
+
+func (p *Parser) getFromToRobustAddresses(from, to address.Address) (string, string) {
+	var err error
+	txFrom := from.String()
+	txTo := to.String()
+	if p.config.ConsolidateRobustAddress {
+		txFrom, err = actors.ConsolidateRobustAddress(from, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
+		if err != nil {
+			txFrom = from.String()
+			p.logger.Sugar().Warnf("Could not consolidate robust address: %v", err)
+		}
+		txTo, err = actors.ConsolidateRobustAddress(to, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
+		if err != nil {
+			txTo = to.String()
+			p.logger.Sugar().Warnf("Could not consolidate robust address: %v", err)
+		}
+	}
+
+	return txFrom, txTo
 }
 
 func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {

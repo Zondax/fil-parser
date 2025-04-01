@@ -266,3 +266,7 @@ func (a *ActorsCache) isBadAddress(add address.Address) bool {
 	_, bad := a.badAddress.Get(add.String())
 	return bad
 }
+
+func (a *ActorsCache) StoreAddressInfoAddress(addInfo types.AddressInfo) {
+	a.offChainCache.StoreAddressInfo(addInfo)
+}
