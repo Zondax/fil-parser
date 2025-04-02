@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
 	"strings"
-
-	"github.com/zondax/fil-parser/metrics"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
@@ -56,7 +55,9 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn: false,
+			FeesAsColumn:             false,
+			ConsolidateRobustAddress: false,
+			RobustAddressBestEffort:  false,
 		},
 	}
 	for _, opt := range opts {
@@ -86,7 +87,9 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn: false,
+			FeesAsColumn:             false,
+			ConsolidateRobustAddress: false,
+			RobustAddressBestEffort:  false,
 		},
 	}
 	for _, opt := range opts {

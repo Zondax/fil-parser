@@ -5,11 +5,12 @@ import (
 	"github.com/zondax/golem/pkg/zcache"
 	"github.com/zondax/znats/znats"
 	"gorm.io/gorm"
+	"time"
 )
 
 type DataSourceConfig struct {
 	Nats           *znats.ConfigNats
-	Cache          *zcache.CombinedConfig
+	Cache          *CacheConfig
 	InputTableName string
 	NetworkName    string
 }
@@ -18,4 +19,9 @@ type DataSource struct {
 	Node   api.FullNode
 	Db     *gorm.DB
 	Config DataSourceConfig
+}
+
+type CacheConfig struct {
+	*zcache.CombinedConfig
+	Ttl time.Duration
 }
