@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/zondax/fil-parser/parser/helper"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
@@ -27,7 +28,7 @@ func parseEamReturn[R createReturn](rawReturn []byte, r R) (R, error) {
 	return r, nil
 }
 
-func parseCreate[T createParams, R createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, params T, r R) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreate[T createParams, R createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -40,12 +41,13 @@ func parseCreate[T createParams, R createReturn](rawParams, rawReturn []byte, ms
 	}
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(rawReturn, metadata, msgCid, r)
+		return handleReturnValue(rawReturn, metadata, msgCid, r, h)
 	}
+
 	return metadata, nil, nil
 }
 
-func parseCreateExternal[T createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, params abi.CborBytes, r T) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreateExternal[T createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -61,12 +63,12 @@ func parseCreateExternal[T createReturn](rawParams, rawReturn []byte, msgCid cid
 	}
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(rawReturn, metadata, msgCid, r)
+		return handleReturnValue(rawReturn, metadata, msgCid, r, h)
 	}
 	return metadata, nil, nil
 }
 
-func handleReturnValue[R createReturn](rawReturn []byte, metadata map[string]interface{}, msgCid cid.Cid, r R) (map[string]interface{}, *types.AddressInfo, error) {
+func handleReturnValue[R createReturn](rawReturn []byte, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	createReturn, err := parseEamReturn[R](rawReturn, r)
 	if err != nil {
 		return nil, nil, err
@@ -78,6 +80,8 @@ func handleReturnValue[R createReturn](rawReturn []byte, metadata map[string]int
 		return metadata, nil, fmt.Errorf("error parsing createReturn: %s", err)
 	}
 	metadata[parser.EthHashKey] = ethHash
+
+	h.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
 
 	return metadata, createdEvmActor, nil
 }

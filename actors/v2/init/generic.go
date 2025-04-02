@@ -3,6 +3,7 @@ package init
 import (
 	"bytes"
 	"fmt"
+	"github.com/zondax/fil-parser/parser/helper"
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -19,7 +20,7 @@ func initConstructor[T constructorParams](raw []byte, constructor T) (map[string
 	return metadata, nil
 }
 
-func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawReturn []byte, params T, r R) (map[string]interface{}, *types.AddressInfo, error) {
+func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawReturn []byte, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	err := params.UnmarshalCBOR(reader)
@@ -41,6 +42,7 @@ func parseExec[T constructorParams, R execReturn](msg *parser.LotusMessage, rawR
 		}
 		createdActor = returnParams(msg, codeCid.String(), r)
 		metadata[parser.ReturnKey] = createdActor
+		h.GetActorsCache().StoreAddressInfoAddress(*createdActor)
 	}
 
 	return metadata, createdActor, nil

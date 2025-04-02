@@ -3,8 +3,10 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
@@ -22,6 +24,8 @@ const (
 	ZCacheCombined  = "combined"
 	DummyTtl        = -1
 	PrefixSplitter  = "/"
+
+	addressTypePrefixF4 = "f4"
 )
 
 // ZCache In-Memory database
@@ -175,6 +179,10 @@ func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 	}
 
 	if isRobustAddress {
+		if f4Address := m.tryToGetF4Address(context.Background(), address); f4Address != "" {
+			return f4Address, nil
+		}
+
 		// Already a robust address
 		return address.String(), nil
 	}
@@ -264,6 +272,21 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 	m.storeRobustShort(info.Robust, info.Short)
 	m.storeShortRobust(info.Short, info.Robust)
 	m.storeActorCode(info.Short, info.ActorCid)
+
+	evmTypes := map[string]bool{
+		manifest.EvmKey:        true,
+		manifest.EamKey:        true,
+		manifest.EthAccountKey: true,
+	}
+	isEvm := evmTypes[info.ActorType]
+	isEvmAndAddressIsF4 := isEvm && strings.HasPrefix(info.Robust, addressTypePrefixF4)
+
+	// Only store the mapping for addresses that are not related to EVM actors,
+	// or are associated with EVM actors but use an f4 prefix. We skip storing
+	// addresses when they are f2 for EVM actors because only f4 addresses are of interest.
+	if !isEvm || isEvmAndAddressIsF4 {
+		m.storeShortRobust(info.Short, info.Robust)
+	}
 }
 
 func (m *ZCache) storeActorCode(shortAddress string, cid string) {
@@ -276,4 +299,30 @@ func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	// The ttl here is pointless
 	ctx := context.Background()
 	_ = m.shortCidMap.Set(ctx, shortAddress, cid, DummyTtl)
+}
+
+func (m *ZCache) tryToGetF4Address(ctx context.Context, address address.Address) string {
+	// Return the address if it's already a f4 address
+	if strings.HasPrefix(address.String(), addressTypePrefixF4) {
+		return address.String()
+	}
+
+	// If the robust address is not f4, it should be f2
+	// Try to get the corresponding f0 for the f2 address
+	f0Address, err := m.GetShortAddress(address)
+	if err != nil {
+		m.logger.Errorf("error getting short address for %s: %s", address.String(), err)
+		return ""
+	}
+
+	// Try to get the f4 address associated with the f0 address
+	// If no f4 is found, it implies the address might not be an EVM actor type
+	var f4Address string
+	err = m.shortRobustMap.Get(ctx, f0Address, &f4Address)
+	if err == nil && f4Address != "" {
+		return f4Address
+	}
+
+	m.logger.Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
+	return ""
 }
