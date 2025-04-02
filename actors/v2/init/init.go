@@ -3,8 +3,8 @@ package init
 import (
 	"context"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
