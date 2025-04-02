@@ -90,6 +90,7 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *common.CacheC
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
 		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
 	}
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
@@ -98,6 +99,7 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *common.CacheC
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
 		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
 	}
 
 	selectorHashSigMapConfig := &zcache.CombinedConfig{
@@ -106,6 +108,7 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *common.CacheC
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
 		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
 	}
 
 	if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
