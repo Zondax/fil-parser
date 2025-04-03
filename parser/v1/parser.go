@@ -54,13 +54,9 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 	}
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
-	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
-	if err != nil {
-		logger.Sugar().Error(err)
-	}
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(string(network), helper, logger, metrics),
+		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
@@ -291,13 +287,18 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		if !trace.MsgRct.ExitCode.IsError() {
+			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+			p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		}
 	}
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if trace.MsgRct.ExitCode.IsError() {
+		if metadata == nil {
+			metadata = make(map[string]interface{})
+		}
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 

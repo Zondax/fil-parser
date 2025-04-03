@@ -150,6 +150,9 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodProveCommitSectorsNI:
 		resp, err := m.ProveCommitSectorsNI(network, height, msg.Params)
 		return resp, nil, err
+	case parser.MethodInitialPledgeExported, parser.MethodInitialPledge:
+		resp, err := m.InitialPledgeExported(network, height, msg.Params)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -213,5 +216,7 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodInternalSectorSetupForPreseal:      m.InternalSectorSetupForPreseal,
 		parser.MethodProveCommitSectorsNI:               m.ProveCommitSectorsNI,
 		parser.MethodProveReplicaUpdates3:               m.ProveReplicaUpdates3,
+		parser.MethodInitialPledgeExported:              m.InitialPledgeExported,
+		parser.MethodInitialPledge:                      m.InitialPledgeExported,
 	}
 }

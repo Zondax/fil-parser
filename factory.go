@@ -38,6 +38,7 @@ type FilecoinParser struct {
 	parserV2 Parser
 	Helper   *helper2.Helper
 	logger   *zap.Logger
+	network  string
 }
 
 type Parser interface {
@@ -71,6 +72,12 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
+
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+
 	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
 	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
 
@@ -79,6 +86,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		parserV2: parserV2,
 		Helper:   helper,
 		logger:   logger,
+		network:  tools.ParseRawNetworkName(string(network)),
 	}, nil
 }
 
@@ -101,14 +109,31 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-	parserV1 := v1.NewActorsV2Parser(helper, logger, defaultOpts.metrics, defaultOpts.config)
-	parserV2 := v2.NewActorsV2Parser(helper, logger, defaultOpts.metrics, defaultOpts.config)
+
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+	networkName := tools.ParseRawNetworkName(string(network))
+
+	var parserV1 Parser
+	var parserV2 Parser
+
+	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	if networkName == tools.CalibrationNetwork {
+		// trace files already use executiontracev2 because of a resync and calibration resets
+		// so we need to use the new parser regardless of the height
+		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	}
+
+	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
 		parserV2: parserV2,
 		Helper:   helper,
 		logger:   logger,
+		network:  networkName,
 	}, nil
 }
 
@@ -197,11 +222,7 @@ func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.T
 }
 
 func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
-	minerTxs, err := p.Helper.FilterTxsByActorType(ctx, txs, manifest.MinerKey, tipsetKey)
-	if err != nil {
-		return nil, err
-	}
-	return p.parserV2.ParseMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
+	return p.parserV2.ParseMinerEvents(ctx, txs, tipsetCid, tipsetKey)
 }
 
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {

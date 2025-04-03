@@ -15,6 +15,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
 
+	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
@@ -34,7 +35,7 @@ import (
 
 const Version = "v2"
 
-var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26", "v1.27", "v1.28", "v1.29", "v1.30", "v1.31"}
+var NodeVersionsSupported = []string{"v1.23", "v1.24", "v1.25", "v1.26", "v1.27", "v1.28", "v1.29", "v1.30", "v1.31", "v1.32"}
 
 type Parser struct {
 	network                string
@@ -72,17 +73,10 @@ func NewParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.Metric
 	return p
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
-	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
-	if err != nil {
-		logger.Fatal(err.Error())
-		return nil
-	}
-	networkName := tools.ParseRawNetworkName(string(network))
-
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	return &Parser{
-		network:                networkName,
-		actorParser:            actorsV2.NewActorParser(networkName, helper, logger, metrics),
+		network:                network,
+		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
@@ -309,15 +303,23 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
 	if mErr != nil {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-		p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		if !trace.MsgRct.ExitCode.IsError() {
+			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+			p.logger.Sugar().Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		}
 	}
 
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
+	if metadata == nil {
+		metadata = map[string]interface{}{
+			parser.ParamsRawKey: trace.Msg.Params,
+			parser.ReturnRawKey: trace.MsgRct.Return,
+		}
+	}
 	if trace.MsgRct.ExitCode.IsError() {
-		metadata["Error"] = trace.MsgRct.ExitCode.Error()
+		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
 
 	jsonMetadata, err := json.Marshal(metadata)
@@ -397,6 +399,7 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		TxTimestamp: timestamp,
 		TxCid:       msg.MsgCid.String(),
 		TxFrom:      msg.Msg.From.String(),
+		TxTo:        parser.BurnAddress,
 		Amount:      msg.GasCost.TotalCost.Int,
 		Status:      "Ok",
 		TxType:      parser.TotalFeeOp,
@@ -444,9 +447,14 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
-	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
+	if msg.From != address.Undef {
+		fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
+		parser.AppendToAddressesMap(p.addresses, fromAdd)
+	}
+	if msg.To != address.Undef {
+		toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+		parser.AppendToAddressesMap(p.addresses, toAdd)
+	}
 }
 
 func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (string, error) {
@@ -471,15 +479,28 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 		if err != nil {
 			p.logger.Sugar().Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}
-		txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+		if actorName != "" {
+			txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+			if err != nil {
+				p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
+				txType = parser.UnknownStr
+			}
+		}
+	}
+
+	// fallback to depracated method
+	if txType == parser.UnknownStr || txType == "" {
+		//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
+		txType, err = p.helper.GetMethodName(&parser.LotusMessage{
+			To:     trace.Msg.To,
+			From:   trace.Msg.From,
+			Method: trace.Msg.Method,
+		}, int64(tipset.Height()), tipset.Key())
 		if err != nil {
-			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
+			p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s' using v1: %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
 		}
 	}
 
-	if err == nil && txType == parser.UnknownStr {
-		return "", fmt.Errorf("could not get method name in transaction '%s'", mainMsgCid.String())
-	}
 	return txType, err
 }
