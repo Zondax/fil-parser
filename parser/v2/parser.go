@@ -16,7 +16,6 @@ import (
 	"github.com/ipfs/go-cid"
 	"go.uber.org/zap"
 
-	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
@@ -303,7 +302,7 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
-	txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset, parentId)
+	txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
 		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Sugar().Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
@@ -512,7 +511,7 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 	}
 }
 
-func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (string, error) {
+func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (string, error) {
 	var (
 		actorName string
 		txType    string

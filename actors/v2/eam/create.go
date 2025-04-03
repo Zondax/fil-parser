@@ -21,7 +21,7 @@ import (
 func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv16.CreateExternalReturn{})
+		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv16.CreateExternalReturn{}, e.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv15.CreateExternalReturn{}, e.helper)
 	case tools.V23.IsSupported(network, height):
@@ -43,7 +43,7 @@ func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn 
 func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.CreateParams{}, &eamv16.CreateReturn{})
+		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.CreateParams{}, &eamv16.CreateReturn{}, e.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseCreate(rawParams, rawReturn, msgCid, &eamv15.CreateParams{}, &eamv15.CreateReturn{}, e.helper)
 	case tools.V23.IsSupported(network, height):
@@ -65,7 +65,7 @@ func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, 
 func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.Create2Params{}, &eamv16.Create2Return{})
+		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.Create2Params{}, &eamv16.Create2Return{}, e.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseCreate(rawParams, rawReturn, msgCid, &eamv15.Create2Params{}, &eamv15.Create2Return{}, e.helper)
 	case tools.V23.IsSupported(network, height):

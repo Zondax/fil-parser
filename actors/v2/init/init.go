@@ -3,6 +3,7 @@ package init
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/fil-parser/parser/helper"
 
 	"go.uber.org/zap"
@@ -134,7 +135,7 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv16.ExecParams{}, &builtinInitv16.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv16.ExecParams{}, &builtinInitv16.ExecReturn{}, i.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseExec(msg, raw, &builtinInitv15.ExecParams{}, &builtinInitv15.ExecReturn{}, i.helper)
 	case tools.V23.IsSupported(network, height):
@@ -172,7 +173,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv16.Exec4Params{}, &builtinInitv16.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv16.Exec4Params{}, &builtinInitv16.Exec4Return{}, i.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseExec(msg, raw, &builtinInitv15.Exec4Params{}, &builtinInitv15.Exec4Return{}, i.helper)
 	case tools.V23.IsSupported(network, height):
