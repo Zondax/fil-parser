@@ -9,7 +9,6 @@ import (
 
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
@@ -63,7 +62,7 @@ func (*Miner) StartNetworkHeight() int64 {
 }
 
 // implemented in the rust builtin-actors but not the golang version
-var initialPledgeMethodNum = abi.MethodNum(builtin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
+var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
