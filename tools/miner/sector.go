@@ -364,6 +364,7 @@ func (eg *eventGenerator) parseConfirmSectorProofsValid(_ context.Context, tx *t
 		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
 			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
 			MinerAddress: tx.TxTo,
+			// #nosec G115
 			SectorNumber: uint64(sector),
 			Height:       tx.Height,
 			TxCid:        tx.TxCid,

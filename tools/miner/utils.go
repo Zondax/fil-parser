@@ -103,5 +103,5 @@ func sectorProofToBigInt(sectorProof int64) *big.Int {
 		return big.NewInt(0)
 	}
 
-	return big.NewInt(int64(info.SectorSize))
+	return big.NewInt(0).SetUint64(uint64(info.SectorSize))
 }
