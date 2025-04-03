@@ -104,13 +104,13 @@ func (p *ActorParser) GetActor(actor string, metrics *actormetrics.ActorsMetrics
 	case manifest.DatacapKey:
 		return datacap.New(p.logger), nil
 	case manifest.EamKey:
-		return eam.New(p.logger), nil
+		return eam.New(p.helper, p.logger), nil
 	case manifest.EthAccountKey:
 		return ethaccount.New(p.logger), nil
 	case manifest.EvmKey:
 		return evm.New(p.logger, p.metrics), nil
 	case manifest.InitKey:
-		return initActor.New(p.logger), nil
+		return initActor.New(p.helper, p.logger), nil
 	case manifest.MarketKey:
 		return market.New(p.logger), nil
 	case manifest.MinerKey:
@@ -120,7 +120,7 @@ func (p *ActorParser) GetActor(actor string, metrics *actormetrics.ActorsMetrics
 	case manifest.PaychKey:
 		return paymentchannel.New(p.logger), nil
 	case manifest.PowerKey:
-		return power.New(p.logger), nil
+		return power.New(p.helper, p.logger), nil
 	case manifest.RewardKey:
 		return reward.New(p.logger), nil
 	case manifest.VerifregKey:

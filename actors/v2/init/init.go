@@ -3,6 +3,7 @@ package init
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/parser/helper"
 
 	"go.uber.org/zap"
 
@@ -36,11 +37,13 @@ import (
 )
 
 type Init struct {
+	helper *helper.Helper
 	logger *zap.Logger
 }
 
-func New(logger *zap.Logger) *Init {
+func New(helper *helper.Helper, logger *zap.Logger) *Init {
 	return &Init{
+		helper: helper,
 		logger: logger,
 	}
 }
@@ -128,60 +131,60 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func (*Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
 		return parseExec(msg, raw, &builtinInitv16.ExecParams{}, &builtinInitv16.ExecReturn{})
 	case tools.V24.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv15.ExecParams{}, &builtinInitv15.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv15.ExecParams{}, &builtinInitv15.ExecReturn{}, i.helper)
 	case tools.V23.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv14.ExecParams{}, &builtinInitv14.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv14.ExecParams{}, &builtinInitv14.ExecReturn{}, i.helper)
 	case tools.V22.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv13.ExecParams{}, &builtinInitv13.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv13.ExecParams{}, &builtinInitv13.ExecReturn{}, i.helper)
 	case tools.V21.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv12.ExecParams{}, &builtinInitv12.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv12.ExecParams{}, &builtinInitv12.ExecReturn{}, i.helper)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parseExec(msg, raw, &builtinInitv11.ExecParams{}, &builtinInitv11.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv11.ExecParams{}, &builtinInitv11.ExecReturn{}, i.helper)
 	case tools.V18.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv10.ExecParams{}, &builtinInitv10.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv10.ExecParams{}, &builtinInitv10.ExecReturn{}, i.helper)
 	case tools.V17.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv9.ExecParams{}, &builtinInitv9.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv9.ExecParams{}, &builtinInitv9.ExecReturn{}, i.helper)
 	case tools.V16.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv8.ExecParams{}, &builtinInitv8.ExecReturn{})
+		return parseExec(msg, raw, &builtinInitv8.ExecParams{}, &builtinInitv8.ExecReturn{}, i.helper)
 	case tools.V15.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv7.ExecParams{}, &legacyv7.ExecReturn{})
+		return parseExec(msg, raw, &legacyv7.ExecParams{}, &legacyv7.ExecReturn{}, i.helper)
 	case tools.V14.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv6.ExecParams{}, &legacyv6.ExecReturn{})
+		return parseExec(msg, raw, &legacyv6.ExecParams{}, &legacyv6.ExecReturn{}, i.helper)
 	case tools.V13.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv5.ExecParams{}, &legacyv5.ExecReturn{})
+		return parseExec(msg, raw, &legacyv5.ExecParams{}, &legacyv5.ExecReturn{}, i.helper)
 	case tools.V12.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv4.ExecParams{}, &legacyv4.ExecReturn{})
+		return parseExec(msg, raw, &legacyv4.ExecParams{}, &legacyv4.ExecReturn{}, i.helper)
 	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseExec(msg, raw, &legacyv3.ExecParams{}, &legacyv3.ExecReturn{})
+		return parseExec(msg, raw, &legacyv3.ExecParams{}, &legacyv3.ExecReturn{}, i.helper)
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseExec(msg, raw, &legacyv2.ExecParams{}, &legacyv2.ExecReturn{})
+		return parseExec(msg, raw, &legacyv2.ExecParams{}, &legacyv2.ExecReturn{}, i.helper)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseExec(msg, raw, &legacyv1.ExecParams{}, &legacyv1.ExecReturn{})
+		return parseExec(msg, raw, &legacyv1.ExecParams{}, &legacyv1.ExecReturn{}, i.helper)
 	}
 	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func (*Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
 	case tools.V25.IsSupported(network, height):
 		return parseExec(msg, raw, &builtinInitv16.Exec4Params{}, &builtinInitv16.Exec4Return{})
 	case tools.V24.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv15.Exec4Params{}, &builtinInitv15.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv15.Exec4Params{}, &builtinInitv15.Exec4Return{}, i.helper)
 	case tools.V23.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv14.Exec4Params{}, &builtinInitv14.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv14.Exec4Params{}, &builtinInitv14.Exec4Return{}, i.helper)
 	case tools.V22.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv13.Exec4Params{}, &builtinInitv13.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv13.Exec4Params{}, &builtinInitv13.Exec4Return{}, i.helper)
 	case tools.V21.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv12.Exec4Params{}, &builtinInitv12.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv12.Exec4Params{}, &builtinInitv12.Exec4Return{}, i.helper)
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parseExec(msg, raw, &builtinInitv11.Exec4Params{}, &builtinInitv11.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv11.Exec4Params{}, &builtinInitv11.Exec4Return{}, i.helper)
 	case tools.V18.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv10.Exec4Params{}, &builtinInitv10.Exec4Return{})
+		return parseExec(msg, raw, &builtinInitv10.Exec4Params{}, &builtinInitv10.Exec4Return{}, i.helper)
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
 		return map[string]interface{}{}, nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}

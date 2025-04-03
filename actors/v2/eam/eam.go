@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/zondax/fil-parser/parser/helper"
 	"strconv"
 
 	"github.com/ipfs/go-cid"
@@ -30,11 +31,13 @@ import (
 
 type Eam struct {
 	logger *zap.Logger
+	helper *helper.Helper
 }
 
-func New(logger *zap.Logger) *Eam {
+func New(helper *helper.Helper, logger *zap.Logger) *Eam {
 	return &Eam{
 		logger: logger,
+		helper: helper,
 	}
 }
 
