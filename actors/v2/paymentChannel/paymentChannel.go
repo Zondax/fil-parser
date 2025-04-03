@@ -18,6 +18,7 @@ import (
 	paychv13 "github.com/filecoin-project/go-state-types/builtin/v13/paych"
 	paychv14 "github.com/filecoin-project/go-state-types/builtin/v14/paych"
 	paychv15 "github.com/filecoin-project/go-state-types/builtin/v15/paych"
+	paychv16 "github.com/filecoin-project/go-state-types/builtin/v16/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
 
@@ -51,22 +52,26 @@ func (*PaymentChannel) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (p *PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsPaych.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsPaych.UpdateChannelState: {
-				Name: parser.MethodUpdateChannelState,
+				Name:   parser.MethodUpdateChannelState,
+				Method: p.UpdateChannelState,
 			},
 			legacyBuiltin.MethodsPaych.Settle: {
-				Name: parser.MethodSettle,
+				Name:   parser.MethodSettle,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 			legacyBuiltin.MethodsPaych.Collect: {
-				Name: parser.MethodCollect,
+				Name:   parser.MethodCollect,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -85,6 +90,8 @@ func (*PaymentChannel) Methods(_ context.Context, network string, height int64) 
 		return paychv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return paychv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return paychv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -126,6 +133,8 @@ func (*PaymentChannel) Constructor(network string, height int64, raw []byte) (ma
 		return parse(raw, &paychv14.ConstructorParams{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, &paychv15.ConstructorParams{})
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, &paychv16.ConstructorParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -162,6 +171,8 @@ func (*PaymentChannel) UpdateChannelState(network string, height int64, raw []by
 		return parse(raw, &paychv14.UpdateChannelStateParams{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, &paychv15.UpdateChannelStateParams{})
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, &paychv16.UpdateChannelStateParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

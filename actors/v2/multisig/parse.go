@@ -19,6 +19,7 @@ import (
 	multisigv13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
 	multisigv14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisigv15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisigv16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisigv8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisigv9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
@@ -52,37 +53,46 @@ func (*Msig) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Msig) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (m *Msig) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMultisig.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsMultisig.Propose: {
-				Name: parser.MethodPropose,
+				Name:   parser.MethodPropose,
+				Method: m.Propose,
 			},
 			legacyBuiltin.MethodsMultisig.Approve: {
-				Name: parser.MethodApprove,
+				Name:   parser.MethodApprove,
+				Method: m.Approve,
 			},
 			legacyBuiltin.MethodsMultisig.Cancel: {
-				Name: parser.MethodCancel,
+				Name:   parser.MethodCancel,
+				Method: m.Cancel,
 			},
 			legacyBuiltin.MethodsMultisig.AddSigner: {
-				Name: parser.MethodAddSigner,
+				Name:   parser.MethodAddSigner,
+				Method: m.MsigParams,
 			},
 			legacyBuiltin.MethodsMultisig.RemoveSigner: {
-				Name: parser.MethodRemoveSigner,
+				Name:   parser.MethodRemoveSigner,
+				Method: m.RemoveSigner,
 			},
 			legacyBuiltin.MethodsMultisig.SwapSigner: {
-				Name: parser.MethodSwapSigner,
+				Name:   parser.MethodSwapSigner,
+				Method: m.MsigParams,
 			},
 			legacyBuiltin.MethodsMultisig.ChangeNumApprovalsThreshold: {
-				Name: parser.MethodChangeNumApprovalsThreshold,
+				Name:   parser.MethodChangeNumApprovalsThreshold,
+				Method: m.ChangeNumApprovalsThreshold,
 			},
 			legacyBuiltin.MethodsMultisig.LockBalance: {
-				Name: parser.MethodLockBalance,
+				Name:   parser.MethodLockBalance,
+				Method: m.LockBalance,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -101,6 +111,8 @@ func (*Msig) Methods(_ context.Context, network string, height int64) (map[abi.M
 		return multisigv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return multisigv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return multisigv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

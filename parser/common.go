@@ -45,6 +45,7 @@ func ParseReturn(metadata map[string]interface{}) string {
 }
 
 func GetTimestamp(timestamp uint64) time.Time {
+	// #nosec G115
 	blockTimeStamp := int64(timestamp) * 1000
 	return time.Unix(blockTimeStamp/1000, blockTimeStamp%1000)
 }

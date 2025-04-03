@@ -21,6 +21,7 @@ import (
 	v13Market "github.com/filecoin-project/go-state-types/builtin/v13/market"
 	v14Market "github.com/filecoin-project/go-state-types/builtin/v14/market"
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
+	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
@@ -35,6 +36,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -58,37 +60,46 @@ func (*Market) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMarket.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsMarket.AddBalance: {
-				Name: parser.MethodAddBalance,
+				Name:   parser.MethodAddBalance,
+				Method: m.AddBalance,
 			},
 			legacyBuiltin.MethodsMarket.WithdrawBalance: {
-				Name: parser.MethodWithdrawBalance,
+				Name:   parser.MethodWithdrawBalance,
+				Method: m.WithdrawBalance,
 			},
 			legacyBuiltin.MethodsMarket.PublishStorageDeals: {
-				Name: parser.MethodPublishStorageDeals,
+				Name:   parser.MethodPublishStorageDeals,
+				Method: m.PublishStorageDealsExported,
 			},
 			legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
-				Name: parser.MethodVerifyDealsForActivation,
+				Name:   parser.MethodVerifyDealsForActivation,
+				Method: m.VerifyDealsForActivationExported,
 			},
 			legacyBuiltin.MethodsMarket.ActivateDeals: {
-				Name: parser.MethodActivateDeals,
+				Name:   parser.MethodActivateDeals,
+				Method: m.ActivateDealsExported,
 			},
 			legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
-				Name: parser.MethodOnMinerSectorsTerminate,
+				Name:   parser.MethodOnMinerSectorsTerminate,
+				Method: m.OnMinerSectorsTerminateExported,
 			},
 			legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
-				Name: parser.MethodComputeDataCommitment,
+				Name:   parser.MethodComputeDataCommitment,
+				Method: m.ComputeDataCommitmentExported,
 			},
 			legacyBuiltin.MethodsMarket.CronTick: {
-				Name: parser.MethodCronTick,
+				Name:   parser.MethodCronTick,
+				Method: actors.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -107,6 +118,8 @@ func (*Market) Methods(_ context.Context, network string, height int64) (map[abi
 		return v14Market.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return v15Market.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return v16Market.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -120,6 +133,8 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 	var resp map[string]interface{}
 	var err error
 	switch {
+	case tools.V25.IsSupported(network, height):
+		resp, err = parseGeneric(rawParams, nil, false, &v16Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		resp, err = parseGeneric(rawParams, nil, false, &v15Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -164,6 +179,8 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 
 func (*Market) PublishStorageDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v16Market.PublishStorageDealsParams{}, &v16Market.PublishStorageDealsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &v15Market.PublishStorageDealsParams{}, &v15Market.PublishStorageDealsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -203,6 +220,8 @@ func (*Market) VerifyDealsForActivationExported(network string, height int64, ra
 	var err error
 
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v16Market.VerifyDealsForActivationParams{}, &v16Market.VerifyDealsForActivationReturn{})
 	case tools.V24.IsSupported(network, height):
 		resp, err = parseGeneric(rawParams, rawReturn, true, &v15Market.VerifyDealsForActivationParams{}, &v15Market.VerifyDealsForActivationReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -242,6 +261,8 @@ func (*Market) VerifyDealsForActivationExported(network string, height int64, ra
 
 func (*Market) ActivateDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v16Market.ActivateDealsParams{}, &v16Market.ActivateDealsResult{})
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &v15Market.ActivateDealsParams{}, &v15Market.ActivateDealsResult{})
 	case tools.V23.IsSupported(network, height):
@@ -280,6 +301,8 @@ func (*Market) ActivateDealsExported(network string, height int64, rawParams, ra
 
 func (*Market) OnMinerSectorsTerminateExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &v16Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &v15Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -346,6 +369,8 @@ func (*Market) ComputeDataCommitmentExported(network string, height int64, rawPa
 
 func (*Market) GetBalanceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v16Market.GetBalanceReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v15Market.GetBalanceReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -366,6 +391,9 @@ func (*Market) GetBalanceExported(network string, height int64, rawParams, rawRe
 
 func (*Market) GetDealDataCommitmentExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealDataCommitmentParams
+		return parseGeneric(rawParams, rawReturn, true, &params, &v16Market.GetDealDataCommitmentReturn{})
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealDataCommitmentParams
 		return parseGeneric(rawParams, rawReturn, true, &params, &v15Market.GetDealDataCommitmentReturn{})
@@ -392,6 +420,10 @@ func (*Market) GetDealDataCommitmentExported(network string, height int64, rawPa
 
 func (*Market) GetDealClientExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealClientParams
+		var r v16Market.GetDealClientReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealClientParams
 		var r v15Market.GetDealClientReturn
@@ -424,6 +456,10 @@ func (*Market) GetDealClientExported(network string, height int64, rawParams, ra
 
 func (*Market) GetDealProviderExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealProviderParams
+		var r v16Market.GetDealProviderReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealProviderParams
 		var r v15Market.GetDealProviderReturn
@@ -456,6 +492,10 @@ func (*Market) GetDealProviderExported(network string, height int64, rawParams, 
 
 func (*Market) GetDealLabelExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealLabelParams
+		var r v16Market.GetDealLabelReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealLabelParams
 		var r v15Market.GetDealLabelReturn
@@ -488,6 +528,10 @@ func (*Market) GetDealLabelExported(network string, height int64, rawParams, raw
 
 func (*Market) GetDealTermExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealTermParams
+		var r v16Market.GetDealTermReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealTermParams
 		var r v15Market.GetDealTermReturn
@@ -520,6 +564,10 @@ func (*Market) GetDealTermExported(network string, height int64, rawParams, rawR
 
 func (*Market) GetDealTotalPriceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealTotalPriceParams
+		var r v16Market.GetDealTotalPriceReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealTotalPriceParams
 		var r v15Market.GetDealTotalPriceReturn
@@ -552,6 +600,10 @@ func (*Market) GetDealTotalPriceExported(network string, height int64, rawParams
 
 func (*Market) GetDealClientCollateralExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealClientCollateralParams
+		var r v16Market.GetDealClientCollateralReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealClientCollateralParams
 		var r v15Market.GetDealClientCollateralReturn
@@ -584,6 +636,10 @@ func (*Market) GetDealClientCollateralExported(network string, height int64, raw
 
 func (*Market) GetDealProviderCollateralExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealProviderCollateralParams
+		var r v16Market.GetDealProviderCollateralReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealProviderCollateralParams
 		var r v15Market.GetDealProviderCollateralReturn
@@ -616,6 +672,10 @@ func (*Market) GetDealProviderCollateralExported(network string, height int64, r
 
 func (*Market) GetDealVerifiedExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealVerifiedParams
+		var r v16Market.GetDealVerifiedReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealVerifiedParams
 		var r v15Market.GetDealVerifiedReturn
@@ -648,6 +708,10 @@ func (*Market) GetDealVerifiedExported(network string, height int64, rawParams, 
 
 func (*Market) GetDealActivationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealActivationParams
+		var r v16Market.GetDealActivationReturn
+		return parseGeneric(rawParams, rawReturn, true, &params, &r)
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealActivationParams
 		var r v15Market.GetDealActivationReturn
@@ -680,6 +744,8 @@ func (*Market) GetDealActivationExported(network string, height int64, rawParams
 
 func (*Market) SettleDealPaymentsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &v16Market.SettleDealPaymentsParams{}, &v16Market.SettleDealPaymentsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &v15Market.SettleDealPaymentsParams{}, &v15Market.SettleDealPaymentsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -716,6 +782,8 @@ func (*Market) SectorContentChanged(network string, height int64, rawParams, raw
 
 func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshaler, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return &miner16.SectorChanges{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &miner15.SectorChanges{}, nil
 	case tools.V23.IsSupported(network, height):
@@ -729,6 +797,8 @@ func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshal
 }
 func sectorContentChangedReturn(network string, height int64) (cbg.CBORUnmarshaler, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return &miner16.PieceChange{}, nil
 	case tools.V24.IsSupported(network, height):
 		return &miner15.PieceChange{}, nil
 	case tools.V23.IsSupported(network, height):
@@ -747,6 +817,9 @@ func (*Market) GetDealSectorExported(network string, height int64, rawParams, ra
 	var extractedReturn abi.SectorNumber
 
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var params v16Market.GetDealSectorParams
+		extractedParams = &params
 	case tools.V24.IsSupported(network, height):
 		var params v15Market.GetDealSectorParams
 		extractedParams = &params

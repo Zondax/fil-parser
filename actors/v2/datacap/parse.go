@@ -18,6 +18,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
 	"github.com/zondax/fil-parser/actors"
@@ -63,6 +64,8 @@ func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[
 		return datacapv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return datacapv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return datacapv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

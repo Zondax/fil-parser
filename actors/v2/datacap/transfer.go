@@ -11,6 +11,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -37,6 +38,8 @@ func (*Datacap) TransferExported(network string, height int64, raw, rawReturn []
 		return parse(raw, rawReturn, true, &datacapv14.TransferParams{}, &datacapv14.TransferReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.TransferParams{}, &datacapv15.TransferReturn{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.TransferParams{}, &datacapv16.TransferReturn{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -65,6 +68,8 @@ func (*Datacap) TransferFromExported(network string, height int64, raw, rawRetur
 		return parse(raw, rawReturn, true, &datacapv14.TransferFromParams{}, &datacapv14.TransferFromReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.TransferFromParams{}, &datacapv15.TransferFromReturn{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.TransferFromParams{}, &datacapv16.TransferFromReturn{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

@@ -9,6 +9,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -33,6 +34,8 @@ func (*Datacap) BurnExported(network string, height int64, raw, rawReturn []byte
 		return parse(raw, rawReturn, true, &datacapv14.BurnParams{}, &datacapv14.BurnReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.BurnParams{}, &datacapv15.BurnReturn{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.BurnParams{}, &datacapv16.BurnReturn{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -55,6 +58,8 @@ func (*Datacap) BurnFromExported(network string, height int64, raw, rawReturn []
 		return parse(raw, rawReturn, true, &datacapv14.BurnFromParams{}, &datacapv14.BurnFromReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.BurnFromParams{}, &datacapv15.BurnFromReturn{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.BurnFromParams{}, &datacapv16.BurnFromReturn{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -77,6 +82,8 @@ func (*Datacap) DestroyExported(network string, height int64, raw, rawReturn []b
 		return parse(raw, rawReturn, true, &datacapv14.DestroyParams{}, &datacapv14.BurnReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &datacapv15.DestroyParams{}, &datacapv15.BurnReturn{}, parser.ParamsKey)
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &datacapv16.DestroyParams{}, &datacapv16.BurnReturn{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

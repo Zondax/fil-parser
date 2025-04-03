@@ -8,6 +8,7 @@ import (
 	powerv13 "github.com/filecoin-project/go-state-types/builtin/v13/power"
 	powerv14 "github.com/filecoin-project/go-state-types/builtin/v14/power"
 	powerv15 "github.com/filecoin-project/go-state-types/builtin/v15/power"
+	powerv16 "github.com/filecoin-project/go-state-types/builtin/v16/power"
 	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
 	"github.com/ipfs/go-cid"
@@ -40,6 +41,8 @@ func getAddressInfo(r powerReturn, msg *parser.LotusMessage) *types.AddressInfo 
 	case *powerv14.CreateMinerReturn:
 		return createAddressInfo(r.IDAddress, r.RobustAddress, msg.Cid)
 	case *powerv15.CreateMinerReturn:
+		return createAddressInfo(r.IDAddress, r.RobustAddress, msg.Cid)
+	case *powerv16.CreateMinerReturn:
 		return createAddressInfo(r.IDAddress, r.RobustAddress, msg.Cid)
 	}
 	return nil

@@ -13,11 +13,14 @@ const (
 	FilPrefix   = "f0"
 
 	// metadata keys
-	ParamsKey  = "Params"
-	ReturnKey  = "Return"
-	EthHashKey = "ethHash"
-	AddressKey = "address"
-	EthLogsKey = "ethLogs"
+	ParamsKey    = "Params"
+	ReturnKey    = "Return"
+	ParamsRawKey = "ParamsRaw"
+	ReturnRawKey = "ReturnRaw"
+	ErrorKey     = "Error"
+	EthHashKey   = "ethHash"
+	AddressKey   = "address"
+	EthLogsKey   = "ethLogs"
 
 	UnknownStr = "unknown"
 
@@ -124,6 +127,8 @@ const (
 	MethodProveCommitSectorsNI                = "ProveCommitSectorsNI"                // MethodsMiner
 	MethodProveReplicaUpdates3                = "ProveReplicaUpdates3"                // MethodsMiner
 	MethodInternalSectorSetupForPreseal       = "InternalSectorSetupForPreseal"       // MethodsMiner
+	MethodInitialPledge                       = "InitialPledge"                       // MethodsMiner
+	MethodInitialPledgeExported               = "InitialPledgeExported"               // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket

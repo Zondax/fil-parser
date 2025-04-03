@@ -9,6 +9,7 @@ import (
 	datacapv13 "github.com/filecoin-project/go-state-types/builtin/v13/datacap"
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
+	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -43,6 +44,10 @@ func (*Datacap) GranularityExported(network string, height int64, rawReturn []by
 	case tools.V24.IsSupported(network, height):
 		var params datacapv15.GranularityReturn
 		var r datacapv15.GranularityReturn
+		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
+	case tools.V25.IsSupported(network, height):
+		var params datacapv16.GranularityReturn
+		var r datacapv16.GranularityReturn
 		data, err = parse(rawReturn, nil, false, &params, &r, parser.ReturnKey)
 	default:
 		err = actors.ErrUnsupportedHeight

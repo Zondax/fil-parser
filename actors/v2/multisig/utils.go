@@ -11,6 +11,7 @@ import (
 	multisig13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
 	multisig14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisig16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 	"github.com/filecoin-project/go-state-types/exitcode"
@@ -105,6 +106,12 @@ func getApproveReturn(network string, height int64, raw map[string]interface{}) 
 		}, nil
 	case tools.V24.IsSupported(network, height):
 		return multisig15.ApproveReturn{
+			Applied: applied,
+			Code:    exitcode.ExitCode(code),
+			Ret:     []byte(ret),
+		}, nil
+	case tools.V25.IsSupported(network, height):
+		return multisig16.ApproveReturn{
 			Applied: applied,
 			Code:    exitcode.ExitCode(code),
 			Ret:     []byte(ret),

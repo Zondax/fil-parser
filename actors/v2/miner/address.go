@@ -11,6 +11,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -29,6 +30,8 @@ import (
 
 func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ChangeMultiaddrsParams{}, &miner16.ChangeMultiaddrsParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ChangeMultiaddrsParams{}, &miner15.ChangeMultiaddrsParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -69,6 +72,8 @@ func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams [
 
 func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ChangePeerIDParams{}, &miner16.ChangePeerIDParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ChangePeerIDParams{}, &miner15.ChangePeerIDParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -109,6 +114,8 @@ func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byt
 
 func (*Miner) ChangeWorkerAddressExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -153,6 +160,9 @@ func (*Miner) ChangeOwnerAddressExported(network string, height int64, rawParams
 
 func (*Miner) IsControllingAddressExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		var returnValue miner16.IsControllingAddressReturn
+		return parseGeneric(rawParams, rawReturn, true, &miner16.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		var returnValue miner15.IsControllingAddressReturn
 		return parseGeneric(rawParams, rawReturn, true, &miner15.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
@@ -179,6 +189,8 @@ func (*Miner) IsControllingAddressExported(network string, height int64, rawPara
 
 func (*Miner) GetOwnerExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawReturn, nil, false, &miner16.GetOwnerReturn{}, &miner16.GetOwnerReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawReturn, nil, false, &miner15.GetOwnerReturn{}, &miner15.GetOwnerReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -199,6 +211,8 @@ func (*Miner) GetOwnerExported(network string, height int64, rawReturn []byte) (
 
 func (*Miner) GetPeerIDExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawReturn, nil, false, &miner16.GetPeerIDReturn{}, &miner16.GetPeerIDReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawReturn, nil, false, &miner15.GetPeerIDReturn{}, &miner15.GetPeerIDReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -219,6 +233,8 @@ func (*Miner) GetPeerIDExported(network string, height int64, rawReturn []byte) 
 
 func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawReturn, nil, false, &miner16.GetMultiAddrsReturn{}, &miner16.GetMultiAddrsReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawReturn, nil, false, &miner15.GetMultiAddrsReturn{}, &miner15.GetMultiAddrsReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -239,6 +255,8 @@ func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []by
 
 func (*Miner) ControlAddresses(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseControlReturn(rawParams, rawReturn, &miner16.GetControlAddressesReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parseControlReturn(rawParams, rawReturn, &miner15.GetControlAddressesReturn{})
 	case tools.V23.IsSupported(network, height):

@@ -17,6 +17,7 @@ import (
 	cronv13 "github.com/filecoin-project/go-state-types/builtin/v13/cron"
 	cronv14 "github.com/filecoin-project/go-state-types/builtin/v14/cron"
 	cronv15 "github.com/filecoin-project/go-state-types/builtin/v15/cron"
+	cronv16 "github.com/filecoin-project/go-state-types/builtin/v16/cron"
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
 
@@ -58,6 +59,8 @@ func (c *Cron) Constructor(network string, height int64, raw []byte) (map[string
 		return cronConstructorLegacy(raw, &cronv14.State{})
 	case tools.V24.IsSupported(network, height):
 		return cronConstructorLegacy(raw, &cronv15.State{})
+	case tools.V25.IsSupported(network, height):
+		return cronConstructorLegacy(raw, &cronv16.State{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }

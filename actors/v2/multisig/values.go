@@ -11,6 +11,7 @@ import (
 	multisig13 "github.com/filecoin-project/go-state-types/builtin/v13/multisig"
 	multisig14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
+	multisig16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
@@ -186,6 +187,10 @@ func (*Msig) ParseChangeNumApprovalsThresholdValue(network string, height int64,
 		ret = &multisig15.ChangeNumApprovalsThresholdParams{
 			NewThreshold: threshold,
 		}
+	case tools.V25.IsSupported(network, height):
+		ret = &multisig16.ChangeNumApprovalsThresholdParams{
+			NewThreshold: threshold,
+		}
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -226,6 +231,8 @@ func (*Msig) ParseConstructorValue(network string, height int64, txMetadata stri
 		return getValue(raw, &multisig14.ConstructorParams{})
 	case tools.V24.IsSupported(network, height):
 		return getValue(raw, &multisig15.ConstructorParams{})
+	case tools.V25.IsSupported(network, height):
+		return getValue(raw, &multisig16.ConstructorParams{})
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -284,6 +291,7 @@ func (*Msig) ParseUniversalReceiverHookValue(network string, height int64, txMet
 	}
 
 	result := UniversalReceiverHookValue{
+		// #nosec G115
 		Type:    uint64(params.Type_),
 		Payload: params.Payload,
 		Return:  tx.Return,
