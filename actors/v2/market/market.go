@@ -61,9 +61,6 @@ func (*Market) StartNetworkHeight() int64 {
 }
 
 func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	if height == 2523454 {
-		fmt.Printf("network: %s height: %d\n", network, height)
-	}
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):

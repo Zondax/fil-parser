@@ -19,7 +19,7 @@ func NewVersionIterator(from version, network string) *VersionIterator {
 	return v
 }
 
-// Next moves to and returns the next version
+// Next returns the current version and advances the iterator
 // Returns false when there are no more versions or the latest version for the network is reached
 func (vi *VersionIterator) Next() (version, bool) {
 	if vi.current == nil {

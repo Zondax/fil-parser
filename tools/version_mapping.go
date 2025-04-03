@@ -87,34 +87,34 @@ func isSupported(network string, height int64, iter *VersionIterator) bool {
 	}
 	if network == CalibrationNetwork {
 		return checkCalibrationEdgeCases(network, height, iter)
-	} else {
-		// edge case: the calibration upgrade is done before mainnet.
-		// so if the version is greater than the latest mainnet version, it is not supported
-		if v.nodeVersion > LatestMainnetVersion.nodeVersion {
-			return false
-		}
-
-		if height == 0 && v.mainnet == 0 {
-			return true
-		}
-		if height >= LatestMainnetVersion.mainnet {
-			return v.nodeVersion == LatestMainnetVersion.nodeVersion
-		}
-		if height <= V7.mainnet {
-			return v.nodeVersion == V7.nodeVersion
-		}
-		// edge case: check if two new versions have the same mainnet height
-		next, ok := iter.PeekNext()
-		if ok && v.mainnet == next.mainnet && !IsLatestVersion(v) {
-			iter.Next()
-			return isSupported(network, height, iter)
-		}
-
-		if height >= v.mainnet && height < next.mainnet {
-			return true
-		}
+	}
+	// edge case: the calibration upgrade is done before mainnet.
+	// so if the version is greater than the latest mainnet version, it is not supported
+	if v.nodeVersion > LatestMainnetVersion.nodeVersion {
 		return false
 	}
+
+	if height == 0 && v.mainnet == 0 {
+		return true
+	}
+	if height >= LatestMainnetVersion.mainnet {
+		return v.nodeVersion == LatestMainnetVersion.nodeVersion
+	}
+	if height <= V7.mainnet {
+		return v.nodeVersion == V7.nodeVersion
+	}
+	// edge case: check if two new versions have the same mainnet height
+	next, ok := iter.PeekNext()
+	if ok && v.mainnet == next.mainnet && !IsLatestVersion(v) {
+		iter.Next()
+		return isSupported(network, height, iter)
+	}
+
+	if height >= v.mainnet && height < next.mainnet {
+		return true
+	}
+	return false
+
 }
 
 func checkCalibrationEdgeCases(network string, height int64, iter *VersionIterator) bool {
