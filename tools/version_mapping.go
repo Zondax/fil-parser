@@ -20,7 +20,7 @@ type version struct {
 }
 
 var (
-	LatestMainnetVersion     version = V24
+	LatestMainnetVersion     version = V25
 	LatestCalibrationVersion version = V25
 
 	supportedVersions     = []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}
@@ -50,7 +50,7 @@ var (
 	V22 version = version{calibration: 1427974, mainnet: 3817920, nodeVersion: 22}
 	V23 version = version{calibration: 1779094, mainnet: 4154640, nodeVersion: 23}
 	V24 version = version{calibration: 2081674, mainnet: 4461240, nodeVersion: 24}
-	V25 version = version{calibration: 2523454, mainnet: -1, nodeVersion: 25}
+	V25 version = version{calibration: 2523454, mainnet: 4867320, nodeVersion: 25}
 )
 
 func init() {
