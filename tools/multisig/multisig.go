@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zondax/golem/pkg/logger"
 	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
