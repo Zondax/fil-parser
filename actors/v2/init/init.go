@@ -3,6 +3,7 @@ package init
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
 
@@ -17,6 +18,7 @@ import (
 	builtinInitv13 "github.com/filecoin-project/go-state-types/builtin/v13/init"
 	builtinInitv14 "github.com/filecoin-project/go-state-types/builtin/v14/init"
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
+	builtinInitv16 "github.com/filecoin-project/go-state-types/builtin/v16/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 
@@ -60,10 +62,12 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsInit.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsInit.Exec: {
-				Name: parser.MethodExec,
+				Name:   parser.MethodExec,
+				Method: i.Exec,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -82,6 +86,8 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 		return builtinInitv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return builtinInitv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return builtinInitv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -89,6 +95,8 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 
 func (*Init) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return initConstructor(raw, &builtinInitv16.ConstructorParams{})
 	case tools.V24.IsSupported(network, height):
 		return initConstructor(raw, &builtinInitv15.ConstructorParams{})
 	case tools.V23.IsSupported(network, height):
@@ -125,6 +133,8 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 
 func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseExec(msg, raw, &builtinInitv16.ExecParams{}, &builtinInitv16.ExecReturn{}, i.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseExec(msg, raw, &builtinInitv15.ExecParams{}, &builtinInitv15.ExecReturn{}, i.helper)
 	case tools.V23.IsSupported(network, height):
@@ -161,6 +171,8 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 
 func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseExec(msg, raw, &builtinInitv16.Exec4Params{}, &builtinInitv16.Exec4Return{}, i.helper)
 	case tools.V24.IsSupported(network, height):
 		return parseExec(msg, raw, &builtinInitv15.Exec4Params{}, &builtinInitv15.Exec4Return{}, i.helper)
 	case tools.V23.IsSupported(network, height):

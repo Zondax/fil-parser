@@ -77,7 +77,7 @@ func TestActorParserV2_EamCreates(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, msg)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, msg, &parser.LotusMessageReceipt{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, msg.Cid, filTypes.EmptyTSK)
 			require.NoError(t, err)

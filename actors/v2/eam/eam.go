@@ -21,7 +21,7 @@ import (
 	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-
+	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -65,6 +65,8 @@ func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.
 		return eamv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return eamv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return eamv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -93,12 +95,17 @@ func newEamCreate(r createReturn, msgCid cid.Cid) (string, *types.AddressInfo, p
 
 	}
 	switch v := r.(type) {
+	case *eamv16.CreateReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv16.Create2Return:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv16.CreateExternalReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+
 	case *eamv15.CreateReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
-
 	case *eamv15.Create2Return:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
-
 	case *eamv15.CreateExternalReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 
@@ -157,6 +164,13 @@ func validateEamReturn(ret createReturn) error {
 	}
 
 	switch v := ret.(type) {
+	case *eamv16.CreateReturn:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv16.Create2Return:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv16.CreateExternalReturn:
+		return checkAndSetAddress(&v.RobustAddress)
+
 	case *eamv15.CreateReturn:
 		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv15.Create2Return:

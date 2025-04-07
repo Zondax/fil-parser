@@ -17,6 +17,7 @@ import (
 	systemv13 "github.com/filecoin-project/go-state-types/builtin/v13/system"
 	systemv14 "github.com/filecoin-project/go-state-types/builtin/v14/system"
 	systemv15 "github.com/filecoin-project/go-state-types/builtin/v15/system"
+	systemv16 "github.com/filecoin-project/go-state-types/builtin/v16/system"
 	systemv8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
 	systemv9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 
@@ -49,7 +50,8 @@ func (*System) Methods(_ context.Context, network string, height int64) (map[abi
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			abi.MethodNum(0): {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -68,6 +70,8 @@ func (*System) Methods(_ context.Context, network string, height int64) (map[abi
 		return systemv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return systemv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return systemv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

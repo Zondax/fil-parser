@@ -93,7 +93,7 @@ func TestActorParserV2_RewardWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))

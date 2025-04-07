@@ -1,10 +1,10 @@
 package tools
 
 func DeterministicTestHeight(version version) int64 {
-	height := version.Height()
-	if version != version.next() {
-		height = (version.Height() + version.next().Height()) / 2
+	iter := NewVersionIterator(version, version.currentNetwork)
+	next, ok := iter.PeekNext()
+	if !ok {
+		return version.Height()
 	}
-
-	return height
+	return (version.Height() + next.Height()) / 2
 }

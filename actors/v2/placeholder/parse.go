@@ -17,7 +17,7 @@ import (
 	placeholderv13 "github.com/filecoin-project/go-state-types/builtin/v13/placeholder"
 	placeholderv14 "github.com/filecoin-project/go-state-types/builtin/v14/placeholder"
 	placeholderv15 "github.com/filecoin-project/go-state-types/builtin/v15/placeholder"
-
+	placeholderv16 "github.com/filecoin-project/go-state-types/builtin/v16/placeholder"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -58,6 +58,8 @@ func (*Placeholder) Methods(_ context.Context, network string, height int64) (ma
 		return placeholderv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return placeholderv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return placeholderv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/filecoin-project/go-address"
 	"math/big"
 	"strings"
+
+	"github.com/filecoin-project/go-address"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -41,10 +42,18 @@ type Parser struct {
 	multisigEventGenerator multisigTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	config                 parser.Config
+	network                string
 }
 
 func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
+	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
+	if err != nil {
+		logger.Fatal(err.Error())
+		return nil
+	}
+	networkName := tools.ParseRawNetworkName(string(network))
 	return &Parser{
+		network:                networkName,
 		actorParser:            actorsV1.NewActorParser(helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
@@ -55,13 +64,9 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 	}
 }
 
-func NewActorsV2Parser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
-	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
-	if err != nil {
-		logger.Error(err.Error())
-	}
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(string(network), helper, logger, metrics),
+		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
@@ -103,7 +108,6 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	tipsetKey := txsData.Tipset.Key()
 	tipsetCid := txsData.Tipset.GetCidString()
 
 	for _, trace := range computeState.Trace {
@@ -115,12 +119,11 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		if ok := hasExecutionTrace(trace); !ok {
 			// Create tx
 			//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
-			txType, _ := p.helper.GetMethodName(&parser.LotusMessage{
-				To:     trace.Msg.To,
-				From:   trace.Msg.From,
-				Method: trace.Msg.Method,
-			}, int64(txsData.Tipset.Height()), tipsetKey)
-
+			txType, err := p.getTxType(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset)
+			if err != nil {
+				p.logger.Errorf("Error when trying to get tx type: %v", err)
+				continue
+			}
 			blockCid, err := appTools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset)
 			if err != nil {
 				_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
@@ -133,18 +136,20 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			badTx := &types.Transaction{
 				TxBasicBlockData: types.TxBasicBlockData{
 					BasicBlockData: types.BasicBlockData{
+						// #nosec G115
 						Height:    uint64(txsData.Tipset.Height()),
 						TipsetCid: tipsetCid,
 					},
 					BlockCid: blockCid,
 				},
-				Id:          messageUuid,
-				ParentId:    uuid.Nil.String(),
-				TxCid:       trace.MsgCid.String(),
-				TxFrom:      txFrom,
-				TxTo:        txTo,
-				TxType:      txType,
-				Amount:      trace.Msg.Value.Int,
+				Id:       messageUuid,
+				ParentId: uuid.Nil.String(),
+				TxCid:    trace.MsgCid.String(),
+				TxFrom:   txFrom,
+				TxTo:     txTo,
+				TxType:   txType,
+				Amount:   trace.Msg.Value.Int,
+				// #nosec G115
 				GasUsed:     uint64(trace.MsgRct.GasUsed),
 				Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
 				TxMetadata:  trace.Error,
@@ -264,13 +269,7 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
-	//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
-	txType, err := p.helper.GetMethodName(&parser.LotusMessage{
-		To:     trace.Msg.To,
-		From:   trace.Msg.From,
-		Method: trace.Msg.Method,
-	}, int64(tipset.Height()), tipset.Key())
-
+	txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
 		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
@@ -292,13 +291,18 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, int64(tipset.Height()), tipset.Key())
 
 	if mErr != nil {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		if !trace.MsgRct.ExitCode.IsError() {
+			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+			p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+		}
 	}
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if trace.MsgRct.ExitCode.IsError() {
+		if metadata == nil {
+			metadata = make(map[string]interface{})
+		}
 		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
 
@@ -324,6 +328,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipsetCid,
 			},
@@ -357,6 +362,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipset.GetCidString(),
 			},
@@ -463,4 +469,31 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey
 	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
 	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
+}
+
+func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (string, error) {
+	msg := &parser.LotusMessage{
+		To:     trace.Msg.To,
+		From:   trace.Msg.From,
+		Method: trace.Msg.Method,
+	}
+	txType, err := p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	if err != nil {
+		return "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+	}
+
+	if txType == "" {
+		actorName, err := p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+		if err != nil {
+			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
+		}
+		if actorName != "" {
+			txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+			if err != nil {
+				p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
+				txType = parser.UnknownStr
+			}
+		}
+	}
+	return txType, nil
 }

@@ -17,6 +17,7 @@ import (
 	verifregv13 "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
 	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
+	verifregv16 "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
@@ -51,28 +52,34 @@ func (*VerifiedRegistry) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*VerifiedRegistry) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+func (v *VerifiedRegistry) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: actors.ParseConstructor,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
-				Name: parser.MethodAddVerifier,
+				Name:   parser.MethodAddVerifier,
+				Method: v.AddVerifier,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.RemoveVerifier: {
-				Name: parser.MethodRemoveVerifier,
+				Name:   parser.MethodRemoveVerifier,
+				Method: v.RemoveVerifier,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.AddVerifiedClient: {
-				Name: parser.MethodAddVerifiedClient,
+				Name:   parser.MethodAddVerifiedClient,
+				Method: v.AddVerifiedClientExported,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.UseBytes: {
-				Name: parser.MethodUseBytes,
+				Name:   parser.MethodUseBytes,
+				Method: v.UseBytes,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.RestoreBytes: {
-				Name: parser.MethodRestoreBytes,
+				Name:   parser.MethodRestoreBytes,
+				Method: v.RestoreBytes,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -91,6 +98,8 @@ func (*VerifiedRegistry) Methods(_ context.Context, network string, height int64
 		return verifregv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return verifregv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return verifregv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -98,6 +107,8 @@ func (*VerifiedRegistry) Methods(_ context.Context, network string, height int64
 
 func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.AddVerifierParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -139,6 +150,8 @@ func (*VerifiedRegistry) RemoveVerifier(network string, height int64, raw []byte
 
 func (*VerifiedRegistry) AddVerifiedClientExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.AddVerifiedClientParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -175,6 +188,8 @@ func (*VerifiedRegistry) AddVerifiedClientExported(network string, height int64,
 
 func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -211,6 +226,8 @@ func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map
 
 func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -247,6 +264,8 @@ func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) 
 
 func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.DataCap{}, &verifregv16.DataCap{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.DataCap{}, &verifregv15.DataCap{})
 	case tools.V23.IsSupported(network, height):
@@ -283,6 +302,8 @@ func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int6
 
 func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &verifregv16.RemoveExpiredAllocationsParams{}, &verifregv16.RemoveExpiredAllocationsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &verifregv15.RemoveExpiredAllocationsParams{}, &verifregv15.RemoveExpiredAllocationsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -305,6 +326,8 @@ func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height
 
 func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.RestoreBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -341,6 +364,8 @@ func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (
 
 func (*VerifiedRegistry) Deprecated2(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &verifregv16.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &verifregv15.UseBytesParams{}, &abi.EmptyValue{})
 	case tools.V23.IsSupported(network, height):
@@ -377,6 +402,8 @@ func (*VerifiedRegistry) Deprecated2(network string, height int64, raw []byte) (
 
 func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &verifregv16.ClaimAllocationsParams{}, &verifregv16.ClaimAllocationsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &verifregv15.ClaimAllocationsParams{}, &verifregv15.ClaimAllocationsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -399,6 +426,8 @@ func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, raw
 
 func (*VerifiedRegistry) GetClaimsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &verifregv16.GetClaimsParams{}, &verifregv16.GetClaimsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &verifregv15.GetClaimsParams{}, &verifregv15.GetClaimsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -421,6 +450,8 @@ func (*VerifiedRegistry) GetClaimsExported(network string, height int64, raw, ra
 
 func (*VerifiedRegistry) ExtendClaimTermsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &verifregv16.ExtendClaimTermsParams{}, &verifregv16.ExtendClaimTermsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &verifregv15.ExtendClaimTermsParams{}, &verifregv15.ExtendClaimTermsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -443,6 +474,8 @@ func (*VerifiedRegistry) ExtendClaimTermsExported(network string, height int64, 
 
 func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &verifregv16.RemoveExpiredClaimsParams{}, &verifregv16.RemoveExpiredClaimsReturn{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &verifregv15.RemoveExpiredClaimsParams{}, &verifregv15.RemoveExpiredClaimsReturn{})
 	case tools.V23.IsSupported(network, height):
@@ -465,6 +498,8 @@ func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int6
 
 func (*VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, rawReturn, true, &verifregv16.UniversalReceiverParams{}, &verifregv16.AllocationsResponse{})
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, rawReturn, true, &verifregv15.UniversalReceiverParams{}, &verifregv15.AllocationsResponse{})
 	case tools.V23.IsSupported(network, height):

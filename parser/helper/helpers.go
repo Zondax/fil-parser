@@ -104,6 +104,10 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	var err error
 	addInfo := &types.AddressInfo{}
 
+	if add == address.Undef {
+		return addInfo
+	}
+
 	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 	if err != nil {
 		h.logger.Errorf("could not get actor code from address. Err: %s", err)
@@ -133,11 +137,15 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	return addInfo
 }
 
-func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+	if add == address.Undef {
+		return "", errors.New("address is undefined")
+	}
+
 	onChainOnly := false
 	for {
 		// Search for actor in cache
-		actorCode, err := h.actorCache.GetActorCode(address, key, onChainOnly)
+		actorCode, err := h.actorCache.GetActorCode(add, key, onChainOnly)
 		if err != nil {
 			return actors.UnknownStr, err
 		}
@@ -238,6 +246,7 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 			continue
 		}
 
+		// #nosec G115
 		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)
 		if err != nil {
 			h.logger.Errorf("could not get actor type from address. Err: %s", err)
@@ -255,6 +264,9 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 
 func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string) (bool, error) {
 	for _, addr := range addresses {
+		if addr == address.Undef {
+			continue
+		}
 		actorName, err := h.GetActorNameFromAddress(addr, height, key)
 		if err != nil {
 			return false, err

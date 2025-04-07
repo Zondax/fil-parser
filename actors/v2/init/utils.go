@@ -11,6 +11,7 @@ import (
 	builtinInitv13 "github.com/filecoin-project/go-state-types/builtin/v13/init"
 	builtinInitv14 "github.com/filecoin-project/go-state-types/builtin/v14/init"
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
+	builtinInitv16 "github.com/filecoin-project/go-state-types/builtin/v16/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
@@ -53,6 +54,8 @@ func execParams(params constructorParams) (cid.Cid, any, error) {
 	}
 
 	switch v := params.(type) {
+	case *builtinInitv16.ExecParams:
+		return setParams(v.CodeCID, v.ConstructorParams)
 	case *builtinInitv15.ExecParams:
 		return setParams(v.CodeCID, v.ConstructorParams)
 	case *builtinInitv14.ExecParams:
@@ -73,6 +76,8 @@ func execParams(params constructorParams) (cid.Cid, any, error) {
 	case *legacyInitv7.ExecParams:
 		return setParams(v.CodeCID, v.ConstructorParams)
 
+	case *builtinInitv16.Exec4Params:
+		return setParams(v.CodeCID, v.ConstructorParams)
 	case *builtinInitv15.Exec4Params:
 		return setExec4Params(v.CodeCID, v.ConstructorParams, v.SubAddress)
 	case *builtinInitv14.Exec4Params:
@@ -101,6 +106,8 @@ func returnParams(msg *parser.LotusMessage, actorCID string, params execReturn) 
 		}
 	}
 	switch v := params.(type) {
+	case *builtinInitv16.ExecReturn:
+		return setReturn(v.IDAddress, v.RobustAddress)
 	case *builtinInitv15.ExecReturn:
 		return setReturn(v.IDAddress, v.RobustAddress)
 	case *builtinInitv14.ExecReturn:

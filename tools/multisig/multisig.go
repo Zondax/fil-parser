@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/fil-parser/metrics"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/zondax/golem/pkg/logger"
+	"github.com/zondax/fil-parser/metrics"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -99,6 +100,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 				continue
 			}
 
+			// #nosec G115
 			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
 				_ = eg.metrics.UpdateActorNameFromAddressMetric()

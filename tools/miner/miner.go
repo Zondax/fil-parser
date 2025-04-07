@@ -41,7 +41,7 @@ func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics met
 func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
 	events := &types.MinerEvents{
 		MinerInfo:    []*types.MinerInfo{},
-		MinerSectors: []*types.MinerSector{},
+		MinerSectors: []*types.MinerSectorEvent{},
 	}
 
 	for _, tx := range transactions {
@@ -50,23 +50,30 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 			continue
 		}
 
-		addrTo, err := address.NewFromString(tx.TxTo)
-		if err != nil {
-			eg.logger.Errorf("could not parse address. Err: %s", err)
-			continue
+		actorAddress := tx.TxTo
+		// this is executed by(from) the miner actor
+		if tx.TxType == parser.MethodUpdateClaimedPower || tx.TxType == parser.TotalFeeOp {
+			actorAddress = tx.TxFrom
 		}
 
-		actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
+		addr, err := address.NewFromString(actorAddress)
+		if err != nil {
+			eg.logger.Errorf("could not parse address. Err: %s", err)
+		}
+
+		// #nosec G115
+		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
 			continue
 		}
+
 		if !eg.isMinerStateMessage(actorName, tx.TxType) {
 			continue
 		}
 
-		minerInfo, err := eg.createMinerInfo(tx, tipsetCid)
+		minerInfo, err := eg.createMinerInfo(tx, tipsetCid, actorAddress)
 		if err != nil {
 			eg.logger.Errorf("could not create miner info. Err: %s", err)
 			continue
@@ -75,12 +82,12 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		events.MinerInfo = append(events.MinerInfo, minerInfo)
 
 		if eg.isMinerSectorMessage(actorName, tx.TxType) {
-			minerSector, err := eg.createMinerSector(ctx, tx, tipsetCid)
+			minerSectors, err := eg.createSectorEvents(ctx, tx, tipsetCid)
 			if err != nil {
 				eg.logger.Errorf("could not create miner sector. Err: %s", err)
 				continue
 			}
-			events.MinerSectors = append(events.MinerSectors, minerSector)
+			events.MinerSectors = append(events.MinerSectors, minerSectors...)
 		}
 
 	}
@@ -90,20 +97,20 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
 	case strings.EqualFold(actorName, manifest.MinerKey):
+		return !strings.EqualFold(txType, parser.MethodOnDeferredCronEvent)
+	case strings.EqualFold(txType, parser.MethodAwardBlockReward):
 		return true
-
-	case strings.EqualFold(actorName, manifest.MarketKey):
-		return strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate) ||
-			strings.EqualFold(txType, parser.MethodPublishStorageDeals) ||
-			strings.EqualFold(txType, parser.MethodPublishStorageDealsExported) ||
-			strings.EqualFold(txType, parser.MethodActivateDeals)
-
-	case strings.EqualFold(actorName, manifest.PowerKey):
-		return strings.EqualFold(txType, parser.MethodCurrentTotalPower)
-
-	case strings.EqualFold(actorName, manifest.RewardKey):
-		return strings.EqualFold(txType, parser.MethodThisEpochReward) ||
-			strings.EqualFold(txType, parser.MethodAwardBlockReward)
+	case strings.EqualFold(txType, parser.MethodUpdateClaimedPower):
+		return true
+	case strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate),
+		strings.EqualFold(txType, parser.MethodPublishStorageDeals),
+		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported),
+		strings.EqualFold(txType, parser.MethodActivateDeals):
+		return true
+	case strings.EqualFold(txType, parser.MethodCurrentTotalPower):
+		return true
+	case strings.EqualFold(txType, parser.MethodThisEpochReward):
+		return true
 	}
 
 	return false

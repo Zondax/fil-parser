@@ -18,6 +18,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -59,79 +60,106 @@ func (*Miner) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+// implemented in the rust builtin-actors but not the golang version
+var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
+
+func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		data = map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMiner.Constructor: {
-				Name: parser.MethodConstructor,
+				Name:   parser.MethodConstructor,
+				Method: m.Constructor,
 			},
 			legacyBuiltin.MethodsMiner.ControlAddresses: {
-				Name: parser.MethodControlAddresses,
+				Name:   parser.MethodControlAddresses,
+				Method: m.ControlAddresses,
 			},
 			legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
-				Name: parser.MethodChangeWorkerAddress,
+				Name:   parser.MethodChangeWorkerAddress,
+				Method: m.ChangeWorkerAddressExported,
 			},
 			legacyBuiltin.MethodsMiner.ChangePeerID: {
-				Name: parser.MethodChangePeerID,
+				Name:   parser.MethodChangePeerID,
+				Method: m.ChangePeerIDExported,
 			},
 			legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
-				Name: parser.MethodSubmitWindowedPoSt,
+				Name:   parser.MethodSubmitWindowedPoSt,
+				Method: m.SubmitWindowedPoSt,
 			},
 			legacyBuiltin.MethodsMiner.PreCommitSector: {
-				Name: parser.MethodPreCommitSector,
+				Name:   parser.MethodPreCommitSector,
+				Method: m.PreCommitSector,
 			},
 			legacyBuiltin.MethodsMiner.ProveCommitSector: {
-				Name: parser.MethodProveCommitSector,
+				Name:   parser.MethodProveCommitSector,
+				Method: m.ProveCommitSector,
 			},
 			nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
-				Name: parser.MethodExtendSectorExpiration,
+				Name:   parser.MethodExtendSectorExpiration,
+				Method: m.ExtendSectorExpiration,
 			},
 			legacyBuiltin.MethodsMiner.TerminateSectors: {
-				Name: parser.MethodTerminateSectors,
+				Name:   parser.MethodTerminateSectors,
+				Method: m.TerminateSectors,
 			},
 			legacyBuiltin.MethodsMiner.DeclareFaults: {
-				Name: parser.MethodDeclareFaults,
+				Name:   parser.MethodDeclareFaults,
+				Method: m.DeclareFaults,
 			},
 			legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
-				Name: parser.MethodDeclareFaultsRecovered,
+				Name:   parser.MethodDeclareFaultsRecovered,
+				Method: m.DeclareFaultsRecovered,
 			},
 			legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
-				Name: parser.MethodOnDeferredCronEvent,
+				Name:   parser.MethodOnDeferredCronEvent,
+				Method: m.OnDeferredCronEvent,
 			},
 			legacyBuiltin.MethodsMiner.CheckSectorProven: {
-				Name: parser.MethodCheckSectorProven,
+				Name:   parser.MethodCheckSectorProven,
+				Method: m.CheckSectorProven,
 			},
 			legacyBuiltin.MethodsMiner.AddLockedFund: {
-				Name: parser.MethodAddLockedFund,
+				Name:   parser.MethodAddLockedFund,
+				Method: m.AddLockedFund,
 			},
 			legacyBuiltin.MethodsMiner.ReportConsensusFault: {
-				Name: parser.MethodReportConsensusFault,
+				Name:   parser.MethodReportConsensusFault,
+				Method: m.ReportConsensusFault,
 			},
 			legacyBuiltin.MethodsMiner.WithdrawBalance: {
-				Name: parser.MethodWithdrawBalance,
+				Name:   parser.MethodWithdrawBalance,
+				Method: m.WithdrawBalanceExported,
 			},
-		}, nil
+		}
 	case tools.V16.IsSupported(network, height):
-		return miner8.Methods, nil
+		data = miner8.Methods
 	case tools.V17.IsSupported(network, height):
-		return miner9.Methods, nil
+		data = miner9.Methods
 	case tools.V18.IsSupported(network, height):
-		return miner10.Methods, nil
+		data = miner10.Methods
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return miner11.Methods, nil
+		data = miner11.Methods
 	case tools.V21.IsSupported(network, height):
-		return miner12.Methods, nil
+		data = miner12.Methods
 	case tools.V22.IsSupported(network, height):
-		return miner13.Methods, nil
+		data = miner13.Methods
 	case tools.V23.IsSupported(network, height):
-		return miner14.Methods, nil
+		data = miner14.Methods
 	case tools.V24.IsSupported(network, height):
-		return miner15.Methods, nil
+		data = miner15.Methods
+	case tools.V25.IsSupported(network, height):
+		data = miner16.Methods
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	data[initialPledgeMethodNum] = nonLegacyBuiltin.MethodMeta{
+		Name:   parser.MethodInitialPledge,
+		Method: m.InitialPledgeExported,
+	}
+	return data, nil
 }
 
 func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -140,6 +168,8 @@ func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []b
 
 func (*Miner) TerminateSectors(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.TerminateSectorsParams{}, &miner16.TerminateSectorsReturn{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.TerminateSectorsParams{}, &miner15.TerminateSectorsReturn{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -176,6 +206,8 @@ func (*Miner) TerminateSectors(network string, height int64, rawParams, rawRetur
 
 func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DeclareFaultsParams{}, &miner16.DeclareFaultsParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DeclareFaultsParams{}, &miner15.DeclareFaultsParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -212,6 +244,8 @@ func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map
 
 func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DeclareFaultsRecoveredParams{}, &miner16.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DeclareFaultsRecoveredParams{}, &miner15.DeclareFaultsRecoveredParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -248,6 +282,8 @@ func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []b
 
 func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ProveReplicaUpdatesParams{}, &miner16.ProveReplicaUpdatesParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ProveReplicaUpdatesParams{}, &miner15.ProveReplicaUpdatesParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -274,6 +310,8 @@ func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte
 
 func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.PreCommitSectorBatchParams2{}, &miner16.PreCommitSectorBatchParams2{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.PreCommitSectorBatchParams2{}, &miner15.PreCommitSectorBatchParams2{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -296,6 +334,8 @@ func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []by
 
 func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.ProveReplicaUpdatesParams2{}, &bitfield.BitField{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.ProveReplicaUpdatesParams2{}, &bitfield.BitField{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -318,6 +358,8 @@ func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawR
 
 func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, rawReturn, true, &miner16.ProveReplicaUpdates3Params{}, &miner16.ProveReplicaUpdates3Return{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, rawReturn, true, &miner15.ProveReplicaUpdates3Params{}, &miner15.ProveReplicaUpdates3Return{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -332,6 +374,8 @@ func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawR
 
 func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ProveCommitAggregateParams{}, &miner16.ProveCommitAggregateParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ProveCommitAggregateParams{}, &miner15.ProveCommitAggregateParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -362,6 +406,8 @@ func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byt
 
 func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DisputeWindowedPoStParams{}, &miner16.DisputeWindowedPoStParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DisputeWindowedPoStParams{}, &miner15.DisputeWindowedPoStParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -396,6 +442,8 @@ func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte
 
 func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ReportConsensusFaultParams{}, &miner16.ReportConsensusFaultParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ReportConsensusFaultParams{}, &miner15.ReportConsensusFaultParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -432,6 +480,8 @@ func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byt
 
 func (*Miner) ChangeBeneficiaryExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ChangeBeneficiaryParams{}, &miner16.ChangeBeneficiaryParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ChangeBeneficiaryParams{}, &miner15.ChangeBeneficiaryParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -467,6 +517,8 @@ func (*Miner) GetBeneficiary(network string, height int64, rawParams, rawReturn 
 
 func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.MinerConstructorParams{}, &miner16.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.MinerConstructorParams{}, &miner15.MinerConstructorParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -503,6 +555,8 @@ func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[s
 
 func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.ApplyRewardParams{}, &miner16.ApplyRewardParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.ApplyRewardParams{}, &miner15.ApplyRewardParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -539,6 +593,8 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 
 func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.DeferredCronEventParams{}, &miner16.DeferredCronEventParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.DeferredCronEventParams{}, &miner15.DeferredCronEventParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -574,4 +630,8 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 		return parseGeneric(rawParams, nil, false, &legacyv1.CronEventPayload{}, &abi.EmptyValue{}, parser.ParamsKey)
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (*Miner) InitialPledgeExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, nil, false, &InitialPledgeReturn{}, &InitialPledgeReturn{}, parser.ReturnKey)
 }

@@ -357,7 +357,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -382,16 +382,25 @@ func TestParser_InDepthCompare(t *testing.T) {
 			require.Equal(t, len(parsedResultV1.TxCids), len(parsedResultV2.TxCids))
 
 			for i := range parsedResultV1.Txs {
-				require.True(t, parsedResultV1.Txs[i].Equal(*parsedResultV2.Txs[i]))
+				tmp1, _ := json.Marshal(parsedResultV1.Txs[i])
+				tmp2, _ := json.Marshal(parsedResultV2.Txs[i])
+				if parsedResultV1.Txs[i].TxType == parser.TotalFeeOp {
+					parsedResultV1.Txs[i].TxTo = parser.BurnAddress
+					parsedResultV2.Txs[i].TxTo = parser.BurnAddress
+				}
+
+				require.Truef(t, parsedResultV1.Txs[i].Equal(*parsedResultV2.Txs[i]), "tx %d is not equal\n%s\n%s", i, tmp1, tmp2)
 			}
 
 			for i := range parsedResultV1.TxCids {
-				require.True(t, reflect.DeepEqual(parsedResultV1.TxCids[i], parsedResultV2.TxCids[i]))
+				tmp1, _ := json.Marshal(parsedResultV1.TxCids[i])
+				tmp2, _ := json.Marshal(parsedResultV2.TxCids[i])
+				require.Truef(t, reflect.DeepEqual(parsedResultV1.TxCids[i], parsedResultV2.TxCids[i]), "tx cid %d is not equal\n%s\n%s", i, tmp1, tmp2)
 			}
 
 			parsedResultV1.Addresses.Range(func(key string, value *types.AddressInfo) bool {
 				v2Value, ok := parsedResultV2.Addresses.Get(key)
-				require.True(t, ok)
+				require.Truef(t, ok, "address %s is not equal", key)
 				require.Equal(t, value, v2Value)
 				return true
 			})

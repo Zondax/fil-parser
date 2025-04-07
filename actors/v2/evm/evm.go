@@ -19,6 +19,7 @@ import (
 	evmv13 "github.com/filecoin-project/go-state-types/builtin/v13/evm"
 	evmv14 "github.com/filecoin-project/go-state-types/builtin/v14/evm"
 	evmv15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
+	evmv16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -62,6 +63,8 @@ func (e *Evm) Methods(_ context.Context, network string, height int64) (map[abi.
 		return evmv14.Methods, nil
 	case tools.V24.IsSupported(network, height):
 		return evmv15.Methods, nil
+	case tools.V25.IsSupported(network, height):
+		return evmv16.Methods, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -98,6 +101,8 @@ func (e *Evm) InvokeContract(network string, height int64, method string, rawPar
 
 func (*Evm) Resurrect(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &evmv16.ResurrectParams{}, &evmv16.ResurrectParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &evmv15.ResurrectParams{}, &evmv15.ResurrectParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -118,6 +123,8 @@ func (*Evm) Resurrect(network string, height int64, raw []byte) (map[string]inte
 
 func (*Evm) InvokeContractDelegate(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(rawParams, rawReturn, true, &evmv16.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(rawParams, rawReturn, true, &evmv15.DelegateCallParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -140,6 +147,8 @@ func (*Evm) GetBytecode(network string, height int64, raw []byte) (map[string]in
 	var data map[string]interface{}
 	var err error
 	switch {
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(raw, nil, false, &evmv16.GetBytecodeReturn{}, &evmv16.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(raw, nil, false, &evmv15.GetBytecodeReturn{}, &evmv15.GetBytecodeReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -164,6 +173,8 @@ func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[strin
 	var data map[string]interface{}
 	var err error
 	switch {
+	case tools.V25.IsSupported(network, height):
+		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		data, err = parse(raw, nil, false, &abi.CborBytes{}, &abi.CborBytes{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -187,6 +198,8 @@ func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[strin
 
 func (*Evm) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(raw, nil, false, &evmv16.ConstructorParams{}, &evmv16.ConstructorParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(raw, nil, false, &evmv15.ConstructorParams{}, &evmv15.ConstructorParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
@@ -207,6 +220,8 @@ func (*Evm) Constructor(network string, height int64, raw []byte) (map[string]in
 
 func (*Evm) GetStorageAt(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parse(rawParams, rawReturn, true, &evmv16.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parse(rawParams, rawReturn, true, &evmv15.GetStorageAtParams{}, &abi.CborBytes{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):

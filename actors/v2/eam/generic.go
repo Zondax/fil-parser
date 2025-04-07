@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/zondax/fil-parser/parser/helper"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -69,7 +70,7 @@ func parseCreateExternal[T createReturn](rawParams, rawReturn []byte, msgCid cid
 }
 
 func handleReturnValue[R createReturn](rawReturn []byte, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
-	createReturn, err := parseEamReturn[R](rawReturn, r)
+	createReturn, err := parseEamReturn(rawReturn, r)
 	if err != nil {
 		return nil, nil, err
 	}

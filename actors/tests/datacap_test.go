@@ -161,7 +161,7 @@ func TestActorParserV2_DatacapWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -196,7 +196,7 @@ func TestActorParserV2_DatacapWithParamsOrReturn(t *testing.T) {
 			} else {
 				msg.Params = rawParams
 			}
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)

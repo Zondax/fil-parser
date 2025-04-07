@@ -10,6 +10,7 @@ import (
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -28,6 +29,8 @@ import (
 
 func (*Miner) GetAvailableBalanceExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawReturn, nil, false, &miner16.GetAvailableBalanceReturn{}, &miner16.GetAvailableBalanceReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawReturn, nil, false, &miner15.GetAvailableBalanceReturn{}, &miner15.GetAvailableBalanceReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -48,6 +51,8 @@ func (*Miner) GetAvailableBalanceExported(network string, height int64, rawRetur
 
 func (*Miner) GetVestingFundsExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawReturn, nil, false, &miner16.GetVestingFundsReturn{}, &miner16.GetVestingFundsReturn{}, parser.ReturnKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawReturn, nil, false, &miner15.GetVestingFundsReturn{}, &miner15.GetVestingFundsReturn{}, parser.ReturnKey)
 	case tools.V23.IsSupported(network, height):
@@ -68,6 +73,8 @@ func (*Miner) GetVestingFundsExported(network string, height int64, rawReturn []
 
 func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	switch {
+	case tools.V25.IsSupported(network, height):
+		return parseGeneric(rawParams, nil, false, &miner16.WithdrawBalanceParams{}, &miner16.WithdrawBalanceParams{}, parser.ParamsKey)
 	case tools.V24.IsSupported(network, height):
 		return parseGeneric(rawParams, nil, false, &miner15.WithdrawBalanceParams{}, &miner15.WithdrawBalanceParams{}, parser.ParamsKey)
 	case tools.V23.IsSupported(network, height):
