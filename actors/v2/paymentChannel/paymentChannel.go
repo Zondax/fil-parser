@@ -3,9 +3,8 @@ package paymentChannel
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"io"
-
-	"go.uber.org/zap"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -36,10 +35,10 @@ import (
 )
 
 type PaymentChannel struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *PaymentChannel {
+func New(logger *logger.Logger) *PaymentChannel {
 	return &PaymentChannel{
 		logger: logger,
 	}

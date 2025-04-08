@@ -23,23 +23,21 @@ import (
 	"github.com/ipld/go-ipld-prime/node/basicnode"
 	"github.com/stretchr/testify/assert"
 
-	"go.uber.org/zap"
-
+	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/go-address"
 	filBig "github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/lotus/api"
+	"github.com/filecoin-project/lotus/api/client"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	cidLink "github.com/ipld/go-ipld-prime/linking/cid"
+	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/parser"
 	v1 "github.com/zondax/fil-parser/parser/v1"
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
-
-	"github.com/bytedance/sonic"
-	"github.com/filecoin-project/lotus/api/client"
-	"github.com/stretchr/testify/require"
+	"github.com/zondax/golem/pkg/logger"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 
 	"github.com/zondax/fil-parser/types"
@@ -53,9 +51,11 @@ const (
 	ethLogPrefix      = "ethlog"
 	nativeLogPrefix   = "nativelog"
 	nodeUrl           = "https://node-fil-mainnet-next.zondax.ch/rpc/v1"
-	calibNextNodeUrl  = "https://hel1-node-fil-calibration-stable.zondax.ch/rpc/v1"
+	calibNextNodeUrl  = "https://hel1-node-fil-calibration-next.zondax.ch/rpc/v1"
 	feeType           = "fee"
 )
+
+var gLogger = logger.NewDevelopmentLogger()
 
 func getFilename(prefix, height string) string {
 	return fmt.Sprintf(`%s/%s_%s.%s`, dataPath, prefix, height, fileDataExtension)
@@ -262,10 +262,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -320,10 +317,7 @@ func TestParser_GetBaseFee(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
@@ -363,10 +357,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), logger)
+			p, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -508,10 +499,7 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -620,10 +608,7 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			nativeLogs, err := readNativeLogs(tt.height)
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -677,10 +662,7 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 		BlockMessages: nil,
 	}
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
-
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
 	require.NoError(t, err)
 
 	eventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "market_deals_event")
@@ -1135,10 +1117,7 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
-
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1281,11 +1260,8 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 }
 
 func TestParser_ParseEthLogs(t *testing.T) {
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
-
 	var emitter ethtypes.EthAddress
-	err = emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
+	err := emitter.UnmarshalJSON([]byte(`"0xd4c5fb16488Aa48081296299d54b0c648C9333dA"`))
 	assert.NoError(t, err)
 
 	txCID := cid.Cid{}.String()
@@ -1302,7 +1278,7 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), logger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1718,10 +1694,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1770,10 +1743,8 @@ func TestParseGenesis(t *testing.T) {
 		t.Fatalf("Error getting genesis data: %s", err)
 	}
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
 	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger)
 	assert.NoError(t, err)
 	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
 
@@ -1795,10 +1766,8 @@ func TestParseGenesisMultisig(t *testing.T) {
 	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
 	require.NoError(t, err)
 
-	logger, err := zap.NewDevelopment()
-	require.NoError(t, err)
 	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), logger)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -1904,12 +1873,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			logger, err := zap.NewDevelopment()
+			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
-
-			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), logger)
-			require.NoError(t, err)
-			pv2, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), logger)
+			pv2, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1975,25 +1941,25 @@ func getStoredGenesisData(network string) (*types.GenesisBalances, *types.Extend
 
 	balancesFileContent, err := os.ReadFile(balancesFilePath)
 	if err != nil {
-		zap.S().Errorf("Error reading file '%s': %s", balancesFilePath, err.Error())
+		gLogger.Errorf("Error reading file '%s': %s", balancesFilePath, err.Error())
 		return nil, nil, err
 	}
 
 	err = json.Unmarshal(balancesFileContent, &balances)
 	if err != nil {
-		zap.S().Errorf("Error unmarshalling genesis balances: %s", err.Error())
+		gLogger.Errorf("Error unmarshalling genesis balances: %s", err.Error())
 		return nil, nil, err
 	}
 
 	tipsetFileContent, err := os.ReadFile(tipsetFilePath)
 	if err != nil {
-		zap.S().Errorf("Error reading file '%s': %s", tipsetFilePath, err.Error())
+		gLogger.Errorf("Error reading file '%s': %s", tipsetFilePath, err.Error())
 		return nil, nil, err
 	}
 
 	err = json.Unmarshal(tipsetFileContent, &tipset)
 	if err != nil {
-		zap.S().Errorf("Error unmarshalling genesis tipset: %s", err.Error())
+		gLogger.Errorf("Error unmarshalling genesis tipset: %s", err.Error())
 		return nil, nil, err
 	}
 

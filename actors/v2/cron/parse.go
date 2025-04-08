@@ -3,15 +3,14 @@ package cron
 import (
 	"context"
 	"fmt"
-
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
+	"github.com/ipfs/go-cid"
 
 	cronv10 "github.com/filecoin-project/go-state-types/builtin/v10/cron"
 	cronv11 "github.com/filecoin-project/go-state-types/builtin/v11/cron"
@@ -30,10 +29,10 @@ import (
 )
 
 type Cron struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Cron {
+func New(logger *logger.Logger) *Cron {
 	return &Cron{
 		logger: logger,
 	}

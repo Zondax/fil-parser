@@ -6,14 +6,13 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	cbg "github.com/whyrusleeping/cbor-gen"
-	"go.uber.org/zap"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
+	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/golem/pkg/logger"
 
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
 	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
@@ -44,10 +43,10 @@ import (
 )
 
 type Market struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Market {
+func New(logger *logger.Logger) *Market {
 	return &Market{
 		logger: logger,
 	}

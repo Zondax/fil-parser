@@ -2,6 +2,7 @@ package miner
 
 import (
 	"context"
+	"github.com/zondax/golem/pkg/logger"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
@@ -11,7 +12,6 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 const (
@@ -26,11 +26,11 @@ var _ EventGenerator = &eventGenerator{}
 
 type eventGenerator struct {
 	helper  *helper.Helper
-	logger  *zap.Logger
+	logger  *logger.Logger
 	metrics *minerMetricsClient
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
@@ -46,7 +46,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 	for _, tx := range transactions {
 		if !strings.EqualFold(tx.Status, txStatusOk) {
-			eg.logger.Sugar().Debug("failed tx found, skipping it")
+			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}
 
@@ -58,14 +58,14 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 		addr, err := address.NewFromString(actorAddress)
 		if err != nil {
-			eg.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			eg.logger.Errorf("could not parse address. Err: %s", err)
 		}
 
 		// #nosec G115
 		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
-			eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
+			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
 			continue
 		}
 
@@ -75,7 +75,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 		minerInfo, err := eg.createMinerInfo(tx, tipsetCid, actorAddress)
 		if err != nil {
-			eg.logger.Sugar().Errorf("could not create miner info. Err: %s", err)
+			eg.logger.Errorf("could not create miner info. Err: %s", err)
 			continue
 		}
 
@@ -84,7 +84,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		if eg.isMinerSectorMessage(actorName, tx.TxType) {
 			minerSectors, err := eg.createSectorEvents(ctx, tx, tipsetCid)
 			if err != nil {
-				eg.logger.Sugar().Errorf("could not create miner sector. Err: %s", err)
+				eg.logger.Errorf("could not create miner sector. Err: %s", err)
 				continue
 			}
 			events.MinerSectors = append(events.MinerSectors, minerSectors...)
@@ -97,7 +97,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
 	case strings.EqualFold(actorName, manifest.MinerKey):
-		return (!strings.EqualFold(txType, parser.MethodOnDeferredCronEvent))
+		return !strings.EqualFold(txType, parser.MethodOnDeferredCronEvent)
 	case strings.EqualFold(txType, parser.MethodAwardBlockReward):
 		return true
 	case strings.EqualFold(txType, parser.MethodUpdateClaimedPower):

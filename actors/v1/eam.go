@@ -48,7 +48,7 @@ func (p *ActorParser) parseEamReturn(rawReturn []byte, method string) (cr eam.Cr
 	if err != nil {
 		rawString := hex.EncodeToString(rawReturn)
 		_ = p.metrics.UpdateActorMethodErrorMetric(manifest.EamKey, method)
-		p.logger.Sugar().Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
+		p.logger.Errorf("[parseEamReturn]- Detected invalid return bytes: %s. Raw: %s", err, rawString)
 	}
 
 	return cr, nil
@@ -157,7 +157,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
 		_ = p.metrics.UpdateActorMethodErrorMetric(manifest.EamKey, parser.MethodCreateExternal)
-		p.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
+		p.logger.Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes

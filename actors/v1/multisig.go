@@ -89,7 +89,7 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	method, innerParams, err := p.innerProposeParams(proposeParams)
 	if err != nil {
 		_ = p.metrics.UpdateMultisigProposeMetric(manifest.MultisigKey, parser.MethodPropose, fmt.Sprint(proposeParams.Method))
-		p.logger.Sugar().Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
+		p.logger.Errorf("could not decode multisig inner params. Method: %v. Err: %v", proposeParams.Method.String(), err)
 	}
 	metadata[parser.ParamsKey] = parser.Propose{
 		To:     proposeParams.To.String(),
@@ -171,7 +171,7 @@ func (p *ActorParser) lockBalance(raw []byte) (map[string]interface{}, error) {
 func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, method string, key filTypes.TipSetKey) (string, error) {
 	msgSerial, err := msg.MarshalJSON() // TODO: this may not work properly
 	if err != nil {
-		p.logger.Sugar().Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
+		p.logger.Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
 		return "", err
 	}
 
@@ -182,12 +182,12 @@ func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, method string, k
 
 	c, err := cid.Parse(actorCode)
 	if err != nil {
-		p.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+		p.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		return "", err
 	}
 	parsedParams, err := p.helper.GetFilecoinLib().ParseParamsMultisigTx(string(msgSerial), c)
 	if err != nil {
-		p.logger.Sugar().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
+		p.logger.Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
 		return "", err
 	}
 

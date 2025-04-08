@@ -3,14 +3,13 @@ package system
 import (
 	"context"
 	"fmt"
-
-	"github.com/ipfs/go-cid"
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
 
 	systemv10 "github.com/filecoin-project/go-state-types/builtin/v10/system"
 	systemv11 "github.com/filecoin-project/go-state-types/builtin/v11/system"
@@ -29,10 +28,10 @@ import (
 )
 
 type System struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *System {
+func New(logger *logger.Logger) *System {
 	return &System{
 		logger: logger,
 	}

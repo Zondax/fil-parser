@@ -3,8 +3,7 @@ package reward
 import (
 	"context"
 	"fmt"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -35,10 +34,10 @@ import (
 )
 
 type Reward struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Reward {
+func New(logger *logger.Logger) *Reward {
 	return &Reward{
 		logger: logger,
 	}

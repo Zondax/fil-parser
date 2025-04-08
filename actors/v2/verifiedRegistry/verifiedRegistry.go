@@ -3,8 +3,7 @@ package verifiedRegistry
 import (
 	"context"
 	"fmt"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -36,10 +35,10 @@ import (
 )
 
 type VerifiedRegistry struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *VerifiedRegistry {
+func New(logger *logger.Logger) *VerifiedRegistry {
 	return &VerifiedRegistry{
 		logger: logger,
 	}

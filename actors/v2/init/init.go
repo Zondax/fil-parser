@@ -5,8 +5,7 @@ import (
 	"fmt"
 
 	"github.com/zondax/fil-parser/parser/helper"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -39,10 +38,10 @@ import (
 
 type Init struct {
 	helper *helper.Helper
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(helper *helper.Helper, logger *zap.Logger) *Init {
+func New(helper *helper.Helper, logger *logger.Logger) *Init {
 	return &Init{
 		helper: helper,
 		logger: logger,

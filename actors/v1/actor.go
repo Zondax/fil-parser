@@ -2,6 +2,7 @@ package actors
 
 import (
 	"context"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -13,18 +14,17 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 var _ actors.ActorParserInterface = &ActorParser{}
 
 type ActorParser struct {
 	helper  *helper.Helper
-	logger  *zap.Logger
+	logger  *logger.Logger
 	metrics *actormetrics.ActorsMetricsClient
 }
 
-func NewActorParser(helper *helper.Helper, logger *zap.Logger, metrics metrics.MetricsClient) actors.ActorParserInterface {
+func NewActorParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) actors.ActorParserInterface {
 	return &ActorParser{
 		helper:  helper,
 		logger:  logger2.GetSafeLogger(logger),

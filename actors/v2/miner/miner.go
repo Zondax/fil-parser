@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -44,10 +43,10 @@ import (
 )
 
 type Miner struct {
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(logger *zap.Logger) *Miner {
+func New(logger *logger.Logger) *Miner {
 	return &Miner{
 		logger: logger,
 	}

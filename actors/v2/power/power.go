@@ -3,8 +3,7 @@ package power
 import (
 	"context"
 	"fmt"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -39,10 +38,10 @@ import (
 
 type Power struct {
 	helper *helper.Helper
-	logger *zap.Logger
+	logger *logger.Logger
 }
 
-func New(helper *helper.Helper, logger *zap.Logger) *Power {
+func New(helper *helper.Helper, logger *logger.Logger) *Power {
 	return &Power{
 		helper: helper,
 		logger: logger,

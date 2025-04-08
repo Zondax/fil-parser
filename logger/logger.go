@@ -1,12 +1,17 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"github.com/zondax/golem/pkg/logger"
+)
 
-func GetSafeLogger(zapLogger *zap.Logger) *zap.Logger {
-	if zapLogger == nil {
-		productionLogger, _ := zap.NewProduction() // default
+func GetSafeLogger(lg *logger.Logger) *logger.Logger {
+	if lg == nil {
+		productionLogger := logger.NewLogger(logger.Config{
+			Level:    "info",
+			Encoding: "json",
+		}) // default
 		return productionLogger
 	}
 
-	return zapLogger
+	return lg
 }

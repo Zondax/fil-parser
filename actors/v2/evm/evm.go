@@ -7,8 +7,7 @@ import (
 	"fmt"
 
 	"github.com/zondax/fil-parser/actors/metrics"
-
-	"go.uber.org/zap"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
@@ -28,11 +27,11 @@ import (
 )
 
 type Evm struct {
-	logger  *zap.Logger
+	logger  *logger.Logger
 	metrics *metrics.ActorsMetricsClient
 }
 
-func New(logger *zap.Logger, metrics *metrics.ActorsMetricsClient) *Evm {
+func New(logger *logger.Logger, metrics *metrics.ActorsMetricsClient) *Evm {
 	return &Evm{
 		logger:  logger,
 		metrics: metrics,
@@ -80,7 +79,7 @@ func (e *Evm) InvokeContract(network string, height int64, method string, rawPar
 	var params abi.CborBytes
 	if err := params.UnmarshalCBOR(reader); err != nil {
 		_ = e.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, method)
-		e.logger.Sugar().Warn(fmt.Sprintf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams)))
+		e.logger.Warnf("error deserializing rawParams: %s - hex data: %s", err.Error(), hex.EncodeToString(rawParams))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
@@ -91,7 +90,7 @@ func (e *Evm) InvokeContract(network string, height int64, method string, rawPar
 	var returnValue abi.CborBytes
 	if err := returnValue.UnmarshalCBOR(reader); err != nil {
 		_ = e.metrics.UpdateActorMethodErrorMetric(manifest.EvmKey, method)
-		e.logger.Sugar().Warn(fmt.Sprintf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn)))
+		e.logger.Warnf("Error deserializing rawReturn: %s - hex data: %s", err.Error(), hex.EncodeToString(rawReturn))
 	}
 
 	if reader.Len() == 0 { // This means that the reader has processed all the bytes
