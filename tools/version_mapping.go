@@ -50,7 +50,7 @@ var (
 	V22 version = version{calibration: 1427974, mainnet: 3817920, nodeVersion: 22}
 	V23 version = version{calibration: 1779094, mainnet: 4154640, nodeVersion: 23}
 	V24 version = version{calibration: 2081674, mainnet: 4461240, nodeVersion: 24}
-	V25 version = version{calibration: 2523454, mainnet: 4867320, nodeVersion: 25}
+	V25 version = version{calibration: 2523454, mainnet: 4878840, nodeVersion: 25}
 )
 
 func init() {
