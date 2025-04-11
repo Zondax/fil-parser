@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
-	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/metrics"
@@ -45,28 +44,11 @@ type Parser struct {
 	network                string
 }
 
-func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
-	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
-	if err != nil {
-		logger.Fatal(err.Error())
-		return nil
-	}
-	networkName := tools.ParseRawNetworkName(string(network))
+func NewParser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient,
+	config parser.Config, actorsConstructor actors.ActorParserConstructor) *Parser {
 	return &Parser{
-		network:                networkName,
-		actorParser:            actorsV1.NewActorParser(helper, logger, metrics),
-		addresses:              types.NewAddressInfoMap(),
-		helper:                 helper,
-		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
-		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
-		config:                 config,
-	}
-}
-
-func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
-	return &Parser{
-		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
+		network:                network,
+		actorParser:            actorsConstructor(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),

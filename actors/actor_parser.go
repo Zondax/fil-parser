@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -11,6 +14,8 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
+
+type ActorParserConstructor func(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) ActorParserInterface
 
 type ActorParserInterface interface {
 	GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,

@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+
+	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
-	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
@@ -60,45 +63,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 			ConsolidateRobustAddress: false,
 			RobustAddressBestEffort:  false,
 		},
-	}
-	for _, opt := range opts {
-		opt(&defaultOpts)
-	}
-
-	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
-	if err != nil {
-		logger.Errorf("could not setup actors cache: %v", err)
-		return nil, err
-	}
-
-	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-
-	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
-	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
-	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
-
-	return &FilecoinParser{
-		parserV1: parserV1,
-		parserV2: parserV2,
-		Helper:   helper,
-		logger:   logger,
-		network:  tools.ParseRawNetworkName(string(network)),
-	}, nil
-}
-
-func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cacheSource common.DataSource, logger *logger.Logger, opts ...Option) (*FilecoinParser, error) {
-	defaultOpts := FilecoinParserOptions{
-		metrics: metrics.NewNoopMetricsClient(),
-		config: parser.Config{
-			FeesAsColumn:             false,
-			ConsolidateRobustAddress: false,
-			RobustAddressBestEffort:  false,
-		},
+		actorParserConstructor: actorsV2.NewActorParser,
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -119,17 +84,16 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 	networkName := tools.ParseRawNetworkName(string(network))
 
-	var parserV1 Parser
-	var parserV2 Parser
+	var parserV1, parserV2 Parser
+	parserV1 = v1.NewParser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config, defaultOpts.actorParserConstructor)
+	parserV2 = v2.NewParser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config, defaultOpts.actorParserConstructor)
 
-	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
-	if networkName == tools.CalibrationNetwork {
+	// Use reflection to get the function pointer value
+	if reflect.TypeOf(defaultOpts.actorParserConstructor) == reflect.TypeOf(actorsV2.NewActorParser) {
 		// trace files already use executiontracev2 because of a resync and calibration resets
 		// so we need to use the new parser regardless of the height
-		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+		parserV1 = v2.NewParser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config, actorsV2.NewActorParser)
 	}
-
-	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
