@@ -30,6 +30,8 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/init"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
 
+	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -54,6 +56,121 @@ func (i *Init) Name() string {
 
 func (*Init) StartNetworkHeight() int64 {
 	return tools.V1.Height()
+}
+
+func constructorParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ConstructorParams{},
+
+		tools.V8.String(): &legacyv2.ConstructorParams{},
+		tools.V9.String(): &legacyv2.ConstructorParams{},
+
+		tools.V10.String(): &legacyv3.ConstructorParams{},
+		tools.V11.String(): &legacyv3.ConstructorParams{},
+
+		tools.V12.String(): &legacyv4.ConstructorParams{},
+		tools.V13.String(): &legacyv5.ConstructorParams{},
+		tools.V14.String(): &legacyv6.ConstructorParams{},
+		tools.V15.String(): &legacyv7.ConstructorParams{},
+		tools.V16.String(): &builtinInitv8.ConstructorParams{},
+		tools.V17.String(): &builtinInitv9.ConstructorParams{},
+		tools.V18.String(): &builtinInitv10.ConstructorParams{},
+
+		tools.V19.String(): &builtinInitv11.ConstructorParams{},
+		tools.V20.String(): &builtinInitv11.ConstructorParams{},
+
+		tools.V21.String(): &builtinInitv12.ConstructorParams{},
+		tools.V22.String(): &builtinInitv13.ConstructorParams{},
+		tools.V23.String(): &builtinInitv14.ConstructorParams{},
+		tools.V24.String(): &builtinInitv15.ConstructorParams{},
+		tools.V25.String(): &builtinInitv16.ConstructorParams{},
+	}
+}
+
+func execParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ExecParams{},
+		tools.V8.String(): &legacyv2.ExecParams{},
+		tools.V9.String(): &legacyv2.ExecParams{},
+
+		tools.V10.String(): &legacyv3.ExecParams{},
+		tools.V11.String(): &legacyv3.ExecParams{},
+
+		tools.V12.String(): &legacyv4.ExecParams{},
+		tools.V13.String(): &legacyv5.ExecParams{},
+		tools.V14.String(): &legacyv6.ExecParams{},
+		tools.V15.String(): &legacyv7.ExecParams{},
+		tools.V16.String(): &builtinInitv8.ExecParams{},
+		tools.V17.String(): &builtinInitv9.ExecParams{},
+		tools.V18.String(): &builtinInitv10.ExecParams{},
+
+		tools.V19.String(): &builtinInitv11.ExecParams{},
+		tools.V20.String(): &builtinInitv11.ExecParams{},
+
+		tools.V21.String(): &builtinInitv12.ExecParams{},
+		tools.V22.String(): &builtinInitv13.ExecParams{},
+		tools.V23.String(): &builtinInitv14.ExecParams{},
+		tools.V24.String(): &builtinInitv15.ExecParams{},
+		tools.V25.String(): &builtinInitv16.ExecParams{},
+	}
+}
+
+func execReturn() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ExecReturn{},
+		tools.V8.String(): &legacyv2.ExecReturn{},
+		tools.V9.String(): &legacyv2.ExecReturn{},
+
+		tools.V10.String(): &legacyv3.ExecReturn{},
+		tools.V11.String(): &legacyv3.ExecReturn{},
+
+		tools.V12.String(): &legacyv4.ExecReturn{},
+		tools.V13.String(): &legacyv5.ExecReturn{},
+		tools.V14.String(): &legacyv6.ExecReturn{},
+		tools.V15.String(): &legacyv7.ExecReturn{},
+		tools.V16.String(): &builtinInitv8.ExecReturn{},
+		tools.V17.String(): &builtinInitv9.ExecReturn{},
+		tools.V18.String(): &builtinInitv10.ExecReturn{},
+
+		tools.V19.String(): &builtinInitv11.ExecReturn{},
+		tools.V20.String(): &builtinInitv11.ExecReturn{},
+
+		tools.V21.String(): &builtinInitv12.ExecReturn{},
+		tools.V22.String(): &builtinInitv13.ExecReturn{},
+		tools.V23.String(): &builtinInitv14.ExecReturn{},
+		tools.V24.String(): &builtinInitv15.ExecReturn{},
+		tools.V25.String(): &builtinInitv16.ExecReturn{},
+	}
+}
+
+func exec4Params() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V18.String(): &builtinInitv10.Exec4Params{},
+
+		tools.V19.String(): &builtinInitv11.Exec4Params{},
+		tools.V20.String(): &builtinInitv11.Exec4Params{},
+
+		tools.V21.String(): &builtinInitv12.Exec4Params{},
+		tools.V22.String(): &builtinInitv13.Exec4Params{},
+		tools.V23.String(): &builtinInitv14.Exec4Params{},
+		tools.V24.String(): &builtinInitv15.Exec4Params{},
+		tools.V25.String(): &builtinInitv16.Exec4Params{},
+	}
+}
+
+func exec4Return() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V18.String(): &builtinInitv10.Exec4Return{},
+
+		tools.V19.String(): &builtinInitv11.Exec4Return{},
+		tools.V20.String(): &builtinInitv11.Exec4Return{},
+
+		tools.V21.String(): &builtinInitv12.Exec4Return{},
+		tools.V22.String(): &builtinInitv13.Exec4Return{},
+		tools.V23.String(): &builtinInitv14.Exec4Return{},
+		tools.V24.String(): &builtinInitv15.Exec4Return{},
+		tools.V25.String(): &builtinInitv16.Exec4Return{},
+	}
 }
 
 func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -94,99 +211,37 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 }
 
 func (*Init) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv16.ConstructorParams{})
-	case tools.V24.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv15.ConstructorParams{})
-	case tools.V23.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv14.ConstructorParams{})
-	case tools.V22.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv13.ConstructorParams{})
-	case tools.V21.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv12.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return initConstructor(raw, &builtinInitv11.ConstructorParams{})
-	case tools.V18.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv10.ConstructorParams{})
-	case tools.V17.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv9.ConstructorParams{})
-	case tools.V16.IsSupported(network, height):
-		return initConstructor(raw, &builtinInitv8.ConstructorParams{})
-	case tools.V15.IsSupported(network, height):
-		return initConstructor(raw, &legacyv7.ConstructorParams{})
-	case tools.V14.IsSupported(network, height):
-		return initConstructor(raw, &legacyv6.ConstructorParams{})
-	case tools.V13.IsSupported(network, height):
-		return initConstructor(raw, &legacyv5.ConstructorParams{})
-	case tools.V12.IsSupported(network, height):
-		return initConstructor(raw, &legacyv4.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return initConstructor(raw, &legacyv3.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return initConstructor(raw, &legacyv2.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return initConstructor(raw, &legacyv1.ConstructorParams{})
+	version := tools.VersionFromHeight(network, height)
+	params, ok := constructorParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+
+	return initConstructor(raw, params)
 }
 
 func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv16.ExecParams{}, &builtinInitv16.ExecReturn{}, i.helper)
-	case tools.V24.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv15.ExecParams{}, &builtinInitv15.ExecReturn{}, i.helper)
-	case tools.V23.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv14.ExecParams{}, &builtinInitv14.ExecReturn{}, i.helper)
-	case tools.V22.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv13.ExecParams{}, &builtinInitv13.ExecReturn{}, i.helper)
-	case tools.V21.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv12.ExecParams{}, &builtinInitv12.ExecReturn{}, i.helper)
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parseExec(msg, raw, &builtinInitv11.ExecParams{}, &builtinInitv11.ExecReturn{}, i.helper)
-	case tools.V18.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv10.ExecParams{}, &builtinInitv10.ExecReturn{}, i.helper)
-	case tools.V17.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv9.ExecParams{}, &builtinInitv9.ExecReturn{}, i.helper)
-	case tools.V16.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv8.ExecParams{}, &builtinInitv8.ExecReturn{}, i.helper)
-	case tools.V15.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv7.ExecParams{}, &legacyv7.ExecReturn{}, i.helper)
-	case tools.V14.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv6.ExecParams{}, &legacyv6.ExecReturn{}, i.helper)
-	case tools.V13.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv5.ExecParams{}, &legacyv5.ExecReturn{}, i.helper)
-	case tools.V12.IsSupported(network, height):
-		return parseExec(msg, raw, &legacyv4.ExecParams{}, &legacyv4.ExecReturn{}, i.helper)
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseExec(msg, raw, &legacyv3.ExecParams{}, &legacyv3.ExecReturn{}, i.helper)
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseExec(msg, raw, &legacyv2.ExecParams{}, &legacyv2.ExecReturn{}, i.helper)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseExec(msg, raw, &legacyv1.ExecParams{}, &legacyv1.ExecReturn{}, i.helper)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := execParams()[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := execReturn()[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseExec(msg, raw, params, returnValue, i.helper)
 }
 
 func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv16.Exec4Params{}, &builtinInitv16.Exec4Return{}, i.helper)
-	case tools.V24.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv15.Exec4Params{}, &builtinInitv15.Exec4Return{}, i.helper)
-	case tools.V23.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv14.Exec4Params{}, &builtinInitv14.Exec4Return{}, i.helper)
-	case tools.V22.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv13.Exec4Params{}, &builtinInitv13.Exec4Return{}, i.helper)
-	case tools.V21.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv12.Exec4Params{}, &builtinInitv12.Exec4Return{}, i.helper)
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return parseExec(msg, raw, &builtinInitv11.Exec4Params{}, &builtinInitv11.Exec4Return{}, i.helper)
-	case tools.V18.IsSupported(network, height):
-		return parseExec(msg, raw, &builtinInitv10.Exec4Params{}, &builtinInitv10.Exec4Return{}, i.helper)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := exec4Params()[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := exec4Return()[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseExec(msg, raw, params, returnValue, i.helper)
 }

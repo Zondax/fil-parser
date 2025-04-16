@@ -28,6 +28,20 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+func authenticateMessageParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &accountv9.AuthenticateMessageParams{},
+		tools.V18.String(): &accountv10.AuthenticateMessageParams{},
+		tools.V19.String(): &accountv11.AuthenticateMessageParams{},
+		tools.V20.String(): &accountv11.AuthenticateMessageParams{},
+		tools.V21.String(): &accountv12.AuthenticateMessageParams{},
+		tools.V22.String(): &accountv13.AuthenticateMessageParams{},
+		tools.V23.String(): &accountv14.AuthenticateMessageParams{},
+		tools.V24.String(): &accountv15.AuthenticateMessageParams{},
+		tools.V25.String(): &accountv16.AuthenticateMessageParams{},
+	}
+}
+
 func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
@@ -79,30 +93,13 @@ func (a *Account) PubkeyAddress(network string, raw, rawReturn []byte) (map[stri
 }
 
 func (a *Account) AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	var r typegen.CborBool
-	switch {
-	// all versions before V17
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height) // method did not exist
-	case tools.V17.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv9.AuthenticateMessageParams{}, &r)
-	case tools.V18.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv10.AuthenticateMessageParams{}, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv11.AuthenticateMessageParams{}, &r)
-	case tools.V21.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv12.AuthenticateMessageParams{}, &r)
-	case tools.V22.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv13.AuthenticateMessageParams{}, &r)
-	case tools.V23.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv14.AuthenticateMessageParams{}, &r)
-	case tools.V24.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv15.AuthenticateMessageParams{}, &r)
-	case tools.V25.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv16.AuthenticateMessageParams{}, &r)
-	default:
+	version := tools.VersionFromHeight(network, height)
+	params, ok := authenticateMessageParams()[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	var r typegen.CborBool
+	return authenticateMessageGeneric(raw, rawReturn, params, &r)
 }
 
 func (a *Account) UniversalReceiverHook(network string, height int64, raw []byte) (map[string]interface{}, error) {

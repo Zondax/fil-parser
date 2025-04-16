@@ -21,46 +21,48 @@ import (
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
 
+	cbg "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (c *Cron) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+func getCronConstructorParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V1.String(): &legacyv1.ConstructorParams{},
 
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return cronConstructorLegacy(raw, &legacyv1.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return cronConstructorLegacy(raw, &legacyv2.ConstructorParams{})
-	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
-		return cronConstructorLegacy(raw, &legacyv3.ConstructorParams{})
-	case tools.V12.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &legacyv4.ConstructorParams{})
-	case tools.V13.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &legacyv5.ConstructorParams{})
-	case tools.V14.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &legacyv6.ConstructorParams{})
-	case tools.V15.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &legacyv7.ConstructorParams{})
+		tools.V8.String(): &legacyv2.ConstructorParams{},
+		tools.V9.String(): &legacyv2.ConstructorParams{},
 
-	case tools.V16.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv8.State{})
-	case tools.V17.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv9.State{})
-	case tools.V18.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv10.State{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return cronConstructorLegacy(raw, &cronv11.State{})
-	case tools.V21.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv12.State{})
-	case tools.V22.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv13.State{})
-	case tools.V23.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv14.State{})
-	case tools.V24.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv15.State{})
-	case tools.V25.IsSupported(network, height):
-		return cronConstructorLegacy(raw, &cronv16.State{})
+		tools.V10.String(): &legacyv3.ConstructorParams{},
+		tools.V11.String(): &legacyv3.ConstructorParams{},
+
+		tools.V12.String(): &legacyv4.ConstructorParams{},
+		tools.V13.String(): &legacyv5.ConstructorParams{},
+		tools.V14.String(): &legacyv6.ConstructorParams{},
+		tools.V15.String(): &legacyv7.ConstructorParams{},
+		tools.V16.String(): &cronv8.State{},
+		tools.V17.String(): &cronv9.State{},
+		tools.V18.String(): &cronv10.State{},
+
+		tools.V19.String(): &cronv11.State{},
+		tools.V20.String(): &cronv11.State{},
+
+		tools.V21.String(): &cronv12.State{},
+		tools.V22.String(): &cronv13.State{},
+		tools.V23.String(): &cronv14.State{},
+		tools.V24.String(): &cronv15.State{},
+		tools.V25.String(): &cronv16.State{},
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func (c *Cron) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	cronConstructor, ok := getCronConstructorParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	return cronConstructorLegacy(raw, cronConstructor)
+
 }

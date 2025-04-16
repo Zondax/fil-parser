@@ -13,35 +13,81 @@ import (
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+
+	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (*Datacap) TransferExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.TransferParams{}, &datacapv9.TransferReturn{}, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.TransferParams{}, &datacapv10.TransferReturn{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.TransferParams{}, &datacapv11.TransferReturn{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.TransferParams{}, &datacapv12.TransferReturn{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.TransferParams{}, &datacapv12.TransferReturn{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.TransferParams{}, &datacapv13.TransferReturn{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.TransferParams{}, &datacapv14.TransferReturn{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.TransferParams{}, &datacapv15.TransferReturn{}, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.TransferParams{}, &datacapv16.TransferReturn{}, parser.ParamsKey)
+func transferParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.TransferParams{},
+		tools.V18.String(): &datacapv10.TransferParams{},
+		tools.V19.String(): &datacapv11.TransferParams{},
+		tools.V20.String(): &datacapv11.TransferParams{},
+		tools.V21.String(): &datacapv12.TransferParams{},
+		tools.V22.String(): &datacapv13.TransferParams{},
+		tools.V23.String(): &datacapv14.TransferParams{},
+		tools.V24.String(): &datacapv15.TransferParams{},
+		tools.V25.String(): &datacapv16.TransferParams{},
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func transferReturn() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.TransferReturn{},
+		tools.V18.String(): &datacapv10.TransferReturn{},
+		tools.V19.String(): &datacapv11.TransferReturn{},
+		tools.V20.String(): &datacapv11.TransferReturn{},
+		tools.V21.String(): &datacapv12.TransferReturn{},
+		tools.V22.String(): &datacapv13.TransferReturn{},
+		tools.V23.String(): &datacapv14.TransferReturn{},
+		tools.V24.String(): &datacapv15.TransferReturn{},
+		tools.V25.String(): &datacapv16.TransferReturn{},
+	}
+}
+
+func transferFromParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.TransferFromParams{},
+		tools.V18.String(): &datacapv10.TransferFromParams{},
+		tools.V19.String(): &datacapv11.TransferFromParams{},
+		tools.V20.String(): &datacapv11.TransferFromParams{},
+		tools.V21.String(): &datacapv12.TransferFromParams{},
+		tools.V22.String(): &datacapv13.TransferFromParams{},
+		tools.V23.String(): &datacapv14.TransferFromParams{},
+		tools.V24.String(): &datacapv15.TransferFromParams{},
+		tools.V25.String(): &datacapv16.TransferFromParams{},
+	}
+}
+
+func transferFromReturn() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.TransferFromReturn{},
+		tools.V18.String(): &datacapv10.TransferFromReturn{},
+		tools.V19.String(): &datacapv11.TransferFromReturn{},
+		tools.V20.String(): &datacapv11.TransferFromReturn{},
+		tools.V21.String(): &datacapv12.TransferFromReturn{},
+		tools.V22.String(): &datacapv13.TransferFromReturn{},
+		tools.V23.String(): &datacapv14.TransferFromReturn{},
+		tools.V24.String(): &datacapv15.TransferFromReturn{},
+		tools.V25.String(): &datacapv16.TransferFromReturn{},
+	}
+}
+
+func (*Datacap) TransferExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := transferParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := transferReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
 }
 
 func (*Datacap) BalanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -49,29 +95,16 @@ func (*Datacap) BalanceExported(network string, height int64, raw, rawReturn []b
 }
 
 func (*Datacap) TransferFromExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.TransferFromParams{}, &datacapv9.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.TransferFromParams{}, &datacapv10.TransferFromReturn{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.TransferFromParams{}, &datacapv11.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.TransferFromParams{}, &datacapv12.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.TransferFromParams{}, &datacapv12.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.TransferFromParams{}, &datacapv13.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.TransferFromParams{}, &datacapv14.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.TransferFromParams{}, &datacapv15.TransferFromReturn{}, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.TransferFromParams{}, &datacapv16.TransferFromReturn{}, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := transferFromParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := transferFromReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	}
+	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
 }
 
 func (*Datacap) BalanceOf(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {

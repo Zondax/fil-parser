@@ -23,135 +23,232 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/miner"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
 
+	cbg "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner16.ChangeMultiaddrsParams{}, &miner16.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner15.ChangeMultiaddrsParams{}, &miner15.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner14.ChangeMultiaddrsParams{}, &miner14.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner13.ChangeMultiaddrsParams{}, &miner13.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner12.ChangeMultiaddrsParams{}, &miner12.ChangeMultiaddrsParams{}, parser.ParamsKey)
+func changeMultiaddrsParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ChangeMultiaddrsParams{},
 
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &miner11.ChangeMultiaddrsParams{}, &miner11.ChangeMultiaddrsParams{}, parser.ParamsKey)
+		tools.V8.String(): &legacyv2.ChangeMultiaddrsParams{},
+		tools.V9.String(): &legacyv2.ChangeMultiaddrsParams{},
 
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner10.ChangeMultiaddrsParams{}, &miner10.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner9.ChangeMultiaddrsParams{}, &miner9.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner8.ChangeMultiaddrsParams{}, &miner8.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.ChangeMultiaddrsParams{}, &legacyv7.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.ChangeMultiaddrsParams{}, &legacyv6.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.ChangeMultiaddrsParams{}, &legacyv5.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.ChangeMultiaddrsParams{}, &legacyv4.ChangeMultiaddrsParams{}, parser.ParamsKey)
+		tools.V10.String(): &legacyv3.ChangeMultiaddrsParams{},
+		tools.V11.String(): &legacyv3.ChangeMultiaddrsParams{},
 
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.ChangeMultiaddrsParams{}, &legacyv3.ChangeMultiaddrsParams{}, parser.ParamsKey)
+		tools.V12.String(): &legacyv4.ChangeMultiaddrsParams{},
+		tools.V13.String(): &legacyv5.ChangeMultiaddrsParams{},
+		tools.V14.String(): &legacyv6.ChangeMultiaddrsParams{},
+		tools.V15.String(): &legacyv7.ChangeMultiaddrsParams{},
+		tools.V16.String(): &miner8.ChangeMultiaddrsParams{},
+		tools.V17.String(): &miner9.ChangeMultiaddrsParams{},
+		tools.V18.String(): &miner10.ChangeMultiaddrsParams{},
 
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, nil, false, &legacyv2.ChangeMultiaddrsParams{}, &legacyv2.ChangeMultiaddrsParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, nil, false, &legacyv1.ChangeMultiaddrsParams{}, &legacyv1.ChangeMultiaddrsParams{}, parser.ParamsKey)
+		tools.V19.String(): &miner11.ChangeMultiaddrsParams{},
+		tools.V20.String(): &miner11.ChangeMultiaddrsParams{},
+
+		tools.V21.String(): &miner12.ChangeMultiaddrsParams{},
+		tools.V22.String(): &miner13.ChangeMultiaddrsParams{},
+		tools.V23.String(): &miner14.ChangeMultiaddrsParams{},
+		tools.V24.String(): &miner15.ChangeMultiaddrsParams{},
+		tools.V25.String(): &miner16.ChangeMultiaddrsParams{},
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func changePeerIDParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ChangePeerIDParams{},
+
+		tools.V8.String(): &legacyv2.ChangePeerIDParams{},
+		tools.V9.String(): &legacyv2.ChangePeerIDParams{},
+
+		tools.V10.String(): &legacyv3.ChangePeerIDParams{},
+		tools.V11.String(): &legacyv3.ChangePeerIDParams{},
+
+		tools.V12.String(): &legacyv4.ChangePeerIDParams{},
+		tools.V13.String(): &legacyv5.ChangePeerIDParams{},
+		tools.V14.String(): &legacyv6.ChangePeerIDParams{},
+		tools.V15.String(): &legacyv7.ChangePeerIDParams{},
+		tools.V16.String(): &miner8.ChangePeerIDParams{},
+		tools.V17.String(): &miner9.ChangePeerIDParams{},
+		tools.V18.String(): &miner10.ChangePeerIDParams{},
+
+		tools.V19.String(): &miner11.ChangePeerIDParams{},
+		tools.V20.String(): &miner11.ChangePeerIDParams{},
+
+		tools.V21.String(): &miner12.ChangePeerIDParams{},
+		tools.V22.String(): &miner13.ChangePeerIDParams{},
+		tools.V23.String(): &miner14.ChangePeerIDParams{},
+		tools.V24.String(): &miner15.ChangePeerIDParams{},
+		tools.V25.String(): &miner16.ChangePeerIDParams{},
+	}
+}
+
+func changeWorkerAddressParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ChangeWorkerAddressParams{},
+
+		tools.V8.String(): &legacyv2.ChangeWorkerAddressParams{},
+		tools.V9.String(): &legacyv2.ChangeWorkerAddressParams{},
+
+		tools.V10.String(): &legacyv3.ChangeWorkerAddressParams{},
+		tools.V11.String(): &legacyv3.ChangeWorkerAddressParams{},
+
+		tools.V12.String(): &legacyv4.ChangeWorkerAddressParams{},
+		tools.V13.String(): &legacyv5.ChangeWorkerAddressParams{},
+		tools.V14.String(): &legacyv6.ChangeWorkerAddressParams{},
+		tools.V15.String(): &legacyv7.ChangeWorkerAddressParams{},
+		tools.V16.String(): &miner8.ChangeWorkerAddressParams{},
+		tools.V17.String(): &miner9.ChangeWorkerAddressParams{},
+		tools.V18.String(): &miner10.ChangeWorkerAddressParams{},
+
+		tools.V19.String(): &miner11.ChangeWorkerAddressParams{},
+		tools.V20.String(): &miner11.ChangeWorkerAddressParams{},
+
+		tools.V21.String(): &miner12.ChangeWorkerAddressParams{},
+		tools.V22.String(): &miner13.ChangeWorkerAddressParams{},
+		tools.V23.String(): &miner14.ChangeWorkerAddressParams{},
+		tools.V24.String(): &miner15.ChangeWorkerAddressParams{},
+		tools.V25.String(): &miner16.ChangeWorkerAddressParams{},
+	}
+}
+
+func isControllingAddressParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): &miner10.IsControllingAddressParams{},
+
+		tools.V19.String(): &miner11.IsControllingAddressParams{},
+		tools.V20.String(): &miner11.IsControllingAddressParams{},
+
+		tools.V21.String(): &miner12.IsControllingAddressParams{},
+		tools.V22.String(): &miner13.IsControllingAddressParams{},
+		tools.V23.String(): &miner14.IsControllingAddressParams{},
+		tools.V24.String(): &miner15.IsControllingAddressParams{},
+		tools.V25.String(): &miner16.IsControllingAddressParams{},
+	}
+}
+
+func isControllingAddressReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(miner10.IsControllingAddressReturn),
+
+		tools.V19.String(): new(miner11.IsControllingAddressReturn),
+		tools.V20.String(): new(miner11.IsControllingAddressReturn),
+
+		tools.V21.String(): new(miner12.IsControllingAddressReturn),
+		tools.V22.String(): new(miner13.IsControllingAddressReturn),
+		tools.V23.String(): new(miner14.IsControllingAddressReturn),
+		tools.V24.String(): new(miner15.IsControllingAddressReturn),
+		tools.V25.String(): new(miner16.IsControllingAddressReturn),
+	}
+}
+
+func getOwnerReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): &miner10.GetOwnerReturn{},
+
+		tools.V19.String(): &miner11.GetOwnerReturn{},
+		tools.V20.String(): &miner11.GetOwnerReturn{},
+
+		tools.V21.String(): &miner12.GetOwnerReturn{},
+		tools.V22.String(): &miner13.GetOwnerReturn{},
+		tools.V23.String(): &miner14.GetOwnerReturn{},
+		tools.V24.String(): &miner15.GetOwnerReturn{},
+		tools.V25.String(): &miner16.GetOwnerReturn{},
+	}
+}
+
+func getPeerIDReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): &miner10.GetPeerIDReturn{},
+
+		tools.V19.String(): &miner11.GetPeerIDReturn{},
+		tools.V20.String(): &miner11.GetPeerIDReturn{},
+
+		tools.V21.String(): &miner12.GetPeerIDReturn{},
+		tools.V22.String(): &miner13.GetPeerIDReturn{},
+		tools.V23.String(): &miner14.GetPeerIDReturn{},
+		tools.V24.String(): &miner15.GetPeerIDReturn{},
+		tools.V25.String(): &miner16.GetPeerIDReturn{},
+	}
+}
+
+func getMultiAddrsReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): &miner10.GetMultiAddrsReturn{},
+
+		tools.V19.String(): &miner11.GetMultiAddrsReturn{},
+		tools.V20.String(): &miner11.GetMultiAddrsReturn{},
+
+		tools.V21.String(): &miner12.GetMultiAddrsReturn{},
+		tools.V22.String(): &miner13.GetMultiAddrsReturn{},
+		tools.V23.String(): &miner14.GetMultiAddrsReturn{},
+		tools.V24.String(): &miner15.GetMultiAddrsReturn{},
+		tools.V25.String(): &miner16.GetMultiAddrsReturn{},
+	}
+}
+
+func getControlAddressesReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.GetControlAddressesReturn{},
+
+		tools.V8.String(): &legacyv2.GetControlAddressesReturn{},
+		tools.V9.String(): &legacyv2.GetControlAddressesReturn{},
+
+		tools.V10.String(): &legacyv3.GetControlAddressesReturn{},
+		tools.V11.String(): &legacyv3.GetControlAddressesReturn{},
+
+		tools.V12.String(): &legacyv4.GetControlAddressesReturn{},
+		tools.V13.String(): &legacyv5.GetControlAddressesReturn{},
+		tools.V14.String(): &legacyv6.GetControlAddressesReturn{},
+		tools.V15.String(): &legacyv7.GetControlAddressesReturn{},
+		tools.V16.String(): &miner8.GetControlAddressesReturn{},
+		tools.V17.String(): &miner9.GetControlAddressesReturn{},
+		tools.V18.String(): &miner10.GetControlAddressesReturn{},
+
+		tools.V19.String(): &miner11.GetControlAddressesReturn{},
+		tools.V20.String(): &miner11.GetControlAddressesReturn{},
+
+		tools.V21.String(): &miner12.GetControlAddressesReturn{},
+		tools.V22.String(): &miner13.GetControlAddressesReturn{},
+		tools.V23.String(): &miner14.GetControlAddressesReturn{},
+		tools.V24.String(): &miner15.GetControlAddressesReturn{},
+		tools.V25.String(): &miner16.GetControlAddressesReturn{},
+	}
+}
+
+func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := changeMultiaddrsParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	return parseGeneric(rawParams, nil, false, params, &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner16.ChangePeerIDParams{}, &miner16.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner15.ChangePeerIDParams{}, &miner15.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner14.ChangePeerIDParams{}, &miner14.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner13.ChangePeerIDParams{}, &miner13.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner12.ChangePeerIDParams{}, &miner12.ChangePeerIDParams{}, parser.ParamsKey)
-
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &miner11.ChangePeerIDParams{}, &miner11.ChangePeerIDParams{}, parser.ParamsKey)
-
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner10.ChangePeerIDParams{}, &miner10.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner9.ChangePeerIDParams{}, &miner9.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner8.ChangePeerIDParams{}, &miner8.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.ChangePeerIDParams{}, &legacyv7.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.ChangePeerIDParams{}, &legacyv6.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.ChangePeerIDParams{}, &legacyv5.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.ChangePeerIDParams{}, &legacyv4.ChangePeerIDParams{}, parser.ParamsKey)
-
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.ChangePeerIDParams{}, &legacyv3.ChangePeerIDParams{}, parser.ParamsKey)
-
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, nil, false, &legacyv2.ChangePeerIDParams{}, &legacyv2.ChangePeerIDParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, nil, false, &legacyv1.ChangePeerIDParams{}, &legacyv1.ChangePeerIDParams{}, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := changePeerIDParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+
+	return parseGeneric(rawParams, nil, false, params, &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Miner) ChangeWorkerAddressExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner16.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner15.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner14.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner13.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner12.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &miner11.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner10.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner9.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &miner8.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, nil, false, &legacyv2.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, nil, false, &legacyv1.ChangeWorkerAddressParams{}, &abi.EmptyValue{}, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := changeWorkerAddressParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+
+	return parseGeneric(rawParams, nil, false, params, &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Miner) ChangeOwnerAddressExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -159,135 +256,55 @@ func (*Miner) ChangeOwnerAddressExported(network string, height int64, rawParams
 }
 
 func (*Miner) IsControllingAddressExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var returnValue miner16.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner16.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		var returnValue miner15.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner15.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		var returnValue miner14.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner14.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		var returnValue miner13.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner13.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		var returnValue miner12.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner12.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		var returnValue miner11.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner11.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		var returnValue miner10.IsControllingAddressReturn
-		return parseGeneric(rawParams, rawReturn, true, &miner10.IsControllingAddressParams{}, &returnValue, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := isControllingAddressParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := isControllingAddressReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue, parser.ParamsKey)
 }
 
 func (*Miner) GetOwnerExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner16.GetOwnerReturn{}, &miner16.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner15.GetOwnerReturn{}, &miner15.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner14.GetOwnerReturn{}, &miner14.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner13.GetOwnerReturn{}, &miner13.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner12.GetOwnerReturn{}, &miner12.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawReturn, nil, false, &miner11.GetOwnerReturn{}, &miner11.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner10.GetOwnerReturn{}, &miner10.GetOwnerReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	returnValue, ok := getOwnerReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+
+	return parseGeneric(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Miner) GetPeerIDExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner16.GetPeerIDReturn{}, &miner16.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner15.GetPeerIDReturn{}, &miner15.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner14.GetPeerIDReturn{}, &miner14.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner13.GetPeerIDReturn{}, &miner13.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner12.GetPeerIDReturn{}, &miner12.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawReturn, nil, false, &miner11.GetPeerIDReturn{}, &miner11.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner10.GetPeerIDReturn{}, &miner10.GetPeerIDReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	returnValue, ok := getPeerIDReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+
+	return parseGeneric(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner16.GetMultiAddrsReturn{}, &miner16.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner15.GetMultiAddrsReturn{}, &miner15.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner14.GetMultiAddrsReturn{}, &miner14.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner13.GetMultiAddrsReturn{}, &miner13.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner12.GetMultiAddrsReturn{}, &miner12.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawReturn, nil, false, &miner11.GetMultiAddrsReturn{}, &miner11.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawReturn, nil, false, &miner10.GetMultiAddrsReturn{}, &miner10.GetMultiAddrsReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	returnValue, ok := getMultiAddrsReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+
+	return parseGeneric(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Miner) ControlAddresses(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner16.GetControlAddressesReturn{})
-	case tools.V24.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner15.GetControlAddressesReturn{})
-	case tools.V23.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner14.GetControlAddressesReturn{})
-	case tools.V22.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner13.GetControlAddressesReturn{})
-	case tools.V21.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner12.GetControlAddressesReturn{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseControlReturn(rawParams, rawReturn, &miner11.GetControlAddressesReturn{})
-	case tools.V18.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner10.GetControlAddressesReturn{})
-	case tools.V17.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner9.GetControlAddressesReturn{})
-	case tools.V16.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &miner8.GetControlAddressesReturn{})
-	case tools.V15.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &legacyv7.GetControlAddressesReturn{})
-	case tools.V14.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &legacyv6.GetControlAddressesReturn{})
-	case tools.V13.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &legacyv5.GetControlAddressesReturn{})
-	case tools.V12.IsSupported(network, height):
-		return parseControlReturn(rawParams, rawReturn, &legacyv4.GetControlAddressesReturn{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseControlReturn(rawParams, rawReturn, &legacyv3.GetControlAddressesReturn{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseControlReturn(rawParams, rawReturn, &legacyv2.GetControlAddressesReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseControlReturn(rawParams, rawReturn, &legacyv1.GetControlAddressesReturn{})
+	version := tools.VersionFromHeight(network, height)
+	returnValue, ok := getControlAddressesReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return parseControlReturn(rawParams, rawReturn, returnValue)
 }

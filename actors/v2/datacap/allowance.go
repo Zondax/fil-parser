@@ -13,107 +13,105 @@ import (
 	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
+	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (*Datacap) IncreaseAllowanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	var r abi.TokenAmount
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.IncreaseAllowanceParams{}, &r, parser.ParamsKey)
+func increaseAllowanceParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.IncreaseAllowanceParams{},
+		tools.V18.String(): &datacapv10.IncreaseAllowanceParams{},
+		tools.V19.String(): &datacapv11.IncreaseAllowanceParams{},
+		tools.V20.String(): &datacapv11.IncreaseAllowanceParams{},
+		tools.V21.String(): &datacapv12.IncreaseAllowanceParams{},
+		tools.V22.String(): &datacapv13.IncreaseAllowanceParams{},
+		tools.V23.String(): &datacapv14.IncreaseAllowanceParams{},
+		tools.V24.String(): &datacapv15.IncreaseAllowanceParams{},
+		tools.V25.String(): &datacapv16.IncreaseAllowanceParams{},
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func decreaseAllowanceParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.DecreaseAllowanceParams{},
+		tools.V18.String(): &datacapv10.DecreaseAllowanceParams{},
+		tools.V19.String(): &datacapv11.DecreaseAllowanceParams{},
+		tools.V20.String(): &datacapv11.DecreaseAllowanceParams{},
+		tools.V21.String(): &datacapv12.DecreaseAllowanceParams{},
+		tools.V22.String(): &datacapv13.DecreaseAllowanceParams{},
+		tools.V23.String(): &datacapv14.DecreaseAllowanceParams{},
+		tools.V24.String(): &datacapv15.DecreaseAllowanceParams{},
+		tools.V25.String(): &datacapv16.DecreaseAllowanceParams{},
+	}
+}
+
+func revokeAllowanceParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.RevokeAllowanceParams{},
+		tools.V18.String(): &datacapv10.RevokeAllowanceParams{},
+		tools.V19.String(): &datacapv11.RevokeAllowanceParams{},
+		tools.V20.String(): &datacapv11.RevokeAllowanceParams{},
+		tools.V21.String(): &datacapv12.RevokeAllowanceParams{},
+		tools.V22.String(): &datacapv13.RevokeAllowanceParams{},
+		tools.V23.String(): &datacapv14.RevokeAllowanceParams{},
+		tools.V24.String(): &datacapv15.RevokeAllowanceParams{},
+		tools.V25.String(): &datacapv16.RevokeAllowanceParams{},
+	}
+}
+
+func allowanceParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.GetAllowanceParams{},
+		tools.V18.String(): &datacapv10.GetAllowanceParams{},
+		tools.V19.String(): &datacapv11.GetAllowanceParams{},
+		tools.V20.String(): &datacapv11.GetAllowanceParams{},
+		tools.V21.String(): &datacapv12.GetAllowanceParams{},
+		tools.V22.String(): &datacapv13.GetAllowanceParams{},
+		tools.V23.String(): &datacapv14.GetAllowanceParams{},
+		tools.V24.String(): &datacapv15.GetAllowanceParams{},
+		tools.V25.String(): &datacapv16.GetAllowanceParams{},
+	}
+}
+
+func (*Datacap) IncreaseAllowanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := increaseAllowanceParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	var r abi.TokenAmount
+	return parse(raw, rawReturn, true, params, &r, parser.ParamsKey)
 }
 
 func (*Datacap) DecreaseAllowanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	var r abi.TokenAmount
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.DecreaseAllowanceParams{}, &r, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := decreaseAllowanceParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	var r abi.TokenAmount
+	return parse(raw, rawReturn, true, params, &r, parser.ParamsKey)
 }
 
 func (*Datacap) RevokeAllowanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	var r abi.TokenAmount
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.RevokeAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.RevokeAllowanceParams{}, &r, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := revokeAllowanceParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	var r abi.TokenAmount
+	return parse(raw, rawReturn, true, params, &r, parser.ParamsKey)
 }
 
 func (*Datacap) AllowanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	var r abi.TokenAmount
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.GetAllowanceParams{}, &r, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.GetAllowanceParams{}, &r, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := allowanceParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	var r abi.TokenAmount
+	return parse(raw, rawReturn, true, params, &r, parser.ParamsKey)
 }

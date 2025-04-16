@@ -251,3 +251,13 @@ func VersionFromString(version string) version {
 	}
 	return V1
 }
+
+func VersionFromHeight(network string, height int64) version {
+	iter := NewVersionIterator(V1, network)
+	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
+		if v.Height() == height {
+			return v
+		}
+	}
+	return V1
+}

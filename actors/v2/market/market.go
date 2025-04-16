@@ -59,6 +59,655 @@ func (*Market) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+func withdrawBalanceParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.WithdrawBalanceParams{},
+
+		tools.V8.String(): &legacyv2.WithdrawBalanceParams{},
+		tools.V9.String(): &legacyv2.WithdrawBalanceParams{},
+
+		tools.V10.String(): &legacyv3.WithdrawBalanceParams{},
+		tools.V11.String(): &legacyv3.WithdrawBalanceParams{},
+
+		tools.V12.String(): &legacyv4.WithdrawBalanceParams{},
+		tools.V13.String(): &legacyv5.WithdrawBalanceParams{},
+		tools.V14.String(): &legacyv6.WithdrawBalanceParams{},
+		tools.V15.String(): &legacyv7.WithdrawBalanceParams{},
+		tools.V16.String(): &v8Market.WithdrawBalanceParams{},
+		tools.V17.String(): &v9Market.WithdrawBalanceParams{},
+		tools.V18.String(): &v10Market.WithdrawBalanceParams{},
+
+		tools.V19.String(): &v11Market.WithdrawBalanceParams{},
+		tools.V20.String(): &v11Market.WithdrawBalanceParams{},
+
+		tools.V21.String(): &v12Market.WithdrawBalanceParams{},
+		tools.V22.String(): &v13Market.WithdrawBalanceParams{},
+		tools.V23.String(): &v14Market.WithdrawBalanceParams{},
+		tools.V24.String(): &v15Market.WithdrawBalanceParams{},
+		tools.V25.String(): &v16Market.WithdrawBalanceParams{},
+	}
+}
+
+func publishStorageDealsParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.PublishStorageDealsParams{},
+
+		tools.V8.String(): &legacyv2.PublishStorageDealsParams{},
+		tools.V9.String(): &legacyv2.PublishStorageDealsParams{},
+
+		tools.V10.String(): &legacyv3.PublishStorageDealsParams{},
+		tools.V11.String(): &legacyv3.PublishStorageDealsParams{},
+
+		tools.V12.String(): &legacyv4.PublishStorageDealsParams{},
+		tools.V13.String(): &legacyv5.PublishStorageDealsParams{},
+		tools.V14.String(): &legacyv6.PublishStorageDealsParams{},
+		tools.V15.String(): &legacyv7.PublishStorageDealsParams{},
+		tools.V16.String(): &v8Market.PublishStorageDealsParams{},
+		tools.V17.String(): &v9Market.PublishStorageDealsParams{},
+		tools.V18.String(): &v10Market.PublishStorageDealsParams{},
+
+		tools.V19.String(): &v11Market.PublishStorageDealsParams{},
+		tools.V20.String(): &v11Market.PublishStorageDealsParams{},
+
+		tools.V21.String(): &v12Market.PublishStorageDealsParams{},
+		tools.V22.String(): &v13Market.PublishStorageDealsParams{},
+		tools.V23.String(): &v14Market.PublishStorageDealsParams{},
+		tools.V24.String(): &v15Market.PublishStorageDealsParams{},
+		tools.V25.String(): &v16Market.PublishStorageDealsParams{},
+	}
+}
+
+func publishStorageDealsReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.PublishStorageDealsReturn{},
+
+		tools.V8.String(): &legacyv2.PublishStorageDealsReturn{},
+		tools.V9.String(): &legacyv2.PublishStorageDealsReturn{},
+
+		tools.V10.String(): &legacyv3.PublishStorageDealsReturn{},
+		tools.V11.String(): &legacyv3.PublishStorageDealsReturn{},
+
+		tools.V12.String(): &legacyv4.PublishStorageDealsReturn{},
+		tools.V13.String(): &legacyv5.PublishStorageDealsReturn{},
+		tools.V14.String(): &legacyv6.PublishStorageDealsReturn{},
+		tools.V15.String(): &legacyv7.PublishStorageDealsReturn{},
+		tools.V16.String(): &v8Market.PublishStorageDealsReturn{},
+		tools.V17.String(): &v9Market.PublishStorageDealsReturn{},
+		tools.V18.String(): &v10Market.PublishStorageDealsReturn{},
+
+		tools.V19.String(): &v11Market.PublishStorageDealsReturn{},
+		tools.V20.String(): &v11Market.PublishStorageDealsReturn{},
+
+		tools.V21.String(): &v12Market.PublishStorageDealsReturn{},
+		tools.V22.String(): &v13Market.PublishStorageDealsReturn{},
+		tools.V23.String(): &v14Market.PublishStorageDealsReturn{},
+		tools.V24.String(): &v15Market.PublishStorageDealsReturn{},
+		tools.V25.String(): &v16Market.PublishStorageDealsReturn{},
+	}
+}
+
+func verifyDealsForActivationParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.VerifyDealsForActivationParams{},
+
+		tools.V8.String(): &legacyv2.VerifyDealsForActivationParams{},
+		tools.V9.String(): &legacyv2.VerifyDealsForActivationParams{},
+
+		tools.V10.String(): &legacyv3.VerifyDealsForActivationParams{},
+		tools.V11.String(): &legacyv3.VerifyDealsForActivationParams{},
+
+		tools.V12.String(): &legacyv4.VerifyDealsForActivationParams{},
+		tools.V13.String(): &legacyv5.VerifyDealsForActivationParams{},
+		tools.V14.String(): &legacyv6.VerifyDealsForActivationParams{},
+		tools.V15.String(): &legacyv7.VerifyDealsForActivationParams{},
+		tools.V16.String(): &v8Market.VerifyDealsForActivationParams{},
+		tools.V17.String(): &v9Market.VerifyDealsForActivationParams{},
+		tools.V18.String(): &v10Market.VerifyDealsForActivationParams{},
+
+		tools.V19.String(): &v11Market.VerifyDealsForActivationParams{},
+		tools.V20.String(): &v11Market.VerifyDealsForActivationParams{},
+
+		tools.V21.String(): &v12Market.VerifyDealsForActivationParams{},
+		tools.V22.String(): &v13Market.VerifyDealsForActivationParams{},
+		tools.V23.String(): &v14Market.VerifyDealsForActivationParams{},
+		tools.V24.String(): &v15Market.VerifyDealsForActivationParams{},
+		tools.V25.String(): &v16Market.VerifyDealsForActivationParams{},
+	}
+}
+
+func verifyDealsForActivationReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.VerifyDealsForActivationReturn{},
+
+		tools.V8.String(): &legacyv2.VerifyDealsForActivationReturn{},
+		tools.V9.String(): &legacyv2.VerifyDealsForActivationReturn{},
+
+		tools.V10.String(): &legacyv3.VerifyDealsForActivationReturn{},
+		tools.V11.String(): &legacyv3.VerifyDealsForActivationReturn{},
+
+		tools.V12.String(): &legacyv4.VerifyDealsForActivationReturn{},
+		tools.V13.String(): &legacyv5.VerifyDealsForActivationReturn{},
+		tools.V14.String(): &legacyv6.VerifyDealsForActivationReturn{},
+		tools.V15.String(): &legacyv7.VerifyDealsForActivationReturn{},
+		tools.V16.String(): &v8Market.VerifyDealsForActivationReturn{},
+		tools.V17.String(): &v9Market.VerifyDealsForActivationReturn{},
+		tools.V18.String(): &v10Market.VerifyDealsForActivationReturn{},
+
+		tools.V19.String(): &v11Market.VerifyDealsForActivationReturn{},
+		tools.V20.String(): &v11Market.VerifyDealsForActivationReturn{},
+
+		tools.V21.String(): &v12Market.VerifyDealsForActivationReturn{},
+		tools.V22.String(): &v13Market.VerifyDealsForActivationReturn{},
+		tools.V23.String(): &v14Market.VerifyDealsForActivationReturn{},
+		tools.V24.String(): &v15Market.VerifyDealsForActivationReturn{},
+		tools.V25.String(): &v16Market.VerifyDealsForActivationReturn{},
+	}
+}
+
+func activateDealsParams() map[string]cbg.CBORUnmarshaler {
+	vmap := map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ActivateDealsParams{},
+
+		tools.V8.String(): &legacyv2.ActivateDealsParams{},
+		tools.V9.String(): &legacyv2.ActivateDealsParams{},
+
+		tools.V10.String(): &legacyv3.ActivateDealsParams{},
+		tools.V11.String(): &legacyv3.ActivateDealsParams{},
+
+		tools.V12.String(): &legacyv4.ActivateDealsParams{},
+		tools.V13.String(): &legacyv5.ActivateDealsParams{},
+		tools.V14.String(): &legacyv6.ActivateDealsParams{},
+		tools.V15.String(): &legacyv7.ActivateDealsParams{},
+		tools.V16.String(): &v8Market.ActivateDealsParams{},
+		tools.V17.String(): &v9Market.ActivateDealsParams{},
+		tools.V18.String(): &v10Market.ActivateDealsParams{},
+
+		tools.V19.String(): &v11Market.ActivateDealsParams{},
+		tools.V20.String(): &v11Market.ActivateDealsParams{},
+
+		tools.V21.String(): &v12Market.ActivateDealsParams{},
+		tools.V22.String(): &v13Market.ActivateDealsParams{},
+		tools.V23.String(): &v14Market.ActivateDealsParams{},
+		tools.V24.String(): &v15Market.ActivateDealsParams{},
+		tools.V25.String(): &v16Market.ActivateDealsParams{},
+	}
+	// set all versions to the same value as V7
+	versions := tools.VersionsBefore(tools.V6)
+	for _, version := range versions {
+		vmap[version.String()] = &legacyv1.ActivateDealsParams{}
+	}
+	return vmap
+}
+
+func activateDealsReturn() map[string]cbg.CBORUnmarshaler {
+	vmap := map[string]cbg.CBORUnmarshaler{
+		tools.V16.String(): &abi.EmptyValue{},
+
+		tools.V17.String(): &v9Market.ActivateDealsResult{},
+		tools.V18.String(): &v10Market.ActivateDealsResult{},
+
+		tools.V19.String(): &v11Market.ActivateDealsResult{},
+		tools.V20.String(): &v11Market.ActivateDealsResult{},
+
+		tools.V21.String(): &v12Market.ActivateDealsResult{},
+		tools.V22.String(): &v13Market.ActivateDealsResult{},
+		tools.V23.String(): &v14Market.ActivateDealsResult{},
+		tools.V24.String(): &v15Market.ActivateDealsResult{},
+		tools.V25.String(): &v16Market.ActivateDealsResult{},
+	}
+	// set all versions to the same value as V16
+	versions := tools.VersionsBefore(tools.V15)
+	for _, version := range versions {
+		vmap[version.String()] = &abi.EmptyValue{}
+	}
+	return vmap
+}
+
+func onMinerSectorsTerminateParams() map[string]cbg.CBORUnmarshaler {
+	vmap := map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.OnMinerSectorsTerminateParams{},
+
+		tools.V8.String(): &legacyv2.OnMinerSectorsTerminateParams{},
+		tools.V9.String(): &legacyv2.OnMinerSectorsTerminateParams{},
+
+		tools.V10.String(): &legacyv3.OnMinerSectorsTerminateParams{},
+		tools.V11.String(): &legacyv3.OnMinerSectorsTerminateParams{},
+
+		tools.V12.String(): &legacyv4.OnMinerSectorsTerminateParams{},
+		tools.V13.String(): &legacyv5.OnMinerSectorsTerminateParams{},
+		tools.V14.String(): &legacyv6.OnMinerSectorsTerminateParams{},
+		tools.V15.String(): &legacyv7.OnMinerSectorsTerminateParams{},
+		tools.V16.String(): &v8Market.OnMinerSectorsTerminateParams{},
+		tools.V17.String(): &v9Market.OnMinerSectorsTerminateParams{},
+		tools.V18.String(): &v10Market.OnMinerSectorsTerminateParams{},
+
+		tools.V19.String(): &v11Market.OnMinerSectorsTerminateParams{},
+		tools.V20.String(): &v11Market.OnMinerSectorsTerminateParams{},
+
+		tools.V21.String(): &v12Market.OnMinerSectorsTerminateParams{},
+		tools.V22.String(): &v13Market.OnMinerSectorsTerminateParams{},
+		tools.V23.String(): &v14Market.OnMinerSectorsTerminateParams{},
+		tools.V24.String(): &v15Market.OnMinerSectorsTerminateParams{},
+		tools.V25.String(): &v16Market.OnMinerSectorsTerminateParams{},
+	}
+	// set all versions to the same value as V7
+	versions := tools.VersionsBefore(tools.V6)
+	for _, version := range versions {
+		vmap[version.String()] = &legacyv1.OnMinerSectorsTerminateParams{}
+	}
+	return vmap
+}
+
+func computeDataCommitmentParams() map[string]cbg.CBORUnmarshaler {
+	vmap := map[string]cbg.CBORUnmarshaler{
+		tools.V7.String(): &legacyv1.ComputeDataCommitmentParams{},
+
+		tools.V8.String(): &legacyv2.ComputeDataCommitmentParams{},
+		tools.V9.String(): &legacyv2.ComputeDataCommitmentParams{},
+
+		tools.V10.String(): &legacyv3.ComputeDataCommitmentParams{},
+		tools.V11.String(): &legacyv3.ComputeDataCommitmentParams{},
+
+		tools.V12.String(): &legacyv4.ComputeDataCommitmentParams{},
+		tools.V13.String(): &legacyv5.ComputeDataCommitmentParams{},
+		tools.V14.String(): &legacyv6.ComputeDataCommitmentParams{},
+		tools.V15.String(): &legacyv7.ComputeDataCommitmentParams{},
+		tools.V16.String(): &v8Market.ComputeDataCommitmentParams{},
+		tools.V17.String(): &v9Market.ComputeDataCommitmentParams{},
+		tools.V18.String(): &v10Market.ComputeDataCommitmentParams{},
+
+		tools.V19.String(): &v11Market.ComputeDataCommitmentParams{},
+		tools.V20.String(): &v11Market.ComputeDataCommitmentParams{},
+	}
+	// set all versions to the same value as V7
+	versions := tools.VersionsBefore(tools.V6)
+	for _, version := range versions {
+		vmap[version.String()] = &legacyv1.ComputeDataCommitmentParams{}
+	}
+	return vmap
+}
+
+func computeDataCommitmentReturn() map[string]cbg.CBORUnmarshaler {
+	vmap := map[string]cbg.CBORUnmarshaler{
+		tools.V12.String(): &cbg.CborCid{},
+		tools.V13.String(): &legacyv5.ComputeDataCommitmentReturn{},
+		tools.V14.String(): &legacyv6.ComputeDataCommitmentReturn{},
+		tools.V15.String(): &legacyv7.ComputeDataCommitmentReturn{},
+		tools.V16.String(): &v8Market.ComputeDataCommitmentReturn{},
+		tools.V17.String(): &v9Market.ComputeDataCommitmentReturn{},
+		tools.V18.String(): &v10Market.ComputeDataCommitmentReturn{},
+
+		tools.V19.String(): &v11Market.ComputeDataCommitmentReturn{},
+		tools.V20.String(): &v11Market.ComputeDataCommitmentReturn{},
+	}
+	// set all versions to the same value as V12
+	versions := tools.VersionsBefore(tools.V11)
+	for _, version := range versions {
+		vmap[version.String()] = &cbg.CborCid{}
+	}
+	return vmap
+}
+
+func getBalanceReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): &v10Market.GetBalanceReturn{},
+
+		tools.V19.String(): &v11Market.GetBalanceReturn{},
+		tools.V20.String(): &v11Market.GetBalanceReturn{},
+
+		tools.V21.String(): &v12Market.GetBalanceReturn{},
+		tools.V22.String(): &v13Market.GetBalanceReturn{},
+		tools.V23.String(): &v14Market.GetBalanceReturn{},
+		tools.V24.String(): &v15Market.GetBalanceReturn{},
+		tools.V25.String(): &v16Market.GetBalanceReturn{},
+	}
+}
+
+func getDealDataCommitmentParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealDataCommitmentParams),
+
+		tools.V19.String(): new(v11Market.GetDealDataCommitmentParams),
+		tools.V20.String(): new(v11Market.GetDealDataCommitmentParams),
+
+		tools.V21.String(): new(v12Market.GetDealDataCommitmentParams),
+		tools.V22.String(): new(v13Market.GetDealDataCommitmentParams),
+		tools.V23.String(): new(v14Market.GetDealDataCommitmentParams),
+		tools.V24.String(): new(v15Market.GetDealDataCommitmentParams),
+		tools.V25.String(): new(v16Market.GetDealDataCommitmentParams),
+	}
+}
+
+func getDealDataCommitmentReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): &v10Market.GetDealDataCommitmentReturn{},
+
+		tools.V19.String(): &v11Market.GetDealDataCommitmentReturn{},
+		tools.V20.String(): &v11Market.GetDealDataCommitmentReturn{},
+
+		tools.V21.String(): &v12Market.GetDealDataCommitmentReturn{},
+		tools.V22.String(): &v13Market.GetDealDataCommitmentReturn{},
+		tools.V23.String(): &v14Market.GetDealDataCommitmentReturn{},
+		tools.V24.String(): &v15Market.GetDealDataCommitmentReturn{},
+		tools.V25.String(): &v16Market.GetDealDataCommitmentReturn{},
+	}
+}
+
+func getDealClientParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealClientParams),
+
+		tools.V19.String(): new(v11Market.GetDealClientParams),
+		tools.V20.String(): new(v11Market.GetDealClientParams),
+
+		tools.V21.String(): new(v12Market.GetDealClientParams),
+		tools.V22.String(): new(v13Market.GetDealClientParams),
+		tools.V23.String(): new(v14Market.GetDealClientParams),
+		tools.V24.String(): new(v15Market.GetDealClientParams),
+		tools.V25.String(): new(v16Market.GetDealClientParams),
+	}
+}
+
+func getDealClientReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealClientReturn),
+
+		tools.V19.String(): new(v11Market.GetDealClientReturn),
+		tools.V20.String(): new(v11Market.GetDealClientReturn),
+
+		tools.V21.String(): new(v12Market.GetDealClientReturn),
+		tools.V22.String(): new(v13Market.GetDealClientReturn),
+		tools.V23.String(): new(v14Market.GetDealClientReturn),
+		tools.V24.String(): new(v15Market.GetDealClientReturn),
+		tools.V25.String(): new(v16Market.GetDealClientReturn),
+	}
+}
+
+func getDealProviderParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealProviderParams),
+
+		tools.V19.String(): new(v11Market.GetDealProviderParams),
+		tools.V20.String(): new(v11Market.GetDealProviderParams),
+
+		tools.V21.String(): new(v12Market.GetDealProviderParams),
+		tools.V22.String(): new(v13Market.GetDealProviderParams),
+		tools.V23.String(): new(v14Market.GetDealProviderParams),
+		tools.V24.String(): new(v15Market.GetDealProviderParams),
+		tools.V25.String(): new(v16Market.GetDealProviderParams),
+	}
+}
+
+func getDealProviderReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealProviderReturn),
+
+		tools.V19.String(): new(v11Market.GetDealProviderReturn),
+		tools.V20.String(): new(v11Market.GetDealProviderReturn),
+
+		tools.V21.String(): new(v12Market.GetDealProviderReturn),
+		tools.V22.String(): new(v13Market.GetDealProviderReturn),
+		tools.V23.String(): new(v14Market.GetDealProviderReturn),
+		tools.V24.String(): new(v15Market.GetDealProviderReturn),
+		tools.V25.String(): new(v16Market.GetDealProviderReturn),
+	}
+}
+
+func getDealLabelParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealLabelParams),
+
+		tools.V19.String(): new(v11Market.GetDealLabelParams),
+		tools.V20.String(): new(v11Market.GetDealLabelParams),
+
+		tools.V21.String(): new(v12Market.GetDealLabelParams),
+		tools.V22.String(): new(v13Market.GetDealLabelParams),
+		tools.V23.String(): new(v14Market.GetDealLabelParams),
+		tools.V24.String(): new(v15Market.GetDealLabelParams),
+		tools.V25.String(): new(v16Market.GetDealLabelParams),
+	}
+}
+
+func getDealLabelReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealLabelReturn),
+
+		tools.V19.String(): new(v11Market.GetDealLabelReturn),
+		tools.V20.String(): new(v11Market.GetDealLabelReturn),
+
+		tools.V21.String(): new(v12Market.GetDealLabelReturn),
+		tools.V22.String(): new(v13Market.GetDealLabelReturn),
+		tools.V23.String(): new(v14Market.GetDealLabelReturn),
+		tools.V24.String(): new(v15Market.GetDealLabelReturn),
+		tools.V25.String(): new(v16Market.GetDealLabelReturn),
+	}
+}
+
+func getDealTermParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealTermParams),
+
+		tools.V19.String(): new(v11Market.GetDealTermParams),
+		tools.V20.String(): new(v11Market.GetDealTermParams),
+
+		tools.V21.String(): new(v12Market.GetDealTermParams),
+		tools.V22.String(): new(v13Market.GetDealTermParams),
+		tools.V23.String(): new(v14Market.GetDealTermParams),
+		tools.V24.String(): new(v15Market.GetDealTermParams),
+		tools.V25.String(): new(v16Market.GetDealTermParams),
+	}
+}
+
+func getDealTermReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealTermReturn),
+
+		tools.V19.String(): new(v11Market.GetDealTermReturn),
+		tools.V20.String(): new(v11Market.GetDealTermReturn),
+
+		tools.V21.String(): new(v12Market.GetDealTermReturn),
+		tools.V22.String(): new(v13Market.GetDealTermReturn),
+		tools.V23.String(): new(v14Market.GetDealTermReturn),
+		tools.V24.String(): new(v15Market.GetDealTermReturn),
+		tools.V25.String(): new(v16Market.GetDealTermReturn),
+	}
+}
+
+func getDealTotalPriceParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealTotalPriceParams),
+
+		tools.V19.String(): new(v11Market.GetDealTotalPriceParams),
+		tools.V20.String(): new(v11Market.GetDealTotalPriceParams),
+
+		tools.V21.String(): new(v12Market.GetDealTotalPriceParams),
+		tools.V22.String(): new(v13Market.GetDealTotalPriceParams),
+		tools.V23.String(): new(v14Market.GetDealTotalPriceParams),
+		tools.V24.String(): new(v15Market.GetDealTotalPriceParams),
+		tools.V25.String(): new(v16Market.GetDealTotalPriceParams),
+	}
+}
+
+func getDealTotalPriceReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealTotalPriceReturn),
+
+		tools.V19.String(): new(v11Market.GetDealTotalPriceReturn),
+		tools.V20.String(): new(v11Market.GetDealTotalPriceReturn),
+
+		tools.V21.String(): new(v12Market.GetDealTotalPriceReturn),
+		tools.V22.String(): new(v13Market.GetDealTotalPriceReturn),
+		tools.V23.String(): new(v14Market.GetDealTotalPriceReturn),
+		tools.V24.String(): new(v15Market.GetDealTotalPriceReturn),
+		tools.V25.String(): new(v16Market.GetDealTotalPriceReturn),
+	}
+}
+
+func getDealClientCollateralParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealClientCollateralParams),
+
+		tools.V19.String(): new(v11Market.GetDealClientCollateralParams),
+		tools.V20.String(): new(v11Market.GetDealClientCollateralParams),
+
+		tools.V21.String(): new(v12Market.GetDealClientCollateralParams),
+		tools.V22.String(): new(v13Market.GetDealClientCollateralParams),
+		tools.V23.String(): new(v14Market.GetDealClientCollateralParams),
+		tools.V24.String(): new(v15Market.GetDealClientCollateralParams),
+		tools.V25.String(): new(v16Market.GetDealClientCollateralParams),
+	}
+}
+
+func getDealClientCollateralReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealClientCollateralReturn),
+
+		tools.V19.String(): new(v11Market.GetDealClientCollateralReturn),
+		tools.V20.String(): new(v11Market.GetDealClientCollateralReturn),
+
+		tools.V21.String(): new(v12Market.GetDealClientCollateralReturn),
+		tools.V22.String(): new(v13Market.GetDealClientCollateralReturn),
+		tools.V23.String(): new(v14Market.GetDealClientCollateralReturn),
+		tools.V24.String(): new(v15Market.GetDealClientCollateralReturn),
+		tools.V25.String(): new(v16Market.GetDealClientCollateralReturn),
+	}
+}
+
+func getDealProviderCollateralParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealProviderCollateralParams),
+
+		tools.V19.String(): new(v11Market.GetDealProviderCollateralParams),
+		tools.V20.String(): new(v11Market.GetDealProviderCollateralParams),
+
+		tools.V21.String(): new(v12Market.GetDealProviderCollateralParams),
+		tools.V22.String(): new(v13Market.GetDealProviderCollateralParams),
+		tools.V23.String(): new(v14Market.GetDealProviderCollateralParams),
+		tools.V24.String(): new(v15Market.GetDealProviderCollateralParams),
+		tools.V25.String(): new(v16Market.GetDealProviderCollateralParams),
+	}
+}
+
+func getDealProviderCollateralReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealProviderCollateralReturn),
+
+		tools.V19.String(): new(v11Market.GetDealProviderCollateralReturn),
+		tools.V20.String(): new(v11Market.GetDealProviderCollateralReturn),
+
+		tools.V21.String(): new(v12Market.GetDealProviderCollateralReturn),
+		tools.V22.String(): new(v13Market.GetDealProviderCollateralReturn),
+		tools.V23.String(): new(v14Market.GetDealProviderCollateralReturn),
+		tools.V24.String(): new(v15Market.GetDealProviderCollateralReturn),
+		tools.V25.String(): new(v16Market.GetDealProviderCollateralReturn),
+	}
+}
+
+func getDealVerifiedParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealVerifiedParams),
+
+		tools.V19.String(): new(v11Market.GetDealVerifiedParams),
+		tools.V20.String(): new(v11Market.GetDealVerifiedParams),
+
+		tools.V21.String(): new(v12Market.GetDealVerifiedParams),
+		tools.V22.String(): new(v13Market.GetDealVerifiedParams),
+		tools.V23.String(): new(v14Market.GetDealVerifiedParams),
+		tools.V24.String(): new(v15Market.GetDealVerifiedParams),
+		tools.V25.String(): new(v16Market.GetDealVerifiedParams),
+	}
+}
+
+func getDealVerifiedReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealVerifiedReturn),
+
+		tools.V19.String(): new(v11Market.GetDealVerifiedReturn),
+		tools.V20.String(): new(v11Market.GetDealVerifiedReturn),
+
+		tools.V21.String(): new(v12Market.GetDealVerifiedReturn),
+		tools.V22.String(): new(v13Market.GetDealVerifiedReturn),
+		tools.V23.String(): new(v14Market.GetDealVerifiedReturn),
+		tools.V24.String(): new(v15Market.GetDealVerifiedReturn),
+		tools.V25.String(): new(v16Market.GetDealVerifiedReturn),
+	}
+}
+
+func getDealActivationParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealActivationParams),
+
+		tools.V19.String(): new(v11Market.GetDealActivationParams),
+		tools.V20.String(): new(v11Market.GetDealActivationParams),
+
+		tools.V21.String(): new(v12Market.GetDealActivationParams),
+		tools.V22.String(): new(v13Market.GetDealActivationParams),
+		tools.V23.String(): new(v14Market.GetDealActivationParams),
+		tools.V24.String(): new(v15Market.GetDealActivationParams),
+		tools.V25.String(): new(v16Market.GetDealActivationParams),
+	}
+}
+
+func getDealActivationReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V18.String(): new(v10Market.GetDealActivationReturn),
+
+		tools.V19.String(): new(v11Market.GetDealActivationReturn),
+		tools.V20.String(): new(v11Market.GetDealActivationReturn),
+
+		tools.V21.String(): new(v12Market.GetDealActivationReturn),
+		tools.V22.String(): new(v13Market.GetDealActivationReturn),
+		tools.V23.String(): new(v14Market.GetDealActivationReturn),
+		tools.V24.String(): new(v15Market.GetDealActivationReturn),
+		tools.V25.String(): new(v16Market.GetDealActivationReturn),
+	}
+}
+
+func settleDealPaymentsParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V22.String(): &v13Market.SettleDealPaymentsParams{},
+		tools.V23.String(): &v14Market.SettleDealPaymentsParams{},
+		tools.V24.String(): &v15Market.SettleDealPaymentsParams{},
+		tools.V25.String(): &v16Market.SettleDealPaymentsParams{},
+	}
+}
+
+func settleDealPaymentsReturn() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V22.String(): &v13Market.SettleDealPaymentsReturn{},
+		tools.V23.String(): &v14Market.SettleDealPaymentsReturn{},
+		tools.V24.String(): &v15Market.SettleDealPaymentsReturn{},
+		tools.V25.String(): &v16Market.SettleDealPaymentsReturn{},
+	}
+}
+
+func sectorChanges() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V22.String(): &miner13.SectorChanges{},
+		tools.V23.String(): &miner14.SectorChanges{},
+		tools.V24.String(): &miner15.SectorChanges{},
+		tools.V25.String(): &miner16.SectorChanges{},
+	}
+}
+
+func pieceChange() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V22.String(): &miner13.PieceChange{},
+		tools.V23.String(): &miner14.PieceChange{},
+		tools.V24.String(): &miner15.PieceChange{},
+		tools.V25.String(): &miner16.PieceChange{},
+	}
+}
+
+func getDealSectorParams() map[string]cbg.CBORUnmarshaler {
+	return map[string]cbg.CBORUnmarshaler{
+		tools.V22.String(): new(v13Market.GetDealSectorParams),
+		tools.V23.String(): new(v14Market.GetDealSectorParams),
+		tools.V24.String(): new(v15Market.GetDealSectorParams),
+		tools.V25.String(): new(v16Market.GetDealSectorParams),
+	}
+}
+
 func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version
@@ -129,44 +778,12 @@ func (*Market) AddBalance(network string, height int64, rawParams []byte) (map[s
 }
 
 func (*Market) WithdrawBalance(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	var resp map[string]interface{}
-	var err error
-	switch {
-	case tools.V25.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v16Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V24.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v15Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V23.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v14Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V22.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v13Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V21.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v12Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		resp, err = parseGeneric(rawParams, nil, false, &v11Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V18.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v10Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V17.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v9Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V16.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &v8Market.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V15.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv7.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V14.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv6.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V13.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv5.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.V12.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv4.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv3.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv2.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		resp, err = parseGeneric(rawParams, nil, false, &legacyv1.WithdrawBalanceParams{}, &abi.EmptyValue{})
-	default:
+	version := tools.VersionFromHeight(network, height)
+	params, ok := withdrawBalanceParams()[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	resp, err := parseGeneric(rawParams, nil, false, params, &abi.EmptyValue{})
 	if err != nil {
 		return nil, err
 	}
@@ -177,584 +794,219 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 }
 
 func (*Market) PublishStorageDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v16Market.PublishStorageDealsParams{}, &v16Market.PublishStorageDealsReturn{})
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v15Market.PublishStorageDealsParams{}, &v15Market.PublishStorageDealsReturn{})
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v14Market.PublishStorageDealsParams{}, &v14Market.PublishStorageDealsReturn{})
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v13Market.PublishStorageDealsParams{}, &v13Market.PublishStorageDealsReturn{})
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v12Market.PublishStorageDealsParams{}, &v12Market.PublishStorageDealsReturn{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, rawReturn, true, &v11Market.PublishStorageDealsParams{}, &v11Market.PublishStorageDealsReturn{})
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v10Market.PublishStorageDealsParams{}, &v10Market.PublishStorageDealsReturn{})
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v9Market.PublishStorageDealsParams{}, &v9Market.PublishStorageDealsReturn{})
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v8Market.PublishStorageDealsParams{}, &v8Market.PublishStorageDealsReturn{})
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv7.PublishStorageDealsParams{}, &legacyv7.PublishStorageDealsReturn{})
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv6.PublishStorageDealsParams{}, &legacyv6.PublishStorageDealsReturn{})
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv5.PublishStorageDealsParams{}, &legacyv5.PublishStorageDealsReturn{})
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv4.PublishStorageDealsParams{}, &legacyv4.PublishStorageDealsReturn{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv3.PublishStorageDealsParams{}, &legacyv3.PublishStorageDealsReturn{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv2.PublishStorageDealsParams{}, &legacyv2.PublishStorageDealsReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv1.PublishStorageDealsParams{}, &legacyv1.PublishStorageDealsReturn{})
+	version := tools.VersionFromHeight(network, height)
+	params, ok := publishStorageDealsParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := publishStorageDealsReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) VerifyDealsForActivationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	var resp map[string]interface{}
-	var err error
-
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v16Market.VerifyDealsForActivationParams{}, &v16Market.VerifyDealsForActivationReturn{})
-	case tools.V24.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v15Market.VerifyDealsForActivationParams{}, &v15Market.VerifyDealsForActivationReturn{})
-	case tools.V23.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v14Market.VerifyDealsForActivationParams{}, &v14Market.VerifyDealsForActivationReturn{})
-	case tools.V22.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v13Market.VerifyDealsForActivationParams{}, &v13Market.VerifyDealsForActivationReturn{})
-	case tools.V21.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v12Market.VerifyDealsForActivationParams{}, &v12Market.VerifyDealsForActivationReturn{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v11Market.VerifyDealsForActivationParams{}, &v11Market.VerifyDealsForActivationReturn{})
-	case tools.V18.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v10Market.VerifyDealsForActivationParams{}, &v10Market.VerifyDealsForActivationReturn{})
-	case tools.V17.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v9Market.VerifyDealsForActivationParams{}, &v9Market.VerifyDealsForActivationReturn{})
-
-	case tools.V16.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &v8Market.VerifyDealsForActivationParams{}, &v8Market.VerifyDealsForActivationReturn{})
-	case tools.V15.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv7.VerifyDealsForActivationParams{}, &legacyv7.VerifyDealsForActivationReturn{})
-	case tools.V14.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv6.VerifyDealsForActivationParams{}, &legacyv6.VerifyDealsForActivationReturn{})
-	case tools.V13.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv5.VerifyDealsForActivationParams{}, &legacyv5.VerifyDealsForActivationReturn{})
-	case tools.V12.IsSupported(network, height):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv4.VerifyDealsForActivationParams{}, &legacyv4.VerifyDealsForActivationReturn{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv3.VerifyDealsForActivationParams{}, &legacyv3.VerifyDealsForActivationReturn{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv2.VerifyDealsForActivationParams{}, &legacyv2.VerifyDealsForActivationReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		resp, err = parseGeneric(rawParams, rawReturn, true, &legacyv1.VerifyDealsForActivationParams{}, &legacyv1.VerifyDealsForActivationReturn{})
-	default:
+	version := tools.VersionFromHeight(network, height)
+	params, ok := verifyDealsForActivationParams()[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return resp, err
+	returnValue, ok := verifyDealsForActivationReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) ActivateDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v16Market.ActivateDealsParams{}, &v16Market.ActivateDealsResult{})
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v15Market.ActivateDealsParams{}, &v15Market.ActivateDealsResult{})
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v14Market.ActivateDealsParams{}, &v14Market.ActivateDealsResult{})
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v13Market.ActivateDealsParams{}, &v13Market.ActivateDealsResult{})
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v12Market.ActivateDealsParams{}, &v12Market.ActivateDealsResult{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, rawReturn, true, &v11Market.ActivateDealsParams{}, &v11Market.ActivateDealsResult{})
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v10Market.ActivateDealsParams{}, &v10Market.ActivateDealsResult{})
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v9Market.ActivateDealsParams{}, &v9Market.ActivateDealsResult{})
-
-	// the method used to return an empty value before
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v8Market.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv7.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv6.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv5.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv4.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv3.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv2.ActivateDealsParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv1.ActivateDealsParams{}, &abi.EmptyValue{})
+	version := tools.VersionFromHeight(network, height)
+	params, ok := activateDealsParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := activateDealsReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
+
 }
 
 func (*Market) OnMinerSectorsTerminateExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v16Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v15Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v14Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v13Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v12Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, nil, false, &v11Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v10Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v9Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &v8Market.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv7.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv6.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv5.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, nil, false, &legacyv4.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, nil, false, &legacyv3.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, nil, false, &legacyv2.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, nil, false, &legacyv1.OnMinerSectorsTerminateParams{}, &abi.EmptyValue{})
+	version := tools.VersionFromHeight(network, height)
+	params, ok := onMinerSectorsTerminateParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return parseGeneric(rawParams, nil, false, params, &abi.EmptyValue{})
 }
 
 func (*Market) ComputeDataCommitmentExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsAfter(tools.V20)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, rawReturn, true, &v11Market.ComputeDataCommitmentParams{}, &v11Market.ComputeDataCommitmentReturn{})
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v10Market.ComputeDataCommitmentParams{}, &v10Market.ComputeDataCommitmentReturn{})
-	case tools.V17.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v9Market.ComputeDataCommitmentParams{}, &v9Market.ComputeDataCommitmentReturn{})
-	case tools.V16.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v8Market.ComputeDataCommitmentParams{}, &v8Market.ComputeDataCommitmentReturn{})
-	case tools.V15.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv7.ComputeDataCommitmentParams{}, &legacyv7.ComputeDataCommitmentReturn{})
-	case tools.V14.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv6.ComputeDataCommitmentParams{}, &legacyv6.ComputeDataCommitmentReturn{})
-	case tools.V13.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv5.ComputeDataCommitmentParams{}, &legacyv5.ComputeDataCommitmentReturn{})
-	case tools.V12.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv4.ComputeDataCommitmentParams{}, &cbg.CborCid{})
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv3.ComputeDataCommitmentParams{}, &cbg.CborCid{})
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv2.ComputeDataCommitmentParams{}, &cbg.CborCid{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parseGeneric(rawParams, rawReturn, true, &legacyv1.ComputeDataCommitmentParams{}, &cbg.CborCid{})
+	version := tools.VersionFromHeight(network, height)
+	params, ok := computeDataCommitmentParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := computeDataCommitmentReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetBalanceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v16Market.GetBalanceReturn{})
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v15Market.GetBalanceReturn{})
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v14Market.GetBalanceReturn{})
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v13Market.GetBalanceReturn{})
-	case tools.V21.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v12Market.GetBalanceReturn{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v11Market.GetBalanceReturn{})
-	case tools.V18.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &address.Address{}, &v10Market.GetBalanceReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	returnValue, ok := getBalanceReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return parseGeneric(rawParams, rawReturn, true, &address.Address{}, returnValue)
 }
 
 func (*Market) GetDealDataCommitmentExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v16Market.GetDealDataCommitmentReturn{})
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v15Market.GetDealDataCommitmentReturn{})
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v14Market.GetDealDataCommitmentReturn{})
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v13Market.GetDealDataCommitmentReturn{})
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v12Market.GetDealDataCommitmentReturn{})
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v11Market.GetDealDataCommitmentReturn{})
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealDataCommitmentParams
-		return parseGeneric(rawParams, rawReturn, true, &params, &v10Market.GetDealDataCommitmentReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealDataCommitmentParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealDataCommitmentReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealClientExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealClientParams
-		var r v16Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealClientParams
-		var r v15Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealClientParams
-		var r v14Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealClientParams
-		var r v13Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealClientParams
-		var r v12Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealClientParams
-		var r v11Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealClientParams
-		var r v10Market.GetDealClientReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealClientParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealClientReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealProviderExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealProviderParams
-		var r v16Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealProviderParams
-		var r v15Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealProviderParams
-		var r v14Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealProviderParams
-		var r v13Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealProviderParams
-		var r v12Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealProviderParams
-		var r v11Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealProviderParams
-		var r v10Market.GetDealProviderReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealProviderParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealProviderReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealLabelExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealLabelParams
-		var r v16Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealLabelParams
-		var r v15Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealLabelParams
-		var r v14Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealLabelParams
-		var r v13Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealLabelParams
-		var r v12Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealLabelParams
-		var r v11Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealLabelParams
-		var r v10Market.GetDealLabelReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealLabelParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealLabelReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealTermExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealTermParams
-		var r v16Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealTermParams
-		var r v15Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealTermParams
-		var r v14Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealTermParams
-		var r v13Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealTermParams
-		var r v12Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealTermParams
-		var r v11Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealTermParams
-		var r v10Market.GetDealTermReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealTermParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealTermReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealTotalPriceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealTotalPriceParams
-		var r v16Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealTotalPriceParams
-		var r v15Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealTotalPriceParams
-		var r v14Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealTotalPriceParams
-		var r v13Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealTotalPriceParams
-		var r v12Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealTotalPriceParams
-		var r v11Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealTotalPriceParams
-		var r v10Market.GetDealTotalPriceReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealTotalPriceParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("unsupported height: %d", height)
+	returnValue, ok := getDealTotalPriceReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealClientCollateralExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealClientCollateralParams
-		var r v16Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealClientCollateralParams
-		var r v15Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealClientCollateralParams
-		var r v14Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealClientCollateralParams
-		var r v13Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealClientCollateralParams
-		var r v12Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealClientCollateralParams
-		var r v11Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealClientCollateralParams
-		var r v10Market.GetDealClientCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealClientCollateralParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("unsupported height: %d", height)
+	returnValue, ok := getDealClientCollateralReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealProviderCollateralExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealProviderCollateralParams
-		var r v16Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealProviderCollateralParams
-		var r v15Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealProviderCollateralParams
-		var r v14Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealProviderCollateralParams
-		var r v13Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealProviderCollateralParams
-		var r v12Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		var params v11Market.GetDealProviderCollateralParams
-		var r v11Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealProviderCollateralParams
-		var r v10Market.GetDealProviderCollateralReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealProviderCollateralParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealProviderCollateralReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealVerifiedExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealVerifiedParams
-		var r v16Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealVerifiedParams
-		var r v15Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealVerifiedParams
-		var r v14Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealVerifiedParams
-		var r v13Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealVerifiedParams
-		var r v12Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealVerifiedParams
-		var r v11Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealVerifiedParams
-		var r v10Market.GetDealVerifiedReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealVerifiedParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealVerifiedReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) GetDealActivationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealActivationParams
-		var r v16Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealActivationParams
-		var r v15Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealActivationParams
-		var r v14Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealActivationParams
-		var r v13Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V21.IsSupported(network, height):
-		var params v12Market.GetDealActivationParams
-		var r v12Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		var params v11Market.GetDealActivationParams
-		var r v11Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.V18.IsSupported(network, height):
-		var params v10Market.GetDealActivationParams
-		var r v10Market.GetDealActivationReturn
-		return parseGeneric(rawParams, rawReturn, true, &params, &r)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getDealActivationParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := getDealActivationReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) SettleDealPaymentsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v16Market.SettleDealPaymentsParams{}, &v16Market.SettleDealPaymentsReturn{})
-	case tools.V24.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v15Market.SettleDealPaymentsParams{}, &v15Market.SettleDealPaymentsReturn{})
-	case tools.V23.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v14Market.SettleDealPaymentsParams{}, &v14Market.SettleDealPaymentsReturn{})
-	case tools.V22.IsSupported(network, height):
-		return parseGeneric(rawParams, rawReturn, true, &v13Market.SettleDealPaymentsParams{}, &v13Market.SettleDealPaymentsReturn{})
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := settleDealPaymentsParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := settleDealPaymentsReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params, returnValue)
 }
 
 func (*Market) SectorContentChanged(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
@@ -780,56 +1032,31 @@ func (*Market) SectorContentChanged(network string, height int64, rawParams, raw
 }
 
 func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshaler, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return &miner16.SectorChanges{}, nil
-	case tools.V24.IsSupported(network, height):
-		return &miner15.SectorChanges{}, nil
-	case tools.V23.IsSupported(network, height):
-		return &miner14.SectorChanges{}, nil
-	case tools.V22.IsSupported(network, height):
-		return &miner13.SectorChanges{}, nil
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := sectorChanges()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return params, nil
 }
+
 func sectorContentChangedReturn(network string, height int64) (cbg.CBORUnmarshaler, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return &miner16.PieceChange{}, nil
-	case tools.V24.IsSupported(network, height):
-		return &miner15.PieceChange{}, nil
-	case tools.V23.IsSupported(network, height):
-		return &miner14.PieceChange{}, nil
-	case tools.V22.IsSupported(network, height):
-		return &miner13.PieceChange{}, nil
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	returnValue, ok := pieceChange()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return returnValue, nil
 }
 
 func (*Market) GetDealSectorExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	metadata := map[string]interface{}{}
-	var extractedParams marketParam
 	var extractedReturn abi.SectorNumber
 
-	switch {
-	case tools.V25.IsSupported(network, height):
-		var params v16Market.GetDealSectorParams
-		extractedParams = &params
-	case tools.V24.IsSupported(network, height):
-		var params v15Market.GetDealSectorParams
-		extractedParams = &params
-	case tools.V23.IsSupported(network, height):
-		var params v14Market.GetDealSectorParams
-		extractedParams = &params
-	case tools.V22.IsSupported(network, height):
-		var params v13Market.GetDealSectorParams
-		extractedParams = &params
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V21)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	extractedParams, ok := getDealSectorParams()[version.String()]
+	if !ok {
+		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
 	err := extractedParams.UnmarshalCBOR(bytes.NewReader(rawParams))

@@ -11,33 +11,51 @@ import (
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+
+	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return nil, actors.ErrInvalidHeightForMethod
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv9.MintParams{}, &datacapv9.MintReturn{}, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv10.MintParams{}, &datacapv10.MintReturn{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, rawReturn, true, &datacapv11.MintParams{}, &datacapv11.MintReturn{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.MintParams{}, &datacapv12.MintReturn{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv12.MintParams{}, &datacapv12.MintReturn{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv13.MintParams{}, &datacapv13.MintReturn{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv14.MintParams{}, &datacapv14.MintReturn{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv15.MintParams{}, &datacapv15.MintReturn{}, parser.ParamsKey)
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, rawReturn, true, &datacapv16.MintParams{}, &datacapv16.MintReturn{}, parser.ParamsKey)
+func mintParams() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.MintParams{},
+		tools.V18.String(): &datacapv10.MintParams{},
+		tools.V19.String(): &datacapv11.MintParams{},
+		tools.V20.String(): &datacapv11.MintParams{},
+		tools.V21.String(): &datacapv12.MintParams{},
+		tools.V22.String(): &datacapv13.MintParams{},
+		tools.V23.String(): &datacapv14.MintParams{},
+		tools.V24.String(): &datacapv15.MintParams{},
+		tools.V25.String(): &datacapv16.MintParams{},
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+}
+
+func mintReturn() map[string]typegen.CBORUnmarshaler {
+	return map[string]typegen.CBORUnmarshaler{
+		tools.V17.String(): &datacapv9.MintReturn{},
+		tools.V18.String(): &datacapv10.MintReturn{},
+		tools.V19.String(): &datacapv11.MintReturn{},
+		tools.V20.String(): &datacapv11.MintReturn{},
+		tools.V21.String(): &datacapv12.MintReturn{},
+		tools.V22.String(): &datacapv13.MintReturn{},
+		tools.V23.String(): &datacapv14.MintReturn{},
+		tools.V24.String(): &datacapv15.MintReturn{},
+		tools.V25.String(): &datacapv16.MintReturn{},
+	}
+}
+
+func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := mintParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := mintReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
 }
