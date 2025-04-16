@@ -3,7 +3,6 @@ package multisig
 import (
 	"bytes"
 	"fmt"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/cbor"
@@ -106,13 +105,18 @@ func innerProposeParams(network string, height int64, method abi.MethodNum, prop
 	case builtin.MethodsVerifiedRegistry.AddVerifier:
 		methodName = parser.MethodAddVerifier
 		params, err = verifierParams(network, height)
+	case builtin.MethodsEVM.InvokeContract:
+		methodName = parser.MethodInvokeContract
+		params = &abi.CborBytes{}
 	default:
 		err = parser.ErrUnknownMethod
 	}
-	if err == nil {
+
+	if err == nil && params != nil {
 		err := params.UnmarshalCBOR(reader)
 		return methodName, params, err
 	}
+
 	return "", nil, err
 }
 
