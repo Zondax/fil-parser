@@ -22,6 +22,12 @@ import (
 )
 
 var constructorParams = map[string]func() typegen.CBORUnmarshaler{
+	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 
 	tools.V8.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
@@ -49,6 +55,12 @@ var constructorParams = map[string]func() typegen.CBORUnmarshaler{
 }
 
 var execParams = map[string]func() typegen.CBORUnmarshaler{
+	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
+	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
+	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
+	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
+	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
+	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V8.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
 	tools.V9.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
@@ -75,7 +87,14 @@ var execParams = map[string]func() typegen.CBORUnmarshaler{
 }
 
 var execReturn = map[string]func() typegen.CBORUnmarshaler{
+	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
+	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
+	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
+	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
+	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
+	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
+
 	tools.V8.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
 	tools.V9.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
 

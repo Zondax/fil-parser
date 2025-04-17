@@ -22,6 +22,12 @@ import (
 )
 
 var addVerifierParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
@@ -49,6 +55,12 @@ var addVerifierParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var addVerifiedClientParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
@@ -76,6 +88,12 @@ var addVerifiedClientParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var useBytesParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
@@ -103,6 +121,12 @@ var useBytesParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
@@ -130,6 +154,12 @@ var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var dataCap = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },

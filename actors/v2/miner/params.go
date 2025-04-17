@@ -22,6 +22,12 @@ import (
 )
 
 var changeMultiaddrsParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeMultiaddrsParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ChangeMultiaddrsParams) },
@@ -49,6 +55,12 @@ var changeMultiaddrsParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var changePeerIDParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangePeerIDParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ChangePeerIDParams) },
@@ -76,6 +88,12 @@ var changePeerIDParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var changeWorkerAddressParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ChangeWorkerAddressParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ChangeWorkerAddressParams) },
@@ -168,6 +186,12 @@ var getMultiAddrsReturn = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var getControlAddressesReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.GetControlAddressesReturn) },
@@ -221,6 +245,12 @@ var getVestingFundsReturn = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var getWithdrawBalanceParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.WithdrawBalanceParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.WithdrawBalanceParams) },
@@ -261,6 +291,12 @@ var extendSectorExpiration2Params = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var preCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SectorPreCommitInfo) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.SectorPreCommitInfo) },
@@ -286,6 +322,12 @@ var preCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var proveCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ProveCommitSectorParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ProveCommitSectorParams) },
@@ -333,6 +375,12 @@ var internalSectorSetupForPresealParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var submitWindowedPoStParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.SubmitWindowedPoStParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.SubmitWindowedPoStParams) },
@@ -370,7 +418,12 @@ var confirmSectorProofsParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var checkSectorProvenParams = map[string]func() cbg.CBORUnmarshaler{
-
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CheckSectorProvenParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CheckSectorProvenParams) },
@@ -398,6 +451,12 @@ var checkSectorProvenParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var extendSectorExpirationParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ExtendSectorExpirationParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ExtendSectorExpirationParams) },
@@ -425,6 +484,12 @@ var extendSectorExpirationParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var compactSectorNumbersParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactSectorNumbersParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CompactSectorNumbersParams) },
@@ -453,6 +518,12 @@ var compactSectorNumbersParams = map[string]func() cbg.CBORUnmarshaler{
 
 func compactPartitionsParams() map[string]func() cbg.CBORUnmarshaler {
 	return map[string]func() cbg.CBORUnmarshaler{
+		tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
+		tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
+		tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
+		tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
+		tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
+		tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
 		tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CompactPartitionsParams) },
 
 		tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CompactPartitionsParams) },

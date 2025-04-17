@@ -23,6 +23,12 @@ import (
 
 var cronConstructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },

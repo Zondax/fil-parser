@@ -22,6 +22,12 @@ import (
 )
 
 var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AwardBlockRewardParams) },
@@ -49,6 +55,12 @@ var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
 	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
 
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ThisEpochRewardReturn) },
