@@ -115,11 +115,11 @@ func (p *Power) Methods(_ context.Context, network string, height int64) (map[ab
 
 func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := currentTotalPowerReturn()[version.String()]
+	returnValue, ok := currentTotalPowerReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Power) SubmitPoRepForBulkVerify(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -143,26 +143,26 @@ func (*Power) OnConsensusFault(network string, height int64, msg *parser.LotusMe
 
 func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := constructorParams()[version.String()]
+	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, nil, false, params, &abi.EmptyValue{}, parser.ParamsKey)
+	return parse(raw, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := createMinerReturn()[version.String()]
+	params, ok := createMinerParams[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	returnValue, ok := createMinerReturn()[version.String()]
+	returnValue, ok := createMinerReturn[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	data, addressInfo, err := parseCreateMiner(msg, raw, rawReturn, params, returnValue)
+	data, addressInfo, err := parseCreateMiner(msg, raw, rawReturn, params(), returnValue())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -176,22 +176,22 @@ func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, he
 
 func (*Power) EnrollCronEvent(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := enrollCronEventParams()[version.String()]
+	params, ok := enrollCronEventParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, rawReturn, false, params, &abi.EmptyValue{}, parser.ParamsKey)
+	return parse(raw, rawReturn, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Power) UpdateClaimedPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := updateClaimedPowerParams()[version.String()]
+	params, ok := updateClaimedPowerParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, rawReturn, false, params, &abi.EmptyValue{}, parser.ParamsKey)
+	return parse(raw, rawReturn, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Power) UpdatePledgeTotal(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -201,45 +201,45 @@ func (*Power) UpdatePledgeTotal(network string, msg *parser.LotusMessage, height
 
 func (*Power) NetworkRawPowerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := networkRawPowerReturn()[version.String()]
+	returnValue, ok := networkRawPowerReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Power) MinerRawPowerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := minerRawPowerParams()[version.String()]
+	params, ok := minerRawPowerParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	returnValue, ok := minerRawPowerReturn()[version.String()]
+	returnValue, ok := minerRawPowerReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, rawReturn, false, params, returnValue, parser.ParamsKey)
+	return parse(raw, rawReturn, false, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := minerCountReturn()[version.String()]
+	returnValue, ok := minerCountReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Power) MinerConsensusCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := minerConsensusCountReturn()[version.String()]
+	returnValue, ok := minerConsensusCountReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }

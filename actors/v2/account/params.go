@@ -13,16 +13,14 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func authenticateMessageParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V17.String(): &accountv9.AuthenticateMessageParams{},
-		tools.V18.String(): &accountv10.AuthenticateMessageParams{},
-		tools.V19.String(): &accountv11.AuthenticateMessageParams{},
-		tools.V20.String(): &accountv11.AuthenticateMessageParams{},
-		tools.V21.String(): &accountv12.AuthenticateMessageParams{},
-		tools.V22.String(): &accountv13.AuthenticateMessageParams{},
-		tools.V23.String(): &accountv14.AuthenticateMessageParams{},
-		tools.V24.String(): &accountv15.AuthenticateMessageParams{},
-		tools.V25.String(): &accountv16.AuthenticateMessageParams{},
-	}
+var authenticateMessageParams = map[string]func() typegen.CBORUnmarshaler{
+	tools.V17.String(): func() typegen.CBORUnmarshaler { return new(accountv9.AuthenticateMessageParams) },
+	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(accountv10.AuthenticateMessageParams) },
+	tools.V19.String(): func() typegen.CBORUnmarshaler { return new(accountv11.AuthenticateMessageParams) },
+	tools.V20.String(): func() typegen.CBORUnmarshaler { return new(accountv11.AuthenticateMessageParams) },
+	tools.V21.String(): func() typegen.CBORUnmarshaler { return new(accountv12.AuthenticateMessageParams) },
+	tools.V22.String(): func() typegen.CBORUnmarshaler { return new(accountv13.AuthenticateMessageParams) },
+	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(accountv14.AuthenticateMessageParams) },
+	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(accountv15.AuthenticateMessageParams) },
+	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(accountv16.AuthenticateMessageParams) },
 }

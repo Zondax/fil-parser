@@ -101,32 +101,32 @@ func (e *Evm) InvokeContract(network string, height int64, method string, rawPar
 
 func (*Evm) Resurrect(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := resurrectParams()[version.String()]
+	params, ok := resurrectParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, nil, false, params, &abi.EmptyValue{}, parser.ParamsKey)
+	return parse(raw, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Evm) InvokeContractDelegate(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := delegateCallParams()[version.String()]
+	params, ok := delegateCallParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(rawParams, rawReturn, true, params, &abi.CborBytes{}, parser.ParamsKey)
+	return parse(rawParams, rawReturn, true, params(), &abi.CborBytes{}, parser.ParamsKey)
 }
 
 func (*Evm) GetBytecode(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := getBytecodeReturn()[version.String()]
+	returnValue, ok := getBytecodeReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, nil, false, returnValue, &abi.CborBytes{}, parser.ReturnKey)
+	return parse(raw, nil, false, returnValue(), &abi.CborBytes{}, parser.ReturnKey)
 }
 
 func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[string]interface{}, error) {
@@ -135,20 +135,20 @@ func (*Evm) GetBytecodeHash(network string, height int64, raw []byte) (map[strin
 
 func (*Evm) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := constructorParams()[version.String()]
+	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, nil, false, params, &abi.CborBytes{}, parser.ParamsKey)
+	return parse(raw, nil, false, params(), &abi.CborBytes{}, parser.ParamsKey)
 }
 
 func (*Evm) GetStorageAt(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := getStorageAtParams()[version.String()]
+	params, ok := getStorageAtParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(rawParams, rawReturn, true, params, &abi.CborBytes{}, parser.ParamsKey)
+	return parse(rawParams, rawReturn, true, params(), &abi.CborBytes{}, parser.ParamsKey)
 }

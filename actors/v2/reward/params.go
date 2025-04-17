@@ -21,60 +21,56 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func awardBlockRewardParams() map[string]cbg.CBORUnmarshaler {
-	return map[string]cbg.CBORUnmarshaler{
-		tools.V7.String(): &legacyv1.AwardBlockRewardParams{},
+var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
 
-		tools.V8.String(): &legacyv2.AwardBlockRewardParams{},
-		tools.V9.String(): &legacyv2.AwardBlockRewardParams{},
+	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AwardBlockRewardParams) },
+	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AwardBlockRewardParams) },
 
-		tools.V10.String(): &legacyv3.AwardBlockRewardParams{},
-		tools.V11.String(): &legacyv3.AwardBlockRewardParams{},
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.AwardBlockRewardParams) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.AwardBlockRewardParams) },
 
-		tools.V12.String(): &legacyv4.AwardBlockRewardParams{},
-		tools.V13.String(): &legacyv5.AwardBlockRewardParams{},
-		tools.V14.String(): &legacyv6.AwardBlockRewardParams{},
-		tools.V15.String(): &legacyv7.AwardBlockRewardParams{},
-		tools.V16.String(): &rewardv8.AwardBlockRewardParams{},
-		tools.V17.String(): &rewardv9.AwardBlockRewardParams{},
-		tools.V18.String(): &rewardv10.AwardBlockRewardParams{},
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv4.AwardBlockRewardParams) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.AwardBlockRewardParams) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.AwardBlockRewardParams) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.AwardBlockRewardParams) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(rewardv8.AwardBlockRewardParams) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(rewardv9.AwardBlockRewardParams) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(rewardv10.AwardBlockRewardParams) },
 
-		tools.V19.String(): &rewardv11.AwardBlockRewardParams{},
-		tools.V20.String(): &rewardv11.AwardBlockRewardParams{},
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(rewardv11.AwardBlockRewardParams) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(rewardv11.AwardBlockRewardParams) },
 
-		tools.V21.String(): &rewardv12.AwardBlockRewardParams{},
-		tools.V22.String(): &rewardv13.AwardBlockRewardParams{},
-		tools.V23.String(): &rewardv14.AwardBlockRewardParams{},
-		tools.V24.String(): &rewardv15.AwardBlockRewardParams{},
-		tools.V25.String(): &rewardv16.AwardBlockRewardParams{},
-	}
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(rewardv12.AwardBlockRewardParams) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(rewardv13.AwardBlockRewardParams) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(rewardv14.AwardBlockRewardParams) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(rewardv15.AwardBlockRewardParams) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.AwardBlockRewardParams) },
 }
 
-func thisEpochRewardReturn() map[string]cbg.CBORUnmarshaler {
-	return map[string]cbg.CBORUnmarshaler{
-		tools.V7.String(): &legacyv1.ThisEpochRewardReturn{},
+var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
 
-		tools.V8.String(): &legacyv2.ThisEpochRewardReturn{},
-		tools.V9.String(): &legacyv2.ThisEpochRewardReturn{},
+	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ThisEpochRewardReturn) },
+	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ThisEpochRewardReturn) },
 
-		tools.V10.String(): &legacyv3.ThisEpochRewardReturn{},
-		tools.V11.String(): &legacyv3.ThisEpochRewardReturn{},
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.ThisEpochRewardReturn) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.ThisEpochRewardReturn) },
 
-		tools.V12.String(): &legacyv4.ThisEpochRewardReturn{},
-		tools.V13.String(): &legacyv5.ThisEpochRewardReturn{},
-		tools.V14.String(): &legacyv6.ThisEpochRewardReturn{},
-		tools.V15.String(): &legacyv7.ThisEpochRewardReturn{},
-		tools.V16.String(): &rewardv8.ThisEpochRewardReturn{},
-		tools.V17.String(): &rewardv9.ThisEpochRewardReturn{},
-		tools.V18.String(): &rewardv10.ThisEpochRewardReturn{},
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv4.ThisEpochRewardReturn) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ThisEpochRewardReturn) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.ThisEpochRewardReturn) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ThisEpochRewardReturn) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(rewardv8.ThisEpochRewardReturn) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(rewardv9.ThisEpochRewardReturn) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(rewardv10.ThisEpochRewardReturn) },
 
-		tools.V19.String(): &rewardv11.ThisEpochRewardReturn{},
-		tools.V20.String(): &rewardv11.ThisEpochRewardReturn{},
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(rewardv11.ThisEpochRewardReturn) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(rewardv11.ThisEpochRewardReturn) },
 
-		tools.V21.String(): &rewardv12.ThisEpochRewardReturn{},
-		tools.V22.String(): &rewardv13.ThisEpochRewardReturn{},
-		tools.V23.String(): &rewardv14.ThisEpochRewardReturn{},
-		tools.V24.String(): &rewardv15.ThisEpochRewardReturn{},
-		tools.V25.String(): &rewardv16.ThisEpochRewardReturn{},
-	}
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(rewardv12.ThisEpochRewardReturn) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(rewardv13.ThisEpochRewardReturn) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(rewardv14.ThisEpochRewardReturn) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(rewardv15.ThisEpochRewardReturn) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
 }

@@ -12,9 +12,9 @@ import (
 
 func (*Datacap) GranularityExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := granuralityReturn()[version.String()]
+	returnValue, ok := granularityReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }

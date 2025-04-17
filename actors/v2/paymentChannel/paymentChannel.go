@@ -95,20 +95,20 @@ type paymentChannelParams interface {
 
 func (*PaymentChannel) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := constructorParams()[version.String()]
+	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, params)
+	return parse(raw, params())
 }
 
 func (*PaymentChannel) UpdateChannelState(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := updateChannelStateParams()[version.String()]
+	params, ok := updateChannelStateParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, params)
+	return parse(raw, params())
 }

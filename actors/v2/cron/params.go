@@ -21,31 +21,29 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func getCronConstructorParams() map[string]cbg.CBORUnmarshaler {
-	return map[string]cbg.CBORUnmarshaler{
-		tools.V1.String(): &legacyv1.ConstructorParams{},
+var cronConstructorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 
-		tools.V8.String(): &legacyv2.ConstructorParams{},
-		tools.V9.String(): &legacyv2.ConstructorParams{},
+	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 
-		tools.V10.String(): &legacyv3.ConstructorParams{},
-		tools.V11.String(): &legacyv3.ConstructorParams{},
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.ConstructorParams) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.ConstructorParams) },
 
-		tools.V12.String(): &legacyv4.ConstructorParams{},
-		tools.V13.String(): &legacyv5.ConstructorParams{},
-		tools.V14.String(): &legacyv6.ConstructorParams{},
-		tools.V15.String(): &legacyv7.ConstructorParams{},
-		tools.V16.String(): &cronv8.State{},
-		tools.V17.String(): &cronv9.State{},
-		tools.V18.String(): &cronv10.State{},
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv4.ConstructorParams) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ConstructorParams) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.ConstructorParams) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ConstructorParams) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(cronv8.State) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(cronv9.State) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(cronv10.State) },
 
-		tools.V19.String(): &cronv11.State{},
-		tools.V20.String(): &cronv11.State{},
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(cronv11.State) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(cronv11.State) },
 
-		tools.V21.String(): &cronv12.State{},
-		tools.V22.String(): &cronv13.State{},
-		tools.V23.String(): &cronv14.State{},
-		tools.V24.String(): &cronv15.State{},
-		tools.V25.String(): &cronv16.State{},
-	}
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(cronv12.State) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(cronv13.State) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(cronv14.State) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(cronv15.State) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(cronv16.State) },
 }

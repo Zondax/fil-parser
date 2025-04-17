@@ -95,12 +95,12 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 
 func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := awardBlockRewardParams()[version.String()]
+	params, ok := awardBlockRewardParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, params, parser.ParamsKey)
+	return parse(raw, params(), parser.ParamsKey)
 }
 
 func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[string]interface{}, error) {
@@ -109,10 +109,10 @@ func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[s
 
 func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returns, ok := thisEpochRewardReturn()[version.String()]
+	returns, ok := thisEpochRewardReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, returns, parser.ReturnKey)
+	return parse(raw, returns(), parser.ReturnKey)
 }

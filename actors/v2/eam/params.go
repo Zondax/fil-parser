@@ -12,67 +12,57 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func createParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &eamv10.CreateParams{},
-		tools.V19.String(): &eamv11.CreateParams{},
-		tools.V20.String(): &eamv11.CreateParams{},
-		tools.V21.String(): &eamv12.CreateParams{},
-		tools.V22.String(): &eamv13.CreateParams{},
-		tools.V23.String(): &eamv14.CreateParams{},
-		tools.V24.String(): &eamv15.CreateParams{},
-		tools.V25.String(): &eamv16.CreateParams{},
-	}
+var createParams = map[string]func() typegen.CBORUnmarshaler{
+	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(eamv10.CreateParams) },
+	tools.V19.String(): func() typegen.CBORUnmarshaler { return new(eamv11.CreateParams) },
+	tools.V20.String(): func() typegen.CBORUnmarshaler { return new(eamv11.CreateParams) },
+	tools.V21.String(): func() typegen.CBORUnmarshaler { return new(eamv12.CreateParams) },
+	tools.V22.String(): func() typegen.CBORUnmarshaler { return new(eamv13.CreateParams) },
+	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(eamv14.CreateParams) },
+	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(eamv15.CreateParams) },
+	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(eamv16.CreateParams) },
 }
 
-func createExternalReturn() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &eamv10.CreateExternalReturn{},
-		tools.V19.String(): &eamv11.CreateExternalReturn{},
-		tools.V20.String(): &eamv11.CreateExternalReturn{},
-		tools.V21.String(): &eamv12.CreateExternalReturn{},
-		tools.V22.String(): &eamv13.CreateExternalReturn{},
-		tools.V23.String(): &eamv14.CreateExternalReturn{},
-		tools.V24.String(): &eamv15.CreateExternalReturn{},
-		tools.V25.String(): &eamv16.CreateExternalReturn{},
-	}
+var createExternalReturn = map[string]func() typegen.CBORUnmarshaler{
+	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(eamv10.CreateExternalReturn) },
+	tools.V19.String(): func() typegen.CBORUnmarshaler { return new(eamv11.CreateExternalReturn) },
+	tools.V20.String(): func() typegen.CBORUnmarshaler { return new(eamv11.CreateExternalReturn) },
+	tools.V21.String(): func() typegen.CBORUnmarshaler { return new(eamv12.CreateExternalReturn) },
+	tools.V22.String(): func() typegen.CBORUnmarshaler { return new(eamv13.CreateExternalReturn) },
+	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(eamv14.CreateExternalReturn) },
+	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(eamv15.CreateExternalReturn) },
+	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(eamv16.CreateExternalReturn) },
 }
 
-func createReturn() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &eamv10.CreateReturn{},
-		tools.V19.String(): &eamv11.CreateReturn{},
-		tools.V20.String(): &eamv11.CreateReturn{},
-		tools.V21.String(): &eamv12.CreateReturn{},
-		tools.V22.String(): &eamv13.CreateReturn{},
-		tools.V23.String(): &eamv14.CreateReturn{},
-		tools.V24.String(): &eamv15.CreateReturn{},
-		tools.V25.String(): &eamv16.CreateReturn{},
-	}
+var createReturn = map[string]func() typegen.CBORUnmarshaler{
+	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(eamv10.CreateReturn) },
+	tools.V19.String(): func() typegen.CBORUnmarshaler { return new(eamv11.CreateReturn) },
+	tools.V20.String(): func() typegen.CBORUnmarshaler { return new(eamv11.CreateReturn) },
+	tools.V21.String(): func() typegen.CBORUnmarshaler { return new(eamv12.CreateReturn) },
+	tools.V22.String(): func() typegen.CBORUnmarshaler { return new(eamv13.CreateReturn) },
+	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(eamv14.CreateReturn) },
+	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(eamv15.CreateReturn) },
+	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(eamv16.CreateReturn) },
 }
 
-func create2Params() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &eamv10.Create2Params{},
-		tools.V19.String(): &eamv11.Create2Params{},
-		tools.V20.String(): &eamv11.Create2Params{},
-		tools.V21.String(): &eamv12.Create2Params{},
-		tools.V22.String(): &eamv13.Create2Params{},
-		tools.V23.String(): &eamv14.Create2Params{},
-		tools.V24.String(): &eamv15.Create2Params{},
-		tools.V25.String(): &eamv16.Create2Params{},
-	}
+var create2Params = map[string]func() typegen.CBORUnmarshaler{
+	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(eamv10.Create2Params) },
+	tools.V19.String(): func() typegen.CBORUnmarshaler { return new(eamv11.Create2Params) },
+	tools.V20.String(): func() typegen.CBORUnmarshaler { return new(eamv11.Create2Params) },
+	tools.V21.String(): func() typegen.CBORUnmarshaler { return new(eamv12.Create2Params) },
+	tools.V22.String(): func() typegen.CBORUnmarshaler { return new(eamv13.Create2Params) },
+	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(eamv14.Create2Params) },
+	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(eamv15.Create2Params) },
+	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(eamv16.Create2Params) },
 }
 
-func create2Return() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &eamv10.Create2Return{},
-		tools.V19.String(): &eamv11.Create2Return{},
-		tools.V20.String(): &eamv11.Create2Return{},
-		tools.V21.String(): &eamv12.Create2Return{},
-		tools.V22.String(): &eamv13.Create2Return{},
-		tools.V23.String(): &eamv14.Create2Return{},
-		tools.V24.String(): &eamv15.Create2Return{},
-		tools.V25.String(): &eamv16.Create2Return{},
-	}
+var create2Return = map[string]func() typegen.CBORUnmarshaler{
+	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(eamv10.Create2Return) },
+	tools.V19.String(): func() typegen.CBORUnmarshaler { return new(eamv11.Create2Return) },
+	tools.V20.String(): func() typegen.CBORUnmarshaler { return new(eamv11.Create2Return) },
+	tools.V21.String(): func() typegen.CBORUnmarshaler { return new(eamv12.Create2Return) },
+	tools.V22.String(): func() typegen.CBORUnmarshaler { return new(eamv13.Create2Return) },
+	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(eamv14.Create2Return) },
+	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(eamv15.Create2Return) },
+	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(eamv16.Create2Return) },
 }

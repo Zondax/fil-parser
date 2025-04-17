@@ -10,39 +10,39 @@ import (
 
 func (*Datacap) BurnExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := burnParams()[version.String()]
+	params, ok := burnParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := burnReturn()[version.String()]
+	returnValue, ok := burnReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
+	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Datacap) BurnFromExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := burnFromParams()[version.String()]
+	params, ok := burnFromParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := burnFromReturn()[version.String()]
+	returnValue, ok := burnFromReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
+	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Datacap) DestroyExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := destroyParams()[version.String()]
+	params, ok := destroyParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := burnReturn()[version.String()]
+	returnValue, ok := burnReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
+	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }

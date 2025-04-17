@@ -12,29 +12,29 @@ import (
 
 func (*Miner) GetAvailableBalanceExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := getAvailableBalanceReturn()[version.String()]
+	returnValue, ok := getAvailableBalanceReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Miner) GetVestingFundsExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := getVestingFundsReturn()[version.String()]
+	returnValue, ok := getVestingFundsReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawReturn, nil, false, returnValue, &abi.EmptyValue{}, parser.ReturnKey)
+	return parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
 
 func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := getWithdrawBalanceParams()[version.String()]
+	params, ok := getWithdrawBalanceParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params, &abi.EmptyValue{}, parser.ParamsKey)
+	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Miner) AddLockedFund(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

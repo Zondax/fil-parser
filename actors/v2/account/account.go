@@ -80,12 +80,12 @@ func (a *Account) PubkeyAddress(network string, raw, rawReturn []byte) (map[stri
 
 func (a *Account) AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := authenticateMessageParams()[version.String()]
+	params, ok := authenticateMessageParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 	var r typegen.CborBool
-	return authenticateMessageGeneric(raw, rawReturn, params, &r)
+	return authenticateMessageGeneric(raw, rawReturn, params(), &r)
 }
 
 func (a *Account) UniversalReceiverHook(network string, height int64, raw []byte) (map[string]interface{}, error) {

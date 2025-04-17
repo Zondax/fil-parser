@@ -13,15 +13,15 @@ import (
 
 func (*Datacap) TransferExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := transferParams()[version.String()]
+	params, ok := transferParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := transferReturn()[version.String()]
+	returnValue, ok := transferReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
-	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
+	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Datacap) BalanceExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -30,15 +30,15 @@ func (*Datacap) BalanceExported(network string, height int64, raw, rawReturn []b
 
 func (*Datacap) TransferFromExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := transferFromParams()[version.String()]
+	params, ok := transferFromParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := transferFromReturn()[version.String()]
+	returnValue, ok := transferFromReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
 	}
-	return parse(raw, rawReturn, true, params, returnValue, parser.ParamsKey)
+	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Datacap) BalanceOf(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {

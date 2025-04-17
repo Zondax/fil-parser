@@ -87,36 +87,36 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 
 func (*Init) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := constructorParams()[version.String()]
+	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return initConstructor(raw, params)
+	return initConstructor(raw, params())
 }
 
 func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := execParams()[version.String()]
+	params, ok := execParams[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := execReturn()[version.String()]
+	returnValue, ok := execReturn[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseExec(msg, raw, params, returnValue, i.helper)
+	return parseExec(msg, raw, params(), returnValue(), i.helper)
 }
 
 func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := exec4Params()[version.String()]
+	params, ok := exec4Params[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	returnValue, ok := exec4Return()[version.String()]
+	returnValue, ok := exec4Return[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseExec(msg, raw, params, returnValue, i.helper)
+	return parseExec(msg, raw, params(), returnValue(), i.helper)
 }
