@@ -21,8 +21,6 @@ import (
 	evmv15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
 	evmv16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
 
-	typegen "github.com/whyrusleeping/cbor-gen"
-
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -46,71 +44,6 @@ func (e *Evm) Name() string {
 
 func (*Evm) StartNetworkHeight() int64 {
 	return tools.V18.Height()
-}
-
-func resurrectParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &evmv10.ResurrectParams{},
-		tools.V19.String(): &evmv11.ResurrectParams{},
-		tools.V20.String(): &evmv11.ResurrectParams{},
-		tools.V21.String(): &evmv12.ResurrectParams{},
-		tools.V22.String(): &evmv13.ResurrectParams{},
-		tools.V23.String(): &evmv14.ResurrectParams{},
-		tools.V24.String(): &evmv15.ResurrectParams{},
-		tools.V25.String(): &evmv16.ResurrectParams{},
-	}
-}
-
-func delegateCallParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &evmv10.DelegateCallParams{},
-		tools.V19.String(): &evmv11.DelegateCallParams{},
-		tools.V20.String(): &evmv11.DelegateCallParams{},
-		tools.V21.String(): &evmv12.DelegateCallParams{},
-		tools.V22.String(): &evmv13.DelegateCallParams{},
-		tools.V23.String(): &evmv14.DelegateCallParams{},
-		tools.V24.String(): &evmv15.DelegateCallParams{},
-		tools.V25.String(): &evmv16.DelegateCallParams{},
-	}
-}
-
-func getBytecodeReturn() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &evmv10.GetBytecodeReturn{},
-		tools.V19.String(): &evmv11.GetBytecodeReturn{},
-		tools.V20.String(): &evmv11.GetBytecodeReturn{},
-		tools.V21.String(): &evmv12.GetBytecodeReturn{},
-		tools.V22.String(): &evmv13.GetBytecodeReturn{},
-		tools.V23.String(): &evmv14.GetBytecodeReturn{},
-		tools.V24.String(): &evmv15.GetBytecodeReturn{},
-		tools.V25.String(): &evmv16.GetBytecodeReturn{},
-	}
-}
-
-func constructorParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &evmv10.ConstructorParams{},
-		tools.V19.String(): &evmv11.ConstructorParams{},
-		tools.V20.String(): &evmv11.ConstructorParams{},
-		tools.V21.String(): &evmv12.ConstructorParams{},
-		tools.V22.String(): &evmv13.ConstructorParams{},
-		tools.V23.String(): &evmv14.ConstructorParams{},
-		tools.V24.String(): &evmv15.ConstructorParams{},
-		tools.V25.String(): &evmv16.ConstructorParams{},
-	}
-}
-
-func getStorageAtParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V18.String(): &evmv10.GetStorageAtParams{},
-		tools.V19.String(): &evmv11.GetStorageAtParams{},
-		tools.V20.String(): &evmv11.GetStorageAtParams{},
-		tools.V21.String(): &evmv12.GetStorageAtParams{},
-		tools.V22.String(): &evmv13.GetStorageAtParams{},
-		tools.V23.String(): &evmv14.GetStorageAtParams{},
-		tools.V24.String(): &evmv15.GetStorageAtParams{},
-		tools.V25.String(): &evmv16.GetStorageAtParams{},
-	}
 }
 
 func (e *Evm) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

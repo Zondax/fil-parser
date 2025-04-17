@@ -28,20 +28,6 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func authenticateMessageParams() map[string]typegen.CBORUnmarshaler {
-	return map[string]typegen.CBORUnmarshaler{
-		tools.V17.String(): &accountv9.AuthenticateMessageParams{},
-		tools.V18.String(): &accountv10.AuthenticateMessageParams{},
-		tools.V19.String(): &accountv11.AuthenticateMessageParams{},
-		tools.V20.String(): &accountv11.AuthenticateMessageParams{},
-		tools.V21.String(): &accountv12.AuthenticateMessageParams{},
-		tools.V22.String(): &accountv13.AuthenticateMessageParams{},
-		tools.V23.String(): &accountv14.AuthenticateMessageParams{},
-		tools.V24.String(): &accountv15.AuthenticateMessageParams{},
-		tools.V25.String(): &accountv16.AuthenticateMessageParams{},
-	}
-}
-
 func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	switch {
 	// all legacy version

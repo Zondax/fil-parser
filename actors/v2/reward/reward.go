@@ -3,6 +3,7 @@ package reward
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -19,14 +20,6 @@ import (
 	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
-
-	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/reward"
-	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/reward"
-	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/reward"
-	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/reward"
-	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/reward"
-	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/reward"
-	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/reward"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -101,41 +94,13 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 }
 
 func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, &rewardv16.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, &rewardv15.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, &rewardv14.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, &rewardv13.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, &rewardv12.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, &rewardv11.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, &rewardv10.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, &rewardv9.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V16.IsSupported(network, height):
-		return parse(raw, &rewardv8.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V15.IsSupported(network, height):
-		return parse(raw, &legacyv7.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V14.IsSupported(network, height):
-		return parse(raw, &legacyv6.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V13.IsSupported(network, height):
-		return parse(raw, &legacyv5.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.V12.IsSupported(network, height):
-		return parse(raw, &legacyv4.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, &legacyv3.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, &legacyv2.AwardBlockRewardParams{}, parser.ParamsKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, &legacyv1.AwardBlockRewardParams{}, parser.ParamsKey)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := awardBlockRewardParams()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil
+
+	return parse(raw, params, parser.ParamsKey)
 }
 
 func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[string]interface{}, error) {
@@ -143,39 +108,11 @@ func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[s
 }
 
 func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parse(raw, &rewardv16.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V24.IsSupported(network, height):
-		return parse(raw, &rewardv15.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V23.IsSupported(network, height):
-		return parse(raw, &rewardv14.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V22.IsSupported(network, height):
-		return parse(raw, &rewardv13.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V21.IsSupported(network, height):
-		return parse(raw, &rewardv12.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parse(raw, &rewardv11.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V18.IsSupported(network, height):
-		return parse(raw, &rewardv10.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V17.IsSupported(network, height):
-		return parse(raw, &rewardv9.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V16.IsSupported(network, height):
-		return parse(raw, &rewardv8.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V15.IsSupported(network, height):
-		return parse(raw, &legacyv7.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V14.IsSupported(network, height):
-		return parse(raw, &legacyv6.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V13.IsSupported(network, height):
-		return parse(raw, &legacyv5.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.V12.IsSupported(network, height):
-		return parse(raw, &legacyv4.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.V11, tools.V10):
-		return parse(raw, &legacyv3.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
-		return parse(raw, &legacyv2.ThisEpochRewardReturn{}, parser.ReturnKey)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return parse(raw, &legacyv1.ThisEpochRewardReturn{}, parser.ReturnKey)
+	version := tools.VersionFromHeight(network, height)
+	returns, ok := thisEpochRewardReturn()[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil
+
+	return parse(raw, returns, parser.ReturnKey)
 }
