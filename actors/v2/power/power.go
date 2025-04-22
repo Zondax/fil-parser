@@ -221,7 +221,7 @@ func (*Power) MinerRawPowerExported(network string, msg *parser.LotusMessage, he
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, rawReturn, false, params(), returnValue(), parser.ParamsKey)
+	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {

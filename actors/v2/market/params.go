@@ -225,6 +225,21 @@ var activateDealsParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var activateDealsReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V2.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V3.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V4.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V5.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V6.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V7.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V8.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V9.String():  func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
 	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(abi.EmptyValue) },
 
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(v9Market.ActivateDealsResult) },
@@ -301,6 +316,19 @@ var computeDataCommitmentParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var computeDataCommitmentReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+
+	tools.V8.String():  func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V9.String():  func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
+
 	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(cbg.CborCid) },
 	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ComputeDataCommitmentReturn) },
 	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.ComputeDataCommitmentReturn) },
