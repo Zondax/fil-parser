@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/zondax/fil-parser/actors/metrics"
-	metrics2 "github.com/zondax/fil-parser/metrics"
-
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
@@ -58,7 +55,7 @@ func TestActorParserV1_PaymentChannelWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_PaymentChannelWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.PaychKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.PaychKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

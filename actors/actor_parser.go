@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -15,6 +17,14 @@ import (
 type ActorParserInterface interface {
 	GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 		height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error)
+}
+
+type Actor interface {
+	Name() string
+	Parse(ctx context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
+	StartNetworkHeight() int64
+	TransactionTypes() map[string]any
+	Methods(ctx context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error)
 }
 
 func ParseSend(msg *parser.LotusMessage) map[string]interface{} {
