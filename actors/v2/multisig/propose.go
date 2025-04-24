@@ -305,45 +305,6 @@ func proposeReturn(network string, height int64) (multisigParams, error) {
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func txnIDParams(network string, height int64) (multisigParams, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return &legacyv1.TxnIDParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
-		return &legacyv2.TxnIDParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
-		return &legacyv3.TxnIDParams{}, nil
-	case tools.V12.IsSupported(network, height):
-		return &legacyv4.TxnIDParams{}, nil
-	case tools.V13.IsSupported(network, height):
-		return &legacyv5.TxnIDParams{}, nil
-	case tools.V14.IsSupported(network, height):
-		return &legacyv6.TxnIDParams{}, nil
-	case tools.V15.IsSupported(network, height):
-		return &legacyv7.TxnIDParams{}, nil
-
-	case tools.V16.IsSupported(network, height):
-		return &multisig8.TxnIDParams{}, nil
-	case tools.V17.IsSupported(network, height):
-		return &multisig9.TxnIDParams{}, nil
-	case tools.V18.IsSupported(network, height):
-		return &multisig10.TxnIDParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return &multisig11.TxnIDParams{}, nil
-	case tools.V21.IsSupported(network, height):
-		return &multisig12.TxnIDParams{}, nil
-	case tools.V22.IsSupported(network, height):
-		return &multisig13.TxnIDParams{}, nil
-	case tools.V23.IsSupported(network, height):
-		return &multisig14.TxnIDParams{}, nil
-	case tools.V24.IsSupported(network, height):
-		return &multisig15.TxnIDParams{}, nil
-	case tools.V25.IsSupported(network, height):
-		return &multisig16.TxnIDParams{}, nil
-	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-}
-
 func addSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
@@ -458,43 +419,6 @@ func swapSignerParams(network string, height int64) (multisigParams, error) {
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func changeNumApprovalsThresholdParams(network string, height int64) (multisigParams, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return &legacyv1.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
-		return &legacyv2.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
-		return &legacyv3.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V12.IsSupported(network, height):
-		return &legacyv4.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V13.IsSupported(network, height):
-		return &legacyv5.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V14.IsSupported(network, height):
-		return &legacyv6.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V15.IsSupported(network, height):
-		return &legacyv7.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V16.IsSupported(network, height):
-		return &multisig8.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V17.IsSupported(network, height):
-		return &multisig9.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V18.IsSupported(network, height):
-		return &multisig10.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return &multisig11.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V21.IsSupported(network, height):
-		return &multisig12.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V22.IsSupported(network, height):
-		return &multisig13.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V23.IsSupported(network, height):
-		return &multisig14.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V24.IsSupported(network, height):
-		return &multisig15.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V25.IsSupported(network, height):
-		return &multisig16.ChangeNumApprovalsThresholdParams{}, nil
-	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-}
 func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
