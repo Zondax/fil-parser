@@ -27,43 +27,6 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 	return method.Name, nil
 }
 
-// GetActorsForMethod returns a list of actor names that support the given method number at the specified network height
-func GetActorsForMethod(ctx context.Context, methodNum abi.MethodNum, height int64, network string, helper *helper.Helper, logger *logger.Logger) ([]string, error) {
-	// Get all builtin actors for the network version at the given height
-	actorParser := &ActorParser{network, helper, logger, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()}}
-
-	// Get all actor types from manifest
-	filActors := manifest.GetBuiltinActorsKeys(10) // This might need adjustment based on height
-
-	supportedActors := []string{}
-
-	// Check each actor type to see if it supports the method
-	for _, actorName := range filActors {
-		actor, err := actorParser.GetActor(actorName)
-		if err != nil {
-			continue // Skip actors we can't instantiate
-		}
-
-		// Skip actors that aren't supported at this height
-		if actor.StartNetworkHeight() > height {
-			continue
-		}
-
-		// Get the methods this actor supports
-		methods, err := actor.Methods(ctx, network, height)
-		if err != nil {
-			continue // Skip if we can't get methods
-		}
-
-		// Check if the actor supports this method
-		if _, ok := methods[methodNum]; ok {
-			supportedActors = append(supportedActors, actorName)
-		}
-	}
-
-	return supportedActors, nil
-}
-
 // EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
 // We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk

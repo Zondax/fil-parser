@@ -1,4 +1,4 @@
-package tools
+package internal
 
 import (
 	"fmt"
@@ -25,6 +25,8 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 )
 
+// GetActor returns a new instance of the specified actor type. It does not return multisig actors to avoid
+// circular dependencies, as multisig also needs all actors to parse 'propose'.
 func GetActor(actor string, logger *logger.Logger, helper *helper.Helper, metrics *actormetrics.ActorsMetricsClient) (actors.Actor, error) {
 	switch actor {
 	case manifest.AccountKey:

@@ -3,7 +3,8 @@ package v2
 import (
 	"context"
 	"fmt"
-	"github.com/zondax/fil-parser/actors/v2/tools"
+
+	"github.com/zondax/fil-parser/actors/v2/internal"
 
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
@@ -78,5 +79,5 @@ func (p *ActorParser) GetActor(actor string) (Actor, error) {
 		return multisig.New(p.helper, p.logger, p.metrics), nil
 	}
 
-	return tools.GetActor(actor, p.logger, p.helper, p.metrics)
+	return internal.GetActor(actor, p.logger, p.helper, p.metrics)
 }
