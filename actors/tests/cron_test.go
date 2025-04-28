@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
-	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -37,7 +37,7 @@ func TestActorParserV1_Cron(t *testing.T) {
 }
 
 func TestActorParserV2_Cron(t *testing.T) {
-	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
+	p := getActorParser(actors.NewActorParser).(*actors.ActorParser)
 	actor, err := p.GetActor(manifest.CronKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 	require.NoError(t, err)
 	require.NotNil(t, actor)

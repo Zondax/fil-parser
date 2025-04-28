@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"os"
 	"testing"
 
+	"github.com/zondax/golem/pkg/logger"
+
 	"github.com/zondax/fil-parser/actors/metrics"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	builtinActors "github.com/filecoin-project/go-state-types/actors"
@@ -86,11 +88,11 @@ func TestAllActorsSupported(t *testing.T) {
 	getActors(t)
 }
 
-func getActors(t *testing.T) []v2.Actor {
-	actorParser := v2.NewActorParser("mainnet", nil, l, metrics2.NewNoopMetricsClient()).(*v2.ActorParser)
+func getActors(t *testing.T) []actor_tools.Actor {
+	actorParser := actors.NewActorParser("mainnet", nil, l, metrics2.NewNoopMetricsClient()).(*actors.ActorParser)
 	// #nosec G115
 	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
-	actors := []v2.Actor{}
+	actors := []actor_tools.Actor{}
 	for _, filActor := range filActors {
 		actor, err := actorParser.GetActor(filActor, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
 		require.NoErrorf(t, err, "Actor %s is not supported", filActor)
