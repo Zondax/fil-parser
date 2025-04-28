@@ -5,7 +5,7 @@ import (
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -13,10 +13,10 @@ import (
 func (p *VerifiedRegistry) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
-		resp, err := actors.ParseConstructor(msg.Params)
+		resp, err := actor_tools.ParseConstructor(msg.Params)
 		return resp, nil, err
 	case parser.MethodAddVerifier:
 		resp, err := p.AddVerifier(network, height, msg.Params)
@@ -66,8 +66,8 @@ func (p *VerifiedRegistry) Parse(_ context.Context, network string, height int64
 
 func (p *VerifiedRegistry) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                             actors.ParseSend,
-		parser.MethodConstructor:                      actors.ParseConstructor,
+		parser.MethodSend:                             actor_tools.ParseSend,
+		parser.MethodConstructor:                      actor_tools.ParseConstructor,
 		parser.MethodAddVerifier:                      p.AddVerifier,
 		parser.MethodRemoveVerifier:                   p.RemoveVerifier,
 		parser.MethodAddVerifiedClient:                p.AddVerifiedClientExported,
