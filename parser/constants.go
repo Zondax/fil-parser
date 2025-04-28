@@ -27,6 +27,12 @@ const (
 	TxTypeGenesis = "Genesis"
 	GenesisHeight = 0
 
+	// FirstExportedMethodNumber is the lowest FRC-42 method number.
+	// https://github.com/filecoin-project/builtin-actors/blob/8fdbdec5e3f46b60ba0132d90533783a44c5961f/runtime/src/builtin/shared.rs#L58
+	FirstExportedMethodNumber = 1 << 24
+
+	EvmMaxReservedMethodNumber = 1023
+
 	MultisigConstructorMethod = "Constructor"
 
 	// Methods
@@ -38,6 +44,7 @@ const (
 	MethodPubkeyAddress                       = "PubkeyAddress"                       // MethodsAccount
 	MethodAuthenticateMessage                 = "AuthenticateMessage"                 // MethodsAccount
 	MethodReceive                             = "Receive"                             // MethodsAccount // exists only in built-in actors v9
+	MethodFallback                            = "Fallback"                            // MethodsAccount
 	MethodExec                                = "Exec"                                // MethodsInit
 	MethodExec4                               = "Exec4"                               // MethodsInit
 	MethodSwapSigner                          = "SwapSigner"                          // MethodsMultisig
@@ -129,6 +136,8 @@ const (
 	MethodInternalSectorSetupForPreseal       = "InternalSectorSetupForPreseal"       // MethodsMiner
 	MethodInitialPledge                       = "InitialPledge"                       // MethodsMiner
 	MethodInitialPledgeExported               = "InitialPledgeExported"               // MethodsMiner
+	MethodMaxTerminationFee                   = "MaxTerminationFee"                   // MethodsMiner
+	MethodMaxTerminationFeeExported           = "MaxTerminationFeeExported"           // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket
@@ -180,6 +189,7 @@ const (
 	MethodGetBytecodeHash                     = "GetBytecodeHash"                     // MethodsEVM
 	MethodInvokeContractReadOnly              = "InvokeContractReadOnly"              // MethodsEVM
 	MethodInvokeContractDelegate              = "InvokeContractDelegate"              // MethodsEVM
+	MethodInvokeContractFilecoinHandler       = "InvokeContractFilecoinHandler"       // MethodsEVM
 	MethodCreate                              = "Create"                              // MethodsEam
 	MethodCreate2                             = "Create2"                             // MethodsEam
 	MethodCreateExternal                      = "CreateExternal"                      // MethodsEam
