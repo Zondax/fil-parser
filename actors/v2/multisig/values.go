@@ -22,7 +22,8 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -192,7 +193,7 @@ func (*Msig) ParseChangeNumApprovalsThresholdValue(network string, height int64,
 			NewThreshold: threshold,
 		}
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return ret, nil
 }
@@ -234,7 +235,7 @@ func (*Msig) ParseConstructorValue(network string, height int64, txMetadata stri
 	case tools.V25.IsSupported(network, height):
 		return getValue(raw, &multisig16.ConstructorParams{})
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func (*Msig) ParseLockBalanceValue(network string, height int64, txMetadata string) (interface{}, error) {

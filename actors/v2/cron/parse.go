@@ -3,6 +3,7 @@ package cron
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -22,7 +23,7 @@ import (
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -53,11 +54,11 @@ func (c *Cron) Methods(_ context.Context, network string, height int64) (map[abi
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsCron.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsCron.EpochTick: {
 				Name:   parser.MethodEpochTick,
-				Method: actors.ParseEmptyParamsAndReturn,
+				Method: actor_tools.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -79,23 +80,23 @@ func (c *Cron) Methods(_ context.Context, network string, height int64) (map[abi
 	case tools.V25.IsSupported(network, height):
 		return cronv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
 func (c *Cron) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := c.Constructor(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodEpochTick:
-		resp, err := actors.ParseEmptyParamsAndReturn()
+		resp, err := actor_tools.ParseEmptyParamsAndReturn()
 		return resp, nil, err
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
@@ -103,8 +104,8 @@ func (c *Cron) Parse(_ context.Context, network string, height int64, txType str
 
 func (c *Cron) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:        actors.ParseSend,
+		parser.MethodSend:        actor_tools.ParseSend,
 		parser.MethodConstructor: c.Constructor,
-		parser.MethodEpochTick:   actors.ParseEmptyParamsAndReturn,
+		parser.MethodEpochTick:   actor_tools.ParseEmptyParamsAndReturn,
 	}
 }

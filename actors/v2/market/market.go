@@ -24,7 +24,8 @@ import (
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -53,7 +54,7 @@ func (m *Market) Methods(_ context.Context, network string, height int64) (map[a
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMarket.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsMarket.AddBalance: {
 				Name:   parser.MethodAddBalance,
@@ -85,7 +86,7 @@ func (m *Market) Methods(_ context.Context, network string, height int64) (map[a
 			},
 			legacyBuiltin.MethodsMarket.CronTick: {
 				Name:   parser.MethodCronTick,
-				Method: actors.ParseEmptyParamsAndReturn,
+				Method: actor_tools.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -107,7 +108,7 @@ func (m *Market) Methods(_ context.Context, network string, height int64) (map[a
 	case tools.V25.IsSupported(network, height):
 		return v16Market.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -119,7 +120,7 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 	version := tools.VersionFromHeight(network, height)
 	params, ok := withdrawBalanceParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	resp, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{})
 	if err != nil {
@@ -135,11 +136,11 @@ func (*Market) PublishStorageDealsExported(network string, height int64, rawPara
 	version := tools.VersionFromHeight(network, height)
 	params, ok := publishStorageDealsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := publishStorageDealsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
@@ -149,25 +150,41 @@ func (*Market) VerifyDealsForActivationExported(network string, height int64, ra
 	version := tools.VersionFromHeight(network, height)
 	params, ok := verifyDealsForActivationParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := verifyDealsForActivationReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil {
+		// fallback
+		// There is mixed use of []SectorDealData and []UnsealedCIDs
+		for k, r := range verifyDealsForActivationReturn {
+			metadata, err = parseGeneric(rawParams, rawReturn, true, params(), r())
+			if err != nil {
+				fmt.Printf("Version: %s Failed\n", k)
+				continue
+			}
+			fmt.Printf("Version: %s Success\n", k)
+			return metadata, nil
+		}
+		return nil, fmt.Errorf("error parsing verifyDealsForActivation: %s", err)
+	}
+
+	return metadata, nil
 }
 
 func (*Market) ActivateDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := activateDealsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := activateDealsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 
@@ -177,20 +194,35 @@ func (*Market) OnMinerSectorsTerminateExported(network string, height int64, raw
 	version := tools.VersionFromHeight(network, height)
 	params, ok := onMinerSectorsTerminateParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{})
+	metadata, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{})
+	if err != nil {
+		// fallback
+		for k, v := range onMinerSectorsTerminateParams {
+			metadata, err = parseGeneric(rawParams, nil, false, v(), &abi.EmptyValue{})
+			if err != nil {
+				fmt.Printf("Version: %s Failed\n", k)
+				continue
+			}
+			fmt.Printf("Version: %s Success\n", k)
+			return metadata, nil
+		}
+		return nil, fmt.Errorf("error parsing onMinerSectorsTerminate: %s", err)
+	}
+
+	return metadata, nil
 }
 
 func (*Market) ComputeDataCommitmentExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := computeDataCommitmentParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := computeDataCommitmentReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -199,7 +231,7 @@ func (*Market) GetBalanceExported(network string, height int64, rawParams, rawRe
 	version := tools.VersionFromHeight(network, height)
 	returnValue, ok := getBalanceReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, &address.Address{}, returnValue())
 }
@@ -208,11 +240,11 @@ func (*Market) GetDealDataCommitmentExported(network string, height int64, rawPa
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealDataCommitmentParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealDataCommitmentReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -221,11 +253,11 @@ func (*Market) GetDealClientExported(network string, height int64, rawParams, ra
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealClientParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealClientReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -234,11 +266,11 @@ func (*Market) GetDealProviderExported(network string, height int64, rawParams, 
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealProviderParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealProviderReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -247,11 +279,11 @@ func (*Market) GetDealLabelExported(network string, height int64, rawParams, raw
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealLabelParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealLabelReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -260,11 +292,11 @@ func (*Market) GetDealTermExported(network string, height int64, rawParams, rawR
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealTermParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealTermReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -273,11 +305,11 @@ func (*Market) GetDealTotalPriceExported(network string, height int64, rawParams
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealTotalPriceParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealTotalPriceReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -286,11 +318,11 @@ func (*Market) GetDealClientCollateralExported(network string, height int64, raw
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealClientCollateralParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealClientCollateralReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -299,11 +331,11 @@ func (*Market) GetDealProviderCollateralExported(network string, height int64, r
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealProviderCollateralParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealProviderCollateralReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -312,11 +344,11 @@ func (*Market) GetDealVerifiedExported(network string, height int64, rawParams, 
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealVerifiedParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealVerifiedReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -325,11 +357,11 @@ func (*Market) GetDealActivationExported(network string, height int64, rawParams
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getDealActivationParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getDealActivationReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -338,11 +370,11 @@ func (*Market) SettleDealPaymentsExported(network string, height int64, rawParam
 	version := tools.VersionFromHeight(network, height)
 	params, ok := settleDealPaymentsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := settleDealPaymentsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 }
@@ -373,7 +405,7 @@ func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshal
 	version := tools.VersionFromHeight(network, height)
 	params, ok := sectorChanges[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return params(), nil
 }
@@ -382,7 +414,7 @@ func sectorContentChangedReturn(network string, height int64) (cbg.CBORUnmarshal
 	version := tools.VersionFromHeight(network, height)
 	returnValue, ok := pieceChange[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return returnValue(), nil
 }
@@ -394,7 +426,7 @@ func (*Market) GetDealSectorExported(network string, height int64, rawParams, ra
 	version := tools.VersionFromHeight(network, height)
 	extractedParams, ok := getDealSectorParams[version.String()]
 	if !ok {
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return map[string]interface{}{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	err := extractedParams().UnmarshalCBOR(bytes.NewReader(rawParams))

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 
 	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
@@ -26,7 +26,6 @@ import (
 
 	typegen "github.com/whyrusleeping/cbor-gen"
 
-	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -56,7 +55,7 @@ func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	case tools.V18.IsSupported(network, height):
 		return eamv10.Methods, nil
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
@@ -72,30 +71,25 @@ func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.
 	case tools.V25.IsSupported(network, height):
 		return eamv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
-func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
-	getReturnStruct := func(actorID uint64, robustAddress *address.Address, ethAddress string) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
+func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (*types.AddressInfo, parser.EamCreateReturn) {
+	getReturnStruct := func(actorID uint64, robustAddress *address.Address, ethAddress string) (*types.AddressInfo, parser.EamCreateReturn) {
 		createReturn := parser.EamCreateReturn{
 			ActorId:       actorID,
 			RobustAddress: robustAddress,
 			EthAddress:    ethAddress,
 		}
 
-		ethHash, err := ethtypes.EthHashFromCid(msgCid)
-		if err != nil {
-			return "", nil, createReturn, fmt.Errorf("error getting ethHash: %s", err)
-		}
-
-		return ethHash.String(), &types.AddressInfo{
+		return &types.AddressInfo{
 			Short:         parser.FilPrefix + strconv.FormatUint(actorID, 10),
 			Robust:        robustAddress.String(),
 			EthAddress:    parser.EthPrefix + ethAddress,
 			ActorType:     "evm",
 			CreationTxCid: msgCid.String(),
-		}, createReturn, nil
+		}, createReturn
 
 	}
 	switch v := r.(type) {
@@ -149,7 +143,7 @@ func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.Add
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 
 	default:
-		return "", nil, parser.EamCreateReturn{}, fmt.Errorf("invalid create return type")
+		return nil, parser.EamCreateReturn{}
 	}
 }
 

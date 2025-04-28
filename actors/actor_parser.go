@@ -14,7 +14,7 @@ import (
 
 type ActorParserInterface interface {
 	GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-		height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error)
+		height int64, key filTypes.TipSetKey) (actor string, metadata map[string]interface{}, addressInfo *types.AddressInfo, err error)
 }
 
 func ParseSend(msg *parser.LotusMessage) map[string]interface{} {

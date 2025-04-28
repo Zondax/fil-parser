@@ -5,7 +5,8 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -14,7 +15,7 @@ func (*Miner) GetAvailableBalanceExported(network string, height int64, rawRetur
 	version := tools.VersionFromHeight(network, height)
 	returnValue, ok := getAvailableBalanceReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
@@ -23,7 +24,7 @@ func (*Miner) GetVestingFundsExported(network string, height int64, rawReturn []
 	version := tools.VersionFromHeight(network, height)
 	returnValue, ok := getVestingFundsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
@@ -32,7 +33,7 @@ func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams []
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getWithdrawBalanceParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }

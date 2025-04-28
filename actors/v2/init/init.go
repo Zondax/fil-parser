@@ -22,7 +22,8 @@ import (
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -55,7 +56,7 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsInit.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsInit.Exec: {
 				Name:   parser.MethodExec,
@@ -81,7 +82,7 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 	case tools.V25.IsSupported(network, height):
 		return builtinInitv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -89,7 +90,7 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 	version := tools.VersionFromHeight(network, height)
 	params, ok := constructorParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return initConstructor(raw, params())
@@ -99,11 +100,11 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 	version := tools.VersionFromHeight(network, height)
 	params, ok := execParams[version.String()]
 	if !ok {
-		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := execReturn[version.String()]
 	if !ok {
-		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseExec(msg, raw, params(), returnValue(), i.helper)
 }
@@ -112,11 +113,11 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 	version := tools.VersionFromHeight(network, height)
 	params, ok := exec4Params[version.String()]
 	if !ok {
-		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := exec4Return[version.String()]
 	if !ok {
-		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseExec(msg, raw, params(), returnValue(), i.helper)
 }

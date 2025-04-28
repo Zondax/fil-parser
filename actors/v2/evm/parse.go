@@ -5,16 +5,17 @@ import (
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors"
+
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Evm) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Evm) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, msgCid cid.Cid, tipsetKey filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := p.Constructor(network, height, msg.Params)
@@ -37,8 +38,11 @@ func (p *Evm) Parse(_ context.Context, network string, height int64, txType stri
 	case parser.MethodGetStorageAt: // TODO: not tested
 		resp, err := p.GetStorageAt(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodInvokeContractFilecoinHandler:
+		resp, err := p.InvokeContractFilecoinHandler(network, height, msgCid, msg.From, tipsetKey, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 	return metadata, nil, parser.ErrUnknownMethod
@@ -46,7 +50,7 @@ func (p *Evm) Parse(_ context.Context, network string, height int64, txType stri
 
 func (p *Evm) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                   actors.ParseSend,
+		parser.MethodSend:                   actor_tools.ParseSend,
 		parser.MethodConstructor:            p.Constructor,
 		parser.MethodResurrect:              p.Resurrect,
 		parser.MethodInvokeContract:         p.InvokeContract,

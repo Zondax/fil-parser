@@ -22,7 +22,8 @@ import (
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -51,7 +52,7 @@ func (p *PaymentChannel) Methods(_ context.Context, network string, height int64
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsPaych.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsPaych.UpdateChannelState: {
 				Name:   parser.MethodUpdateChannelState,
@@ -59,11 +60,11 @@ func (p *PaymentChannel) Methods(_ context.Context, network string, height int64
 			},
 			legacyBuiltin.MethodsPaych.Settle: {
 				Name:   parser.MethodSettle,
-				Method: actors.ParseEmptyParamsAndReturn,
+				Method: actor_tools.ParseEmptyParamsAndReturn,
 			},
 			legacyBuiltin.MethodsPaych.Collect: {
 				Name:   parser.MethodCollect,
-				Method: actors.ParseEmptyParamsAndReturn,
+				Method: actor_tools.ParseEmptyParamsAndReturn,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -85,7 +86,7 @@ func (p *PaymentChannel) Methods(_ context.Context, network string, height int64
 	case tools.V25.IsSupported(network, height):
 		return paychv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -97,7 +98,7 @@ func (*PaymentChannel) Constructor(network string, height int64, raw []byte) (ma
 	version := tools.VersionFromHeight(network, height)
 	params, ok := constructorParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, params())
@@ -107,7 +108,7 @@ func (*PaymentChannel) UpdateChannelState(network string, height int64, raw []by
 	version := tools.VersionFromHeight(network, height)
 	params, ok := updateChannelStateParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, params())

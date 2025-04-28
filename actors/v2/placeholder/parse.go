@@ -3,6 +3,7 @@ package placeholder
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -18,7 +19,8 @@ import (
 	placeholderv14 "github.com/filecoin-project/go-state-types/builtin/v14/placeholder"
 	placeholderv15 "github.com/filecoin-project/go-state-types/builtin/v15/placeholder"
 	placeholderv16 "github.com/filecoin-project/go-state-types/builtin/v16/placeholder"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -45,7 +47,7 @@ func (*Placeholder) Methods(_ context.Context, network string, height int64) (ma
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	case tools.V18.IsSupported(network, height):
 		return placeholderv10.Methods, nil
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
@@ -61,7 +63,7 @@ func (*Placeholder) Methods(_ context.Context, network string, height int64) (ma
 	case tools.V25.IsSupported(network, height):
 		return placeholderv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 

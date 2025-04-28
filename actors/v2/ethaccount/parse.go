@@ -3,6 +3,7 @@ package ethaccount
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -19,7 +20,7 @@ import (
 	ethaccountv15 "github.com/filecoin-project/go-state-types/builtin/v15/ethaccount"
 	ethaccountv16 "github.com/filecoin-project/go-state-types/builtin/v16/ethaccount"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -47,7 +48,7 @@ func (e *EthAccount) Methods(_ context.Context, network string, height int64) (m
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	case tools.V18.IsSupported(network, height):
 		return ethaccountv10.Methods, nil
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
@@ -63,7 +64,7 @@ func (e *EthAccount) Methods(_ context.Context, network string, height int64) (m
 	case tools.V25.IsSupported(network, height):
 		return ethaccountv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -83,7 +84,7 @@ func (e *EthAccount) Parse(_ context.Context, network string, height int64, txTy
 func (e *EthAccount) TransactionTypes() map[string]any {
 	return map[string]any{
 		parser.MethodConstructor: e.Constructor,
-		parser.MethodSend:        actors.ParseSend,
+		parser.MethodSend:        actor_tools.ParseSend,
 	}
 }
 

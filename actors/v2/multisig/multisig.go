@@ -28,7 +28,8 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/multisig"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/multisig"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -69,7 +70,7 @@ func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[stri
 	case tools.V25.IsSupported(network, height):
 		return parse(raw, &multisig16.ConstructorParams{}, cborUnmarshaller[*multisig16.ConstructorParams])
 	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return map[string]interface{}{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, parser ParseFn) (map[string]interface{}, error) {
@@ -105,7 +106,7 @@ func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64
 	case tools.V25.IsSupported(network, height):
 		return parseWithMsigParser[*multisig16.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*multisig16.ConstructorParams], false, nil)
 	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return map[string]interface{}{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
@@ -142,7 +143,7 @@ func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key
 	case tools.V25.IsSupported(network, height):
 		return parseWithMsigParser(msg, height, key, parser, rawReturn, cborUnmarshaller[*multisig16.ApproveReturn], true, &multisig16.ApproveReturn{})
 	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return map[string]interface{}{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, proposeKind string, key filTypes.TipSetKey, rawParams, rawReturn []byte, _ ParseFn) (map[string]interface{}, error) {
@@ -218,7 +219,7 @@ func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessag
 	case tools.V25.IsSupported(network, height):
 		return parse(rawParams, &multisig16.ChangeNumApprovalsThresholdParams{}, cborUnmarshaller[*multisig16.ChangeNumApprovalsThresholdParams])
 	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return map[string]interface{}{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
@@ -254,7 +255,7 @@ func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64,
 	case tools.V25.IsSupported(network, height):
 		return parse(rawParams, &multisig16.LockBalanceParams{}, cborUnmarshaller[*multisig16.LockBalanceParams])
 	}
-	return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return map[string]interface{}{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func (*Msig) UniversalReceiverHook(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {

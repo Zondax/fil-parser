@@ -8,7 +8,8 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/cbor"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 
@@ -232,7 +233,7 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 			break
 		}
 	default:
-		return nil, 0, "", "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, 0, "", "", nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return nil, 0, "", "", nil, err
@@ -273,7 +274,7 @@ func proposeReturn(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.ProposeReturn{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func txnIDParams(network string, height int64) (multisigParams, error) {
@@ -312,7 +313,7 @@ func txnIDParams(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.TxnIDParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func addSignerParams(network string, height int64) (multisigParams, error) {
@@ -350,7 +351,7 @@ func addSignerParams(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.AddSignerParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func removeSignerParams(network string, height int64) (multisigParams, error) {
@@ -388,7 +389,7 @@ func removeSignerParams(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.RemoveSignerParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func swapSignerParams(network string, height int64) (multisigParams, error) {
@@ -426,7 +427,7 @@ func swapSignerParams(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.SwapSignerParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 
 func changeNumApprovalsThresholdParams(network string, height int64) (multisigParams, error) {
@@ -464,7 +465,7 @@ func changeNumApprovalsThresholdParams(network string, height int64) (multisigPa
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.ChangeNumApprovalsThresholdParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
@@ -501,7 +502,7 @@ func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.LockBalanceParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 func withdrawBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
@@ -538,7 +539,7 @@ func withdrawBalanceParams(network string, height int64) (multisigParams, error)
 	case tools.V25.IsSupported(network, height):
 		return &miner16.WithdrawBalanceParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }
 func verifierParams(network string, height int64) (multisigParams, error) {
 	switch {
@@ -575,5 +576,5 @@ func verifierParams(network string, height int64) (multisigParams, error) {
 	case tools.V25.IsSupported(network, height):
 		return &verifregv16.AddVerifierParams{}, nil
 	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }

@@ -23,46 +23,53 @@ import (
 	accountv8 "github.com/filecoin-project/go-state-types/builtin/v8/account"
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
 func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		data = map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsAccount.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsAccount.PubkeyAddress: {
 				Name:   parser.MethodPubkeyAddress,
 				Method: a.PubkeyAddress,
 			},
-		}, nil
+		}
+
 	case tools.V16.IsSupported(network, height):
-		return accountv8.Methods, nil
+		data = accountv8.Methods
 	case tools.V17.IsSupported(network, height):
-		return accountv9.Methods, nil
+		data = accountv9.Methods
 	case tools.V18.IsSupported(network, height):
-		return accountv10.Methods, nil
+		data = accountv10.Methods
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return accountv11.Methods, nil
+		data = accountv11.Methods
 	case tools.V21.IsSupported(network, height):
-		return accountv12.Methods, nil
+		data = accountv12.Methods
 	case tools.V22.IsSupported(network, height):
-		return accountv13.Methods, nil
+		data = accountv13.Methods
 	case tools.V23.IsSupported(network, height):
-		return accountv14.Methods, nil
+		data = accountv14.Methods
 	case tools.V24.IsSupported(network, height):
-		return accountv15.Methods, nil
+		data = accountv15.Methods
 	case tools.V25.IsSupported(network, height):
-		return accountv16.Methods, nil
+		data = accountv16.Methods
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
+	data[abi.MethodNum(parser.FirstExportedMethodNumber)] = nonLegacyBuiltin.MethodMeta{
+		Name:   parser.MethodFallback,
+		Method: a.Fallback,
+	}
+	return data, nil
 }
 
 func (a *Account) PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -82,7 +89,7 @@ func (a *Account) AuthenticateMessage(network string, height int64, raw, rawRetu
 	version := tools.VersionFromHeight(network, height)
 	params, ok := authenticateMessageParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	var r typegen.CborBool
 	return authenticateMessageGeneric(raw, rawReturn, params(), &r)
@@ -96,5 +103,11 @@ func (a *Account) UniversalReceiverHook(network string, height int64, raw []byte
 
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(raw)
+	return metadata, nil
+}
+
+func (a *Account) Fallback(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsKey] = raw
 	return metadata, nil
 }

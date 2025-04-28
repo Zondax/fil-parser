@@ -2,6 +2,8 @@ package actors
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -14,6 +16,8 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
+
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 )
 
 var _ actors.ActorParserInterface = &ActorParser{}
@@ -24,7 +28,7 @@ type ActorParser struct {
 	metrics *actormetrics.ActorsMetricsClient
 }
 
-func NewActorParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) actors.ActorParserInterface {
+func NewActorParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) actor_tools.ActorParserInterface {
 	return &ActorParser{
 		helper:  helper,
 		logger:  logger2.GetSafeLogger(logger),
@@ -81,4 +85,29 @@ func (p *ActorParser) GetMetadata(_ context.Context, txType string, msg *parser.
 	}
 
 	return actor, metadata, addressInfo, err
+}
+
+func (p *ActorParser) GetActor(actor string, metrics *actormetrics.ActorsMetricsClient) (actor_tools.Actor, error) {
+	return nil, fmt.Errorf("unimplemented")
+}
+
+func (p *ActorParser) AllActors() []string {
+	return []string{
+		manifest.AccountKey,
+		manifest.CronKey,
+		manifest.DatacapKey,
+		manifest.EamKey,
+		manifest.EvmKey,
+		manifest.EthAccountKey,
+		manifest.InitKey,
+		manifest.MarketKey,
+		manifest.MinerKey,
+		manifest.MultisigKey,
+		manifest.PaychKey,
+		manifest.PowerKey,
+		manifest.RewardKey,
+		manifest.VerifregKey,
+		manifest.PlaceholderKey,
+		manifest.SystemKey,
+	}
 }

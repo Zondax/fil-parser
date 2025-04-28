@@ -5,7 +5,8 @@ import (
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -13,7 +14,7 @@ import (
 func (p *Reward) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := p.Constructor(network, height, msg.Params)
@@ -28,7 +29,7 @@ func (p *Reward) Parse(_ context.Context, network string, height int64, txType s
 		resp, err := p.ThisEpochReward(network, height, msgRct.Return)
 		return resp, nil, err
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
@@ -36,7 +37,7 @@ func (p *Reward) Parse(_ context.Context, network string, height int64, txType s
 
 func (p *Reward) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:             actors.ParseSend,
+		parser.MethodSend:             actor_tools.ParseSend,
 		parser.MethodConstructor:      p.Constructor,
 		parser.MethodAwardBlockReward: p.AwardBlockReward,
 		parser.MethodUpdateNetworkKPI: p.UpdateNetworkKPI,

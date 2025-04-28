@@ -23,7 +23,8 @@ import (
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
-	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/miner/types"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -48,6 +49,7 @@ func (*Miner) StartNetworkHeight() int64 {
 
 // implemented in the rust builtin-actors but not the golang version
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
+var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
@@ -139,11 +141,15 @@ func (m *Miner) Methods(_ context.Context, network string, height int64) (map[ab
 	case tools.V25.IsSupported(network, height):
 		data = miner16.Methods
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	data[initialPledgeMethodNum] = nonLegacyBuiltin.MethodMeta{
 		Name:   parser.MethodInitialPledge,
 		Method: m.InitialPledgeExported,
+	}
+	data[maxTerminationFeeMethodNum] = nonLegacyBuiltin.MethodMeta{
+		Name:   parser.MethodMaxTerminationFee,
+		Method: m.MaxTerminationFeeExported,
 	}
 	return data, nil
 }
@@ -156,11 +162,11 @@ func (*Miner) TerminateSectors(network string, height int64, rawParams, rawRetur
 	version := tools.VersionFromHeight(network, height)
 	params, ok := terminateSectorsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := terminateSectorsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
@@ -170,7 +176,7 @@ func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map
 
 	params, ok := declareFaultsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
@@ -180,7 +186,7 @@ func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []b
 	version := tools.VersionFromHeight(network, height)
 	params, ok := declareFaultsRecoveredParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -189,7 +195,7 @@ func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte
 	version := tools.VersionFromHeight(network, height)
 	params, ok := proveReplicaUpdatesParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -198,7 +204,7 @@ func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []by
 	version := tools.VersionFromHeight(network, height)
 	params, ok := preCommitSectorBatchParams2[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -207,7 +213,7 @@ func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawR
 	version := tools.VersionFromHeight(network, height)
 	params, ok := proveReplicaUpdatesParams2[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), &bitfield.BitField{}, parser.ParamsKey)
 }
@@ -216,11 +222,11 @@ func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawR
 	version := tools.VersionFromHeight(network, height)
 	params, ok := proveReplicaUpdates3Params[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := proveReplicaUpdates3Return[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
@@ -229,7 +235,7 @@ func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byt
 	version := tools.VersionFromHeight(network, height)
 	params, ok := proveCommitAggregateParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -238,7 +244,7 @@ func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte
 	version := tools.VersionFromHeight(network, height)
 	params, ok := disputeWindowedPoStParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -248,7 +254,7 @@ func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byt
 	version := tools.VersionFromHeight(network, height)
 	params, ok := reportConsensusFaultParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -257,7 +263,7 @@ func (*Miner) ChangeBeneficiaryExported(network string, height int64, rawParams 
 	version := tools.VersionFromHeight(network, height)
 	params, ok := changeBeneficiaryParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -279,7 +285,7 @@ func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[s
 	version := tools.VersionFromHeight(network, height)
 	params, ok := minerConstructorParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -288,7 +294,7 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 	version := tools.VersionFromHeight(network, height)
 	params, ok := applyRewardParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
@@ -297,11 +303,14 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 	version := tools.VersionFromHeight(network, height)
 	params, ok := deferredCronEventParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Miner) InitialPledgeExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	return parseGeneric(rawParams, nil, false, &InitialPledgeReturn{}, &InitialPledgeReturn{}, parser.ReturnKey)
+	return parseGeneric(rawParams, nil, false, &types.InitialPledgeReturn{}, &types.InitialPledgeReturn{}, parser.ReturnKey)
+}
+func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, rawReturn, true, &types.MaxTerminationFeeParams{}, &types.MaxTerminationFeeReturn{}, parser.ReturnKey)
 }

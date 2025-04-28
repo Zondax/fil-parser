@@ -20,7 +20,8 @@ import (
 
 	"github.com/ipfs/go-cid"
 	typegen "github.com/whyrusleeping/cbor-gen"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -95,7 +96,7 @@ func setExecParams(params typegen.CBORUnmarshaler) (cid.Cid, any, error) {
 
 	}
 
-	return cid.Undef, nil, actors.ErrUnsupportedHeight
+	return cid.Undef, nil, actor_tools.ErrUnsupportedHeight
 }
 
 func setReturnParams(msg *parser.LotusMessage, actorCID string, params typegen.CBORUnmarshaler) *types.AddressInfo {

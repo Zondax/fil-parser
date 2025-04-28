@@ -5,7 +5,7 @@ import (
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -15,10 +15,10 @@ func (p *Eam) Parse(_ context.Context, network string, height int64, txType stri
 	var err error
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
-		resp, err := actors.ParseEmptyParamsAndReturn()
+		resp, err := actor_tools.ParseEmptyParamsAndReturn()
 		return resp, nil, err
 	case parser.MethodCreate:
 		return p.Create(network, height, msg.Params, msgRct.Return, msgCid)
@@ -27,7 +27,7 @@ func (p *Eam) Parse(_ context.Context, network string, height int64, txType stri
 	case parser.MethodCreateExternal:
 		return p.CreateExternal(network, height, msg.Params, msgRct.Return, msgCid)
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	default:
 		err = parser.ErrUnknownMethod
@@ -37,8 +37,8 @@ func (p *Eam) Parse(_ context.Context, network string, height int64, txType stri
 
 func (p *Eam) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:           actors.ParseSend,
-		parser.MethodConstructor:    actors.ParseEmptyParamsAndReturn,
+		parser.MethodSend:           actor_tools.ParseSend,
+		parser.MethodConstructor:    actor_tools.ParseEmptyParamsAndReturn,
 		parser.MethodCreate:         p.Create,
 		parser.MethodCreate2:        p.Create2,
 		parser.MethodCreateExternal: p.CreateExternal,

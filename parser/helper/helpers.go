@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/ipfs/go-cid"
 	// The following import is necessary to ensure that the init() function
@@ -152,7 +153,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 
 		c, err := cid.Parse(actorCode)
 		if err != nil {
-			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code (%s): %v", actorCode, err)
 			return actors.UnknownStr, err
 		}
 

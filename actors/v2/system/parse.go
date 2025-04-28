@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -21,7 +22,8 @@ import (
 	systemv8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
 	systemv9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -51,7 +53,7 @@ func (*System) Methods(_ context.Context, network string, height int64) (map[abi
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			abi.MethodNum(0): {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 		}, nil
 	case tools.V16.IsSupported(network, height):
@@ -73,7 +75,7 @@ func (*System) Methods(_ context.Context, network string, height int64) (map[abi
 	case tools.V25.IsSupported(network, height):
 		return systemv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 func (s *System) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
@@ -81,7 +83,7 @@ func (s *System) Parse(_ context.Context, network string, height int64, txType s
 	var err error
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err = s.Constructor()
@@ -94,7 +96,7 @@ func (s *System) Parse(_ context.Context, network string, height int64, txType s
 
 func (s *System) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:        actors.ParseSend,
+		parser.MethodSend:        actor_tools.ParseSend,
 		parser.MethodConstructor: s.Constructor,
 	}
 }

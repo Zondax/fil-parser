@@ -5,7 +5,7 @@ import (
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
@@ -13,7 +13,7 @@ import (
 func (m *Miner) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
 		resp, err := m.Constructor(network, height, msg.Params)
@@ -79,10 +79,10 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 		resp, err := m.CompactSectorNumbers(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodConfirmChangeWorkerAddress, parser.MethodConfirmChangeWorkerAddressExported:
-		resp, err := actors.ParseEmptyParamsAndReturn()
+		resp, err := actor_tools.ParseEmptyParamsAndReturn()
 		return resp, nil, err
 	case parser.MethodRepayDebt, parser.MethodRepayDebtExported:
-		resp, err := actors.ParseEmptyParamsAndReturn()
+		resp, err := actor_tools.ParseEmptyParamsAndReturn()
 		return resp, nil, err
 	case parser.MethodChangeOwnerAddress, parser.MethodChangeOwnerAddressExported: // TODO: not tested
 		resp, err := m.ChangeOwnerAddressExported(network, height, msg.Params)
@@ -153,8 +153,11 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodInitialPledgeExported, parser.MethodInitialPledge:
 		resp, err := m.InitialPledgeExported(network, height, msg.Params)
 		return resp, nil, err
+	case parser.MethodMaxTerminationFee, parser.MethodMaxTerminationFeeExported:
+		resp, err := m.MaxTerminationFeeExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
@@ -162,7 +165,7 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 
 func (m *Miner) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                               actors.ParseSend,
+		parser.MethodSend:                               actor_tools.ParseSend,
 		parser.MethodConstructor:                        m.Constructor,
 		parser.MethodControlAddresses:                   m.ControlAddresses,
 		parser.MethodChangeWorkerAddress:                m.ChangeWorkerAddressExported,
@@ -188,11 +191,11 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodChangeMultiaddrsExported:           m.ChangeMultiaddrsExported,
 		parser.MethodCompactPartitions:                  m.CompactPartitions,
 		parser.MethodCompactSectorNumbers:               m.CompactSectorNumbers,
-		parser.MethodConfirmChangeWorkerAddress:         actors.ParseEmptyParamsAndReturn,
-		parser.MethodConfirmChangeWorkerAddressExported: actors.ParseEmptyParamsAndReturn,
+		parser.MethodConfirmChangeWorkerAddress:         actor_tools.ParseEmptyParamsAndReturn,
+		parser.MethodConfirmChangeWorkerAddressExported: actor_tools.ParseEmptyParamsAndReturn,
 		parser.MethodConfirmUpdateWorkerKey:             m.ConfirmUpdateWorkerKey,
-		parser.MethodRepayDebt:                          actors.ParseEmptyParamsAndReturn,
-		parser.MethodRepayDebtExported:                  actors.ParseEmptyParamsAndReturn,
+		parser.MethodRepayDebt:                          actor_tools.ParseEmptyParamsAndReturn,
+		parser.MethodRepayDebtExported:                  actor_tools.ParseEmptyParamsAndReturn,
 		parser.MethodChangeOwnerAddress:                 m.ChangeOwnerAddressExported,
 		parser.MethodChangeOwnerAddressExported:         m.ChangeOwnerAddressExported,
 		parser.MethodDisputeWindowedPoSt:                m.DisputeWindowedPoSt,
@@ -218,5 +221,7 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodProveReplicaUpdates3:               m.ProveReplicaUpdates3,
 		parser.MethodInitialPledgeExported:              m.InitialPledgeExported,
 		parser.MethodInitialPledge:                      m.InitialPledgeExported,
+		parser.MethodMaxTerminationFee:                  m.MaxTerminationFeeExported,
+		parser.MethodMaxTerminationFeeExported:          m.MaxTerminationFeeExported,
 	}
 }

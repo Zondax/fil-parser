@@ -21,7 +21,8 @@ import (
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -55,7 +56,7 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsReward.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsReward.AwardBlockReward: {
 				Name:   parser.MethodAwardBlockReward,
@@ -89,7 +90,7 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 	case tools.V25.IsSupported(network, height):
 		return rewardv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -97,7 +98,7 @@ func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[s
 	version := tools.VersionFromHeight(network, height)
 	params, ok := awardBlockRewardParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, params(), parser.ParamsKey)
@@ -111,7 +112,7 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 	version := tools.VersionFromHeight(network, height)
 	returns, ok := thisEpochRewardReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, returns(), parser.ReturnKey)

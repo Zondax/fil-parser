@@ -19,7 +19,8 @@ import (
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -119,7 +120,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 	)
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actor_tools.ErrInvalidHeightForMethod, height)
 	case tools.V17.IsSupported(network, height):
 		tmp := &miner9.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -250,7 +251,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 		approvedByNominee = tmp.Proposed.ApprovedByNominee
 	default:
-		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parser.GetBeneficiaryReturn{

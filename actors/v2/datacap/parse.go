@@ -3,6 +3,7 @@ package datacap
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -20,7 +21,7 @@ import (
 	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -48,7 +49,7 @@ func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[
 	switch {
 	// all legacy version
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	case tools.V17.IsSupported(network, height):
 		return datacapv9.Methods, nil
 	case tools.V18.IsSupported(network, height):
@@ -66,17 +67,17 @@ func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[
 	case tools.V25.IsSupported(network, height):
 		return datacapv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
 func (p *Datacap) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	switch txType {
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodConstructor:
-		resp, err := actors.ParseConstructor(msg.Params)
+		resp, err := actor_tools.ParseConstructor(msg.Params)
 		return resp, nil, err
 	case parser.MethodMintExported, parser.MethodMint:
 		resp, err := p.MintExported(network, height, msg.Params, msgRct.Return)
@@ -127,7 +128,7 @@ func (p *Datacap) Parse(_ context.Context, network string, height int64, txType 
 		resp, err := p.BalanceOf(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 	return map[string]interface{}{}, nil, parser.ErrUnknownMethod
@@ -135,8 +136,8 @@ func (p *Datacap) Parse(_ context.Context, network string, height int64, txType 
 
 func (d *Datacap) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                      actors.ParseSend,
-		parser.MethodConstructor:               actors.ParseConstructor,
+		parser.MethodSend:                      actor_tools.ParseSend,
+		parser.MethodConstructor:               actor_tools.ParseConstructor,
 		parser.MethodMint:                      d.MintExported,
 		parser.MethodMintExported:              d.MintExported,
 		parser.MethodDestroy:                   d.DestroyExported,

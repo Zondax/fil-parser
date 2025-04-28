@@ -15,7 +15,8 @@ import (
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 	"github.com/filecoin-project/go-state-types/exitcode"
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -61,7 +62,7 @@ func getApproveReturn(network string, height int64, raw map[string]interface{}) 
 
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrInvalidHeightForMethod, height)
 	case tools.V16.IsSupported(network, height):
 		return multisig8.ApproveReturn{
 			Applied: applied,
@@ -118,5 +119,5 @@ func getApproveReturn(network string, height int64, raw map[string]interface{}) 
 		}, nil
 	}
 
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 }

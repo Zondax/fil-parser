@@ -2,19 +2,8 @@ package market
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
-	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
-	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
-	v12Market "github.com/filecoin-project/go-state-types/builtin/v12/market"
-	v13Market "github.com/filecoin-project/go-state-types/builtin/v13/market"
-	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
-	v14Market "github.com/filecoin-project/go-state-types/builtin/v14/market"
-	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
-	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
-	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
-	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
-	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
-	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
-	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
+	cbg "github.com/whyrusleeping/cbor-gen"
+
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/market"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/market"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/market"
@@ -22,7 +11,23 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/market"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/market"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/market"
-	cbg "github.com/whyrusleeping/cbor-gen"
+
+	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
+	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
+	v12Market "github.com/filecoin-project/go-state-types/builtin/v12/market"
+	v13Market "github.com/filecoin-project/go-state-types/builtin/v13/market"
+	v14Market "github.com/filecoin-project/go-state-types/builtin/v14/market"
+	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
+	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
+	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
+	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
+
+	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
+	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
+	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
+
+	"github.com/zondax/fil-parser/actors/v2/market/types"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -182,8 +187,8 @@ var verifyDealsForActivationReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(v10Market.VerifyDealsForActivationReturn) },
 
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationReturn) },
-	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationReturn) },
 
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationReturn) },
 	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.VerifyDealsForActivationReturn) },
 	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.VerifyDealsForActivationReturn) },
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.VerifyDealsForActivationReturn) },
@@ -215,13 +220,14 @@ var activateDealsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(v10Market.ActivateDealsParams) },
 
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(v11Market.ActivateDealsParams) },
-	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.ActivateDealsParams) },
 
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.ActivateDealsParams) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.ActivateDealsParams) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.ActivateDealsParams) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.ActivateDealsParams) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.ActivateDealsParams) },
+	// go-state-types impl. of ActivateDealsParams not upto date with builtin-actors
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V20.String()) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V21.String()) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V22.String()) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V23.String()) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V24.String()) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V25.String()) },
 }
 
 var activateDealsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -246,13 +252,14 @@ var activateDealsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(v10Market.ActivateDealsResult) },
 
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(v11Market.ActivateDealsResult) },
-	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.ActivateDealsResult) },
 
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.ActivateDealsResult) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.ActivateDealsResult) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.ActivateDealsResult) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.ActivateDealsResult) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.ActivateDealsResult) },
+	// go-state-types impl. of ActivateDealsParams not upto date with builtin-actors
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V20.String()) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V21.String()) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V22.String()) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V23.String()) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V24.String()) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V25.String()) },
 }
 
 var onMinerSectorsTerminateParams = map[string]func() cbg.CBORUnmarshaler{
@@ -282,10 +289,12 @@ var onMinerSectorsTerminateParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.OnMinerSectorsTerminateParams) },
 
 	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.OnMinerSectorsTerminateParams) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.OnMinerSectorsTerminateParams) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.OnMinerSectorsTerminateParams) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.OnMinerSectorsTerminateParams) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.OnMinerSectorsTerminateParams) },
+
+	// go-state-types impl. of OnMinerSectorsTerminateParams not upto date with builtin-actors
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
 }
 
 var computeDataCommitmentParams = map[string]func() cbg.CBORUnmarshaler{

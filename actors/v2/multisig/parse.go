@@ -3,6 +3,7 @@ package multisig
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -22,7 +23,8 @@ import (
 	multisigv8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisigv9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -59,7 +61,7 @@ func (m *Msig) Methods(_ context.Context, network string, height int64) (map[abi
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsMultisig.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsMultisig.Propose: {
 				Name:   parser.MethodPropose,
@@ -113,7 +115,7 @@ func (m *Msig) Methods(_ context.Context, network string, height int64) (map[abi
 	case tools.V25.IsSupported(network, height):
 		return multisigv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -129,7 +131,7 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 	case parser.MethodConstructor: // TODO: not tested
 		ret, err = p.MsigConstructor(network, height, msg.Params)
 	case parser.MethodSend:
-		resp := actors.ParseSend(msg)
+		resp := actor_tools.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
 		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return, p.parseMsigParams)
@@ -148,7 +150,7 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
 		ret, err = p.UniversalReceiverHook(network, msg, height, key, msgRct.Return, p.parseMsigParams)
 	case parser.UnknownStr:
-		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
+		resp, err := actor_tools.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 
@@ -158,7 +160,7 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 func (p *Msig) TransactionTypes() map[string]any {
 	return map[string]any{
 		parser.MethodConstructor:                         p.MsigConstructor,
-		parser.MethodSend:                                actors.ParseSend,
+		parser.MethodSend:                                actor_tools.ParseSend,
 		parser.MethodPropose:                             p.Propose,
 		parser.MethodProposeExported:                     p.Propose,
 		parser.MethodApprove:                             p.Approve,

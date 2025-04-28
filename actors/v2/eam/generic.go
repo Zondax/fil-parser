@@ -8,6 +8,7 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -42,12 +43,23 @@ func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](rawParams
 		}
 		metadata[parser.ParamsKey] = params
 	}
+	var createdEvmActor *types.AddressInfo
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(rawReturn, metadata, msgCid, r, h)
+		var err error
+		metadata, createdEvmActor, err = handleReturnValue(rawReturn, metadata, msgCid, r, h)
+		if err != nil {
+			return metadata, nil, err
+		}
 	}
 
-	return metadata, nil, nil
+	ethHash, err := ethtypes.EthHashFromCid(msgCid)
+	if err != nil {
+		return metadata, createdEvmActor, fmt.Errorf("error getting ethHash: %s", err)
+	}
+	metadata[parser.EthHashKey] = ethHash.String()
+
+	return metadata, createdEvmActor, nil
 }
 
 func parseCreateExternal[T typegen.CBORUnmarshaler](rawParams, rawReturn []byte, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
@@ -64,6 +76,11 @@ func parseCreateExternal[T typegen.CBORUnmarshaler](rawParams, rawReturn []byte,
 		}
 
 	}
+	ethHash, err := ethtypes.EthHashFromCid(msgCid)
+	if err != nil {
+		return metadata, nil, fmt.Errorf("error getting ethHash: %s", err)
+	}
+	metadata[parser.EthHashKey] = ethHash.String()
 
 	if len(rawReturn) > 0 {
 		return handleReturnValue(rawReturn, metadata, msgCid, r, h)
@@ -76,13 +93,8 @@ func handleReturnValue[R typegen.CBORUnmarshaler](rawReturn []byte, metadata map
 	if err != nil {
 		return nil, nil, err
 	}
-
-	ethHash, createdEvmActor, cr, err := newEamCreate(createReturn, msgCid)
+	createdEvmActor, cr := newEamCreate(createReturn, msgCid)
 	metadata[parser.ReturnKey] = cr
-	if err != nil {
-		return metadata, nil, fmt.Errorf("error parsing createReturn: %s", err)
-	}
-	metadata[parser.EthHashKey] = ethHash
 
 	h.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
 

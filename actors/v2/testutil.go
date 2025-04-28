@@ -12,6 +12,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/rt"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 )
 
 var utilityMethods = []string{"Exports", "Code", "IsSingleton", "State"}
@@ -37,7 +38,7 @@ func builtinActorMethods(methodMap map[abi.MethodNum]builtin.MethodMeta) []strin
 	return methods
 }
 
-func MissingMethods(actor Actor, actorVersions []any) []string {
+func MissingMethods(actor actor_tools.Actor, actorVersions []any) []string {
 	missingMethods := map[string]bool{}
 	txTypes := actor.TransactionTypes()
 	for _, actorVersion := range actorVersions {

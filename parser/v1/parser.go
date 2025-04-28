@@ -16,7 +16,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
-	actorsV2 "github.com/zondax/fil-parser/actors/v2"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
@@ -34,7 +34,7 @@ const Version = "v1"
 var NodeVersionsSupported = []string{"v1.21", "v1.22"}
 
 type Parser struct {
-	actorParser            actors.ActorParserInterface
+	actorParser            actor_tools.ActorParserInterface
 	addresses              *types.AddressInfoMap
 	txCidEquivalents       []types.TxCidTranslation
 	helper                 *helper.Helper
@@ -66,7 +66,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 
 func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
 	return &Parser{
-		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
+		actorParser:            actors.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
@@ -488,7 +488,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, 
 			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}
 		if actorName != "" {
-			txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+			txType, err = actor_tools.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger, p.actorParser)
 			if err != nil {
 				p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
 				txType = parser.UnknownStr
