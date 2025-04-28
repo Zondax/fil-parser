@@ -18,6 +18,7 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/verifreg"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/verifreg"
 	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry/types"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -229,17 +230,17 @@ var claimAllocationsParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var claimAllocationsReturn = map[string]func() cbg.CBORUnmarshaler{
-	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.ClaimAllocationsReturn) },
-	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.ClaimAllocationsReturn) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
 
-	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.ClaimAllocationsReturn) },
-	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.ClaimAllocationsReturn) },
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
 
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.ClaimAllocationsReturn) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.ClaimAllocationsReturn) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.ClaimAllocationsReturn) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.ClaimAllocationsReturn) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.ClaimAllocationsReturn) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
 }
 
 var getClaimsParams = map[string]func() cbg.CBORUnmarshaler{
