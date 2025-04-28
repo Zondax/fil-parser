@@ -86,7 +86,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	// Try on-chain cache
 	actorCode, err := a.onChainCache.GetActorCode(add, key)
 	if err != nil {
-		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
 			a.badAddress.Set(add.String(), true)
 		}
@@ -128,7 +128,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	// Try on-chain cache
 	robust, err = a.onChainCache.GetRobustAddress(add)
 	if err != nil {
-		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
@@ -162,7 +162,7 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	// Try on-chain cache
 	short, err = a.onChainCache.GetShortAddress(add)
 	if err != nil {
-		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
