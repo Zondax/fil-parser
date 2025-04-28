@@ -22,7 +22,8 @@ import (
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
-	"github.com/zondax/fil-parser/actors"
+	actor_tools "github.com/zondax/fil-parser/actors/v2/tools"
+
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -52,7 +53,7 @@ func (v *VerifiedRegistry) Methods(_ context.Context, network string, height int
 		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 			legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
 				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
+				Method: actor_tools.ParseConstructor,
 			},
 			legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
 				Name:   parser.MethodAddVerifier,
@@ -94,7 +95,7 @@ func (v *VerifiedRegistry) Methods(_ context.Context, network string, height int
 	case tools.V25.IsSupported(network, height):
 		return verifregv16.Methods, nil
 	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 }
 
@@ -102,7 +103,7 @@ func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (
 	version := tools.VersionFromHeight(network, height)
 	params, ok := addVerifierParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -117,7 +118,7 @@ func (*VerifiedRegistry) AddVerifiedClientExported(network string, height int64,
 	version := tools.VersionFromHeight(network, height)
 	params, ok := addVerifiedClientParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -127,7 +128,7 @@ func (*VerifiedRegistry) UseBytes(network string, height int64, raw []byte) (map
 	version := tools.VersionFromHeight(network, height)
 	params, ok := useBytesParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -137,7 +138,7 @@ func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) 
 	version := tools.VersionFromHeight(network, height)
 	params, ok := restoreBytesParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -147,7 +148,7 @@ func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int6
 	version := tools.VersionFromHeight(network, height)
 	params, ok := dataCap[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -157,11 +158,11 @@ func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height
 	version := tools.VersionFromHeight(network, height)
 	params, ok := removeExpiredAllocationsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := removeExpiredAllocationsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, rawReturn, true, params(), returnValue())
@@ -171,7 +172,7 @@ func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (
 	version := tools.VersionFromHeight(network, height)
 	params, ok := restoreBytesParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -181,7 +182,7 @@ func (*VerifiedRegistry) Deprecated2(network string, height int64, raw []byte) (
 	version := tools.VersionFromHeight(network, height)
 	params, ok := useBytesParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 
 	return parse(raw, nil, false, params(), &abi.EmptyValue{})
@@ -191,24 +192,43 @@ func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, raw
 	version := tools.VersionFromHeight(network, height)
 	params, ok := claimAllocationsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := claimAllocationsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params(), returnValue())
+	versions := tools.GetSupportedVersions(network)
+
+	metadata, err := parse(raw, rawReturn, true, params(), returnValue())
+	if err != nil {
+		// fallback
+		// There is mixed use of SectorAllocationClaims with flat parameters and with info inside structs
+		for _, v := range versions {
+			params, paramsOk := claimAllocationsParams[v.String()]
+			returnValue, returnValueOk := claimAllocationsReturn[v.String()]
+			if !paramsOk || !returnValueOk {
+				continue
+			}
+			metadata, err = parse(raw, rawReturn, true, params(), returnValue())
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, nil
 }
 
 func (*VerifiedRegistry) GetClaimsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getClaimsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := getClaimsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
@@ -217,11 +237,11 @@ func (*VerifiedRegistry) ExtendClaimTermsExported(network string, height int64, 
 	version := tools.VersionFromHeight(network, height)
 	params, ok := extendClaimTermsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := extendClaimTermsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
@@ -230,11 +250,11 @@ func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int6
 	version := tools.VersionFromHeight(network, height)
 	params, ok := removeExpiredClaimsParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := removeExpiredClaimsReturn[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
@@ -243,11 +263,11 @@ func (*VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw
 	version := tools.VersionFromHeight(network, height)
 	params, ok := universalReceiverParams[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	returnValue, ok := allocationsResponse[version.String()]
 	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, fmt.Errorf("%w: %d", actor_tools.ErrUnsupportedHeight, height)
 	}
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
