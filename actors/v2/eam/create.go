@@ -4,13 +4,6 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	eamv10 "github.com/filecoin-project/go-state-types/builtin/v10/eam"
-	eamv11 "github.com/filecoin-project/go-state-types/builtin/v11/eam"
-	eamv12 "github.com/filecoin-project/go-state-types/builtin/v12/eam"
-	eamv13 "github.com/filecoin-project/go-state-types/builtin/v13/eam"
-	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
-	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
-	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors"
@@ -19,67 +12,37 @@ import (
 )
 
 func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv16.CreateExternalReturn{}, e.helper)
-	case tools.V24.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv15.CreateExternalReturn{}, e.helper)
-	case tools.V23.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv14.CreateExternalReturn{}, e.helper)
-	case tools.V22.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv13.CreateExternalReturn{}, e.helper)
-	case tools.V21.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv12.CreateExternalReturn{}, e.helper)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv11.CreateExternalReturn{}, e.helper)
-	case tools.V18.IsSupported(network, height):
-		return parseCreateExternal(rawParams, rawReturn, msgCid, abi.CborBytes{}, &eamv10.CreateExternalReturn{}, e.helper)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params := abi.CborBytes{}
+	returnValue, ok := createExternalReturn[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	return parseCreateExternal(rawParams, rawReturn, msgCid, params, returnValue(), e.helper)
 }
 
 func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.CreateParams{}, &eamv16.CreateReturn{}, e.helper)
-	case tools.V24.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv15.CreateParams{}, &eamv15.CreateReturn{}, e.helper)
-	case tools.V23.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv14.CreateParams{}, &eamv14.CreateReturn{}, e.helper)
-	case tools.V22.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv13.CreateParams{}, &eamv13.CreateReturn{}, e.helper)
-	case tools.V21.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv12.CreateParams{}, &eamv12.CreateReturn{}, e.helper)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv11.CreateParams{}, &eamv11.CreateReturn{}, e.helper)
-	case tools.V18.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv10.CreateParams{}, &eamv10.CreateReturn{}, e.helper)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := createParams[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := createReturn[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseCreate(rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
 }
 
 func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
-	switch {
-	case tools.V25.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv16.Create2Params{}, &eamv16.Create2Return{}, e.helper)
-	case tools.V24.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv15.Create2Params{}, &eamv15.Create2Return{}, e.helper)
-	case tools.V23.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv14.Create2Params{}, &eamv14.Create2Return{}, e.helper)
-	case tools.V22.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv13.Create2Params{}, &eamv13.Create2Return{}, e.helper)
-	case tools.V21.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv12.Create2Params{}, &eamv12.Create2Return{}, e.helper)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv11.Create2Params{}, &eamv11.Create2Return{}, e.helper)
-	case tools.V18.IsSupported(network, height):
-		return parseCreate(rawParams, rawReturn, msgCid, &eamv10.Create2Params{}, &eamv10.Create2Return{}, e.helper)
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[string]interface{}{}, nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
+	version := tools.VersionFromHeight(network, height)
+	params, ok := create2Params[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	returnValue, ok := create2Return[version.String()]
+	if !ok {
+		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseCreate(rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
 }

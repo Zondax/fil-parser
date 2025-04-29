@@ -251,3 +251,59 @@ func VersionFromString(version string) version {
 	}
 	return V1
 }
+
+func VersionFromHeight(network string, height int64) version {
+	switch {
+	case V1.IsSupported(network, height):
+		return V1
+	case V2.IsSupported(network, height):
+		return V2
+	case V3.IsSupported(network, height):
+		return V3
+	case V4.IsSupported(network, height):
+		return V4
+	case V5.IsSupported(network, height):
+		return V5
+	case V6.IsSupported(network, height):
+		return V6
+	case V7.IsSupported(network, height):
+		return V7
+	case V8.IsSupported(network, height):
+		return V8
+	case V9.IsSupported(network, height):
+		return V9
+	case V10.IsSupported(network, height):
+		return V10
+	case V11.IsSupported(network, height):
+		return V11
+	case V12.IsSupported(network, height):
+		return V12
+	case V13.IsSupported(network, height):
+		return V13
+	case V14.IsSupported(network, height):
+		return V14
+	case V15.IsSupported(network, height):
+		return V15
+	case V16.IsSupported(network, height):
+		return V16
+	case V17.IsSupported(network, height):
+		return V17
+	case V18.IsSupported(network, height):
+		return V18
+	case V19.IsSupported(network, height):
+		return V19
+	case V20.IsSupported(network, height):
+		return V20
+	case V21.IsSupported(network, height):
+		return V21
+	case V22.IsSupported(network, height):
+		return V22
+	case V23.IsSupported(network, height):
+		return V23
+	case V24.IsSupported(network, height):
+		return V24
+	case V25.IsSupported(network, height):
+		return V25
+	}
+	return LatestVersion(network)
+}

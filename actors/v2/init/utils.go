@@ -17,13 +17,15 @@ import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 
 	legacyInitv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
+
 	"github.com/ipfs/go-cid"
+	typegen "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
 )
 
-func execParams(params constructorParams) (cid.Cid, any, error) {
+func setExecParams(params typegen.CBORUnmarshaler) (cid.Cid, any, error) {
 	setParams := func(codeCid cid.Cid, constructorParams []byte) (cid.Cid, any, error) {
 		return cid.Undef, parser.ExecParams{
 			CodeCid:           codeCid.String(),
@@ -96,7 +98,7 @@ func execParams(params constructorParams) (cid.Cid, any, error) {
 	return cid.Undef, nil, actors.ErrUnsupportedHeight
 }
 
-func returnParams(msg *parser.LotusMessage, actorCID string, params execReturn) *types.AddressInfo {
+func setReturnParams(msg *parser.LotusMessage, actorCID string, params typegen.CBORUnmarshaler) *types.AddressInfo {
 	setReturn := func(idAddress, robustAddress address.Address) *types.AddressInfo {
 		return &types.AddressInfo{
 			Short:         idAddress.String(),

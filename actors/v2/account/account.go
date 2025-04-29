@@ -79,30 +79,13 @@ func (a *Account) PubkeyAddress(network string, raw, rawReturn []byte) (map[stri
 }
 
 func (a *Account) AuthenticateMessage(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	var r typegen.CborBool
-	switch {
-	// all versions before V17
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[string]interface{}{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height) // method did not exist
-	case tools.V17.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv9.AuthenticateMessageParams{}, &r)
-	case tools.V18.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv10.AuthenticateMessageParams{}, &r)
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv11.AuthenticateMessageParams{}, &r)
-	case tools.V21.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv12.AuthenticateMessageParams{}, &r)
-	case tools.V22.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv13.AuthenticateMessageParams{}, &r)
-	case tools.V23.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv14.AuthenticateMessageParams{}, &r)
-	case tools.V24.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv15.AuthenticateMessageParams{}, &r)
-	case tools.V25.IsSupported(network, height):
-		return authenticateMessageGeneric(raw, rawReturn, &accountv16.AuthenticateMessageParams{}, &r)
-	default:
+	version := tools.VersionFromHeight(network, height)
+	params, ok := authenticateMessageParams[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	var r typegen.CborBool
+	return authenticateMessageGeneric(raw, rawReturn, params(), &r)
 }
 
 func (a *Account) UniversalReceiverHook(network string, height int64, raw []byte) (map[string]interface{}, error) {

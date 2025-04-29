@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
-	"strconv"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -22,6 +23,9 @@ import (
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
 	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
+
+	typegen "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -72,7 +76,7 @@ func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.
 	}
 }
 
-func newEamCreate(r createReturn, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
+func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
 	getReturnStruct := func(actorID uint64, robustAddress *address.Address, ethAddress string) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
 		createReturn := parser.EamCreateReturn{
 			ActorId:       actorID,
@@ -149,7 +153,7 @@ func newEamCreate(r createReturn, msgCid cid.Cid) (string, *types.AddressInfo, p
 	}
 }
 
-func validateEamReturn(ret createReturn) error {
+func validateEamReturn(ret typegen.CBORUnmarshaler) error {
 	if ret == nil {
 		return fmt.Errorf("input is nil")
 	}
