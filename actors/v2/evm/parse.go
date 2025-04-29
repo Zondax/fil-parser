@@ -37,6 +37,9 @@ func (p *Evm) Parse(_ context.Context, network string, height int64, txType stri
 	case parser.MethodGetStorageAt: // TODO: not tested
 		resp, err := p.GetStorageAt(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodHandleFilecoinMethod:
+		resp, err := p.HandleFilecoinMethod(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err

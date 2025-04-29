@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/actors/v2/evm/types"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -151,4 +152,18 @@ func (*Evm) GetStorageAt(network string, height int64, rawParams, rawReturn []by
 	}
 
 	return parse(rawParams, rawReturn, true, params(), &abi.CborBytes{}, parser.ParamsKey)
+}
+
+func (*Evm) HandleFilecoinMethod(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata, err := parse(rawParams, rawReturn, true, &types.HandleFilecoinMethodParams{}, &types.HandleFilecoinMethodReturn{}, parser.ParamsKey)
+	if err != nil {
+		if metadata == nil {
+			metadata = make(map[string]interface{})
+		}
+		metadata[parser.ParamsRawKey] = hex.EncodeToString(rawParams)
+		metadata[parser.ReturnRawKey] = hex.EncodeToString(rawReturn)
+		return metadata, nil
+	}
+	return metadata, nil
+
 }
