@@ -91,12 +91,12 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("failed to read header: %w", err)
 		}
 		t.SectorNumbers = make([]uint64, extra)
-		for i := 0; i < int(extra); i++ {
+		for i := uint64(0); i < extra; i++ {
 			_, innerExtra, err := cr.ReadHeader()
 			if err != nil {
 				return fmt.Errorf("failed to read header: %w", err)
 			}
-			t.SectorNumbers[i] = uint64(innerExtra)
+			t.SectorNumbers[i] = innerExtra
 		}
 	default:
 		return fmt.Errorf("unexpected type: %d", maj)
