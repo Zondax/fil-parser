@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 
 	typegen "github.com/whyrusleeping/cbor-gen"
@@ -116,6 +117,6 @@ func (a *Account) UniversalReceiverHook(network string, height int64, raw []byte
 
 func (a *Account) Fallback(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	metadata[parser.ParamsRawKey] = raw
+	metadata[parser.ParamsRawKey] = hex.EncodeToString(raw)
 	return metadata, nil
 }

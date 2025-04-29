@@ -2,6 +2,7 @@ package ethaccount
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -101,6 +102,6 @@ func (e *EthAccount) parseEthAccountAny(rawParams, rawReturn []byte) (map[string
 
 func (e *EthAccount) Fallback(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	metadata[parser.ParamsRawKey] = raw
+	metadata[parser.ParamsRawKey] = hex.EncodeToString(raw)
 	return metadata, nil
 }
