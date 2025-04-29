@@ -184,22 +184,11 @@ func (t *BatchActivateDealsResult) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		for i := 0; i < int(extra); i++ {
-			{
-				var maj byte
-				var extra uint64
-				var err error
-				_ = maj
-				_ = extra
-				_ = err
-
-				{
-					t.Activations[i] = SectorDealActivation{
-						version: version,
-					}
-					if err := t.Activations[i].UnmarshalCBOR(cr); err != nil {
-						return fmt.Errorf("unmarshaling t.Activations[%d]: %w", i, err)
-					}
-				}
+			t.Activations[i] = SectorDealActivation{
+				version: version,
+			}
+			if err := t.Activations[i].UnmarshalCBOR(cr); err != nil {
+				return fmt.Errorf("unmarshaling t.Activations[%d]: %w", i, err)
 			}
 		}
 	}
@@ -259,20 +248,9 @@ func (t *SectorDealActivation) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		for i := 0; i < int(extra); i++ {
-			{
-				var maj byte
-				var extra uint64
-				var err error
-				_ = maj
-				_ = extra
-				_ = err
-
-				{
-					t.VerifiedInfos[i] = verifiedDealInfos[version]()
-					if err := t.VerifiedInfos[i].UnmarshalCBOR(cr); err != nil {
-						return fmt.Errorf("unmarshaling t.VerifiedInfos[%d]: %w", i, err)
-					}
-				}
+			t.VerifiedInfos[i] = verifiedDealInfos[version]()
+			if err := t.VerifiedInfos[i].UnmarshalCBOR(cr); err != nil {
+				return fmt.Errorf("unmarshaling t.VerifiedInfos[%d]: %w", i, err)
 			}
 		}
 	}
