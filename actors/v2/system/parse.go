@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -44,38 +45,52 @@ func (*System) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func (*System) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			abi.MethodNum(0): {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return systemv8.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return systemv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return systemv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return systemv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return systemv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return systemv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return systemv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return systemv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return systemv16.Methods, nil
-	default:
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		abi.MethodNum(0): {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
 	}
 }
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(systemv8.Methods),
+	tools.V17.String(): actors.CopyMethods(systemv9.Methods),
+	tools.V18.String(): actors.CopyMethods(systemv10.Methods),
+	tools.V19.String(): actors.CopyMethods(systemv11.Methods),
+	tools.V20.String(): actors.CopyMethods(systemv11.Methods),
+	tools.V21.String(): actors.CopyMethods(systemv12.Methods),
+	tools.V22.String(): actors.CopyMethods(systemv13.Methods),
+	tools.V23.String(): actors.CopyMethods(systemv14.Methods),
+	tools.V24.String(): actors.CopyMethods(systemv15.Methods),
+	tools.V25.String(): actors.CopyMethods(systemv16.Methods),
+}
+
+func (*System) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return methods, nil
+}
+
 func (s *System) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
 	var resp map[string]interface{}
 	var err error

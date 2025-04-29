@@ -52,28 +52,38 @@ func (*Eam) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
+func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsCron.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsCron.EpochTick: {
+			Name:   parser.MethodEpochTick,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V18.String(): actors.CopyMethods(eamv10.Methods),
+	tools.V19.String(): actors.CopyMethods(eamv11.Methods),
+	tools.V20.String(): actors.CopyMethods(eamv11.Methods),
+	tools.V21.String(): actors.CopyMethods(eamv12.Methods),
+	tools.V22.String(): actors.CopyMethods(eamv13.Methods),
+	tools.V23.String(): actors.CopyMethods(eamv14.Methods),
+	tools.V24.String(): actors.CopyMethods(eamv15.Methods),
+	tools.V25.String(): actors.CopyMethods(eamv16.Methods),
+}
+
 func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	case tools.V18.IsSupported(network, height):
-		return eamv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return eamv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return eamv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return eamv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return eamv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return eamv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return eamv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return methods, nil
 }
 
 func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {

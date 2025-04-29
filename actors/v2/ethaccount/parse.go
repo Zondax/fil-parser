@@ -3,6 +3,7 @@ package ethaccount
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -43,28 +44,25 @@ func (*EthAccount) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V18.String(): actors.CopyMethods(ethaccountv10.Methods),
+	tools.V19.String(): actors.CopyMethods(ethaccountv11.Methods),
+	tools.V20.String(): actors.CopyMethods(ethaccountv11.Methods),
+	tools.V21.String(): actors.CopyMethods(ethaccountv12.Methods),
+	tools.V22.String(): actors.CopyMethods(ethaccountv13.Methods),
+	tools.V23.String(): actors.CopyMethods(ethaccountv14.Methods),
+	tools.V24.String(): actors.CopyMethods(ethaccountv15.Methods),
+	tools.V25.String(): actors.CopyMethods(ethaccountv16.Methods),
+}
+
 func (e *EthAccount) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	case tools.V18.IsSupported(network, height):
-		return ethaccountv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return ethaccountv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return ethaccountv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return ethaccountv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return ethaccountv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return ethaccountv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return ethaccountv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return methods, nil
 }
 
 func (e *EthAccount) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
@@ -73,6 +71,8 @@ func (e *EthAccount) Parse(_ context.Context, network string, height int64, txTy
 	switch txType {
 	case parser.MethodConstructor:
 		resp, err = e.Constructor()
+	case parser.MethodFallback:
+		resp, err = e.Fallback(network, height, msg.Params)
 	default:
 		resp, err = e.parseEthAccountAny(msg.Params, msgRct.Return)
 	}
@@ -96,5 +96,11 @@ func (e *EthAccount) parseEthAccountAny(rawParams, rawReturn []byte) (map[string
 	metadata[parser.ParamsKey] = rawParams
 	metadata[parser.ReturnKey] = rawReturn
 
+	return metadata, nil
+}
+
+func (e *EthAccount) Fallback(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsRawKey] = raw
 	return metadata, nil
 }

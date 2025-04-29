@@ -53,69 +53,84 @@ func (*Msig) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	m := &Msig{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsMultisig.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsMultisig.Propose: {
+			Name:   parser.MethodPropose,
+			Method: m.Propose,
+		},
+		legacyBuiltin.MethodsMultisig.Approve: {
+			Name:   parser.MethodApprove,
+			Method: m.Approve,
+		},
+		legacyBuiltin.MethodsMultisig.Cancel: {
+			Name:   parser.MethodCancel,
+			Method: m.Cancel,
+		},
+		legacyBuiltin.MethodsMultisig.AddSigner: {
+			Name:   parser.MethodAddSigner,
+			Method: m.MsigParams,
+		},
+		legacyBuiltin.MethodsMultisig.RemoveSigner: {
+			Name:   parser.MethodRemoveSigner,
+			Method: m.RemoveSigner,
+		},
+		legacyBuiltin.MethodsMultisig.SwapSigner: {
+			Name:   parser.MethodSwapSigner,
+			Method: m.MsigParams,
+		},
+		legacyBuiltin.MethodsMultisig.ChangeNumApprovalsThreshold: {
+			Name:   parser.MethodChangeNumApprovalsThreshold,
+			Method: m.ChangeNumApprovalsThreshold,
+		},
+		legacyBuiltin.MethodsMultisig.LockBalance: {
+			Name:   parser.MethodLockBalance,
+			Method: m.LockBalance,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(multisigv8.Methods),
+	tools.V17.String(): actors.CopyMethods(multisigv9.Methods),
+	tools.V18.String(): actors.CopyMethods(multisigv10.Methods),
+	tools.V19.String(): actors.CopyMethods(multisigv11.Methods),
+	tools.V20.String(): actors.CopyMethods(multisigv11.Methods),
+	tools.V21.String(): actors.CopyMethods(multisigv12.Methods),
+	tools.V22.String(): actors.CopyMethods(multisigv13.Methods),
+	tools.V23.String(): actors.CopyMethods(multisigv14.Methods),
+	tools.V24.String(): actors.CopyMethods(multisigv15.Methods),
+	tools.V25.String(): actors.CopyMethods(multisigv16.Methods),
+}
+
 func (m *Msig) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsMultisig.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-			legacyBuiltin.MethodsMultisig.Propose: {
-				Name:   parser.MethodPropose,
-				Method: m.Propose,
-			},
-			legacyBuiltin.MethodsMultisig.Approve: {
-				Name:   parser.MethodApprove,
-				Method: m.Approve,
-			},
-			legacyBuiltin.MethodsMultisig.Cancel: {
-				Name:   parser.MethodCancel,
-				Method: m.Cancel,
-			},
-			legacyBuiltin.MethodsMultisig.AddSigner: {
-				Name:   parser.MethodAddSigner,
-				Method: m.MsigParams,
-			},
-			legacyBuiltin.MethodsMultisig.RemoveSigner: {
-				Name:   parser.MethodRemoveSigner,
-				Method: m.RemoveSigner,
-			},
-			legacyBuiltin.MethodsMultisig.SwapSigner: {
-				Name:   parser.MethodSwapSigner,
-				Method: m.MsigParams,
-			},
-			legacyBuiltin.MethodsMultisig.ChangeNumApprovalsThreshold: {
-				Name:   parser.MethodChangeNumApprovalsThreshold,
-				Method: m.ChangeNumApprovalsThreshold,
-			},
-			legacyBuiltin.MethodsMultisig.LockBalance: {
-				Name:   parser.MethodLockBalance,
-				Method: m.LockBalance,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return multisigv8.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return multisigv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return multisigv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return multisigv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return multisigv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return multisigv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return multisigv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return multisigv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return multisigv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	return methods, nil
 }
 
 /*

@@ -3,6 +3,7 @@ package cron
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -46,41 +47,55 @@ func (*Cron) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsCron.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsCron.EpochTick: {
+			Name:   parser.MethodEpochTick,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(cronv8.Methods),
+	tools.V17.String(): actors.CopyMethods(cronv9.Methods),
+	tools.V18.String(): actors.CopyMethods(cronv10.Methods),
+	tools.V19.String(): actors.CopyMethods(cronv11.Methods),
+	tools.V20.String(): actors.CopyMethods(cronv11.Methods),
+	tools.V21.String(): actors.CopyMethods(cronv12.Methods),
+	tools.V22.String(): actors.CopyMethods(cronv13.Methods),
+	tools.V23.String(): actors.CopyMethods(cronv14.Methods),
+	tools.V24.String(): actors.CopyMethods(cronv15.Methods),
+	tools.V25.String(): actors.CopyMethods(cronv16.Methods),
+}
+
 func (c *Cron) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsCron.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-			legacyBuiltin.MethodsCron.EpochTick: {
-				Name:   parser.MethodEpochTick,
-				Method: actors.ParseEmptyParamsAndReturn,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return cronv8.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return cronv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return cronv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return cronv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return cronv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return cronv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return cronv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return cronv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return cronv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return methods, nil
 }
 
 func (c *Cron) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {

@@ -185,6 +185,7 @@ const (
 	MethodInvokeContract                      = "InvokeContract"                      // MethodsEVM
 	MethodGetBytecode                         = "GetBytecode"                         // MethodsEVM
 	MethodGetStorageAt                        = "GetStorageAt"                        // MethodsEVM
+	MethodHandleFilecoinMethod                = "HandleFilecoinMethod"                // MethodsEVM
 	MethodResurrect                           = "Resurrect"                           // MethodsEVM
 	MethodGetBytecodeHash                     = "GetBytecodeHash"                     // MethodsEVM
 	MethodInvokeContractReadOnly              = "InvokeContractReadOnly"              // MethodsEVM

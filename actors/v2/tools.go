@@ -22,7 +22,16 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 
 	method, ok := actorMethods[methodNum]
 	if !ok {
+
+		if (actorName == manifest.AccountKey || actorName == manifest.EthAccountKey) && methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
+			return parser.MethodFallback, nil
+		}
+		if actorName == manifest.EvmKey && methodNum > abi.MethodNum(parser.EvmMaxReservedMethodNumber) {
+			return parser.MethodHandleFilecoinMethod, nil
+		}
+
 		return parser.UnknownStr, nil
+
 	}
 	return method.Name, nil
 }

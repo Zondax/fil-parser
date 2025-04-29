@@ -28,41 +28,56 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	a := &Account{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsAccount.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsAccount.PubkeyAddress: {
+			Name:   parser.MethodPubkeyAddress,
+			Method: a.PubkeyAddress,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(accountv8.Methods),
+	tools.V17.String(): actors.CopyMethods(accountv9.Methods),
+	tools.V18.String(): actors.CopyMethods(accountv10.Methods),
+	tools.V19.String(): actors.CopyMethods(accountv11.Methods),
+	tools.V20.String(): actors.CopyMethods(accountv11.Methods),
+	tools.V21.String(): actors.CopyMethods(accountv12.Methods),
+	tools.V22.String(): actors.CopyMethods(accountv13.Methods),
+	tools.V23.String(): actors.CopyMethods(accountv14.Methods),
+	tools.V24.String(): actors.CopyMethods(accountv15.Methods),
+	tools.V25.String(): actors.CopyMethods(accountv16.Methods),
+}
+
 func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsAccount.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-			legacyBuiltin.MethodsAccount.PubkeyAddress: {
-				Name:   parser.MethodPubkeyAddress,
-				Method: a.PubkeyAddress,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return accountv8.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return accountv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return accountv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return accountv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return accountv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return accountv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return accountv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return accountv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return accountv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return methods, nil
 }
 
 func (a *Account) PubkeyAddress(network string, raw, rawReturn []byte) (map[string]interface{}, error) {
@@ -96,5 +111,11 @@ func (a *Account) UniversalReceiverHook(network string, height int64, raw []byte
 
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsKey] = base64.StdEncoding.EncodeToString(raw)
+	return metadata, nil
+}
+
+func (a *Account) Fallback(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsRawKey] = raw
 	return metadata, nil
 }
