@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/zondax/golem/pkg/logger"
 	"strings"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/filecoin-project/lotus/api"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
@@ -45,6 +45,7 @@ func ParseReturn(metadata map[string]interface{}) string {
 }
 
 func GetTimestamp(timestamp uint64) time.Time {
+	// #nosec G115
 	blockTimeStamp := int64(timestamp) * 1000
 	return time.Unix(blockTimeStamp/1000, blockTimeStamp%1000)
 }
@@ -74,15 +75,15 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 	}
 }
 
-func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *zap.Logger) (uint64, error) {
+func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logger) (uint64, error) {
 	defaultError := errors.New("could not find base fee")
 	if tipset == nil {
-		logger.Sugar().Error("get-parent-base-fee: tipset is nil")
+		logger.Error("get-parent-base-fee: tipset is nil")
 		return 0, defaultError
 	}
 
 	if len(tipset.TipSet.Blocks()) == 0 {
-		logger.Sugar().Error("get-parent-base-fee: no blocks found in the Tipset")
+		logger.Error("get-parent-base-fee: no blocks found in the Tipset")
 		return 0, defaultError
 	}
 
@@ -94,7 +95,7 @@ func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string
 	ctx := context.Background()
 	ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
 	if err != nil || ethHash == nil {
-		return "", nil
+		return "", err
 	}
 
 	return ethHash.String(), nil

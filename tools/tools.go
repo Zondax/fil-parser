@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -14,13 +16,12 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
-	"go.uber.org/zap"
 )
 
 const UnknownParserVersion = "unknown"
 
 type Tools struct {
-	Logger *zap.Logger
+	Logger *logger.Logger
 }
 
 func BuildId(input ...string) string {
@@ -65,13 +66,13 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 		// Get the miner that received the reward
 		params, ok := txMetadata["Params"]
 		if !ok {
-			t.Logger.Sugar().Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
+			t.Logger.Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
 			return blockCid, nil
 		}
 
 		rewardsParams, ok := params.(reward.AwardBlockRewardParams)
 		if !ok {
-			t.Logger.Sugar().Errorf("Could not parse parameters for tx '%s'", txType)
+			t.Logger.Errorf("Could not parse parameters for tx '%s'", txType)
 			return blockCid, nil
 		}
 		// Get the block that this miner mined
@@ -90,11 +91,11 @@ func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[stri
 
 	blockCids, ok := tipset.BlockMessages[msgCid]
 	if !ok {
-		return blockCid, fmt.Errorf("could not find block hash for message cid '%s'", msgCid)
+		return blockCid, errors.New("could not find block hash for message cid")
 	}
 
 	if len(blockCids) == 0 {
-		return blockCid, fmt.Errorf("could not find block hash for message cid '%s'. Slice is empty", msgCid)
+		return blockCid, errors.New("could not find block hash for message cid. Slice is empty")
 	} else {
 		blockCid = blockCids[0].Cid
 	}

@@ -51,6 +51,14 @@ type GetBeneficiaryReturn struct {
 	Proposed Proposed          `json:"proposed"`
 }
 
+// TODO: look how to combine these two proposes
+type MultisigPropose struct {
+	To     string
+	Value  string
+	Method string
+	Params map[string]interface{}
+}
+
 type Propose struct {
 	To     string
 	Value  string
@@ -80,10 +88,11 @@ type BurnFee struct {
 }
 
 type FeesMetadata struct {
-	TxType                string
+	TxType                string `json:"TxType,omitempty"`
 	MinerFee              MinerFee
 	OverEstimationBurnFee OverEstimationBurnFee
 	BurnFee               BurnFee
+	TotalCost             string
 }
 
 type LotusMessage struct {

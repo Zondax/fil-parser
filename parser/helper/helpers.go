@@ -3,7 +3,18 @@ package helper
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/ipfs/go-cid"
+	// The following import is necessary to ensure that the init() function
+	// from the lotus build package is invoked.
+	// In a recent refactor (v1.30.0), some build packages were modularized to reduce
+	// unnecessary dependencies. As a result, if this package is not explicitly
+	// imported, its init() will not be triggered, potentially causing issues
+	// with initialization, such as errors when searching for actorNameByCid.
+	_ "github.com/filecoin-project/lotus/build"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -24,25 +35,19 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
+
+	"github.com/zondax/fil-parser/metrics"
+	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
+	"github.com/zondax/rosetta-filecoin-lib/actors"
+
 	"github.com/zondax/fil-parser/actors/cache"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/parser"
-	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
-	"github.com/zondax/rosetta-filecoin-lib/actors"
-	"go.uber.org/zap"
-
-	// The following import is necessary to ensure that the init() function
-	// from the lotus build package is invoked.
-	// In a recent refactor (v1.30.0), some build packages were modularized to reduce
-	// unnecessary dependencies. As a result, if this package is not explicitly
-	// imported, its init() will not be triggered, potentially causing issues
-	// with initialization, such as errors when searching for actorNameByCid.
-	_ "github.com/filecoin-project/lotus/build"
-
+	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	"github.com/zondax/fil-parser/types"
 )
 
+// Deprecated: Use v2/tools.ActorMethods instead
 var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.InitKey:     filInit.Methods,
 	manifest.CronKey:     cron.Methods,
@@ -69,11 +74,18 @@ type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
 	node       api.FullNode
 	actorCache *cache.ActorsCache
-	logger     *zap.Logger
+	logger     *logger.Logger
+	metrics    *parsermetrics.ParserMetricsClient
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *zap.Logger) *Helper {
-	return &Helper{lib: lib, actorCache: actorsCache, node: node, logger: logger2.GetSafeLogger(logger)}
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
+	return &Helper{
+		lib:        lib,
+		actorCache: actorsCache,
+		node:       node,
+		logger:     logger2.GetSafeLogger(logger),
+		metrics:    parsermetrics.NewClient(metrics, "helper"),
+	}
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
@@ -92,20 +104,24 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	var err error
 	addInfo := &types.AddressInfo{}
 
+	if add == address.Undef {
+		return addInfo
+	}
+
 	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 	if err != nil {
-		h.logger.Sugar().Errorf("could not get actor code from address. Err: %s", err)
+		h.logger.Errorf("could not get actor code from address. Err: %s", err)
 	} else {
 		c, err := cid.Parse(addInfo.ActorCid)
 		if err != nil {
-			h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		}
 		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
-		h.logger.Sugar().Errorf("could not get short address for %s. Err: %v", add.String(), err)
+		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	// Ignore searching robust addresses for Msig and miners
@@ -115,24 +131,28 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
-		h.logger.Sugar().Errorf("could not get robust address for %s. Err: %v", add.String(), err)
+		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
 	return addInfo
 }
 
-func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+	if add == address.Undef {
+		return "", errors.New("address is undefined")
+	}
+
 	onChainOnly := false
 	for {
 		// Search for actor in cache
-		actorCode, err := h.actorCache.GetActorCode(address, key, onChainOnly)
+		actorCode, err := h.actorCache.GetActorCode(add, key, onChainOnly)
 		if err != nil {
 			return actors.UnknownStr, err
 		}
 
 		c, err := cid.Parse(actorCode)
 		if err != nil {
-			h.logger.Sugar().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
+			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 			return actors.UnknownStr, err
 		}
 
@@ -149,8 +169,8 @@ func (h *Helper) GetActorNameFromAddress(address address.Address, height int64, 
 	}
 }
 
+// Deprecated: Use v2/tools.GetMethodName instead
 func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
-
 	if msg == nil {
 		return "", errors.New("malformed value")
 	}
@@ -165,21 +185,49 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	actorName, _ := h.GetActorNameFromAddress(msg.To, height, key)
+	actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	if err != nil {
+		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
+	}
 
 	actorMethods, ok := allMethods[actorName]
 	if !ok {
 		return "", parser.ErrNotKnownActor
 	}
+
 	method, ok := actorMethods[msg.Method]
 	if !ok {
 		return parser.UnknownStr, nil
 	}
+
 	return method.Name, nil
 }
 
+// CheckCommonMethods returns the method name for the given message if Send Or Constructor, otherwise returns an empty string
+func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
+	if msg == nil {
+		return "", errors.New("malformed value")
+	}
+
+	// Shortcut 1 - Method "0" corresponds to "MethodSend"
+	if msg.Method == 0 {
+		return parser.MethodSend, nil
+	}
+
+	// Shortcut 2 - Method "1" corresponds to "MethodConstructor"
+	if msg.Method == 1 {
+		return parser.MethodConstructor, nil
+	}
+
+	return "", nil
+}
+
 func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
-	return h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+	s, err := h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+	if err != nil {
+		_ = h.metrics.UpdateGetEvmSelectorSigMetric()
+	}
+	return s, err
 }
 
 func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey) ([]*types.Transaction, error) {
@@ -187,18 +235,21 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 	for _, tx := range txs {
 		addrTo, err := address.NewFromString(tx.TxTo)
 		if err != nil {
-			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			_ = h.metrics.UpdateParseAddressErrorMetric("to")
+			h.logger.Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 		addrFrom, err := address.NewFromString(tx.TxFrom)
 		if err != nil {
-			h.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+			_ = h.metrics.UpdateParseAddressErrorMetric("from")
+			h.logger.Errorf("could not parse address. Err: %s", err)
 			continue
 		}
 
+		// #nosec G115
 		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)
 		if err != nil {
-			h.logger.Sugar().Errorf("could not get actor type from address. Err: %s", err)
+			h.logger.Errorf("could not get actor type from address. Err: %s", err)
 			continue
 		}
 		if !isType {
@@ -213,6 +264,9 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 
 func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string) (bool, error) {
 	for _, addr := range addresses {
+		if addr == address.Undef {
+			continue
+		}
 		actorName, err := h.GetActorNameFromAddress(addr, height, key)
 		if err != nil {
 			return false, err

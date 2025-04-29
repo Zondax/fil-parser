@@ -13,16 +13,25 @@ const (
 	FilPrefix   = "f0"
 
 	// metadata keys
-	ParamsKey  = "Params"
-	ReturnKey  = "Return"
-	EthHashKey = "ethHash"
-	AddressKey = "address"
-	EthLogsKey = "ethLogs"
+	ParamsKey    = "Params"
+	ReturnKey    = "Return"
+	ParamsRawKey = "ParamsRaw"
+	ReturnRawKey = "ReturnRaw"
+	ErrorKey     = "Error"
+	EthHashKey   = "ethHash"
+	AddressKey   = "address"
+	EthLogsKey   = "ethLogs"
 
 	UnknownStr = "unknown"
 
 	TxTypeGenesis = "Genesis"
 	GenesisHeight = 0
+
+	// FirstExportedMethodNumber is the lowest FRC-42 method number.
+	// https://github.com/filecoin-project/builtin-actors/blob/8fdbdec5e3f46b60ba0132d90533783a44c5961f/runtime/src/builtin/shared.rs#L58
+	FirstExportedMethodNumber = 1 << 24
+
+	EvmMaxReservedMethodNumber = 1023
 
 	MultisigConstructorMethod = "Constructor"
 
@@ -34,6 +43,8 @@ const (
 	MethodEpochTick                           = "EpochTick"                           // Cron
 	MethodPubkeyAddress                       = "PubkeyAddress"                       // MethodsAccount
 	MethodAuthenticateMessage                 = "AuthenticateMessage"                 // MethodsAccount
+	MethodReceive                             = "Receive"                             // MethodsAccount // exists only in built-in actors v9
+	MethodFallback                            = "Fallback"                            // MethodsAccount
 	MethodExec                                = "Exec"                                // MethodsInit
 	MethodExec4                               = "Exec4"                               // MethodsInit
 	MethodSwapSigner                          = "SwapSigner"                          // MethodsMultisig
@@ -69,6 +80,8 @@ const (
 	MethodMinerRawPowerExported               = "MinerRawPowerExported"               // MethodsPower
 	MethodMinerCountExported                  = "MinerCountExported"                  // MethodsPower
 	MethodMinerConsensusCountExported         = "MinerConsensusCountExported"         // MethodsPower
+	MethodOnEpochTickEnd                      = "OnEpochTickEnd"                      // MethodsPower
+	MethodOnConsensusFault                    = "OnConsensusFault"                    // MethodsPower
 	MethodOnDeferredCronEvent                 = "OnDeferredCronEvent"                 // MethodsMiner
 	MethodPreCommitSector                     = "PreCommitSector"                     // MethodsMiner
 	MethodProveCommitSector                   = "ProveCommitSector"                   // MethodsMiner - Deprecated
@@ -116,7 +129,15 @@ const (
 	MethodGetVestingFunds                     = "GetVestingFundsExported"             // MethodsMiner
 	MethodGetPeerID                           = "GetPeerIDExported"                   // MethodsMiner
 	MethodGetMultiaddrs                       = "GetMultiaddrsExported"               // MethodsMiner
+	MethodAddLockedFund                       = "AddLockedFund"                       // MethodsMiner
 	MethodProveCommitSectors3                 = "ProveCommitSectors3"                 // MethodsMiner
+	MethodProveCommitSectorsNI                = "ProveCommitSectorsNI"                // MethodsMiner
+	MethodProveReplicaUpdates3                = "ProveReplicaUpdates3"                // MethodsMiner
+	MethodInternalSectorSetupForPreseal       = "InternalSectorSetupForPreseal"       // MethodsMiner
+	MethodInitialPledge                       = "InitialPledge"                       // MethodsMiner
+	MethodInitialPledgeExported               = "InitialPledgeExported"               // MethodsMiner
+	MethodMaxTerminationFee                   = "MaxTerminationFee"                   // MethodsMiner
+	MethodMaxTerminationFeeExported           = "MaxTerminationFeeExported"           // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket
@@ -136,6 +157,9 @@ const (
 	MethodGetDealProviderCollateral           = "GetDealProviderCollateralExported"   // MethodsMarket
 	MethodGetDealVerified                     = "GetDealVerifiedExported"             // MethodsMarket
 	MethodGetDealActivation                   = "GetDealActivationExported"           // MethodsMarket
+	MethodGetDealSectorExported               = "GetDealSectorExported"               // MethodsMarket
+	MethodSettleDealPaymentsExported          = "SettleDealPaymentsExported"          // MethodsMarket
+	MethodSectorContentChanged                = "SectorContentChanged"                // MethodsMarket
 	MethodUpdateChannelState                  = "UpdateChannelState"                  // MethodsPaymentChannel
 	MethodSettle                              = "Settle"                              // MethodsPaymentChannel
 	MethodCollect                             = "Collect"                             // MethodsPaymentChannel
@@ -161,30 +185,45 @@ const (
 	MethodInvokeContract                      = "InvokeContract"                      // MethodsEVM
 	MethodGetBytecode                         = "GetBytecode"                         // MethodsEVM
 	MethodGetStorageAt                        = "GetStorageAt"                        // MethodsEVM
+	MethodHandleFilecoinMethod                = "HandleFilecoinMethod"                // MethodsEVM
 	MethodResurrect                           = "Resurrect"                           // MethodsEVM
 	MethodGetBytecodeHash                     = "GetBytecodeHash"                     // MethodsEVM
 	MethodInvokeContractReadOnly              = "InvokeContractReadOnly"              // MethodsEVM
 	MethodInvokeContractDelegate              = "InvokeContractDelegate"              // MethodsEVM
+	MethodInvokeContractFilecoinHandler       = "InvokeContractFilecoinHandler"       // MethodsEVM
 	MethodCreate                              = "Create"                              // MethodsEam
 	MethodCreate2                             = "Create2"                             // MethodsEam
 	MethodCreateExternal                      = "CreateExternal"                      // MethodsEam
+	MethodMint                                = "Mint"                                // MethodsDatacap: v9
 	MethodMintExported                        = "MintExported"                        // MethodsDatacap
+	MethodDestroy                             = "Destroy"                             // MethodsDatacap: v9
 	MethodDestroyExported                     = "DestroyExported"                     // MethodsDatacap
+	MethodName                                = "Name"                                // MethodsDatacap: v9
 	MethodNameExported                        = "NameExported"                        // MethodsDatacap
+	MethodSymbol                              = "Symbol"                              // MethodsDatacap: v9
 	MethodSymbolExported                      = "SymbolExported"                      // MethodsDatacap
+	MethodTotalSupply                         = "TotalSupply"                         // MethodsDatacap: v9
 	MethodTotalSupplyExported                 = "TotalSupplyExported"                 // MethodsDatacap
 	MethodBalanceExported                     = "BalanceExported"                     // MethodsDatacap
+	MethodTransfer                            = "Transfer"                            // MethodsDatacap: v9
 	MethodTransferExported                    = "TransferExported"                    // MethodsDatacap
+	MethodTransferFrom                        = "TransferFrom"                        // MethodsDatacap: v9
 	MethodTransferFromExported                = "TransferFromExported"                // MethodsDatacap
+	MethodIncreaseAllowance                   = "IncreaseAllowance"                   // MethodsDatacap: v9
 	MethodIncreaseAllowanceExported           = "IncreaseAllowanceExported"           // MethodsDatacap
+	MethodDecreaseAllowance                   = "DecreaseAllowance"                   // MethodsDatacap: v9
 	MethodDecreaseAllowanceExported           = "DecreaseAllowanceExported"           // MethodsDatacap
+	MethodRevokeAllowance                     = "RevokeAllowance"                     // MethodsDatacap: v9
 	MethodRevokeAllowanceExported             = "RevokeAllowanceExported"             // MethodsDatacap
+	MethodBurn                                = "Burn"                                // MethodsDatacap: v9
 	MethodBurnExported                        = "BurnExported"                        // MethodsDatacap
+	MethodBurnFrom                            = "BurnFrom"                            // MethodsDatacap: v9
 	MethodBurnFromExported                    = "BurnFromExported"                    // MethodsDatacap
+	MethodAllowance                           = "Allowance"                           // MethodsDatacap: v9
 	MethodAllowanceExported                   = "AllowanceExported"                   // MethodsDatacap
 	MethodGranularityExported                 = "GranularityExported"                 // MethodsDatacap
-
-	MethodUnknown = "Unknown" // Common
+	MethodBalanceOf                           = "BalanceOf"                           // MethodsDatacap
+	MethodUnknown                             = "Unknown"                             // Common
 )
 
 // SupportedOperations operations that will be parsed

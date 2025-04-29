@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/golem/pkg/logger"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
@@ -14,12 +17,11 @@ import (
 	"github.com/filecoin-project/lotus/chain/actors/builtin/multisig"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	cbor "github.com/ipfs/go-ipld-cbor"
-	"github.com/zondax/fil-parser/actors"
+	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
-	"go.uber.org/zap"
 )
 
 const (
@@ -53,14 +55,16 @@ type EventGenerator interface {
 }
 
 type eventGenerator struct {
-	helper *helper.Helper
-	logger *zap.Logger
+	helper  *helper.Helper
+	logger  *logger.Logger
+	metrics *multisigMetricsClient
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *zap.Logger) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) EventGenerator {
 	return &eventGenerator{
-		helper: helper,
-		logger: logger,
+		helper:  helper,
+		logger:  logger,
+		metrics: newClient(metrics, "multisigEventGenerator"),
 	}
 }
 
@@ -72,12 +76,13 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 	for _, tx := range transactions {
 		if !strings.EqualFold(tx.Status, txStatusOk) {
-			eg.logger.Sugar().Debug("failed tx found, skipping it")
+			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}
 
 		metadata, err := tools.ParseTxMetadata(tx.TxMetadata)
 		if err != nil {
+			_ = eg.metrics.UpdateParseTxMetadataMetric(tx.TxType)
 			return nil, err
 		}
 
@@ -91,13 +96,15 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			addrTo, err := address.NewFromString(tx.TxTo)
 			if err != nil {
-				eg.logger.Sugar().Errorf("could not parse address. Err: %s", err)
+				eg.logger.Errorf("could not parse address. Err: %s", err)
 				continue
 			}
 
+			// #nosec G115
 			actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
-				eg.logger.Sugar().Errorf("could not get actor name from address. Err: %s", err)
+				_ = eg.metrics.UpdateActorNameFromAddressMetric()
+				eg.logger.Errorf("could not get actor name from address. Err: %s", err)
 				continue
 			}
 			if !strings.EqualFold(actorName, manifest.MultisigKey) {
@@ -106,7 +113,6 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			multisigInfo, err := eg.createMultisigInfo(ctx, tx, tipsetCid)
 			if err != nil {
-				// TODO: Metric
 				continue
 			}
 			events.MultisigInfo = append(events.MultisigInfo, multisigInfo)
@@ -165,7 +171,7 @@ func (eg *eventGenerator) processProposalParams(ctx context.Context, metadata ma
 		}
 
 		metadataJSON, _ := json.Marshal(metadata)
-		eg.logger.Sugar().Debug(ctx, fmt.Sprintf("unknown method with metadata %v", string(metadataJSON)))
+		eg.logger.Debugf("unknown method with metadata %v", string(metadataJSON))
 		proposal.Value = string(metadataJSON)
 	}
 }
@@ -174,7 +180,7 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 	if nestedParams, ok := params[metadataParams].(map[string]interface{}); ok {
 		jsonParams, err := json.Marshal(nestedParams)
 		if err != nil {
-			eg.logger.Sugar().Error(ctx, fmt.Sprintf("Error marshaling nested params: %v", err))
+			eg.logger.Errorf("Error marshaling nested params: %v", err)
 			return
 		}
 		proposal.Value = string(jsonParams)
@@ -187,25 +193,27 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 
 	jsonParams, err := json.Marshal(params)
 	if err != nil {
-		eg.logger.Sugar().Error(ctx, fmt.Sprintf("Error marshaling params: %v", err))
+		eg.logger.Errorf("Error marshaling params: %v", err)
 		return
 	}
 
-	eg.logger.Sugar().Debug(ctx, fmt.Sprintf("zero value with params: %v", string(jsonParams)))
+	eg.logger.Debugf("zero value with params: %v", string(jsonParams))
 	proposal.Value = string(jsonParams)
 
 }
 
 func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.MultisigInfo, error) {
-	value, err := actors.ParseMultisigMetadata(tx.TxType, tx.TxMetadata)
+	value, err := actorsV1.ParseMultisigMetadata(tx.TxType, tx.TxMetadata)
 	if err != nil {
-		eg.logger.Sugar().Error(ctx, fmt.Sprintf("Multisig error parsing metadata: %s", err.Error()))
+		_ = eg.metrics.UpdateParseMultisigMetadataMetric(tx.TxType)
+		eg.logger.Errorf("Multisig error parsing metadata: %s", err.Error())
 		value = tx.TxMetadata // if there is an error then we need to store the raw metadata
 	}
 
 	b, err := json.Marshal(value)
 	if err != nil {
-		eg.logger.Sugar().Error(ctx, fmt.Sprintf("Multisig error marshaling value: %s", err.Error()))
+		_ = eg.metrics.UpdateMarshalMultisigMetadataMetric(tx.TxType)
+		eg.logger.Errorf("Multisig error marshaling value: %s", err.Error())
 		return nil, err
 	}
 
@@ -224,7 +232,7 @@ func (eg *eventGenerator) parseParamsString(ctx context.Context, metadata map[st
 	var params map[string]interface{}
 	if paramsStr, ok := metadata[metadataParams].(string); ok {
 		if err := json.Unmarshal([]byte(paramsStr), &params); err != nil {
-			eg.logger.Sugar().Error(fmt.Sprintf("Error deserializing params string: %v", err))
+			eg.logger.Errorf("Error deserializing params string: %v", err)
 			return nil
 		}
 	}

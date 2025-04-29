@@ -3,24 +3,30 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
+
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/logger"
+	metrics2 "github.com/zondax/golem/pkg/metrics"
 	"github.com/zondax/golem/pkg/zcache"
-	"go.uber.org/zap"
 )
 
 const (
 	ZCacheImpl      = "zcache"
 	ZCacheLocalOnly = "in-memory"
 	ZCacheCombined  = "combined"
-	NoTtl           = -1
 	DummyTtl        = -1
 	PrefixSplitter  = "/"
+
+	addressTypePrefixF4 = "f4"
 )
 
 // ZCache In-Memory database
@@ -29,12 +35,12 @@ type ZCache struct {
 	robustShortMap     zcache.ZCache
 	shortRobustMap     zcache.ZCache
 	selectorHashSigMap zcache.ZCache
-	logger             *zap.Logger
+	logger             *logger.Logger
 	cacheType          string
-	ttl                int
+	ttl                time.Duration
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
 	var err error
 	m.logger = logger2.GetSafeLogger(logger)
 
@@ -44,13 +50,13 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 	cacheConfig := source.Config.Cache
 	if cacheConfig == nil {
 		m.cacheType = ZCacheLocalOnly
-		m.ttl = NoTtl
+		m.ttl = DummyTtl
 		if err := m.initMapsLocalCache(); err != nil {
 			return err
 		}
 	} else {
+		m.ttl = cacheConfig.Ttl
 		m.cacheType = ZCacheCombined
-		m.ttl = cacheConfig.GlobalTtlSeconds
 
 		prefix := ""
 		if cacheConfig.GlobalPrefix != "" {
@@ -65,40 +71,44 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *zap.Logger) error {
 		}
 	}
 
-	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2CidMapPrefix, Logger: m.logger}); err != nil {
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
+		Prefix:       Short2CidMapPrefix,
+		Logger:       m.logger,
+		MetricServer: metrics2.NewNoopMetrics()},
+	); err != nil {
 		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
 	}
 
 	return nil
 }
 
-func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.CombinedConfig) error {
+func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *common.CacheConfig) error {
 	var err error
 	robustShortMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
 		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
 	}
 
 	shortRobustMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2RobustMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
 		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
 	}
 
 	selectorHashSigMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, SelectorHash2SigMapPrefix),
-		GlobalTtlSeconds:   cacheConfig.GlobalTtlSeconds,
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
 		Local:              cacheConfig.Local,
 		Remote:             cacheConfig.Remote,
 		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
 	}
 
 	if m.robustShortMap, err = zcache.NewCombinedCache(robustShortMapConfig); err != nil {
@@ -116,13 +126,25 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *zcache.Combin
 func (m *ZCache) initMapsLocalCache() error {
 	var err error
 
-	if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Robust2ShortMapPrefix, Logger: m.logger}); err != nil {
+	if m.robustShortMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
+		Prefix:       Robust2ShortMapPrefix,
+		Logger:       m.logger,
+		MetricServer: metrics2.NewNoopMetrics()},
+	); err != nil {
 		return fmt.Errorf("error creating robustShortMap for local zcache, err: %s", err)
 	}
-	if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: Short2RobustMapPrefix, Logger: m.logger}); err != nil {
+	if m.shortRobustMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
+		Prefix:       Short2RobustMapPrefix,
+		Logger:       m.logger,
+		MetricServer: metrics2.NewNoopMetrics()},
+	); err != nil {
 		return fmt.Errorf("error creating shortRobustMap for local zcache, err: %s", err)
 	}
-	if m.selectorHashSigMap, err = zcache.NewLocalCache(&zcache.LocalConfig{Prefix: SelectorHash2SigMapPrefix, Logger: m.logger}); err != nil {
+	if m.selectorHashSigMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
+		Prefix:       SelectorHash2SigMapPrefix,
+		Logger:       m.logger,
+		MetricServer: metrics2.NewNoopMetrics()},
+	); err != nil {
 		return fmt.Errorf("error creating selectorHashSigMap for local zcache, err: %s", err)
 	}
 	return nil
@@ -140,7 +162,7 @@ func (m *ZCache) BackFill() error {
 func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
-		m.logger.Sugar().Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
+		m.logger.Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
 		return cid.Undef.String(), common.ErrKeyNotFound
 	}
 
@@ -164,6 +186,10 @@ func (m *ZCache) GetRobustAddress(address address.Address) (string, error) {
 	}
 
 	if isRobustAddress {
+		if f4Address := m.tryToGetF4Address(context.Background(), address); f4Address != "" {
+			return f4Address, nil
+		}
+
 		// Already a robust address
 		return address.String(), nil
 	}
@@ -227,42 +253,83 @@ func (m *ZCache) StoreEVMSelectorSig(ctx context.Context, selectorHash, selector
 
 func (m *ZCache) storeRobustShort(robust string, short string) {
 	if robust == "" || short == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.robustShortMap.Set(ctx, robust, short, DummyTtl)
+	_ = m.robustShortMap.Set(ctx, robust, short, m.ttl)
 }
 
 func (m *ZCache) storeShortRobust(short string, robust string) {
 	if robust == "" || short == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty robust or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty robust or short address")
 		return
 	}
 
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortRobustMap.Set(ctx, short, robust, DummyTtl)
+	_ = m.shortRobustMap.Set(ctx, short, robust, m.ttl)
 }
 
 func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 	m.storeRobustShort(info.Robust, info.Short)
 	m.storeShortRobust(info.Short, info.Robust)
 	m.storeActorCode(info.Short, info.ActorCid)
+
+	evmTypes := map[string]bool{
+		manifest.EvmKey:        true,
+		manifest.EamKey:        true,
+		manifest.EthAccountKey: true,
+	}
+	isEvm := evmTypes[info.ActorType]
+	isEvmAndAddressIsF4 := isEvm && strings.HasPrefix(info.Robust, addressTypePrefixF4)
+
+	// Only store the mapping for addresses that are not related to EVM actors,
+	// or are associated with EVM actors but use an f4 prefix. We skip storing
+	// addresses when they are f2 for EVM actors because only f4 addresses are of interest.
+	if !isEvm || isEvmAndAddressIsF4 {
+		m.storeShortRobust(info.Short, info.Robust)
+	}
 }
 
 func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	if shortAddress == "" || cid == "" {
-		m.logger.Sugar().Debugf("[ActorsCache] - Trying to store empty cid or short address")
+		m.logger.Debugf("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
 
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortCidMap.Set(ctx, shortAddress, cid, DummyTtl)
+	_ = m.shortCidMap.Set(ctx, shortAddress, cid, m.ttl)
+}
+
+func (m *ZCache) tryToGetF4Address(ctx context.Context, address address.Address) string {
+	// Return the address if it's already a f4 address
+	if strings.HasPrefix(address.String(), addressTypePrefixF4) {
+		return address.String()
+	}
+
+	// If the robust address is not f4, it should be f2
+	// Try to get the corresponding f0 for the f2 address
+	f0Address, err := m.GetShortAddress(address)
+	if err != nil {
+		m.logger.Errorf("error getting short address for %s: %s", address.String(), err)
+		return ""
+	}
+
+	// Try to get the f4 address associated with the f0 address
+	// If no f4 is found, it implies the address might not be an EVM actor type
+	var f4Address string
+	err = m.shortRobustMap.Get(ctx, f0Address, &f4Address)
+	if err == nil && f4Address != "" {
+		return f4Address
+	}
+
+	m.logger.Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
+	return ""
 }
