@@ -45,7 +45,7 @@ func (*PaymentChannel) StartNetworkHeight() int64 {
 }
 
 func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	m := &Msig{}
+	p := &PaymentChannel{}
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 		legacyBuiltin.MethodsPaych.Constructor: {
 			Name:   parser.MethodConstructor,

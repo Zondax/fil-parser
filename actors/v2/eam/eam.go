@@ -52,19 +52,6 @@ func (*Eam) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
-func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsCron.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsCron.EpochTick: {
-			Name:   parser.MethodEpochTick,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V18.String(): actors.CopyMethods(eamv10.Methods),
 	tools.V19.String(): actors.CopyMethods(eamv11.Methods),
