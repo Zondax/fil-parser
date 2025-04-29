@@ -3,6 +3,7 @@ package datacap
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -44,30 +45,26 @@ func (*Datacap) StartNetworkHeight() int64 {
 	return tools.V17.Height()
 }
 
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V17.String(): actors.CopyMethods(datacapv9.Methods),
+	tools.V18.String(): actors.CopyMethods(datacapv10.Methods),
+	tools.V19.String(): actors.CopyMethods(datacapv11.Methods),
+	tools.V20.String(): actors.CopyMethods(datacapv11.Methods),
+	tools.V21.String(): actors.CopyMethods(datacapv12.Methods),
+	tools.V22.String(): actors.CopyMethods(datacapv13.Methods),
+	tools.V23.String(): actors.CopyMethods(datacapv14.Methods),
+	tools.V24.String(): actors.CopyMethods(datacapv15.Methods),
+	tools.V25.String(): actors.CopyMethods(datacapv16.Methods),
+}
+
 func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	case tools.V17.IsSupported(network, height):
-		return datacapv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return datacapv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return datacapv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return datacapv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return datacapv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return datacapv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return datacapv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return datacapv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return methods, nil
 }
 
 func (p *Datacap) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {

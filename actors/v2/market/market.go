@@ -46,69 +46,83 @@ func (*Market) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	m := &Market{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsMarket.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsMarket.AddBalance: {
+			Name:   parser.MethodAddBalance,
+			Method: m.AddBalance,
+		},
+		legacyBuiltin.MethodsMarket.WithdrawBalance: {
+			Name:   parser.MethodWithdrawBalance,
+			Method: m.WithdrawBalance,
+		},
+		legacyBuiltin.MethodsMarket.PublishStorageDeals: {
+			Name:   parser.MethodPublishStorageDeals,
+			Method: m.PublishStorageDealsExported,
+		},
+		legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
+			Name:   parser.MethodVerifyDealsForActivation,
+			Method: m.VerifyDealsForActivationExported,
+		},
+		legacyBuiltin.MethodsMarket.ActivateDeals: {
+			Name:   parser.MethodActivateDeals,
+			Method: m.ActivateDealsExported,
+		},
+		legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
+			Name:   parser.MethodOnMinerSectorsTerminate,
+			Method: m.OnMinerSectorsTerminateExported,
+		},
+		legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
+			Name:   parser.MethodComputeDataCommitment,
+			Method: m.ComputeDataCommitmentExported,
+		},
+		legacyBuiltin.MethodsMarket.CronTick: {
+			Name:   parser.MethodCronTick,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(v8Market.Methods),
+	tools.V17.String(): actors.CopyMethods(v9Market.Methods),
+	tools.V18.String(): actors.CopyMethods(v10Market.Methods),
+	tools.V19.String(): actors.CopyMethods(v11Market.Methods),
+	tools.V20.String(): actors.CopyMethods(v11Market.Methods),
+	tools.V21.String(): actors.CopyMethods(v12Market.Methods),
+	tools.V22.String(): actors.CopyMethods(v13Market.Methods),
+	tools.V23.String(): actors.CopyMethods(v14Market.Methods),
+	tools.V24.String(): actors.CopyMethods(v15Market.Methods),
+	tools.V25.String(): actors.CopyMethods(v16Market.Methods),
+}
+
 func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsMarket.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-			legacyBuiltin.MethodsMarket.AddBalance: {
-				Name:   parser.MethodAddBalance,
-				Method: m.AddBalance,
-			},
-			legacyBuiltin.MethodsMarket.WithdrawBalance: {
-				Name:   parser.MethodWithdrawBalance,
-				Method: m.WithdrawBalance,
-			},
-			legacyBuiltin.MethodsMarket.PublishStorageDeals: {
-				Name:   parser.MethodPublishStorageDeals,
-				Method: m.PublishStorageDealsExported,
-			},
-			legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
-				Name:   parser.MethodVerifyDealsForActivation,
-				Method: m.VerifyDealsForActivationExported,
-			},
-			legacyBuiltin.MethodsMarket.ActivateDeals: {
-				Name:   parser.MethodActivateDeals,
-				Method: m.ActivateDealsExported,
-			},
-			legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
-				Name:   parser.MethodOnMinerSectorsTerminate,
-				Method: m.OnMinerSectorsTerminateExported,
-			},
-			legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
-				Name:   parser.MethodComputeDataCommitment,
-				Method: m.ComputeDataCommitmentExported,
-			},
-			legacyBuiltin.MethodsMarket.CronTick: {
-				Name:   parser.MethodCronTick,
-				Method: actors.ParseEmptyParamsAndReturn,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return v8Market.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return v9Market.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return v10Market.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return v11Market.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return v12Market.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return v13Market.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return v14Market.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return v15Market.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return v16Market.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	return methods, nil
 }
 
 func (*Market) AddBalance(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

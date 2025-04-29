@@ -2,6 +2,7 @@ package verifiedRegistry
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/zondax/fil-parser/parser"
 )
@@ -12,7 +13,7 @@ func parse[T verifiedRegistryParams, R verifiedRegistryReturn](raw, rawReturn []
 		reader := bytes.NewReader(raw)
 		err := params.UnmarshalCBOR(reader)
 		if err != nil {
-			return metadata, err
+			return metadata, fmt.Errorf("error unmarshaling params: %w", err)
 		}
 		metadata[parser.ParamsKey] = params
 	}
@@ -24,7 +25,7 @@ func parse[T verifiedRegistryParams, R verifiedRegistryReturn](raw, rawReturn []
 		reader := bytes.NewReader(rawReturn)
 		err := r.UnmarshalCBOR(reader)
 		if err != nil {
-			return metadata, err
+			return metadata, fmt.Errorf("error unmarshaling return: %w", err)
 		}
 		metadata[parser.ReturnKey] = r
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/actors/v2/evm/types"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -46,28 +47,25 @@ func (*Evm) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V18.String(): actors.CopyMethods(evmv10.Methods),
+	tools.V19.String(): actors.CopyMethods(evmv11.Methods),
+	tools.V20.String(): actors.CopyMethods(evmv11.Methods),
+	tools.V21.String(): actors.CopyMethods(evmv12.Methods),
+	tools.V22.String(): actors.CopyMethods(evmv13.Methods),
+	tools.V23.String(): actors.CopyMethods(evmv14.Methods),
+	tools.V24.String(): actors.CopyMethods(evmv15.Methods),
+	tools.V25.String(): actors.CopyMethods(evmv16.Methods),
+}
+
 func (e *Evm) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V17)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	case tools.V18.IsSupported(network, height):
-		return evmv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return evmv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return evmv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return evmv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return evmv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return evmv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return evmv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return methods, nil
 }
 
 func (e *Evm) InvokeContract(network string, height int64, method string, rawParams, rawReturn []byte) (map[string]interface{}, error) {
@@ -151,4 +149,18 @@ func (*Evm) GetStorageAt(network string, height int64, rawParams, rawReturn []by
 	}
 
 	return parse(rawParams, rawReturn, true, params(), &abi.CborBytes{}, parser.ParamsKey)
+}
+
+func (*Evm) HandleFilecoinMethod(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	metadata, err := parse(rawParams, rawReturn, true, &types.HandleFilecoinMethodParams{}, &types.HandleFilecoinMethodReturn{}, parser.ParamsKey)
+	if err != nil {
+		if metadata == nil {
+			metadata = make(map[string]interface{})
+		}
+		metadata[parser.ParamsRawKey] = hex.EncodeToString(rawParams)
+		metadata[parser.ReturnRawKey] = hex.EncodeToString(rawReturn)
+		return metadata, nil
+	}
+	return metadata, nil
+
 }

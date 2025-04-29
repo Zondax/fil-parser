@@ -45,57 +45,71 @@ func (*VerifiedRegistry) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	v := &VerifiedRegistry{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
+			Name:   parser.MethodAddVerifier,
+			Method: v.AddVerifier,
+		},
+		legacyBuiltin.MethodsVerifiedRegistry.RemoveVerifier: {
+			Name:   parser.MethodRemoveVerifier,
+			Method: v.RemoveVerifier,
+		},
+		legacyBuiltin.MethodsVerifiedRegistry.AddVerifiedClient: {
+			Name:   parser.MethodAddVerifiedClient,
+			Method: v.AddVerifiedClientExported,
+		},
+		legacyBuiltin.MethodsVerifiedRegistry.UseBytes: {
+			Name:   parser.MethodUseBytes,
+			Method: v.UseBytes,
+		},
+		legacyBuiltin.MethodsVerifiedRegistry.RestoreBytes: {
+			Name:   parser.MethodRestoreBytes,
+			Method: v.RestoreBytes,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(verifregv8.Methods),
+	tools.V17.String(): actors.CopyMethods(verifregv9.Methods),
+	tools.V18.String(): actors.CopyMethods(verifregv10.Methods),
+	tools.V19.String(): actors.CopyMethods(verifregv11.Methods),
+	tools.V20.String(): actors.CopyMethods(verifregv11.Methods),
+	tools.V21.String(): actors.CopyMethods(verifregv12.Methods),
+	tools.V22.String(): actors.CopyMethods(verifregv13.Methods),
+	tools.V23.String(): actors.CopyMethods(verifregv14.Methods),
+	tools.V24.String(): actors.CopyMethods(verifregv15.Methods),
+	tools.V25.String(): actors.CopyMethods(verifregv16.Methods),
+}
+
 func (v *VerifiedRegistry) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-			legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
-				Name:   parser.MethodAddVerifier,
-				Method: v.AddVerifier,
-			},
-			legacyBuiltin.MethodsVerifiedRegistry.RemoveVerifier: {
-				Name:   parser.MethodRemoveVerifier,
-				Method: v.RemoveVerifier,
-			},
-			legacyBuiltin.MethodsVerifiedRegistry.AddVerifiedClient: {
-				Name:   parser.MethodAddVerifiedClient,
-				Method: v.AddVerifiedClientExported,
-			},
-			legacyBuiltin.MethodsVerifiedRegistry.UseBytes: {
-				Name:   parser.MethodUseBytes,
-				Method: v.UseBytes,
-			},
-			legacyBuiltin.MethodsVerifiedRegistry.RestoreBytes: {
-				Name:   parser.MethodRestoreBytes,
-				Method: v.RestoreBytes,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return verifregv8.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return verifregv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return verifregv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return verifregv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return verifregv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return verifregv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return verifregv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return verifregv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return verifregv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	return methods, nil
 }
 
 func (*VerifiedRegistry) AddVerifier(network string, height int64, raw []byte) (map[string]interface{}, error) {
@@ -197,7 +211,26 @@ func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, raw
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params(), returnValue())
+
+	metadata, err := parse(raw, rawReturn, true, params(), returnValue())
+	if err != nil {
+		// fallback
+		// There is mixed use of SectorAllocationClaims with flat parameters and with info inside structs
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, paramsOk := claimAllocationsParams[v.String()]
+			returnValue, returnValueOk := claimAllocationsReturn[v.String()]
+			if !paramsOk || !returnValueOk {
+				continue
+			}
+			metadata, err = parse(raw, rawReturn, true, params(), returnValue())
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, err
 }
 
 func (*VerifiedRegistry) GetClaimsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {

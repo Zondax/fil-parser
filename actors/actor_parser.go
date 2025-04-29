@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 
@@ -59,4 +60,13 @@ func ParseUnknownMetadata(msgParams, msgReturn []byte) (map[string]interface{}, 
 
 func ParseEmptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
+}
+
+func CopyMethods(methods map[abi.MethodNum]nonLegacyBuiltin.MethodMeta) map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	res := make(map[abi.MethodNum]nonLegacyBuiltin.MethodMeta)
+	for k, v := range methods {
+		res[k] = v
+	}
+
+	return res
 }

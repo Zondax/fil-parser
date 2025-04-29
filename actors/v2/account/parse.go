@@ -2,6 +2,7 @@ package account
 
 import (
 	"context"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -48,6 +49,9 @@ func (a *Account) Parse(_ context.Context, network string, height int64, txType 
 		return resp, nil, err
 	case parser.MethodUniversalReceiverHook, parser.MethodReceive:
 		resp, err := a.UniversalReceiverHook(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodFallback:
+		resp, err := a.Fallback(network, height, msg.Params)
 		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"sync"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -25,12 +24,10 @@ import (
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/miner/types"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
-
-// minerMethodsMu protects concurrent access to miner method maps across network versions
-var minerMethodsMu sync.Mutex
 
 type Miner struct {
 	logger *logger.Logger
@@ -52,115 +49,121 @@ func (*Miner) StartNetworkHeight() int64 {
 
 // implemented in the rust builtin-actors but not the golang version
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
+var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
+
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	m := &Miner{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsMiner.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: m.Constructor,
+		},
+		legacyBuiltin.MethodsMiner.ControlAddresses: {
+			Name:   parser.MethodControlAddresses,
+			Method: m.ControlAddresses,
+		},
+		legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
+			Name:   parser.MethodChangeWorkerAddress,
+			Method: m.ChangeWorkerAddressExported,
+		},
+		legacyBuiltin.MethodsMiner.ChangePeerID: {
+			Name:   parser.MethodChangePeerID,
+			Method: m.ChangePeerIDExported,
+		},
+		legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
+			Name:   parser.MethodSubmitWindowedPoSt,
+			Method: m.SubmitWindowedPoSt,
+		},
+		legacyBuiltin.MethodsMiner.PreCommitSector: {
+			Name:   parser.MethodPreCommitSector,
+			Method: m.PreCommitSector,
+		},
+		legacyBuiltin.MethodsMiner.ProveCommitSector: {
+			Name:   parser.MethodProveCommitSector,
+			Method: m.ProveCommitSector,
+		},
+		nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
+			Name:   parser.MethodExtendSectorExpiration,
+			Method: m.ExtendSectorExpiration,
+		},
+		legacyBuiltin.MethodsMiner.TerminateSectors: {
+			Name:   parser.MethodTerminateSectors,
+			Method: m.TerminateSectors,
+		},
+		legacyBuiltin.MethodsMiner.DeclareFaults: {
+			Name:   parser.MethodDeclareFaults,
+			Method: m.DeclareFaults,
+		},
+		legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
+			Name:   parser.MethodDeclareFaultsRecovered,
+			Method: m.DeclareFaultsRecovered,
+		},
+		legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
+			Name:   parser.MethodOnDeferredCronEvent,
+			Method: m.OnDeferredCronEvent,
+		},
+		legacyBuiltin.MethodsMiner.CheckSectorProven: {
+			Name:   parser.MethodCheckSectorProven,
+			Method: m.CheckSectorProven,
+		},
+		legacyBuiltin.MethodsMiner.AddLockedFund: {
+			Name:   parser.MethodAddLockedFund,
+			Method: m.AddLockedFund,
+		},
+		legacyBuiltin.MethodsMiner.ReportConsensusFault: {
+			Name:   parser.MethodReportConsensusFault,
+			Method: m.ReportConsensusFault,
+		},
+		legacyBuiltin.MethodsMiner.WithdrawBalance: {
+			Name:   parser.MethodWithdrawBalance,
+			Method: m.WithdrawBalanceExported,
+		},
+		initialPledgeMethodNum: {
+			Name:   parser.MethodInitialPledge,
+			Method: m.InitialPledgeExported,
+		},
+		maxTerminationFeeMethodNum: {
+			Name:   parser.MethodMaxTerminationFee,
+			Method: m.MaxTerminationFeeExported,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(miner8.Methods),
+	tools.V17.String(): actors.CopyMethods(miner9.Methods),
+	tools.V18.String(): actors.CopyMethods(miner10.Methods),
+	tools.V19.String(): actors.CopyMethods(miner11.Methods),
+	tools.V20.String(): actors.CopyMethods(miner11.Methods),
+	tools.V21.String(): actors.CopyMethods(miner12.Methods),
+	tools.V22.String(): actors.CopyMethods(miner13.Methods),
+	tools.V23.String(): actors.CopyMethods(miner14.Methods),
+	tools.V24.String(): actors.CopyMethods(miner15.Methods),
+	tools.V25.String(): actors.CopyMethods(miner16.Methods),
+}
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	// minerMethodsMu protects access to the package-level global data structures, particularly the
-	// method maps used across different network versions (e.g., miner8.Methods, miner9.Methods, etc.).
-	// These maps are global variables defined in their respective imported packages, and when assigned
-	// to the 'data' variable, Go handles them by reference, not by copying the entire map.
-	// Multiple goroutines accessing or modifying these maps concurrently could lead to race conditions,
-	// memory corruption, or unexpected behavior since maps in Go are not safe for concurrent use.
-	// This mutex ensures that only one goroutine at a time can read from or write to these maps,
-	// guaranteeing thread safety across all instances of the Miner struct.
-	minerMethodsMu.Lock()         // Lock the package mutex before accessing/modifying the map
-	defer minerMethodsMu.Unlock() // Ensure the mutex is unlocked when we're done
-
-	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		data = map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsMiner.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: m.Constructor,
-			},
-			legacyBuiltin.MethodsMiner.ControlAddresses: {
-				Name:   parser.MethodControlAddresses,
-				Method: m.ControlAddresses,
-			},
-			legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
-				Name:   parser.MethodChangeWorkerAddress,
-				Method: m.ChangeWorkerAddressExported,
-			},
-			legacyBuiltin.MethodsMiner.ChangePeerID: {
-				Name:   parser.MethodChangePeerID,
-				Method: m.ChangePeerIDExported,
-			},
-			legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
-				Name:   parser.MethodSubmitWindowedPoSt,
-				Method: m.SubmitWindowedPoSt,
-			},
-			legacyBuiltin.MethodsMiner.PreCommitSector: {
-				Name:   parser.MethodPreCommitSector,
-				Method: m.PreCommitSector,
-			},
-			legacyBuiltin.MethodsMiner.ProveCommitSector: {
-				Name:   parser.MethodProveCommitSector,
-				Method: m.ProveCommitSector,
-			},
-			nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
-				Name:   parser.MethodExtendSectorExpiration,
-				Method: m.ExtendSectorExpiration,
-			},
-			legacyBuiltin.MethodsMiner.TerminateSectors: {
-				Name:   parser.MethodTerminateSectors,
-				Method: m.TerminateSectors,
-			},
-			legacyBuiltin.MethodsMiner.DeclareFaults: {
-				Name:   parser.MethodDeclareFaults,
-				Method: m.DeclareFaults,
-			},
-			legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
-				Name:   parser.MethodDeclareFaultsRecovered,
-				Method: m.DeclareFaultsRecovered,
-			},
-			legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
-				Name:   parser.MethodOnDeferredCronEvent,
-				Method: m.OnDeferredCronEvent,
-			},
-			legacyBuiltin.MethodsMiner.CheckSectorProven: {
-				Name:   parser.MethodCheckSectorProven,
-				Method: m.CheckSectorProven,
-			},
-			legacyBuiltin.MethodsMiner.AddLockedFund: {
-				Name:   parser.MethodAddLockedFund,
-				Method: m.AddLockedFund,
-			},
-			legacyBuiltin.MethodsMiner.ReportConsensusFault: {
-				Name:   parser.MethodReportConsensusFault,
-				Method: m.ReportConsensusFault,
-			},
-			legacyBuiltin.MethodsMiner.WithdrawBalance: {
-				Name:   parser.MethodWithdrawBalance,
-				Method: m.WithdrawBalanceExported,
-			},
-		}
-	case tools.V16.IsSupported(network, height):
-		data = miner8.Methods
-	case tools.V17.IsSupported(network, height):
-		data = miner9.Methods
-	case tools.V18.IsSupported(network, height):
-		data = miner10.Methods
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		data = miner11.Methods
-	case tools.V21.IsSupported(network, height):
-		data = miner12.Methods
-	case tools.V22.IsSupported(network, height):
-		data = miner13.Methods
-	case tools.V23.IsSupported(network, height):
-		data = miner14.Methods
-	case tools.V24.IsSupported(network, height):
-		data = miner15.Methods
-	case tools.V25.IsSupported(network, height):
-		data = miner16.Methods
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	data[initialPledgeMethodNum] = nonLegacyBuiltin.MethodMeta{
-		Name:   parser.MethodInitialPledge,
-		Method: m.InitialPledgeExported,
-	}
-	return data, nil
+	return methods, nil
 }
 
 func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -317,6 +320,10 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
-func (*Miner) InitialPledgeExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	return parseGeneric(rawParams, nil, false, &InitialPledgeReturn{}, &InitialPledgeReturn{}, parser.ReturnKey)
+func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawReturn, nil, true, &types.InitialPledgeReturn{}, &types.InitialPledgeReturn{}, parser.ReturnKey)
+}
+
+func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, rawReturn, true, &types.MaxTerminationFeeParams{}, &types.MaxTerminationFeeReturn{}, parser.ParamsKey)
 }

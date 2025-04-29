@@ -48,69 +48,83 @@ func (*Power) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	p := &Power{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsPower.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsPower.CreateMiner: {
+			Name:   parser.MethodCreateMiner,
+			Method: p.CreateMinerExported,
+		},
+		legacyBuiltin.MethodsPower.UpdateClaimedPower: {
+			Name:   parser.MethodUpdateClaimedPower,
+			Method: p.UpdateClaimedPower,
+		},
+		legacyBuiltin.MethodsPower.EnrollCronEvent: {
+			Name:   parser.MethodEnrollCronEvent,
+			Method: p.EnrollCronEvent,
+		},
+		legacyBuiltin.MethodsPower.OnEpochTickEnd: {
+			Name:   parser.MethodOnEpochTickEnd,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+		legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
+			Name:   parser.MethodUpdatePledgeTotal,
+			Method: p.UpdatePledgeTotal,
+		},
+		legacyBuiltin.MethodsPower.OnConsensusFault: {
+			Name:   parser.MethodOnConsensusFault,
+			Method: p.OnConsensusFault,
+		},
+		legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
+			Name:   parser.MethodSubmitPoRepForBulkVerify,
+			Method: p.SubmitPoRepForBulkVerify,
+		},
+		legacyBuiltin.MethodsPower.CurrentTotalPower: {
+			Name:   parser.MethodCurrentTotalPower,
+			Method: p.CurrentTotalPower,
+		},
+	}
+}
+
+var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V1.String():  legacyMethods(),
+	tools.V2.String():  legacyMethods(),
+	tools.V3.String():  legacyMethods(),
+	tools.V4.String():  legacyMethods(),
+	tools.V5.String():  legacyMethods(),
+	tools.V6.String():  legacyMethods(),
+	tools.V7.String():  legacyMethods(),
+	tools.V8.String():  legacyMethods(),
+	tools.V9.String():  legacyMethods(),
+	tools.V10.String(): legacyMethods(),
+	tools.V11.String(): legacyMethods(),
+	tools.V12.String(): legacyMethods(),
+	tools.V13.String(): legacyMethods(),
+	tools.V14.String(): legacyMethods(),
+	tools.V15.String(): legacyMethods(),
+	tools.V16.String(): actors.CopyMethods(powerv8.Methods),
+	tools.V17.String(): actors.CopyMethods(powerv9.Methods),
+	tools.V18.String(): actors.CopyMethods(powerv10.Methods),
+	tools.V19.String(): actors.CopyMethods(powerv11.Methods),
+	tools.V20.String(): actors.CopyMethods(powerv11.Methods),
+	tools.V21.String(): actors.CopyMethods(powerv12.Methods),
+	tools.V22.String(): actors.CopyMethods(powerv13.Methods),
+	tools.V23.String(): actors.CopyMethods(powerv14.Methods),
+	tools.V24.String(): actors.CopyMethods(powerv15.Methods),
+	tools.V25.String(): actors.CopyMethods(powerv16.Methods),
+}
+
 func (p *Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	switch {
-	// all legacy version
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
-		return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-			legacyBuiltin.MethodsPower.Constructor: {
-				Name:   parser.MethodConstructor,
-				Method: actors.ParseConstructor,
-			},
-			legacyBuiltin.MethodsPower.CreateMiner: {
-				Name:   parser.MethodCreateMiner,
-				Method: p.CreateMinerExported,
-			},
-			legacyBuiltin.MethodsPower.UpdateClaimedPower: {
-				Name:   parser.MethodUpdateClaimedPower,
-				Method: p.UpdateClaimedPower,
-			},
-			legacyBuiltin.MethodsPower.EnrollCronEvent: {
-				Name:   parser.MethodEnrollCronEvent,
-				Method: p.EnrollCronEvent,
-			},
-			legacyBuiltin.MethodsPower.OnEpochTickEnd: {
-				Name:   parser.MethodOnEpochTickEnd,
-				Method: actors.ParseEmptyParamsAndReturn,
-			},
-			legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
-				Name:   parser.MethodUpdatePledgeTotal,
-				Method: p.UpdatePledgeTotal,
-			},
-			legacyBuiltin.MethodsPower.OnConsensusFault: {
-				Name:   parser.MethodOnConsensusFault,
-				Method: p.OnConsensusFault,
-			},
-			legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
-				Name:   parser.MethodSubmitPoRepForBulkVerify,
-				Method: p.SubmitPoRepForBulkVerify,
-			},
-			legacyBuiltin.MethodsPower.CurrentTotalPower: {
-				Name:   parser.MethodCurrentTotalPower,
-				Method: p.CurrentTotalPower,
-			},
-		}, nil
-	case tools.V16.IsSupported(network, height):
-		return powerv8.Methods, nil
-	case tools.V17.IsSupported(network, height):
-		return powerv9.Methods, nil
-	case tools.V18.IsSupported(network, height):
-		return powerv10.Methods, nil
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
-		return powerv11.Methods, nil
-	case tools.V21.IsSupported(network, height):
-		return powerv12.Methods, nil
-	case tools.V22.IsSupported(network, height):
-		return powerv13.Methods, nil
-	case tools.V23.IsSupported(network, height):
-		return powerv14.Methods, nil
-	case tools.V24.IsSupported(network, height):
-		return powerv15.Methods, nil
-	case tools.V25.IsSupported(network, height):
-		return powerv16.Methods, nil
-	default:
+	version := tools.VersionFromHeight(network, height)
+	methods, ok := methods[version.String()]
+	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+	return methods, nil
 }
 
 func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
