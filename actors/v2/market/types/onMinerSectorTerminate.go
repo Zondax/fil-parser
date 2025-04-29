@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"math"
@@ -11,8 +12,9 @@ import (
 )
 
 type OnMinerSectorsTerminateParams struct {
-	Epoch   abi.ChainEpoch
-	Sectors bitfield.BitField
+	Epoch          abi.ChainEpoch
+	SectorBitField bitfield.BitField
+	SectorNumbers  []uint64
 }
 
 func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
@@ -63,13 +65,41 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Epoch = abi.ChainEpoch(extraI)
 	}
 
-	// t.Sectors (bitfield.BitField) (struct)
-	{
-		if err := t.Sectors.UnmarshalCBOR(cr); err != nil {
-			return fmt.Errorf("unmarshaling t.Sectors: %w", err)
-		}
-
+	// save current progress
+	curr, err := io.ReadAll(r)
+	if err != nil {
+		return fmt.Errorf("failed to read all bytes: %w", err)
 	}
 
+	// check next data type
+	buf := new(bytes.Buffer)
+	buf.Write(curr)
+	maj, _, err = cbg.CborReadHeader(cbg.NewCborReader(buf))
+	if err != nil {
+		return fmt.Errorf("failed to read header: %w", err)
+	}
+
+	cr = cbg.NewCborReader(bytes.NewReader(curr))
+	switch maj {
+	case cbg.MajByteString:
+		if err := t.SectorBitField.UnmarshalCBOR(cr); err != nil {
+			return fmt.Errorf("unmarshaling t.SectorBitField: %w", err)
+		}
+	case cbg.MajArray:
+		_, extra, err := cr.ReadHeader()
+		if err != nil {
+			return fmt.Errorf("failed to read header: %w", err)
+		}
+		t.SectorNumbers = make([]uint64, extra)
+		for i := 0; i < int(extra); i++ {
+			_, innerExtra, err := cr.ReadHeader()
+			if err != nil {
+				return fmt.Errorf("failed to read header: %w", err)
+			}
+			t.SectorNumbers[i] = uint64(innerExtra)
+		}
+	default:
+		return fmt.Errorf("unexpected type: %d", maj)
+	}
 	return nil
 }
