@@ -14,7 +14,7 @@ jobs:
       options: --tty
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - uses: actions/setup-go@v3
@@ -34,7 +34,7 @@ jobs:
       options: --tty
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - uses: actions/setup-go@v3
@@ -57,7 +57,7 @@ jobs:
     timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - uses: actions/setup-go@v3
