@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -46,16 +47,15 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
+			if extra > uint64(math.MaxInt64) {
 				return fmt.Errorf("int64 positive overflow")
 			}
-		case cbg.MajNegativeInt:
 			extraI = int64(extra)
-			if extraI < 0 {
+		case cbg.MajNegativeInt:
+			if extra > uint64(math.MaxInt64) {
 				return fmt.Errorf("int64 negative overflow")
 			}
-			extraI = -1 - extraI
+			extraI = -1 - int64(extra)
 		default:
 			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}

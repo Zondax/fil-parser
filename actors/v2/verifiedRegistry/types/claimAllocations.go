@@ -53,33 +53,22 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ClaimedSpace (big.Int) (struct) or (SectorClaimSummary) (struct)
-	if maj == cbg.MajArray {
+	switch maj {
+	case cbg.MajArray:
 		if extra != 1 {
 			return fmt.Errorf("cbor input had wrong number of fields")
 		}
 
 		for i := 0; i < int(extra); i++ {
-			{
-				var maj byte
-				var extra uint64
-				var err error
-				_ = maj
-				_ = extra
-				_ = err
-
-				{
-					if err := t.ClaimedSpace.UnmarshalCBOR(cr); err != nil {
-						return fmt.Errorf("unmarshaling t.ClaimedSpace: %w", err)
-					}
-				}
+			if err := t.ClaimedSpace.UnmarshalCBOR(cr); err != nil {
+				return fmt.Errorf("unmarshaling t.ClaimedSpace: %w", err)
 			}
 		}
-
-	} else if maj == cbg.MajByteString {
+	case cbg.MajByteString:
 		if err := t.ClaimedSpace.UnmarshalCBOR(cr); err != nil {
 			return fmt.Errorf("unmarshaling t.ClaimedSpace: %w", err)
 		}
-	} else {
+	default:
 		return fmt.Errorf("cbor input had wrong type")
 	}
 

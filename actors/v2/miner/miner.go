@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"sync"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -29,9 +28,6 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
-
-// minerMethodsMu protects concurrent access to miner method maps across network versions
-var minerMethodsMu sync.Mutex
 
 type Miner struct {
 	logger *logger.Logger
