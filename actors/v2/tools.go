@@ -37,7 +37,8 @@ func ActorMethods(ctx context.Context, actorName string, height int64, network s
 	if actorName == manifest.EthAccountKey || actorName == manifest.PlaceholderKey {
 		mActorName = manifest.EvmKey
 	}
-	actor, err := actorParser.GetActor(mActorName, metricsClient)
+
+	actor, err := actorParser.GetActor(mActorName)
 	if err != nil {
 		return nil, err
 	}
@@ -46,5 +47,6 @@ func ActorMethods(ctx context.Context, actorName string, height int64, network s
 	if err != nil {
 		return nil, err
 	}
+
 	return actorMethods, nil
 }

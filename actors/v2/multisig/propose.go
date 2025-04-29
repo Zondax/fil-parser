@@ -2,11 +2,17 @@ package multisig
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
+	"github.com/filecoin-project/go-state-types/manifest"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/zondax/fil-parser/actors/v2/internal"
+
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/cbor"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
@@ -67,56 +73,78 @@ import (
 	legacyminer7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/miner"
 )
 
-func innerProposeParams(network string, height int64, method abi.MethodNum, proposeParams []byte) (string, cbor.Unmarshaler, error) {
-	var params multisigParams
-	var err error
-	var methodName string
-	reader := bytes.NewReader(proposeParams)
-	switch method {
-	case builtin.MethodSend:
-		if proposeParams == nil {
-			return parser.MethodSend, nil, nil
-		}
-		_, _, _, _, params, err = getProposeParams(network, height, proposeParams)
-		return parser.MethodSend, params, err
-	case builtin.MethodsMultisig.Approve:
-		methodName = parser.MethodApprove
-		params, err = txnIDParams(network, height)
-	case builtin.MethodsMultisig.Cancel:
-		methodName = parser.MethodCancel
-		params, err = txnIDParams(network, height)
-	case builtin.MethodsMultisig.AddSigner:
-		methodName = parser.MethodAddSigner
-		params, err = addSignerParams(network, height)
-	case builtin.MethodsMultisig.RemoveSigner:
-		methodName = parser.MethodRemoveSigner
-		params, err = removeSignerParams(network, height)
-	case builtin.MethodsMultisig.SwapSigner:
-		methodName = parser.MethodSwapSigner
-		params, err = swapSignerParams(network, height)
-	case builtin.MethodsMultisig.ChangeNumApprovalsThreshold:
-		methodName = parser.MethodChangeNumApprovalsThreshold
-		params, err = changeNumApprovalsThresholdParams(network, height)
-	case builtin.MethodsMultisig.LockBalance:
-		methodName = parser.MethodLockBalance
-		params, err = lockBalanceParams(network, height)
-	case builtin.MethodsMiner.WithdrawBalance:
-		methodName = parser.MethodWithdrawBalance
-		params, err = withdrawBalanceParams(network, height)
-	case builtin.MethodsVerifiedRegistry.AddVerifier:
-		methodName = parser.MethodAddVerifier
-		params, err = verifierParams(network, height)
-	default:
-		err = parser.ErrUnknownMethod
+// innerProposeParams processes the parameters for a multisig proposal by:
+// 1. Creating a new LotusMessage with the proposal details
+// 2. Getting the actor and method name for the proposal
+// 3. Parsing the proposal parameters using the actor's Parse method
+func (m *Msig) innerProposeParams(
+	msg *parser.LotusMessage, to address.Address, network string, height int64, method abi.MethodNum,
+	proposeParams []byte, key filTypes.TipSetKey,
+) (string, map[string]interface{}, error) {
+	proposeMsg := &parser.LotusMessage{
+		To:     to,
+		From:   msg.From,
+		Method: method,
+		Cid:    msg.Cid,
+		Params: proposeParams,
 	}
-	if err == nil {
-		err := params.UnmarshalCBOR(reader)
-		return methodName, params, err
+
+	actor, proposedMethod, err := m.innerProposeMethod(proposeMsg, network, height, key)
+	if err != nil {
+		return "", nil, err
 	}
-	return "", nil, err
+
+	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: []byte{}}, msg.Cid, key)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return proposedMethod, metadata, nil
 }
 
-func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to, value string, params multisigParams, err error) {
+// innerProposeMethod determines the actor and method name for a multisig proposal by:
+// 1. Getting the actor name from the target address
+// 2. Getting the appropriate actor implementation
+// 3. Checking for common methods
+// 4. Looking up the method name in the actor's method list
+func (m *Msig) innerProposeMethod(
+	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
+) (actors.Actor, string, error) {
+	actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key)
+	if err != nil {
+		return nil, "", err
+	}
+	var actor actors.Actor
+	actor = m
+	if actorName != manifest.MultisigKey {
+		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	method, err := m.helper.CheckCommonMethods(msg, height, key)
+	if err != nil {
+		return nil, "", err
+	}
+	if method != "" {
+		return actor, method, nil
+	}
+
+	actorMethods, err := actor.Methods(context.Background(), network, height)
+	if err != nil {
+		return nil, "", err
+	}
+
+	proposeMethod, ok := actorMethods[msg.Method]
+	if !ok {
+		return nil, "", fmt.Errorf("unrecognized propose method: %s for actor %s", method, actorName)
+	}
+
+	return actor, proposeMethod.Name, nil
+}
+
+func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to address.Address, value string, params multisigParams, err error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
 		tmp := &legacyv1.ProposeParams{}
@@ -124,7 +152,7 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 
 	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
 		tmp := &legacyv2.ProposeParams{}
@@ -132,42 +160,42 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		tmp := &legacyv3.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V12.IsSupported(network, height):
 		tmp := &legacyv4.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V13.IsSupported(network, height):
 		tmp := &legacyv5.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V14.IsSupported(network, height):
 		tmp := &legacyv6.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V15.IsSupported(network, height):
 		tmp := &legacyv7.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 
 	case tools.V16.IsSupported(network, height):
 		tmp := &multisig8.ProposeParams{}
@@ -175,67 +203,68 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V17.IsSupported(network, height):
 		tmp := &multisig9.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V18.IsSupported(network, height):
 		tmp := &multisig10.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
 		tmp := &multisig11.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V21.IsSupported(network, height):
 		tmp := &multisig12.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V22.IsSupported(network, height):
 		tmp := &multisig13.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V23.IsSupported(network, height):
 		tmp := &multisig14.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V24.IsSupported(network, height):
 		tmp := &multisig15.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
-		return tmp.Params, tmp.Method, tmp.To.String(), tmp.Value.String(), tmp, nil
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	case tools.V25.IsSupported(network, height):
 		tmp := &multisig16.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
+		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 	default:
-		return nil, 0, "", "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return nil, 0, address.Undef, "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return nil, 0, "", "", nil, err
+	return nil, 0, address.Undef, "", nil, err
 }
 
 func proposeReturn(network string, height int64) (multisigParams, error) {
@@ -272,45 +301,6 @@ func proposeReturn(network string, height int64) (multisigParams, error) {
 		return &multisig15.ProposeReturn{}, nil
 	case tools.V25.IsSupported(network, height):
 		return &multisig16.ProposeReturn{}, nil
-	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-}
-
-func txnIDParams(network string, height int64) (multisigParams, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return &legacyv1.TxnIDParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
-		return &legacyv2.TxnIDParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
-		return &legacyv3.TxnIDParams{}, nil
-	case tools.V12.IsSupported(network, height):
-		return &legacyv4.TxnIDParams{}, nil
-	case tools.V13.IsSupported(network, height):
-		return &legacyv5.TxnIDParams{}, nil
-	case tools.V14.IsSupported(network, height):
-		return &legacyv6.TxnIDParams{}, nil
-	case tools.V15.IsSupported(network, height):
-		return &legacyv7.TxnIDParams{}, nil
-
-	case tools.V16.IsSupported(network, height):
-		return &multisig8.TxnIDParams{}, nil
-	case tools.V17.IsSupported(network, height):
-		return &multisig9.TxnIDParams{}, nil
-	case tools.V18.IsSupported(network, height):
-		return &multisig10.TxnIDParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return &multisig11.TxnIDParams{}, nil
-	case tools.V21.IsSupported(network, height):
-		return &multisig12.TxnIDParams{}, nil
-	case tools.V22.IsSupported(network, height):
-		return &multisig13.TxnIDParams{}, nil
-	case tools.V23.IsSupported(network, height):
-		return &multisig14.TxnIDParams{}, nil
-	case tools.V24.IsSupported(network, height):
-		return &multisig15.TxnIDParams{}, nil
-	case tools.V25.IsSupported(network, height):
-		return &multisig16.TxnIDParams{}, nil
 	}
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
@@ -429,43 +419,6 @@ func swapSignerParams(network string, height int64) (multisigParams, error) {
 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 }
 
-func changeNumApprovalsThresholdParams(network string, height int64) (multisigParams, error) {
-	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
-		return &legacyv1.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
-		return &legacyv2.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
-		return &legacyv3.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V12.IsSupported(network, height):
-		return &legacyv4.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V13.IsSupported(network, height):
-		return &legacyv5.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V14.IsSupported(network, height):
-		return &legacyv6.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V15.IsSupported(network, height):
-		return &legacyv7.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V16.IsSupported(network, height):
-		return &multisig8.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V17.IsSupported(network, height):
-		return &multisig9.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V18.IsSupported(network, height):
-		return &multisig10.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V20, tools.V19):
-		return &multisig11.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V21.IsSupported(network, height):
-		return &multisig12.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V22.IsSupported(network, height):
-		return &multisig13.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V23.IsSupported(network, height):
-		return &multisig14.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V24.IsSupported(network, height):
-		return &multisig15.ChangeNumApprovalsThresholdParams{}, nil
-	case tools.V25.IsSupported(network, height):
-		return &multisig16.ChangeNumApprovalsThresholdParams{}, nil
-	}
-	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-}
 func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
 	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):

@@ -11,9 +11,11 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
+
+	typegen "github.com/whyrusleeping/cbor-gen"
 )
 
-func parseEamReturn[R createReturn](rawReturn []byte, r R) (R, error) {
+func parseEamReturn[R typegen.CBORUnmarshaler](rawReturn []byte, r R) (R, error) {
 	reader := bytes.NewReader(rawReturn)
 	err := r.UnmarshalCBOR(reader)
 	if err != nil {
@@ -29,7 +31,7 @@ func parseEamReturn[R createReturn](rawReturn []byte, r R) (R, error) {
 	return r, nil
 }
 
-func parseCreate[T createParams, R createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](rawParams, rawReturn []byte, msgCid cid.Cid, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -48,7 +50,7 @@ func parseCreate[T createParams, R createReturn](rawParams, rawReturn []byte, ms
 	return metadata, nil, nil
 }
 
-func parseCreateExternal[T createReturn](rawParams, rawReturn []byte, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreateExternal[T typegen.CBORUnmarshaler](rawParams, rawReturn []byte, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -69,7 +71,7 @@ func parseCreateExternal[T createReturn](rawParams, rawReturn []byte, msgCid cid
 	return metadata, nil, nil
 }
 
-func handleReturnValue[R createReturn](rawReturn []byte, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func handleReturnValue[R typegen.CBORUnmarshaler](rawReturn []byte, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	createReturn, err := parseEamReturn(rawReturn, r)
 	if err != nil {
 		return nil, nil, err

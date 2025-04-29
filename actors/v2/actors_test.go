@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	builtinActors "github.com/filecoin-project/go-state-types/actors"
@@ -92,7 +91,7 @@ func getActors(t *testing.T) []v2.Actor {
 	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
 	actors := []v2.Actor{}
 	for _, filActor := range filActors {
-		actor, err := actorParser.GetActor(filActor, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+		actor, err := actorParser.GetActor(filActor)
 		require.NoErrorf(t, err, "Actor %s is not supported", filActor)
 		actors = append(actors, actor)
 	}

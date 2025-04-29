@@ -4,33 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/zondax/fil-parser/actors/v2/internal"
+
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
 	"github.com/ipfs/go-cid"
 
-	"github.com/filecoin-project/go-state-types/abi"
-	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/actors/v2/account"
-	"github.com/zondax/fil-parser/actors/v2/cron"
-	"github.com/zondax/fil-parser/actors/v2/datacap"
-	"github.com/zondax/fil-parser/actors/v2/eam"
-	"github.com/zondax/fil-parser/actors/v2/ethaccount"
-	"github.com/zondax/fil-parser/actors/v2/evm"
-	initActor "github.com/zondax/fil-parser/actors/v2/init"
-	"github.com/zondax/fil-parser/actors/v2/market"
-	"github.com/zondax/fil-parser/actors/v2/miner"
 	"github.com/zondax/fil-parser/actors/v2/multisig"
-	paymentchannel "github.com/zondax/fil-parser/actors/v2/paymentChannel"
-	"github.com/zondax/fil-parser/actors/v2/placeholder"
-	"github.com/zondax/fil-parser/actors/v2/power"
-	"github.com/zondax/fil-parser/actors/v2/reward"
-	"github.com/zondax/fil-parser/actors/v2/system"
-	verifiedregistry "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/golem/pkg/logger"
 
 	logger2 "github.com/zondax/fil-parser/logger"
@@ -39,13 +24,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-type Actor interface {
-	Name() string
-	Parse(ctx context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error)
-	StartNetworkHeight() int64
-	TransactionTypes() map[string]any
-	Methods(ctx context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error)
-}
+type Actor = actors.Actor
 
 var _ actors.ActorParserInterface = &ActorParser{}
 
@@ -76,7 +55,7 @@ func (p *ActorParser) GetMetadata(ctx context.Context, txType string, msg *parse
 	if err != nil {
 		return "", metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
 	}
-	actorParser, err := p.GetActor(actor, p.metrics)
+	actorParser, err := p.GetActor(actor)
 	if err != nil {
 		return actor, nil, nil, parser.ErrNotValidActor
 	}
@@ -95,41 +74,10 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 	return 0, nil
 }
 
-func (p *ActorParser) GetActor(actor string, metrics *actormetrics.ActorsMetricsClient) (Actor, error) {
-	switch actor {
-	case manifest.AccountKey:
-		return account.New(p.logger), nil
-	case manifest.CronKey:
-		return cron.New(p.logger), nil
-	case manifest.DatacapKey:
-		return datacap.New(p.logger), nil
-	case manifest.EamKey:
-		return eam.New(p.helper, p.logger), nil
-	case manifest.EthAccountKey:
-		return ethaccount.New(p.logger), nil
-	case manifest.EvmKey:
-		return evm.New(p.logger, p.metrics), nil
-	case manifest.InitKey:
-		return initActor.New(p.helper, p.logger), nil
-	case manifest.MarketKey:
-		return market.New(p.logger), nil
-	case manifest.MinerKey:
-		return miner.New(p.logger), nil
-	case manifest.MultisigKey:
-		return multisig.New(p.helper, p.logger, metrics), nil
-	case manifest.PaychKey:
-		return paymentchannel.New(p.logger), nil
-	case manifest.PowerKey:
-		return power.New(p.helper, p.logger), nil
-	case manifest.RewardKey:
-		return reward.New(p.logger), nil
-	case manifest.VerifregKey:
-		return verifiedregistry.New(p.logger), nil
-	case manifest.PlaceholderKey:
-		return placeholder.New(p.logger), nil
-	case manifest.SystemKey:
-		return system.New(p.logger), nil
-	default:
-		return nil, fmt.Errorf("actor %s not found", actor)
+func (p *ActorParser) GetActor(actor string) (Actor, error) {
+	if actor == manifest.MultisigKey {
+		return multisig.New(p.helper, p.logger, p.metrics), nil
 	}
+
+	return internal.GetActor(actor, p.logger, p.helper, p.metrics)
 }
