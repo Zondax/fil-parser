@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 
@@ -16,7 +17,6 @@ type ClaimAllocationsReturn struct {
 
 func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = ClaimAllocationsReturn{}
-
 	cr := cbg.NewCborReader(r)
 
 	maj, extra, err := cr.ReadHeader()
@@ -47,14 +47,30 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 
 	}
 
-	maj, extra, err = cr.ReadHeader()
+	// save current position
+	curr, err := io.ReadAll(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read all bytes: %w", err)
 	}
+	// check next data type
+	buf := new(bytes.Buffer)
+	buf.Write(curr)
+	maj, _, err = cbg.CborReadHeader(cbg.NewCborReader(buf))
+	if err != nil {
+		return fmt.Errorf("failed to read header for ClaimAllocationsReturn element: %w", err)
+	}
+
+	// reset the reader to the original position
+	cr = cbg.NewCborReader(bytes.NewReader(curr))
 
 	// t.ClaimedSpace (big.Int) (struct) or (SectorClaimSummary) (struct)
 	switch maj {
 	case cbg.MajArray:
+		_, extra, err := cr.ReadHeader()
+		if err != nil {
+			return fmt.Errorf("failed to read header for ClaimAllocationsReturn element: %w", err)
+		}
+
 		if extra != 1 {
 			return fmt.Errorf("cbor input had wrong number of fields")
 		}

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 
@@ -44,11 +45,22 @@ func (h *HandleFilecoinMethodParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	peeker := cbg.GetPeeker(cr)
-	firstMaj, _, err := cbg.CborReadHeader(peeker)
+	// save current position
+	curr, err := io.ReadAll(r)
+	if err != nil {
+		return fmt.Errorf("failed to read all bytes: %w", err)
+	}
+
+	// check next data type
+	buf := new(bytes.Buffer)
+	buf.Write(curr)
+	firstMaj, _, err := cbg.CborReadHeader(cbg.NewCborReader(buf))
 	if err != nil {
 		return fmt.Errorf("failed to read header for Args element: %w", err)
 	}
+
+	// reset the reader to the original position
+	cr = cbg.NewCborReader(bytes.NewReader(curr))
 
 	// attempt parse regardless of parameter order
 	var method uint64

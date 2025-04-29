@@ -211,12 +211,12 @@ func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, raw
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	versions := tools.GetSupportedVersions(network)
 
 	metadata, err := parse(raw, rawReturn, true, params(), returnValue())
 	if err != nil {
 		// fallback
 		// There is mixed use of SectorAllocationClaims with flat parameters and with info inside structs
+		versions := tools.GetSupportedVersions(network)
 		for _, v := range versions {
 			params, paramsOk := claimAllocationsParams[v.String()]
 			returnValue, returnValueOk := claimAllocationsReturn[v.String()]
@@ -230,7 +230,7 @@ func (*VerifiedRegistry) ClaimAllocations(network string, height int64, raw, raw
 			break
 		}
 	}
-	return metadata, nil
+	return metadata, err
 }
 
 func (*VerifiedRegistry) GetClaimsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
