@@ -107,7 +107,7 @@ func (t *BatchActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		if extra > 8192 {
-			return fmt.Errorf("t.Inputs: array too large (%d)", extra)
+			return fmt.Errorf("t.Sectors: array too large (%d)", extra)
 		}
 
 		if maj != cbg.MajArray {
@@ -119,30 +119,16 @@ func (t *BatchActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		for i := 0; i < int(extra); i++ {
-			{
-				var maj byte
-				var extra uint64
-				var err error
-				_ = maj
-				_ = extra
-				_ = err
-
-				{
-					t.Sectors[i] = sectorDeals[version]()
-					if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
-						return fmt.Errorf("unmarshaling t.Sectors[%d]: %w", i, err)
-					}
-				}
+			t.Sectors[i] = sectorDeals[version]()
+			if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
+				return fmt.Errorf("unmarshaling t.Sectors[%d]: %w", i, err)
 			}
 		}
 	}
 
 	// t.ComputeCID (cbg.CborBool) (bool)
-	{
-		if err := t.ComputeCID.UnmarshalCBOR(cr); err != nil {
-			return fmt.Errorf("unmarshaling t.ComputeCID: %w", err)
-		}
-
+	if err := t.ComputeCID.UnmarshalCBOR(cr); err != nil {
+		return fmt.Errorf("unmarshaling t.ComputeCID: %w", err)
 	}
 
 	return nil
