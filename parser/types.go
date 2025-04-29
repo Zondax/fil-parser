@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/json"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
@@ -48,6 +49,14 @@ type Proposed struct {
 type GetBeneficiaryReturn struct {
 	Active   ActiveBeneficiary `json:"active"`
 	Proposed Proposed          `json:"proposed"`
+}
+
+// TODO: look how to combine these two proposes
+type MultisigPropose struct {
+	To     string
+	Value  string
+	Method string
+	Params map[string]interface{}
 }
 
 type Propose struct {
