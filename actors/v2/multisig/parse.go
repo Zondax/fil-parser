@@ -3,6 +3,7 @@ package multisig
 import (
 	"context"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/abi"

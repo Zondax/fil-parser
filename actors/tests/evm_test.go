@@ -10,10 +10,8 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
-	"github.com/zondax/fil-parser/actors/metrics"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
-	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -191,7 +189,7 @@ func TestActorParserV1_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 
 func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -221,7 +219,7 @@ func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 
 func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -249,7 +247,7 @@ func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 
 func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -279,7 +277,7 @@ func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 
 func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -307,7 +305,7 @@ func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 
 func TestActorParserV2_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

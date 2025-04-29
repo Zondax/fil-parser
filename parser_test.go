@@ -50,8 +50,8 @@ const (
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
 	nativeLogPrefix   = "nativelog"
-	nodeUrl           = "https://node-fil-mainnet-next.zondax.ch/rpc/v1"
-	calibNextNodeUrl  = "https://hel1-node-fil-calibration-next.zondax.ch/rpc/v1"
+	nodeUrl           = "https://node-fil-mainnet-stable.zondax.ch/rpc/v1"
+	calibNextNodeUrl  = "https://node-fil-calibration-stable.zondax.ch/rpc/v1"
 	feeType           = "fee"
 )
 
@@ -1918,6 +1918,26 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				if tt.shouldFail {
 					continue
 				}
+
+				// The 'Propose' v1Params structure is being modified to maintain compatibility with the v2 format.
+				// In v1, the "Params" structure is flatter, while in v2, it has an additional nested level with another "Params" key.
+				// The code normalizes v1 to match v2's structure for comparison purposes.
+				if tx.TxType == parser.MethodPropose || tx.TxType == parser.MethodProposeExported {
+					v1Params := metadataV1[parser.ParamsKey]
+					v1ParamsMap, ok := v1Params.(map[string]interface{})
+					if !ok {
+						t.Fatalf("Error casting v1 params to map[string]interface{}")
+					}
+					if v1ParamsMap[parser.ParamsKey] != nil {
+						v1ParamsMap[parser.ParamsKey] = v1ParamsMap[parser.ParamsKey].(map[string]interface{})[parser.ParamsKey]
+					} else {
+						v1ParamsMap[parser.ParamsKey] = map[string]interface{}{
+							parser.ParamsKey: nil,
+						}
+					}
+					metadataV1[parser.ParamsKey] = v1ParamsMap
+				}
+
 				if metadataV1[parser.ParamsKey] != nil {
 					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 				}

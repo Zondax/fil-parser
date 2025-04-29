@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sync"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-bitfield"
@@ -42,6 +44,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+// minerMethodsMu protects concurrent access to miner method maps across network versions
+var minerMethodsMu sync.Mutex
+
 type Miner struct {
 	logger *logger.Logger
 }
@@ -64,6 +69,17 @@ func (*Miner) StartNetworkHeight() int64 {
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
+	// minerMethodsMu protects access to the package-level global data structures, particularly the
+	// method maps used across different network versions (e.g., miner8.Methods, miner9.Methods, etc.).
+	// These maps are global variables defined in their respective imported packages, and when assigned
+	// to the 'data' variable, Go handles them by reference, not by copying the entire map.
+	// Multiple goroutines accessing or modifying these maps concurrently could lead to race conditions,
+	// memory corruption, or unexpected behavior since maps in Go are not safe for concurrent use.
+	// This mutex ensures that only one goroutine at a time can read from or write to these maps,
+	// guaranteeing thread safety across all instances of the Miner struct.
+	minerMethodsMu.Lock()         // Lock the package mutex before accessing/modifying the map
+	defer minerMethodsMu.Unlock() // Ensure the mutex is unlocked when we're done
+
 	var data map[abi.MethodNum]nonLegacyBuiltin.MethodMeta
 	switch {
 	// all legacy version

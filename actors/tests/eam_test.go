@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/zondax/fil-parser/actors/metrics"
-	metrics2 "github.com/zondax/fil-parser/metrics"
-
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/stretchr/testify/require"
@@ -62,7 +59,7 @@ func TestActorParserV1_EamCreates(t *testing.T) {
 
 func TestActorParserV2_EamCreates(t *testing.T) {
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EamKey, &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()})
+	actor, err := p.GetActor(manifest.EamKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
