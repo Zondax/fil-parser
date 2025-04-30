@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"io"
+	"math"
 
 	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	v12Market "github.com/filecoin-project/go-state-types/builtin/v12/market"
@@ -328,16 +329,18 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
+			// Check for positive overflow before conversion
+			if extra > uint64(math.MaxInt64) {
 				return fmt.Errorf("int64 positive overflow")
 			}
-		case cbg.MajNegativeInt:
 			extraI = int64(extra)
-			if extraI < 0 {
+		case cbg.MajNegativeInt:
+			// Check for negative overflow before conversion
+			// We need -1-extra >= MinInt64, which simplifies to extra <= MaxInt64
+			if extra > uint64(math.MaxInt64) {
 				return fmt.Errorf("int64 negative overflow")
 			}
-			extraI = -1 - extraI
+			extraI = -1 - int64(extra)
 		default:
 			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
@@ -353,16 +356,18 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
+			// Check for positive overflow before conversion
+			if extra > uint64(math.MaxInt64) {
 				return fmt.Errorf("int64 positive overflow")
 			}
-		case cbg.MajNegativeInt:
 			extraI = int64(extra)
-			if extraI < 0 {
+		case cbg.MajNegativeInt:
+			// Check for negative overflow before conversion
+			// We need -1-extra >= MinInt64, which simplifies to extra <= MaxInt64
+			if extra > uint64(math.MaxInt64) {
 				return fmt.Errorf("int64 negative overflow")
 			}
-			extraI = -1 - extraI
+			extraI = -1 - int64(extra)
 		default:
 			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
