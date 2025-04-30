@@ -19,7 +19,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/whyrusleeping/cbor-gen v0.3.1
-	github.com/zondax/golem v0.21.0
+	github.com/zondax/golem v0.21.1
 	github.com/zondax/rosetta-filecoin-lib v1.3202.0
 	gotest.tools v2.2.0+incompatible
 )
@@ -148,7 +148,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polydawn/refmt v0.89.0 // indirect
-	github.com/prometheus/client_golang v1.21.1 // indirect
+	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.16.0 // indirect
@@ -174,7 +174,7 @@ require (
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
 	golang.org/x/mod v0.24.0
 	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da

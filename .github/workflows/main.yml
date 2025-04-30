@@ -14,10 +14,10 @@ jobs:
       options: --tty
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.23.7'
       - name: Build
@@ -34,10 +34,10 @@ jobs:
       options: --tty
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.23.7'
       - name: ModTidy check
@@ -57,10 +57,10 @@ jobs:
     timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.23.7'
       - name: test
