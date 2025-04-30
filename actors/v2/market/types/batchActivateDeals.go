@@ -11,6 +11,7 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/big"
 	cbg "github.com/whyrusleeping/cbor-gen"
@@ -22,10 +23,11 @@ var sectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	// From V20!
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.SectorDeals) },
 	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.SectorDeals) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.SectorDeals) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.SectorDeals) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.SectorDeals) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SectorDeals) },
+	//
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 }
 
 var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
@@ -36,6 +38,13 @@ var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.VerifiedDealInfo) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.VerifiedDealInfo) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifiedDealInfo) },
+}
+
+type SectorDeals struct {
+	SectorNumber uint64
+	SectorType   abi.RegisteredSealProof
+	SectorExpiry abi.ChainEpoch
+	DealIDs      []abi.DealID
 }
 
 type BatchActivateDealsParams struct {
@@ -264,6 +273,143 @@ func (t *SectorDealActivation) UnmarshalCBOR(r io.Reader) (err error) {
 	{
 		if err := t.UnsealedCid.UnmarshalCBOR(cr); err != nil {
 			return fmt.Errorf("unmarshaling t.UnsealedCid: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SectorDeals{}
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 4 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.SectorNumber  (uint64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI uint64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = uint64(extra)
+
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SectorNumber = extraI
+	}
+
+	// t.SectorType (abi.RegisteredSealProof) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SectorType = abi.RegisteredSealProof(extraI)
+	}
+	// t.SectorExpiry (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SectorExpiry = abi.ChainEpoch(extraI)
+	}
+	// t.DealIDs ([]abi.DealID) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.DealIDs = make([]abi.DealID, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.DealIDs[i] = abi.DealID(extra)
+
+			}
+
 		}
 	}
 

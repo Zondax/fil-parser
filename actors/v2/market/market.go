@@ -170,7 +170,25 @@ func (*Market) VerifyDealsForActivationExported(network string, height int64, ra
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		var mErr error
+		for _, v := range versions {
+			params, paramsOk := verifyDealsForActivationParams[v.String()]
+			returnValue, returnOk := verifyDealsForActivationReturn[v.String()]
+			if !paramsOk || !returnOk {
+				continue
+			}
+			metadata, mErr = parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+			if mErr != nil {
+				continue
+			}
+			break
+		}
+		return metadata, mErr
+	}
+	return metadata, err
 }
 
 func (*Market) ActivateDealsExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
