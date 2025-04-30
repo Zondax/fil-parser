@@ -153,10 +153,12 @@ var verifyDealsForActivationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationParams) },
 
 	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.VerifyDealsForActivationParams) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.VerifyDealsForActivationParams) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.VerifyDealsForActivationParams) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.VerifyDealsForActivationParams) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifyDealsForActivationParams) },
+
+	// go-state-types impl. of ActivateDealsParams not upto date with builtin-actors
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V22.String()) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V23.String()) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V24.String()) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V25.String()) },
 }
 
 var verifyDealsForActivationReturn = map[string]func() cbg.CBORUnmarshaler{

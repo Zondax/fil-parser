@@ -11,7 +11,6 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
 
-	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/big"
 	cbg "github.com/whyrusleeping/cbor-gen"
@@ -61,12 +60,6 @@ func NewBatchActivateDealsResult(version string) *BatchActivateDealsResult {
 	return &BatchActivateDealsResult{
 		version: version,
 	}
-}
-
-type SectorDeals struct {
-	SectorType   abi.RegisteredSealProof
-	SectorExpiry abi.ChainEpoch
-	DealIDs      []abi.DealID
 }
 
 type SectorDealActivation struct {
