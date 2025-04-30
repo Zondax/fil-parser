@@ -118,6 +118,12 @@ func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodWithdrawBalance,
 			Method: m.WithdrawBalanceExported,
 		},
+	}
+}
+
+func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	m := &Miner{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 		initialPledgeMethodNum: {
 			Name:   parser.MethodInitialPledge,
 			Method: m.InitialPledgeExported,
@@ -130,31 +136,31 @@ func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 }
 
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
-	tools.V16.String(): actors.CopyMethods(miner8.Methods),
-	tools.V17.String(): actors.CopyMethods(miner9.Methods),
-	tools.V18.String(): actors.CopyMethods(miner10.Methods),
-	tools.V19.String(): actors.CopyMethods(miner11.Methods),
-	tools.V20.String(): actors.CopyMethods(miner11.Methods),
-	tools.V21.String(): actors.CopyMethods(miner12.Methods),
-	tools.V22.String(): actors.CopyMethods(miner13.Methods),
-	tools.V23.String(): actors.CopyMethods(miner14.Methods),
-	tools.V24.String(): actors.CopyMethods(miner15.Methods),
-	tools.V25.String(): actors.CopyMethods(miner16.Methods),
+	tools.V1.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V2.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V3.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V4.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V5.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V6.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V7.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V8.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V9.String():  actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V10.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V11.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V12.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V13.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V14.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V15.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V16.String(): actors.CopyMethods(customMethods(), miner8.Methods),
+	tools.V17.String(): actors.CopyMethods(customMethods(), miner9.Methods),
+	tools.V18.String(): actors.CopyMethods(customMethods(), miner10.Methods),
+	tools.V19.String(): actors.CopyMethods(customMethods(), miner11.Methods),
+	tools.V20.String(): actors.CopyMethods(customMethods(), miner11.Methods),
+	tools.V21.String(): actors.CopyMethods(customMethods(), miner12.Methods),
+	tools.V22.String(): actors.CopyMethods(customMethods(), miner13.Methods),
+	tools.V23.String(): actors.CopyMethods(customMethods(), miner14.Methods),
+	tools.V24.String(): actors.CopyMethods(customMethods(), miner15.Methods),
+	tools.V25.String(): actors.CopyMethods(customMethods(), miner16.Methods),
 }
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

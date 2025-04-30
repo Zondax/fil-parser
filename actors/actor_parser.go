@@ -62,10 +62,12 @@ func ParseEmptyParamsAndReturn() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
 
-func CopyMethods(methods map[abi.MethodNum]nonLegacyBuiltin.MethodMeta) map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+func CopyMethods(methods ...map[abi.MethodNum]nonLegacyBuiltin.MethodMeta) map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	res := make(map[abi.MethodNum]nonLegacyBuiltin.MethodMeta)
-	for k, v := range methods {
-		res[k] = v
+	for _, method := range methods {
+		for k, v := range method {
+			res[k] = v
+		}
 	}
 
 	return res
