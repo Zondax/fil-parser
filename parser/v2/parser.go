@@ -341,6 +341,8 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
 
+	metadata[parser.MethodNumKey] = trace.Msg.Method.String()
+
 	jsonMetadata, err := json.Marshal(metadata)
 	if err != nil {
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)

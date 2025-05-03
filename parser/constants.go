@@ -18,6 +18,7 @@ const (
 	ParamsRawKey = "ParamsRaw"
 	ReturnRawKey = "ReturnRaw"
 	ErrorKey     = "Error"
+	MethodNumKey = "MethodNum"
 	EthHashKey   = "ethHash"
 	AddressKey   = "address"
 	EthLogsKey   = "ethLogs"
