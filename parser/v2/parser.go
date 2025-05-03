@@ -443,6 +443,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 
 		minerAddress, err = actors.ConsolidateRobustAddress(minerAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
+			minerAddress = minerAddr.String()
 			p.logger.Errorf("Error when trying to consolidate miner address to robust: %v", err)
 		}
 	}

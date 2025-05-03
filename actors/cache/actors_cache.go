@@ -31,6 +31,7 @@ var SystemActorsId = map[string]bool{
 	"f05":  true,
 	"f06":  true,
 	"f07":  true,
+	"f010": true,
 	"f099": true,
 }
 
