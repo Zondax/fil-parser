@@ -299,12 +299,19 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
-	if trace.MsgRct.ExitCode.IsError() {
-		if metadata == nil {
-			metadata = make(map[string]interface{})
+
+	if metadata == nil {
+		metadata = map[string]interface{}{
+			parser.ParamsRawKey: trace.Msg.Params,
+			parser.ReturnRawKey: trace.MsgRct.Return,
 		}
-		metadata["Error"] = trace.MsgRct.ExitCode.Error()
 	}
+
+	if trace.MsgRct.ExitCode.IsError() {
+		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
+	}
+
+	metadata[parser.MethodNumKey] = trace.Msg.Method.String()
 
 	tipsetCid := tipset.GetCidString()
 	jsonMetadata, err := json.Marshal(metadata)

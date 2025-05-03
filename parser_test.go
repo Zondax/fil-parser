@@ -1534,7 +1534,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			height:  "39035",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
-					{Height: 39035, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 1, Signer: "f01717", ActionType: "Propose", TxTypeToExecute: "Unknown", Value: "{\"Params\":{\"Method\":\"\",\"Params\":null,\"To\":\"f01174\",\"Value\":\"0\"},\"Return\":{\"Applied\":false,\"Code\":0,\"Ret\":null,\"TxnID\":1}}"},
+					{Height: 39035, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 1, Signer: "f01717", ActionType: "Propose", TxTypeToExecute: "Unknown", Value: "{\"MethodNum\":\"2\",\"Params\":{\"Method\":\"\",\"Params\":null,\"To\":\"f01174\",\"Value\":\"0\"},\"Return\":{\"Applied\":false,\"Code\":0,\"Ret\":null,\"TxnID\":1}}"},
 				},
 				multisigInfo: []types.MultisigInfo{},
 			},
