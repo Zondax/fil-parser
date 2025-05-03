@@ -303,8 +303,10 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		if metadata == nil {
 			metadata = make(map[string]interface{})
 		}
-		metadata["Error"] = trace.MsgRct.ExitCode.Error()
+		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
+
+	metadata[parser.MethodNumKey] = trace.Msg.Method.String()
 
 	tipsetCid := tipset.GetCidString()
 	jsonMetadata, err := json.Marshal(metadata)
