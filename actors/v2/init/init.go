@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
 
@@ -120,7 +121,19 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseExec(msg, raw, params(), returnValue(), i.helper)
+
+	metadata, addressInfo, err := parseExec(msg, raw, params(), returnValue(), i.helper)
+	if addressInfo != nil {
+		c, err := cid.Parse(addressInfo.ActorCid)
+		if err == nil {
+			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
+			if err == nil {
+				addressInfo.ActorType = parseExecActor(createdActorName)
+			}
+		}
+	}
+
+	return metadata, addressInfo, err
 }
 
 func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
@@ -133,5 +146,17 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseExec(msg, raw, params(), returnValue(), i.helper)
+
+	metadata, addressInfo, err := parseExec(msg, raw, params(), returnValue(), i.helper)
+	if addressInfo != nil {
+		c, err := cid.Parse(addressInfo.ActorCid)
+		if err == nil {
+			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
+			if err == nil {
+				addressInfo.ActorType = parseExecActor(createdActorName)
+			}
+		}
+	}
+
+	return metadata, addressInfo, err
 }
