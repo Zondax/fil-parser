@@ -28,7 +28,7 @@ import (
 
 func setExecParams(params typegen.CBORUnmarshaler) (cid.Cid, any, error) {
 	setParams := func(codeCid cid.Cid, constructorParams []byte) (cid.Cid, any, error) {
-		return cid.Undef, parser.ExecParams{
+		return codeCid, parser.ExecParams{
 			CodeCid:           codeCid.String(),
 			ConstructorParams: base64.StdEncoding.EncodeToString(constructorParams),
 		}, nil
@@ -49,7 +49,7 @@ func setExecParams(params typegen.CBORUnmarshaler) (cid.Cid, any, error) {
 			}
 			subAddressStr = subAddress.String()
 		}
-		return cid.Undef, parser.Exec4Params{
+		return codeCid, parser.Exec4Params{
 			CodeCid:           codeCid.String(),
 			ConstructorParams: base64.StdEncoding.EncodeToString(constructorParams),
 			SubAddress:        subAddressStr,
