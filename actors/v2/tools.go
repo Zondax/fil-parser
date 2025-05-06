@@ -11,6 +11,7 @@ import (
 	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/golem/pkg/logger"
 )
 
@@ -22,12 +23,28 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 
 	method, ok := actorMethods[methodNum]
 	if !ok {
+		version := tools.VersionFromHeight(network, height)
 
-		if (actorName == manifest.AccountKey || actorName == manifest.EthAccountKey) && methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
-			return parser.MethodFallback, nil
+		if actorName == manifest.AccountKey {
+			if version.NodeVersion() == tools.V17.NodeVersion() {
+				return parser.MethodUniversalReceiverHook, nil
+			} else if version.NodeVersion() > tools.V17.NodeVersion() {
+				if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
+					return parser.MethodFallback, nil
+				}
+			}
 		}
-		if actorName == manifest.EvmKey && methodNum > abi.MethodNum(parser.EvmMaxReservedMethodNumber) {
-			return parser.MethodHandleFilecoinMethod, nil
+
+		// handle fallback methods
+		if actorName == manifest.EthAccountKey {
+			if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
+				return parser.MethodFallback, nil
+			}
+		}
+		if actorName == manifest.EvmKey {
+			if methodNum > abi.MethodNum(parser.EvmMaxReservedMethodNumber) {
+				return parser.MethodHandleFilecoinMethod, nil
+			}
 		}
 
 		return parser.UnknownStr, nil
