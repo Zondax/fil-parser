@@ -25,9 +25,6 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 	if !ok {
 		version := tools.VersionFromHeight(network, height)
 
-		if actorName == manifest.PlaceholderKey {
-			return parser.MethodFallback, nil
-		}
 		if actorName == manifest.AccountKey {
 			if version.NodeVersion() == tools.V17.NodeVersion() {
 				return parser.MethodUniversalReceiverHook, nil
