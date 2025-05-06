@@ -77,7 +77,6 @@ func (a *Account) Methods(_ context.Context, network string, height int64) (map[
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-
 	return methods, nil
 }
 
