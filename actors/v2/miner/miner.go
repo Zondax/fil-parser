@@ -132,6 +132,11 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodMaxTerminationFee,
 			Method: m.MaxTerminationFeeExported,
 		},
+		// missing in go-state-types
+		nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetBeneficiary): {
+			Name:   parser.MethodGetBeneficiary,
+			Method: m.GetBeneficiary,
+		},
 	}
 }
 
@@ -166,6 +171,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	version := tools.VersionFromHeight(network, height)
 	methods, ok := methods[version.String()]
+	fmt.Println(methods)
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
