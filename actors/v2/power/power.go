@@ -133,7 +133,22 @@ func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
+	metadata, err := parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			returnValue, ok := currentTotalPowerReturn[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parse(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, err
 }
 
 func (*Power) SubmitPoRepForBulkVerify(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {

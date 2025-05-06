@@ -37,11 +37,12 @@ var (
 	V9  version = version{calibration: 0, mainnet: 265200, nodeVersion: 9}
 	V10 version = version{calibration: 0, mainnet: 550321, nodeVersion: 10}
 	V11 version = version{calibration: 0, mainnet: 665280, nodeVersion: 11}
-	V12 version = version{calibration: 193789, mainnet: 712320, nodeVersion: 12}
-	V13 version = version{calibration: 0, mainnet: 892800, nodeVersion: 13} // calibration reset
-	V14 version = version{calibration: 312746, mainnet: 1231620, nodeVersion: 14}
-	V15 version = version{calibration: 682006, mainnet: 1594680, nodeVersion: 15}
-	V16 version = version{calibration: 1044660, mainnet: 1960320, nodeVersion: 16}
+	// parsing all calibration heights from 0->16800 with V16
+	V12 version = version{calibration: 0, mainnet: 712320, nodeVersion: 12}      // actual: 193789
+	V13 version = version{calibration: 0, mainnet: 892800, nodeVersion: 13}      // calibration reset
+	V14 version = version{calibration: 0, mainnet: 1231620, nodeVersion: 14}     // actual: 312746
+	V15 version = version{calibration: 0, mainnet: 1594680, nodeVersion: 15}     // actual: 682006
+	V16 version = version{calibration: 0, mainnet: 1960320, nodeVersion: 16}     // actual: 1044660
 	V17 version = version{calibration: 16800, mainnet: 2383680, nodeVersion: 17} // calibration reset
 	V18 version = version{calibration: 322354, mainnet: 2683348, nodeVersion: 18}
 	V19 version = version{calibration: 489094, mainnet: 2809800, nodeVersion: 19}
@@ -128,18 +129,16 @@ func checkCalibrationEdgeCases(network string, height int64, iter *VersionIterat
 	if height >= LatestCalibrationVersion.calibration {
 		return v.nodeVersion == LatestCalibrationVersion.nodeVersion
 	}
-	if v.nodeVersion < V19.nodeVersion {
-		if v.nodeVersion != V18.nodeVersion {
-			// on calibration, all versions before V18 are not used because of a calibration reset
-			return false
-		}
+	if v.nodeVersion < V16.nodeVersion {
+		// on calibration, all versions before V16 are not used because of a calibration reset
+		return false
 	}
 
-	if height < V19.calibration {
-		// parse all calibration heights before V19 with the V18 network version parsers because there was a calibration reset somewhere between V16 and V17.
-		// and through testing we have determined there was a reset in V18
-		return v.nodeVersion == V18.nodeVersion
-	}
+	// if height < V19.calibration {
+	// parse all calibration heights before V19 with the V18 network version parsers because there was a calibration reset somewhere between V16 and V17.
+	// and through testing we have determined there was a reset in V18
+	// return v.nodeVersion == V18.nodeVersion
+	// }
 
 	next, ok := iter.PeekNext()
 	// edge case: check if two new versions have the same calibration height
@@ -182,6 +181,10 @@ func (v version) Height() int64 {
 		return v.calibration
 	}
 	return v.mainnet
+}
+
+func (v version) NodeVersion() int64 {
+	return v.nodeVersion
 }
 
 // GetSupportedVersions returns all supported versions for a given network
