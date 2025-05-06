@@ -25,6 +25,7 @@ import (
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/market/types"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -201,8 +202,25 @@ func (*Market) ActivateDealsExported(network string, height int64, rawParams, ra
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
 
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, paramsOk := activateDealsParams[v.String()]
+			returnValue, returnOk := activateDealsReturn[v.String()]
+			if !paramsOk || !returnOk {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+			if err != nil {
+				continue
+			}
+			break
+		}
+		return metadata, err
+	}
+	return metadata, nil
 }
 
 func (*Market) OnMinerSectorsTerminateExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -391,11 +409,20 @@ func (*Market) SectorContentChanged(network string, height int64, rawParams, raw
 	}
 
 	metadata[parser.ParamsKey] = params
-	r, err := parseCBORArray(network, height, rawReturn, sectorContentChangedReturn)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing CBOR array: %w", err)
+
+	if len(rawReturn) > 0 {
+		r := types.SectorReturn{}
+		err = r.UnmarshalCBOR(bytes.NewReader(rawReturn))
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling sector return: %w", err)
+		}
+
+		// r, err := parseCBORArray(network, height, rawReturn, sectorContentChangedReturn)
+		// if err != nil {
+		// 	return nil, fmt.Errorf("error parsing CBOR array: %w", err)
+		// }
+		metadata[parser.ReturnKey] = r
 	}
-	metadata[parser.ReturnKey] = r
 
 	return metadata, nil
 
@@ -412,7 +439,7 @@ func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshal
 
 func sectorContentChangedReturn(network string, height int64) (cbg.CBORUnmarshaler, error) {
 	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := pieceChange[version.String()]
+	returnValue, ok := sectorReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
