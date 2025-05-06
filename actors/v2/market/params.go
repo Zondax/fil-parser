@@ -643,13 +643,6 @@ var sectorChanges = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(miner16.SectorChanges) },
 }
 
-var sectorReturn = map[string]func() cbg.CBORUnmarshaler{
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(types.SectorReturn) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.SectorReturn) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.SectorReturn) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.SectorReturn) },
-}
-
 var getDealSectorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.GetDealSectorParams) },
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.GetDealSectorParams) },

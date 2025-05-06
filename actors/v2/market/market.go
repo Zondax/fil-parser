@@ -417,10 +417,6 @@ func (*Market) SectorContentChanged(network string, height int64, rawParams, raw
 			return nil, fmt.Errorf("error unmarshalling sector return: %w", err)
 		}
 
-		// r, err := parseCBORArray(network, height, rawReturn, sectorContentChangedReturn)
-		// if err != nil {
-		// 	return nil, fmt.Errorf("error parsing CBOR array: %w", err)
-		// }
 		metadata[parser.ReturnKey] = r
 	}
 
@@ -435,15 +431,6 @@ func sectorContentChangedParams(network string, height int64) (cbg.CBORUnmarshal
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 	return params(), nil
-}
-
-func sectorContentChangedReturn(network string, height int64) (cbg.CBORUnmarshaler, error) {
-	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := sectorReturn[version.String()]
-	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	}
-	return returnValue(), nil
 }
 
 func (*Market) GetDealSectorExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
