@@ -88,10 +88,13 @@ var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
 }
 
 func GetMinerFromAwardBlockRewardParams(params any) string {
+	if params == nil {
+		return ""
+	}
 	switch p := params.(type) {
 	case *legacyv1.AwardBlockRewardParams:
 		return p.Miner.String()
-	// Duplicate cases
+	// Duplicate cases , they will cause a compile time error.
 	// case *legacyv2.AwardBlockRewardParams:
 	// 	return p.Miner.String()
 	// case *legacyv3.AwardBlockRewardParams:
