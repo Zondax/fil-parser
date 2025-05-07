@@ -298,8 +298,8 @@ func (m *ZCache) StoreAddressInfo(info types.AddressInfo) {
 	}
 }
 
-func (m *ZCache) storeActorCode(shortAddress string, cid string) {
-	if shortAddress == "" || cid == "" {
+func (m *ZCache) storeActorCode(shortAddress string, cidStr string) {
+	if shortAddress == "" || cidStr == "" || cidStr == cid.Undef.String() {
 		m.logger.Debugf("[ActorsCache] - Trying to store empty cid or short address")
 		return
 	}
@@ -307,7 +307,7 @@ func (m *ZCache) storeActorCode(shortAddress string, cid string) {
 	// Possible ZCache types can be Local or Combined. Both types set the TTL at instantiation time
 	// The ttl here is pointless
 	ctx := context.Background()
-	_ = m.shortCidMap.Set(ctx, shortAddress, cid, m.ttl)
+	_ = m.shortCidMap.Set(ctx, shortAddress, cidStr, m.ttl)
 }
 
 func (m *ZCache) tryToGetF4Address(ctx context.Context, address address.Address) string {
