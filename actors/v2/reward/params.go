@@ -86,3 +86,45 @@ var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(rewardv15.ThisEpochRewardReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
 }
+
+func GetMinerFromAwardBlockRewardParams(params any) string {
+	if params == nil {
+		return ""
+	}
+	switch p := params.(type) {
+	case *legacyv1.AwardBlockRewardParams:
+		return p.Miner.String()
+	// Duplicate cases , they will cause a compile time error.
+	// case *legacyv2.AwardBlockRewardParams:
+	// 	return p.Miner.String()
+	// case *legacyv3.AwardBlockRewardParams:
+	// 	return p.Miner.String()
+	// case *legacyv4.AwardBlockRewardParams:
+	// 	return p.Miner.String()
+	// case *legacyv5.AwardBlockRewardParams:
+	// 	return p.Miner.String()
+	// case *legacyv6.AwardBlockRewardParams:
+	// 	return p.Miner.String()
+	// case *legacyv7.AwardBlockRewardParams:
+	// 	return p.Miner.String()
+	case *rewardv8.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv9.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv10.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv11.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv12.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv13.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv14.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv15.AwardBlockRewardParams:
+		return p.Miner.String()
+	case *rewardv16.AwardBlockRewardParams:
+		return p.Miner.String()
+	}
+	return ""
+}

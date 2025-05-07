@@ -2,16 +2,19 @@ package v2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-
 	"github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/actors/v2/reward"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
 )
 
@@ -78,4 +81,53 @@ func ActorMethods(ctx context.Context, actorName string, height int64, network s
 	}
 
 	return actorMethods, nil
+}
+
+func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet, logger *logger.Logger) (string, error) {
+	// Default value
+	blockCid := ""
+
+	// Process the special cases first were this kind of txs are not explicitly included in a block
+	switch txType {
+	case parser.MethodAwardBlockReward:
+		if txMetadata == nil {
+			return blockCid, fmt.Errorf("received tx of type '%s' with nil metadata", txType)
+		}
+		// Get the miner that received the reward
+		params, ok := txMetadata["Params"]
+		if !ok {
+			logger.Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
+			return blockCid, nil
+		}
+		miner := reward.GetMinerFromAwardBlockRewardParams(params)
+		if miner == "" {
+			logger.Errorf("Could not parse parameters for tx '%s'", txType)
+			return blockCid, nil
+		}
+		// Get the block that this miner mined
+		c, err := tipset.GetBlockMinedByMiner(miner)
+		if err != nil {
+			return blockCid, err
+		}
+		return c, nil
+	case parser.MethodApplyRewards, parser.MethodUpdatePledgeTotal, parser.MethodCronTick,
+		parser.MethodEpochTick, parser.MethodThisEpochReward, parser.MethodConfirmSectorProofsValid,
+		parser.MethodActivateDeals, parser.MethodClaimAllocations, parser.MethodBurnExported,
+		parser.MethodEnrollCronEvent, parser.MethodOnDeferredCronEvent, parser.MethodUpdateNetworkKPI:
+		// These txs are not included in a block
+		return blockCid, nil
+	}
+
+	blockCids, ok := tipset.BlockMessages[msgCid]
+	if !ok {
+		return blockCid, errors.New("could not find block hash for message cid")
+	}
+
+	if len(blockCids) == 0 {
+		return blockCid, errors.New("could not find block hash for message cid. Slice is empty")
+	} else {
+		blockCid = blockCids[0].Cid
+	}
+
+	return blockCid, nil
 }

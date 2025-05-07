@@ -132,7 +132,9 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 			}
 		}
 	}
-
+	if addressInfo != nil {
+		i.helper.GetActorsCache().StoreAddressInfoAddress(*addressInfo)
+	}
 	return metadata, addressInfo, err
 }
 
@@ -157,6 +159,8 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 			}
 		}
 	}
-
+	if addressInfo != nil {
+		i.helper.GetActorsCache().StoreAddressInfoAddress(*addressInfo)
+	}
 	return metadata, addressInfo, err
 }
