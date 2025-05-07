@@ -132,6 +132,11 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodMaxTerminationFee,
 			Method: m.MaxTerminationFeeExported,
 		},
+		// missing in go-state-types
+		nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetBeneficiary): {
+			Name:   parser.MethodGetBeneficiary,
+			Method: m.GetBeneficiary,
+		},
 	}
 }
 

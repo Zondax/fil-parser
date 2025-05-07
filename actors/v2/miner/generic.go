@@ -131,11 +131,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 
 	case tools.V18.IsSupported(network, height):
 		tmp := &miner10.GetBeneficiaryReturn{}
@@ -148,11 +150,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
 		tmp := &miner11.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -164,11 +168,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	case tools.V21.IsSupported(network, height):
 		tmp := &miner12.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -180,11 +186,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	case tools.V22.IsSupported(network, height):
 		tmp := &miner13.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -196,11 +204,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	case tools.V23.IsSupported(network, height):
 		tmp := &miner14.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -212,11 +222,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	case tools.V24.IsSupported(network, height):
 		tmp := &miner15.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -228,11 +240,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	case tools.V25.IsSupported(network, height):
 		tmp := &miner16.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
@@ -244,11 +258,13 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		usedQuota = tmp.Active.Term.UsedQuota.String()
 		expiration = int64(tmp.Active.Term.Expiration)
 
-		newBeneficiary = tmp.Proposed.NewBeneficiary.String()
-		newQuota = tmp.Proposed.NewQuota.String()
-		newExpiration = int64(tmp.Proposed.NewExpiration)
-		approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
-		approvedByNominee = tmp.Proposed.ApprovedByNominee
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
 	default:
 		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

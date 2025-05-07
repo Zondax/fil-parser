@@ -68,5 +68,6 @@ func (a *Account) TransactionTypes() map[string]any {
 		parser.MethodAuthenticateMessage:   a.AuthenticateMessage,
 		parser.MethodUniversalReceiverHook: a.UniversalReceiverHook,
 		parser.MethodReceive:               a.UniversalReceiverHook,
+		parser.MethodFallback:              a.Fallback,
 	}
 }

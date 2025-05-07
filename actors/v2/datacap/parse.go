@@ -45,16 +45,36 @@ func (*Datacap) StartNetworkHeight() int64 {
 	return tools.V17.Height()
 }
 
+func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		abi.MethodNum(1):  datacapv9.Methods[abi.MethodNum(1)],
+		abi.MethodNum(2):  datacapv9.Methods[abi.MethodNum(2)],
+		abi.MethodNum(3):  datacapv9.Methods[abi.MethodNum(3)],
+		abi.MethodNum(10): datacapv9.Methods[abi.MethodNum(10)],
+		abi.MethodNum(11): datacapv9.Methods[abi.MethodNum(11)],
+		abi.MethodNum(12): datacapv9.Methods[abi.MethodNum(12)],
+		abi.MethodNum(13): datacapv9.Methods[abi.MethodNum(13)],
+		abi.MethodNum(14): datacapv9.Methods[abi.MethodNum(14)],
+		abi.MethodNum(15): datacapv9.Methods[abi.MethodNum(15)],
+		abi.MethodNum(16): datacapv9.Methods[abi.MethodNum(16)],
+		abi.MethodNum(17): datacapv9.Methods[abi.MethodNum(17)],
+		abi.MethodNum(18): datacapv9.Methods[abi.MethodNum(18)],
+		abi.MethodNum(19): datacapv9.Methods[abi.MethodNum(19)],
+		abi.MethodNum(20): datacapv9.Methods[abi.MethodNum(20)],
+		abi.MethodNum(21): datacapv9.Methods[abi.MethodNum(21)],
+	}
+}
+
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V17.String(): actors.CopyMethods(datacapv9.Methods),
-	tools.V18.String(): actors.CopyMethods(datacapv10.Methods),
-	tools.V19.String(): actors.CopyMethods(datacapv11.Methods),
-	tools.V20.String(): actors.CopyMethods(datacapv11.Methods),
-	tools.V21.String(): actors.CopyMethods(datacapv12.Methods),
-	tools.V22.String(): actors.CopyMethods(datacapv13.Methods),
-	tools.V23.String(): actors.CopyMethods(datacapv14.Methods),
-	tools.V24.String(): actors.CopyMethods(datacapv15.Methods),
-	tools.V25.String(): actors.CopyMethods(datacapv16.Methods),
+	tools.V17.String(): actors.CopyMethods(datacapv9.Methods, legacyMethods()),
+	tools.V18.String(): actors.CopyMethods(datacapv10.Methods, legacyMethods()),
+	tools.V19.String(): actors.CopyMethods(datacapv11.Methods, legacyMethods()),
+	tools.V20.String(): actors.CopyMethods(datacapv11.Methods, legacyMethods()),
+	tools.V21.String(): actors.CopyMethods(datacapv12.Methods, legacyMethods()),
+	tools.V22.String(): actors.CopyMethods(datacapv13.Methods, legacyMethods()),
+	tools.V23.String(): actors.CopyMethods(datacapv14.Methods, legacyMethods()),
+	tools.V24.String(): actors.CopyMethods(datacapv15.Methods, legacyMethods()),
+	tools.V25.String(): actors.CopyMethods(datacapv16.Methods, legacyMethods()),
 }
 
 func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
