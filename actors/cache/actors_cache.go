@@ -124,7 +124,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 		return add.String(), nil
 	}
 
-	if a.networkName == tools.CalibrationNetwork || a.networkName == tools.CalibrationNetworkNodeType {
+	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
 		if _, ok := CalibrationActorsId[add.String()]; ok {
 			return add.String(), nil
 		}

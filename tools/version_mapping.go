@@ -70,7 +70,7 @@ func LatestVersion(network string) version {
 }
 
 func ParseRawNetworkName(network string) string {
-	if network == "calibrationnet" || network == CalibrationNetwork {
+	if network == CalibrationNetworkNodeType || network == CalibrationNetwork {
 		return CalibrationNetwork
 	}
 	return MainnetNetwork
