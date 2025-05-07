@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	actormetrics "github.com/zondax/fil-parser/actors/metrics"
-	"github.com/zondax/fil-parser/metrics"
-	"github.com/zondax/golem/pkg/logger"
 	"net/http"
 	"strings"
 	"time"
+
+	actormetrics "github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -33,6 +35,14 @@ var SystemActorsId = map[string]bool{
 	"f07":  true,
 	"f010": true,
 	"f099": true,
+}
+
+// CalibrationActorsId Map to identify system actors which don't have an associated robust address in the calibration network
+// These are storage miners that initiated the calibration network
+var CalibrationActorsId = map[string]bool{
+	"f01000": true,
+	"f01001": true,
+	"f01002": true,
 }
 
 func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient) (*ActorsCache, error) {
@@ -63,6 +73,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 		logger:        logger,
 		httpClient:    resty.New().SetTimeout(30 * time.Second),
 		metrics:       actormetrics.NewClient(metrics, "actorsCache"),
+		networkName:   dataSource.Config.NetworkName,
 	}, nil
 }
 
@@ -111,6 +122,12 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	if _, ok := SystemActorsId[add.String()]; ok {
 		return add.String(), nil
+	}
+
+	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
+		if _, ok := CalibrationActorsId[add.String()]; ok {
+			return add.String(), nil
+		}
 	}
 
 	// Try offline store cache
