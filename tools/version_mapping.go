@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	CalibrationNetwork = "calibration"
-	MainnetNetwork     = "mainnet"
+	CalibrationNetworkNodeType = "calibrationnet"
+	CalibrationNetwork         = "calibration"
+	MainnetNetwork             = "mainnet"
 )
 
 type version struct {
