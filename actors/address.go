@@ -26,7 +26,7 @@ func ConsolidateRobustAddress(addr address.Address, actorCache *cache.ActorsCach
 
 	robustAddress, err := actorCache.GetRobustAddress(addr)
 	if err != nil && !bestEffort {
-		logger.Warnf("Error converting address %s to robust format: %v", address, err)
+		logger.Warnf("Error converting address %s to robust format: %v", addr, err)
 		return "", fmt.Errorf("error converting address to robust format: %v", err) // Fallback
 	}
 
