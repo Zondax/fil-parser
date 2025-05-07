@@ -34,6 +34,7 @@ type ActorsCache struct {
 	logger        *logger.Logger
 	httpClient    *resty.Client
 	metrics       *metrics.ActorsMetricsClient
+	networkName   string
 }
 
 // FourBytesSignatureResult represents the response from SignatureDBURL
