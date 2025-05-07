@@ -45,7 +45,6 @@ func parseExec[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](msg *parser
 		}
 		createdActor = setReturnParams(msg, codeCid.String(), r)
 		metadata[parser.ReturnKey] = createdActor
-		h.GetActorsCache().StoreAddressInfoAddress(*createdActor)
 	}
 
 	return metadata, createdActor, nil

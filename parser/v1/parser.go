@@ -103,7 +103,6 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		return nil, errors.New("could not decode")
 	}
 
-	appTools := tools.Tools{Logger: p.logger}
 	var transactions []*types.Transaction
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
@@ -124,7 +123,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 				p.logger.Errorf("Error when trying to get tx type: %v", err)
 				continue
 			}
-			blockCid, err := appTools.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset)
+			blockCid, err := actorsV2.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset, p.logger)
 			if err != nil {
 				_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
 				p.logger.Errorf("Error when trying to get block cid from message,txType '%s': cid '%s': %v", txType, trace.MsgCid.String(), err)
@@ -321,8 +320,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 
 	p.appendAddressInfo(trace.Msg, tipset.Key())
 
-	appTools := tools.Tools{Logger: p.logger}
-	blockCid, err := appTools.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset)
+	blockCid, err := actorsV2.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset, p.logger)
 	if err != nil {
 		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
 		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
@@ -356,8 +354,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 
 func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	appTools := tools.Tools{Logger: p.logger}
-	blockCid, err := appTools.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset)
+	blockCid, err := actorsV2.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset, p.logger)
 	if err != nil {
 		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
 	}
