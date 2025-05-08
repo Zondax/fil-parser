@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -318,7 +319,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
-	p.appendAddressInfo(trace.Msg, tipset.Key())
+	p.appendAddressInfo(trace.Msg, tipset.Key(), tipset.Height())
 
 	blockCid, err := actorsV2.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset, p.logger)
 	if err != nil {
@@ -466,12 +467,12 @@ func hasExecutionTrace(trace *typesV1.InvocResultV1) bool {
 	return true
 }
 
-func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey) {
+func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey, height abi.ChainEpoch) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+	fromAdd := p.helper.GetActorAddressInfo(msg.From, key, height)
+	toAdd := p.helper.GetActorAddressInfo(msg.To, key, height)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
 }
 

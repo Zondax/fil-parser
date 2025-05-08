@@ -126,7 +126,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 	if addressInfo != nil {
 		c, err := cid.Parse(addressInfo.ActorCid)
 		if err == nil {
-			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
+			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
 			if err == nil {
 				addressInfo.ActorType = parseExecActor(createdActorName)
 			}
@@ -153,7 +153,7 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 	if addressInfo != nil {
 		c, err := cid.Parse(addressInfo.ActorCid)
 		if err == nil {
-			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
+			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
 			if err == nil {
 				addressInfo.ActorType = parseExecActor(createdActorName)
 			}

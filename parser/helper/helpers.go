@@ -37,6 +37,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/tools"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 
@@ -76,6 +77,7 @@ type Helper struct {
 	actorCache *cache.ActorsCache
 	logger     *logger.Logger
 	metrics    *parsermetrics.ParserMetricsClient
+	network    string
 }
 
 func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
@@ -100,7 +102,7 @@ func (h *Helper) GetFilecoinNodeClient() api.FullNode {
 	return h.node
 }
 
-func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey) *types.AddressInfo {
+func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey, height abi.ChainEpoch) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
 
@@ -108,6 +110,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
+	version := tools.VersionFromHeight(h.network, int64(height))
 	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 	if err != nil {
 		h.logger.Errorf("could not get actor code from address. Err: %s", err)
@@ -116,7 +119,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		if err != nil {
 			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		}
-		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
+		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
@@ -156,7 +159,8 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 			return actors.UnknownStr, err
 		}
 
-		actorName, err := h.lib.BuiltinActors.GetActorNameFromCid(c)
+		version := tools.VersionFromHeight(h.network, height)
+		actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
 		if err != nil {
 			return actors.UnknownStr, err
 		}
