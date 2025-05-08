@@ -94,6 +94,8 @@ func GetMinerFromAwardBlockRewardParams(params any) string {
 	switch p := params.(type) {
 	case *legacyv1.AwardBlockRewardParams:
 		return p.Miner.String()
+	case legacyv1.AwardBlockRewardParams:
+		return p.Miner.String()
 	// Duplicate cases , they will cause a compile time error.
 	// case *legacyv2.AwardBlockRewardParams:
 	// 	return p.Miner.String()
@@ -109,21 +111,47 @@ func GetMinerFromAwardBlockRewardParams(params any) string {
 	// 	return p.Miner.String()
 	case *rewardv8.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv8.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv9.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv9.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv10.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv10.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv11.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv11.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv12.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv12.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv13.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv13.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv14.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv14.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv15.AwardBlockRewardParams:
 		return p.Miner.String()
+	case rewardv15.AwardBlockRewardParams:
+		return p.Miner.String()
+
 	case *rewardv16.AwardBlockRewardParams:
+		return p.Miner.String()
+	case rewardv16.AwardBlockRewardParams:
 		return p.Miner.String()
 	}
 	return ""
