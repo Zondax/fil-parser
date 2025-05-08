@@ -20,7 +20,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	github.com/zondax/golem v0.21.1
-	github.com/zondax/rosetta-filecoin-lib v1.3202.0
+	github.com/zondax/rosetta-filecoin-lib v1.3202.1-rc1
 	gotest.tools v2.2.0+incompatible
 )
 
