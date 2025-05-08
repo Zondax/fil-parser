@@ -276,7 +276,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
 		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
-		p.logger.Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
+		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height())
 	}
 
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
