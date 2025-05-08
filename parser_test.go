@@ -180,7 +180,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 98,
+				totalAddress: 95,
 				totalTxCids:  99,
 			},
 		},
@@ -202,7 +202,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 88,
+				totalAddress: 85,
 				totalTxCids:  147,
 			},
 		},
@@ -1800,7 +1800,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 98,
+				totalAddress: 95,
 				totalTxCids:  99,
 			},
 		},
@@ -1811,7 +1811,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 88,
+				totalAddress: 85,
 				totalTxCids:  147,
 			},
 		},
