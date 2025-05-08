@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
-	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
@@ -73,10 +74,14 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
+	if helper == nil {
+		return nil, errors.New("helper is nil")
+	}
 
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Error(err.Error())
+		return nil, err
 	}
 
 	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
@@ -112,10 +117,13 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-
+	if helper == nil {
+		return nil, errors.New("helper is nil")
+	}
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Error(err.Error())
+		return nil, err
 	}
 	networkName := tools.ParseRawNetworkName(string(network))
 

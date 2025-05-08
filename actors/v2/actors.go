@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/zondax/fil-parser/actors/v2/internal"
 
@@ -75,7 +76,7 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 }
 
 func (p *ActorParser) GetActor(actor string) (Actor, error) {
-	if actor == manifest.MultisigKey {
+	if strings.Contains(actor, manifest.MultisigKey) {
 		return multisig.New(p.helper, p.logger, p.metrics), nil
 	}
 

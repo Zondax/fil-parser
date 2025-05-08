@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/ipfs/go-cid"
 	// The following import is necessary to ensure that the init() function
@@ -81,13 +82,20 @@ type Helper struct {
 }
 
 func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
-	return &Helper{
+	h := &Helper{
 		lib:        lib,
 		actorCache: actorsCache,
 		node:       node,
 		logger:     logger2.GetSafeLogger(logger),
 		metrics:    parsermetrics.NewClient(metrics, "helper"),
 	}
+	network, err := h.node.StateNetworkName(context.Background())
+	if err != nil {
+		h.logger.Errorf("could not get network name: %v", err)
+		return nil
+	}
+	h.network = tools.ParseRawNetworkName(string(network))
+	return h
 }
 
 func (h *Helper) GetActorsCache() *cache.ActorsCache {
