@@ -18,7 +18,7 @@ type version struct {
 	calibration int64
 	mainnet     int64
 
-	nodeVersion    int64
+	nodeVersion    uint
 	currentNetwork string
 }
 
@@ -186,7 +186,7 @@ func (v version) Height() int64 {
 	return v.mainnet
 }
 
-func (v version) NodeVersion() int64 {
+func (v version) NodeVersion() uint {
 	return v.nodeVersion
 }
 
