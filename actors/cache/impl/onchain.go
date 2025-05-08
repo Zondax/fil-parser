@@ -3,6 +3,8 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
@@ -118,8 +120,16 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	}
 
 	if err != nil {
-		m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus: %s", err.Error())
-		return "", common.ErrKeyNotFound
+		if strings.Contains(err.Error(), "actor code is not account") {
+			key, err = m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
+			if err != nil {
+				m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus(StateLookupRobustAddress): %s", err.Error())
+				return "", common.ErrKeyNotFound
+			}
+		} else {
+			m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus: %s", err.Error())
+			return "", common.ErrKeyNotFound
+		}
 	}
 
 	// Must check here because if lotus cannot find the pair, it will return the same address as result
