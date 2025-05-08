@@ -351,7 +351,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		}
 
 		// check if the address is a multisig address
-		if !strings.EqualFold(actorName, manifest.MultisigKey) {
+		if !strings.Contains(actorName, manifest.MultisigKey) {
 			continue
 		}
 

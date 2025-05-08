@@ -101,7 +101,7 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 		}
 		miner := reward.GetMinerFromAwardBlockRewardParams(params)
 		if miner == "" {
-			logger.Errorf("Could not parse parameters for tx '%s'", txType)
+			logger.Errorf("Could not parse parameters for tx '%s', param type: %T", txType, params)
 			return blockCid, nil
 		}
 		// Get the block that this miner mined
