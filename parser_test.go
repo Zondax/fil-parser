@@ -262,7 +262,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV1())
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -317,7 +317,7 @@ func TestParser_GetBaseFee(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV1())
 			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
@@ -357,7 +357,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV2())
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -499,7 +499,7 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV1())
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -608,7 +608,7 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 			nativeLogs, err := readNativeLogs(tt.height)
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV1())
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -662,7 +662,7 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 		BlockMessages: nil,
 	}
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger, WithActorParserV1())
 	require.NoError(t, err)
 
 	eventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "market_deals_event")
@@ -1117,7 +1117,7 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger, WithActorParserV1())
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1278,7 +1278,7 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
+	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger, WithActorParserV1())
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1694,7 +1694,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV1())
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1744,7 +1744,7 @@ func TestParseGenesis(t *testing.T) {
 	}
 
 	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger, WithActorParserV1())
 	assert.NoError(t, err)
 	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
 
@@ -1767,7 +1767,7 @@ func TestParseGenesisMultisig(t *testing.T) {
 	require.NoError(t, err)
 
 	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger)
+	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger, WithActorParserV1())
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -1873,9 +1873,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
+			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV1())
 			require.NoError(t, err)
-			pv2, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
+			pv2, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger, WithActorParserV2())
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
