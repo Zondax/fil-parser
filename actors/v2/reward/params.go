@@ -1,6 +1,8 @@
 package reward
 
 import (
+	"reflect"
+
 	rewardv10 "github.com/filecoin-project/go-state-types/builtin/v10/reward"
 	rewardv11 "github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	rewardv12 "github.com/filecoin-project/go-state-types/builtin/v12/reward"
@@ -91,65 +93,53 @@ func GetMinerFromAwardBlockRewardParams(params any) string {
 	if params == nil {
 		return ""
 	}
-	switch p := params.(type) {
-	case *legacyv1.AwardBlockRewardParams:
-		return p.Miner.String()
+
+	var reward any
+
+	t := reflect.TypeOf(params)
+	switch t.Kind() {
+	case reflect.Ptr:
+		val := reflect.ValueOf(params).Elem()
+		if val.IsValid() && val.CanInterface() {
+			reward = val.Interface()
+		}
+	case reflect.Struct:
+		reward = params
+	}
+
+	switch p := reward.(type) {
 	case legacyv1.AwardBlockRewardParams:
 		return p.Miner.String()
 	// Duplicate cases , they will cause a compile time error.
-	// case *legacyv2.AwardBlockRewardParams:
+	// case legacyv2.AwardBlockRewardParams:
 	// 	return p.Miner.String()
-	// case *legacyv3.AwardBlockRewardParams:
+	// case legacyv3.AwardBlockRewardParams:
 	// 	return p.Miner.String()
-	// case *legacyv4.AwardBlockRewardParams:
+	// case legacyv4.AwardBlockRewardParams:
 	// 	return p.Miner.String()
-	// case *legacyv5.AwardBlockRewardParams:
+	// case legacyv5.AwardBlockRewardParams:
 	// 	return p.Miner.String()
-	// case *legacyv6.AwardBlockRewardParams:
+	// case legacyv6.AwardBlockRewardParams:
 	// 	return p.Miner.String()
-	// case *legacyv7.AwardBlockRewardParams:
+	// case legacyv7.AwardBlockRewardParams:
 	// 	return p.Miner.String()
-	case *rewardv8.AwardBlockRewardParams:
-		return p.Miner.String()
+	// case rewardv8.AwardBlockRewardParams:
+	// 	return p.Miner.String()
 	case rewardv8.AwardBlockRewardParams:
-		return p.Miner.String()
-
-	case *rewardv9.AwardBlockRewardParams:
 		return p.Miner.String()
 	case rewardv9.AwardBlockRewardParams:
 		return p.Miner.String()
-
-	case *rewardv10.AwardBlockRewardParams:
-		return p.Miner.String()
 	case rewardv10.AwardBlockRewardParams:
-		return p.Miner.String()
-
-	case *rewardv11.AwardBlockRewardParams:
 		return p.Miner.String()
 	case rewardv11.AwardBlockRewardParams:
 		return p.Miner.String()
-
-	case *rewardv12.AwardBlockRewardParams:
-		return p.Miner.String()
 	case rewardv12.AwardBlockRewardParams:
-		return p.Miner.String()
-
-	case *rewardv13.AwardBlockRewardParams:
 		return p.Miner.String()
 	case rewardv13.AwardBlockRewardParams:
 		return p.Miner.String()
-
-	case *rewardv14.AwardBlockRewardParams:
-		return p.Miner.String()
 	case rewardv14.AwardBlockRewardParams:
 		return p.Miner.String()
-
-	case *rewardv15.AwardBlockRewardParams:
-		return p.Miner.String()
 	case rewardv15.AwardBlockRewardParams:
-		return p.Miner.String()
-
-	case *rewardv16.AwardBlockRewardParams:
 		return p.Miner.String()
 	case rewardv16.AwardBlockRewardParams:
 		return p.Miner.String()
