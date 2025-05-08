@@ -1895,10 +1895,10 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 
 			require.Equal(t, len(parsedResultActorV1.Txs), len(parsedResultActorV2.Txs))
 
-			require.Equal(t, len(parsedResultActorV1.TxCids), len(parsedResultActorV2.TxCids))
-			require.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
-			require.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
-			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
+			assert.Equal(t, len(parsedResultActorV1.TxCids), len(parsedResultActorV2.TxCids))
+			assert.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
+			assert.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
+			assert.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
 
 			require.Equalf(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len(), "v1 %d , v2 %d", parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
 			// compare tx metadata
