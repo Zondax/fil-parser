@@ -180,7 +180,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 95,
+				totalAddress: 98,
 				totalTxCids:  99,
 			},
 		},
@@ -1800,7 +1800,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 95,
+				totalAddress: 98,
 				totalTxCids:  99,
 			},
 		},
@@ -1900,8 +1900,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			require.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
 			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
 
-			// actorV2 fixed more addresses
-			require.NotEqualf(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len(), "v1 %d , v2 %d", parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
+			require.Equalf(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len(), "v1 %d , v2 %d", parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
 			// compare tx metadata
 			failedTxType := map[string]string{}
 			for i, tx := range parsedResultActorV1.Txs {
