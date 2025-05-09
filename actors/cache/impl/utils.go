@@ -16,15 +16,14 @@ const (
 )
 
 func stateLookupWithRetry(maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (address.Address, error)) (address.Address, error) {
-	var address address.Address
-	var err error
-
 	// try without backoff
-	address, err = request()
+	address, err := request()
 	if err != nil {
 		if !strings.Contains(err.Error(), "RPC client error") {
 			return address, err
 		}
+	} else {
+		return address, nil
 	}
 
 	b := backoff.New().
