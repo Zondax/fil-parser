@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
@@ -39,6 +40,8 @@ import (
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/golem/pkg/logger"
+	"github.com/zondax/golem/pkg/metrics"
+	"github.com/zondax/golem/pkg/zcache"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 
 	"github.com/zondax/fil-parser/types"
@@ -65,21 +68,21 @@ var calibNextNodeParserV2 *FilecoinParser
 func TestMain(m *testing.M) {
 	var err error
 	lib := getLib(nodeUrl)
-	nodeUrlParserV1, err = NewFilecoinParser(lib, getCacheDataSource(nodeUrl), gLogger)
+	nodeUrlParserV1, err = NewFilecoinParser(lib, getCacheDataSource("mainnet", nodeUrl), gLogger)
 	if err != nil {
 		panic(err)
 	}
-	nodeUrlParserV2, err = NewFilecoinParserWithActorV2(lib, getCacheDataSource(nodeUrl), gLogger)
+	nodeUrlParserV2, err = NewFilecoinParserWithActorV2(lib, getCacheDataSource("mainnet", nodeUrl), gLogger)
 	if err != nil {
 		panic(err)
 	}
 
 	lib = getLib(calibNextNodeUrl)
-	calibNextNodeParserV1, err = NewFilecoinParser(lib, getCacheDataSource(calibNextNodeUrl), gLogger)
+	calibNextNodeParserV1, err = NewFilecoinParser(lib, getCacheDataSource("calibration", calibNextNodeUrl), gLogger)
 	if err != nil {
 		panic(err)
 	}
-	calibNextNodeParserV2, err = NewFilecoinParserWithActorV2(lib, getCacheDataSource(calibNextNodeUrl), gLogger)
+	calibNextNodeParserV2, err = NewFilecoinParserWithActorV2(lib, getCacheDataSource("calibration", calibNextNodeUrl), gLogger)
 	if err != nil {
 		panic(err)
 	}
@@ -185,9 +188,23 @@ func getLib(nodeURL string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
 	return lib
 }
 
-func getCacheDataSource(nodeURL string) common.DataSource {
+func getCacheDataSource(networkName string, nodeURL string) common.DataSource {
+	cacheTTL := 3600
+
 	return common.DataSource{
 		Node: getLotusClient(nodeURL),
+		Config: common.DataSourceConfig{
+			NetworkName: networkName,
+			Cache: &common.CacheConfig{
+				CombinedConfig: &zcache.CombinedConfig{
+					Local:              &zcache.LocalConfig{},
+					IsRemoteBestEffort: true,
+					GlobalPrefix:       "test",
+					GlobalMetricServer: metrics.NewNoopMetrics(),
+				},
+				Ttl: time.Duration(cacheTTL) * time.Second,
+			},
+		},
 	}
 }
 
@@ -235,7 +252,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 85,
+				totalAddress: 769,
 				totalTxCids:  147,
 			},
 		},
@@ -246,7 +263,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 70,
+				totalAddress: 733,
 				totalTxCids:  118,
 			},
 		},
@@ -257,7 +274,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 75,
+				totalAddress: 672,
 				totalTxCids:  97,
 			},
 		},
@@ -268,7 +285,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 102,
+				totalAddress: 789,
 				totalTxCids:  177,
 			},
 		},
@@ -1866,7 +1883,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 98,
+				totalAddress: 224,
 				totalTxCids:  99,
 			},
 		},
@@ -1877,7 +1894,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 85,
+				totalAddress: 765,
 				totalTxCids:  147,
 			},
 		},
@@ -1888,7 +1905,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 70,
+				totalAddress: 624,
 				totalTxCids:  118,
 			},
 		},
@@ -1899,7 +1916,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 75,
+				totalAddress: 606,
 				totalTxCids:  97,
 			},
 			shouldFail: true,
@@ -1911,7 +1928,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 102,
+				totalAddress: 789,
 				totalTxCids:  177,
 			},
 		},
