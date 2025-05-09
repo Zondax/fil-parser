@@ -17,4 +17,8 @@ lint:
 	golangci-lint run -E gofmt -E gosec -E goconst -E gocritic --timeout 5m
 
 test:
-	go test -timeout 120m  ./...
+	go test -timeout 120m  ./... 
+
+dev_env_start_as_daemon:
+	cd ci && docker-compose -f docker-compose.yml up -d --remove-orphans
+.PHONY: dev_env_start_as_daemon
