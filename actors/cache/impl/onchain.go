@@ -21,8 +21,10 @@ const OnChainImpl = "on-chain"
 
 // OnChain implementation
 type OnChain struct {
-	Node   api.FullNode
-	logger *logger.Logger
+	Node               api.FullNode
+	logger             *logger.Logger
+	maxRetries         int
+	maxWaitBeforeRetry time.Duration
 }
 
 func (m *OnChain) StoreAddressInfo(info types.AddressInfo) {
@@ -98,10 +100,14 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 }
 
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
-	actor, err := m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+	actor, err := stateLookupWithRetry(m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+		return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+	})
 	if err != nil {
 		// Try again but using the corresponding tipset Key
-		actor, err = m.Node.StateGetActor(context.Background(), add, key)
+		actor, err = stateLookupWithRetry(m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+			return m.Node.StateGetActor(context.Background(), add, key)
+		})
 		if err != nil {
 			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
 			return cid.Cid{}, err
@@ -112,24 +118,22 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 }
 
 func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool) (string, error) {
-	var maxAttempts = 3
-	var maxWaitBeforeRetry = 5 * time.Second
 	var key address.Address
 	var err error
 
 	if reverse {
-		key, err = stateLookupWithRetry(maxAttempts, maxWaitBeforeRetry, func() (address.Address, error) {
+		key, err = stateLookupWithRetry(m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
 			return m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
 		})
 	} else {
-		key, err = stateLookupWithRetry(maxAttempts, maxWaitBeforeRetry, func() (address.Address, error) {
+		key, err = stateLookupWithRetry(m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
 			return m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
 		})
 	}
 
 	if err != nil {
 		if strings.Contains(err.Error(), "actor code is not account") {
-			key, err = stateLookupWithRetry(maxAttempts, maxWaitBeforeRetry, func() (address.Address, error) {
+			key, err = stateLookupWithRetry(m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
 				return m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
 			})
 			if err != nil {

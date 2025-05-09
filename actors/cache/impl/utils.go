@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/filecoin-project/go-address"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
@@ -15,15 +16,15 @@ const (
 	SelectorHash2SigMapPrefix = "hash2Sig"
 )
 
-func stateLookupWithRetry(maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (address.Address, error)) (address.Address, error) {
+func stateLookupWithRetry[T address.Address | *filTypes.Actor](maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
 	// try without backoff
-	address, err := request()
+	result, err := request()
 	if err != nil {
 		if !strings.Contains(err.Error(), "RPC client error") {
-			return address, err
+			return result, err
 		}
 	} else {
-		return address, nil
+		return result, nil
 	}
 
 	b := backoff.New().
@@ -33,12 +34,12 @@ func stateLookupWithRetry(maxAttempts int, maxWaitBeforeRetry time.Duration, req
 		Linear()
 
 	err = backoff.Do(func() error {
-		address, err = request()
+		result, err = request()
 		if err != nil {
 			return err
 		}
 		return nil
 	}, b)
 
-	return address, err
+	return result, err
 }

@@ -57,9 +57,12 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:             false,
-			ConsolidateRobustAddress: false,
-			RobustAddressBestEffort:  false,
+			FeesAsColumn:                  false,
+			ConsolidateRobustAddress:      false,
+			RobustAddressBestEffort:       false,
+			NodeMaxRetries:                3,
+			NodeMaxWaitBeforeRetrySeconds: 1,
+			NodeRetryStrategy:             "linear",
 		},
 	}
 	for _, opt := range opts {
@@ -67,7 +70,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
@@ -100,9 +103,12 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:             false,
-			ConsolidateRobustAddress: false,
-			RobustAddressBestEffort:  false,
+			FeesAsColumn:                  false,
+			ConsolidateRobustAddress:      false,
+			RobustAddressBestEffort:       false,
+			NodeMaxRetries:                3,
+			NodeMaxWaitBeforeRetrySeconds: 1,
+			NodeRetryStrategy:             "linear",
 		},
 	}
 	for _, opt := range opts {
@@ -110,7 +116,7 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
