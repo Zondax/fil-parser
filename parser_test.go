@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/ipfs/go-cid"
@@ -253,6 +254,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			lib := getLib(t, tt.url)
 
 			tipset, err := readTipset(tt.height)
@@ -1863,6 +1865,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			lib := getLib(t, tt.url)
 
 			tipset, err := readTipset(tt.height)
@@ -1885,10 +1888,25 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResultActorV1, err := pv1.ParseTransactions(context.Background(), txsData)
-			require.NoError(t, err)
-			parsedResultActorV2, err := pv2.ParseTransactions(context.Background(), txsData)
-			require.NoError(t, err)
+			wg := sync.WaitGroup{}
+			wg.Add(2)
+			var parsedResultActorV1 *types.TxsParsedResult
+			var parsedResultActorV2 *types.TxsParsedResult
+			var err1 error
+			var err2 error
+			go func() {
+				defer wg.Done()
+				parsedResultActorV1, err1 = pv1.ParseTransactions(context.Background(), txsData)
+			}()
+			go func() {
+				defer wg.Done()
+				parsedResultActorV2, err2 = pv2.ParseTransactions(context.Background(), txsData)
+			}()
+
+			wg.Wait()
+
+			require.NoErrorf(t, err1, "error parsing v1: %s", err1)
+			require.NoErrorf(t, err2, "error parsing v2: %s", err2)
 
 			require.NotNil(t, parsedResultActorV1.Txs)
 			require.NotNil(t, parsedResultActorV2.Txs)
