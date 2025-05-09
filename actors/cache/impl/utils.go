@@ -16,12 +16,14 @@ const (
 	SelectorHash2SigMapPrefix = "hash2Sig"
 )
 
-func stateLookupWithRetry[T address.Address | *filTypes.Actor](maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
+func stateLookupWithRetry[T address.Address | *filTypes.Actor](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
 	// try without backoff
 	result, err := request()
 	if err != nil {
-		if !strings.Contains(err.Error(), "RPC client error") {
-			return result, err
+		for _, errString := range errStrings {
+			if strings.Contains(err.Error(), errString) {
+				return result, err
+			}
 		}
 	} else {
 		return result, nil
