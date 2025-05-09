@@ -101,12 +101,12 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	retryErrStrings := []string{"ipld: could not find", "RPC client error"}
-	actor, err := stateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+	actor, err := StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
 		return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
 	})
 	if err != nil {
 		// Try again but using the corresponding tipset Key
-		actor, err = stateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+		actor, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
 			return m.Node.StateGetActor(context.Background(), add, key)
 		})
 		if err != nil {
@@ -123,18 +123,18 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	var err error
 	retryErrStrings := []string{"RPC client error"}
 	if reverse {
-		key, err = stateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+		key, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
 			return m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
 		})
 	} else {
-		key, err = stateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+		key, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
 			return m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
 		})
 	}
 
 	if err != nil {
 		if strings.Contains(err.Error(), "actor code is not account") {
-			key, err = stateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+			key, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
 				return m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
 			})
 			if err != nil {

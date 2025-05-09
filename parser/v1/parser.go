@@ -192,6 +192,9 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		if err == nil && txHash != "" {
 			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 		}
+		if err != nil {
+			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+		}
 	}
 
 	transactions = tools.SetNodeMetadata(transactions, txsData.Metadata, Version)

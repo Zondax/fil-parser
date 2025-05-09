@@ -6,6 +6,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
@@ -16,7 +17,7 @@ const (
 	SelectorHash2SigMapPrefix = "hash2Sig"
 )
 
-func stateLookupWithRetry[T address.Address | *filTypes.Actor](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
+func StateLookupWithRetry[T address.Address | *filTypes.Actor | *ethtypes.EthHash](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
 	// try without backoff
 	result, err := request()
 	if err != nil {

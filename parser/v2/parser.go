@@ -161,6 +161,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 		if err != nil {
 			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
 		}
 	}
 
