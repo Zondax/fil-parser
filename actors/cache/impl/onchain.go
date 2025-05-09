@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -111,17 +112,26 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 }
 
 func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool) (string, error) {
+	var maxAttempts = 3
+	var maxWaitBeforeRetry = 5 * time.Second
 	var key address.Address
 	var err error
+
 	if reverse {
-		key, err = m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
+		key, err = stateLookupWithRetry(maxAttempts, maxWaitBeforeRetry, func() (address.Address, error) {
+			return m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
+		})
 	} else {
-		key, err = m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
+		key, err = stateLookupWithRetry(maxAttempts, maxWaitBeforeRetry, func() (address.Address, error) {
+			return m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
+		})
 	}
 
 	if err != nil {
 		if strings.Contains(err.Error(), "actor code is not account") {
-			key, err = m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
+			key, err = stateLookupWithRetry(maxAttempts, maxWaitBeforeRetry, func() (address.Address, error) {
+				return m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
+			})
 			if err != nil {
 				m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus(StateLookupRobustAddress): %s", err.Error())
 				return "", common.ErrKeyNotFound
