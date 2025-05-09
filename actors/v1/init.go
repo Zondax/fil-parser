@@ -3,8 +3,9 @@ package actors
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/zondax/fil-parser/parser"
 	"strings"
+
+	"github.com/zondax/fil-parser/parser"
 
 	"github.com/filecoin-project/go-address"
 	builtinInit "github.com/filecoin-project/go-state-types/builtin/v11/init"

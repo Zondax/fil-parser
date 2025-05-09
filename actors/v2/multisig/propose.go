@@ -110,7 +110,7 @@ func (m *Msig) innerProposeParams(
 func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 ) (actors.Actor, string, error) {
-	actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key)
+	_, actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		return nil, "", err
 	}

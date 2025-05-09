@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
 	"time"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors/cache/impl"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -93,7 +96,14 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 
 func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
 	ctx := context.Background()
-	ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+	ethHash, err := impl.StateLookupWithRetry([]string{"RPC client error"}, 3, 10*time.Second, func() (*ethtypes.EthHash, error) {
+		ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+		if err != nil || ethHash == nil {
+			return nil, err
+		}
+		return ethHash, nil
+	})
+
 	if err != nil || ethHash == nil {
 		return "", err
 	}

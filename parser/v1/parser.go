@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -191,6 +192,9 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		if err == nil && txHash != "" {
 			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 		}
+		if err != nil {
+			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+		}
 	}
 
 	transactions = tools.SetNodeMetadata(transactions, txsData.Metadata, Version)
@@ -275,7 +279,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
 		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
-		p.logger.Errorf("Could not get method name in transaction '%s'", trace.Msg.Cid().String())
+		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height())
 	}
 
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
@@ -318,7 +322,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
-	p.appendAddressInfo(trace.Msg, tipset.Key())
+	p.appendAddressInfo(trace.Msg, tipset.Key(), tipset.Height())
 
 	blockCid, err := actorsV2.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset, p.logger)
 	if err != nil {
@@ -466,12 +470,12 @@ func hasExecutionTrace(trace *typesV1.InvocResultV1) bool {
 	return true
 }
 
-func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey) {
+func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey, height abi.ChainEpoch) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+	fromAdd := p.helper.GetActorAddressInfo(msg.From, key, height)
+	toAdd := p.helper.GetActorAddressInfo(msg.To, key, height)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
 }
 
@@ -487,7 +491,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, 
 	}
 
 	if txType == "" {
-		actorName, err := p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+		_, actorName, err := p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
 		if err != nil {
 			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}

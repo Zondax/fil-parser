@@ -1,9 +1,13 @@
 package fil_parser
 
 import (
+	"time"
+
+	"github.com/cenkalti/backoff/v4"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/golem/pkg/metrics"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 // FilecoinParserOptions contains configuration options for the Filecoin parser.
@@ -11,6 +15,7 @@ type FilecoinParserOptions struct {
 	// metrics is the metrics client used to track parser metrics and statistics.
 	metrics metrics2.MetricsClient
 	config  parser.Config
+	backoff backoff.BackOff
 }
 
 // Option is a function type that modifies FilecoinParserOptions.
@@ -29,5 +34,23 @@ func WithMetrics(metrics metrics.TaskMetrics) Option {
 func WithConfig(config parser.Config) Option {
 	return func(o *FilecoinParserOptions) {
 		o.config = config
+	}
+}
+
+func WithBackoff(config parser.Config) Option {
+	return func(o *FilecoinParserOptions) {
+		b := golemBackoff.New().
+			WithMaxAttempts(config.NodeMaxRetries).
+			WithMaxDuration(time.Duration(config.NodeMaxWaitBeforeRetrySeconds) * time.Second).
+			WithInitialDuration(time.Duration(config.NodeMaxWaitBeforeRetrySeconds) * time.Second)
+
+		switch config.NodeRetryStrategy {
+		case "linear":
+			o.backoff = b.Linear()
+		case "exponential":
+			o.backoff = b.Exponential()
+		default:
+			o.backoff = b.Linear()
+		}
 	}
 }

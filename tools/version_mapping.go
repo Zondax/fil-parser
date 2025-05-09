@@ -4,6 +4,8 @@ import (
 	"container/list"
 	"fmt"
 	"math"
+
+	"github.com/filecoin-project/go-state-types/network"
 )
 
 const (
@@ -16,7 +18,7 @@ type version struct {
 	calibration int64
 	mainnet     int64
 
-	nodeVersion    int64
+	nodeVersion    uint
 	currentNetwork string
 }
 
@@ -184,8 +186,12 @@ func (v version) Height() int64 {
 	return v.mainnet
 }
 
-func (v version) NodeVersion() int64 {
+func (v version) NodeVersion() uint {
 	return v.nodeVersion
+}
+
+func (v version) FilNetworkVersion() network.Version {
+	return network.Version(v.nodeVersion)
 }
 
 // GetSupportedVersions returns all supported versions for a given network

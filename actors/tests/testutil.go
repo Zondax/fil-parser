@@ -5,9 +5,11 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/fil-parser/metrics"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/zondax/fil-parser/metrics"
 
 	"github.com/filecoin-project/lotus/api/client"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -18,6 +20,7 @@ import (
 	helper2 "github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 )
 
@@ -35,7 +38,10 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 	}
 	actorsCache, err := cache.SetupActorsCache(common.DataSource{
 		Node: lotusClient,
-	}, nil, metrics.NewNoopMetricsClient())
+	}, nil, metrics.NewNoopMetricsClient(), golemBackoff.New().
+		WithMaxAttempts(3).
+		WithMaxDuration(1*time.Second).
+		WithInitialDuration(1*time.Second).Linear())
 
 	if err != nil {
 		return nil

@@ -8,9 +8,12 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/go-state-types/network"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
@@ -124,17 +127,13 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 
 	metadata, addressInfo, err := parseExec(msg, raw, params(), returnValue(), i.helper)
 	if addressInfo != nil {
-		c, err := cid.Parse(addressInfo.ActorCid)
+		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(height, version.FilNetworkVersion(), addressInfo)
 		if err == nil {
-			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
-			if err == nil {
-				addressInfo.ActorType = parseExecActor(createdActorName)
-			}
+			addressInfo.ActorCid = createdActorCid.String()
+			addressInfo.ActorType = parseExecActor(createdActorName)
 		}
 	}
-	if addressInfo != nil {
-		i.helper.GetActorsCache().StoreAddressInfoAddress(*addressInfo)
-	}
+
 	return metadata, addressInfo, err
 }
 
@@ -151,16 +150,40 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 
 	metadata, addressInfo, err := parseExec(msg, raw, params(), returnValue(), i.helper)
 	if addressInfo != nil {
-		c, err := cid.Parse(addressInfo.ActorCid)
+		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(height, version.FilNetworkVersion(), addressInfo)
 		if err == nil {
-			createdActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCid(c)
-			if err == nil {
-				addressInfo.ActorType = parseExecActor(createdActorName)
-			}
+			addressInfo.ActorCid = createdActorCid.String()
+			addressInfo.ActorType = parseExecActor(createdActorName)
 		}
 	}
-	if addressInfo != nil {
-		i.helper.GetActorsCache().StoreAddressInfoAddress(*addressInfo)
-	}
+
 	return metadata, addressInfo, err
+}
+
+func (i *Init) getActorDetailsFromAddress(height int64, version network.Version, addressInfo *types.AddressInfo) (actorCid cid.Cid, actorName string, err error) {
+	parsedActorCid, err := cid.Parse(addressInfo.ActorCid)
+	if err != nil {
+		return cid.Undef, "", err
+	}
+	addrStr := addressInfo.Robust
+	if addrStr == "" {
+		addrStr = addressInfo.Short
+	}
+	addr, err := address.NewFromString(addrStr)
+	if err != nil {
+		return cid.Undef, "", err
+	}
+
+	parsedActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCidByVersion(parsedActorCid, version)
+	if err != nil {
+		i.logger.Warnf("initActor: error getting actor details from rosetta: %s", err)
+		gotActorCid, gotActorName, err := i.helper.GetActorNameFromAddress(addr, height, filTypes.EmptyTSK)
+		if err != nil {
+			i.logger.Errorf("initActor: error getting actor details from node: %s", err)
+			return cid.Undef, parsedActorName, err
+		}
+		return gotActorCid, gotActorName, nil
+	}
+
+	return parsedActorCid, parsedActorName, nil
 }
