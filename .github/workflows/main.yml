@@ -54,7 +54,7 @@ jobs:
     container:
       image: golang:1.23.7
       options: --tty
-    timeout-minutes: 50
+    timeout-minutes: 120
     steps:
       - name: Checkout
         uses: actions/checkout@v4
