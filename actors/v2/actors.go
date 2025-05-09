@@ -52,7 +52,7 @@ func (p *ActorParser) GetMetadata(ctx context.Context, txType string, msg *parse
 		return "", metadata, nil, nil
 	}
 
-	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
+	_, actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		return "", metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
 	}

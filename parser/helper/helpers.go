@@ -135,11 +135,6 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
-	// Ignore searching robust addresses for Msig and miners
-	if addInfo.ActorType == manifest.MinerKey || addInfo.ActorType == manifest.MultisigKey {
-		return addInfo
-	}
-
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
@@ -148,9 +143,9 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	return addInfo
 }
 
-func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
 	if add == address.Undef {
-		return "", errors.New("address is undefined")
+		return cid.Undef, "", errors.New("address is undefined")
 	}
 
 	onChainOnly := false
@@ -158,25 +153,25 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		// Search for actor in cache
 		actorCode, err := h.actorCache.GetActorCode(add, key, onChainOnly)
 		if err != nil {
-			return actors.UnknownStr, err
+			return cid.Undef, actors.UnknownStr, err
 		}
 
 		c, err := cid.Parse(actorCode)
 		if err != nil {
 			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
-			return actors.UnknownStr, err
+			return cid.Undef, actors.UnknownStr, err
 		}
 
 		version := tools.VersionFromHeight(h.network, height)
 		actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
 		if err != nil {
-			return actors.UnknownStr, err
+			return cid.Undef, actors.UnknownStr, err
 		}
 
 		if actorName == manifest.PlaceholderKey && !onChainOnly {
 			onChainOnly = true
 		} else {
-			return actorName, nil
+			return c, actorName, nil
 		}
 	}
 }
@@ -197,7 +192,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	_, actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
 	}
@@ -279,7 +274,7 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		if addr == address.Undef {
 			continue
 		}
-		actorName, err := h.GetActorNameFromAddress(addr, height, key)
+		_, actorName, err := h.GetActorNameFromAddress(addr, height, key)
 		if err != nil {
 			return false, err
 		}

@@ -300,7 +300,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		shortAdd, _ := p.Helper.GetActorsCache().GetShortAddress(filAdd)
 		robustAdd, _ := p.Helper.GetActorsCache().GetRobustAddress(filAdd)
 		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK, false)
-		actorName, _ := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
+		_, actorName, _ := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
 
 		addresses.Set(balance.Key, &types.AddressInfo{
 			Short:     shortAdd,
@@ -350,7 +350,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		}
 
 		// get actor name from address
-		actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
+		_, actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
 		if err != nil {
 			p.logger.Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
 			continue
