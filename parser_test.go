@@ -168,7 +168,7 @@ func getLib(nodeURL string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
 }
 
 func getCacheDataSource(networkName string, nodeURL string) common.DataSource {
-	cacheTTL := 3600
+	cacheTTL := -1
 
 	return common.DataSource{
 		Node: getLotusClient(nodeURL),
