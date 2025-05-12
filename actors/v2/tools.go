@@ -53,6 +53,12 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 			}
 		}
 
+		if actorName == manifest.MultisigKey {
+			if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
+				return parser.MethodFallback, nil
+			}
+		}
+
 		return parser.UnknownStr, nil
 
 	}
