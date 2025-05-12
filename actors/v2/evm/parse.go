@@ -40,6 +40,15 @@ func (p *Evm) Parse(_ context.Context, network string, height int64, txType stri
 	case parser.MethodHandleFilecoinMethod:
 		resp, err := p.HandleFilecoinMethod(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodChangeOwnerAddressExported:
+		resp, err := p.ChangeOwnerAddress(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodChangeMultiaddrsExported:
+		resp, err := p.ChangeMultiAddrs(network, height, msg.Params)
+		return resp, nil, err
+	case parser.MethodValueTransfer:
+		resp, err := p.ValueTransfer(network, height, msg.Params)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
