@@ -178,10 +178,11 @@ func getCacheDataSource(networkName string, nodeURL string) common.DataSource {
 				CombinedConfig: &zcache.CombinedConfig{
 					Local: &zcache.LocalConfig{},
 					Remote: &zcache.RemoteConfig{
-						Addr: "localhost:6379",
+						Addr:     os.Getenv("REDIS_ADDR"),
+						Password: os.Getenv("REDIS_SECRET"),
 					},
 					IsRemoteBestEffort: false,
-					GlobalPrefix:       "test",
+					GlobalPrefix:       "ci",
 					GlobalMetricServer: metrics.NewNoopMetrics(),
 				},
 				Ttl: time.Duration(cacheTTL) * time.Second,
