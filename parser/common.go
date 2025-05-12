@@ -53,6 +53,9 @@ func GetTimestamp(timestamp uint64) time.Time {
 	return time.Unix(blockTimeStamp/1000, blockTimeStamp%1000)
 }
 
+// TODO: RM SPECIAL CASE
+// evm: skip if f2 & tx_cid is not there
+
 func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.AddressInfo) {
 	if addressMap == nil {
 		return
@@ -60,11 +63,32 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 
 	for _, i := range info {
 		switch i.ActorType {
-		case manifest.MultisigKey:
+		case manifest.EvmKey:
+			if i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != "" {
+				prev, ok := addressMap.Get(i.Short)
+				if ok {
+					// this may happen because of direct storage from the evm parser
+					if prev.CreationTxCid == "" || prev.ActorCid == "" {
+						ok = false
+					}
+				}
+				if !ok {
+					addressMap.Set(i.Short, i)
+				}
+			}
+		// miner & multisig: we skip any addressInfo without a CreationTxCid. The CreationTxCid is only obtained from parsing init.Exec Txs.
+		case manifest.MultisigKey, manifest.MinerKey:
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
-			if i.Short != "" {
-				if _, ok := addressMap.Get(i.Short); !ok {
+			if i.Short != "" && i.CreationTxCid != "" && i.ActorCid != "" {
+				prev, ok := addressMap.Get(i.Short)
+				if ok {
+					// this may happen because of direct storage from the miner/msig parser for diff. tx_types on the same address
+					if prev.CreationTxCid == "" || prev.ActorCid == "" {
+						ok = false
+					}
+				}
+				if !ok {
 					addressMap.Set(i.Short, i)
 				}
 			}
