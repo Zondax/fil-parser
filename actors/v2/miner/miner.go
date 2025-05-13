@@ -52,7 +52,7 @@ var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMetho
 var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
 
 // Implemented in a fork https://github.com/ipfs-force-community/builtin-actors/blob/99642572098400e6bbdff27c5126714781350fce/actors/miner/src/lib.rs#L131
-var movePartionsMethodNum = abi.MethodNum(33)
+var movePartitionsMethodNum = abi.MethodNum(33)
 
 func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	m := &Miner{}
@@ -140,7 +140,7 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodGetBeneficiary,
 			Method: m.GetBeneficiary,
 		},
-		movePartionsMethodNum: {
+		movePartitionsMethodNum: {
 			Name:   parser.MethodMovePartitions,
 			Method: m.MovePartitions,
 		},
