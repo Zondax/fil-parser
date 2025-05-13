@@ -9,6 +9,7 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
+// MaxTerminationFeeParams is implemented in the rust builtin-actors but not the golang version
 type MaxTerminationFeeParams struct {
 	Power         big.Int
 	InitialPledge abi.TokenAmount

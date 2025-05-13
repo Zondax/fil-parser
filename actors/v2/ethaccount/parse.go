@@ -48,13 +48,20 @@ func (*EthAccount) StartNetworkHeight() int64 {
 
 func customMethods(e *EthAccount) map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		// This is a miner method verified from testing with CID: bafy2bzacealgb5zr5g2cc5emi7yc2mpragoufvt5lm54xzdkhdorpfgjhbshi on calibration.
 		abi.MethodNum(23): {
 			Name:   parser.MethodChangeOwnerAddressExported,
 			Method: e.ChangeOwnerAddress,
 		},
+		// This is a miner method verified from testing with CID: f3vmqpcytevkwn6fktjd2zelo4lftq6xzsb2vnmp2r3qarbr4vnso7c7y3nqi5gmxifp22m2pbqdctfxrwkmga on calibration.
 		abi.MethodNum(18): {
 			Name:   parser.MethodChangeMultiaddrsExported,
 			Method: e.ChangeMultiAddrs,
+		},
+		// https://github.com/filecoin-project/ref-fvm/issues/835#issuecomment-1236096270
+		abi.MethodNum(0): {
+			Name:   parser.MethodValueTransfer,
+			Method: e.ValueTransfer,
 		},
 	}
 }

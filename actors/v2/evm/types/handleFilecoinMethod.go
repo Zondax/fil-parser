@@ -11,11 +11,13 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
+// HandleFilecoinMethodParams is implemented in the rust builtin-actors but not the golang version
 type HandleFilecoinMethodParams struct {
 	Method uint64
 	Args   ipldformat.Node
 }
 
+// HandleFilecoinMethodReturn is implemented in the rust builtin-actors but not the golang version
 type HandleFilecoinMethodReturn struct {
 	AbiBytes []byte `json:"-"`
 
