@@ -89,8 +89,10 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 				continue
 			}
 			events.MinerSectors = append(events.MinerSectors, minerSectors...)
+			_ = eg.metrics.UpdateProcessedMinerSectorsTotalMetric(tx.TxType)
 		}
 
+		_ = eg.metrics.UpdateProcessedMinerInfoTotalMetric(tx.TxType)
 	}
 	return events, nil
 }
