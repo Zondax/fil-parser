@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -47,6 +48,10 @@ var CalibrationActorsId = map[string]bool{
 }
 
 func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
+	var setupMu sync.Mutex
+	setupMu.Lock()
+	defer setupMu.Unlock()
+
 	var offChainCache IActorsCache
 	var onChainCache impl.OnChain
 
