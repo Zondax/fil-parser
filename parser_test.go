@@ -395,7 +395,6 @@ func TestParser_InDepthCompare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			var p1 *FilecoinParser
 			var p2 *FilecoinParser
 			var err1 error
