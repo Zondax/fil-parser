@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/zondax/fil-parser/parser"
@@ -53,6 +54,7 @@ func BuildTipsetId(tipsetCid string) string {
 	return id.String()
 }
 
+// Deprecated: Use v2/tools.GetBlockCidFromMsgCid instead
 func (t *Tools) GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet) (string, error) {
 	// Default value
 	blockCid := ""
