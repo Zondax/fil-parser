@@ -17,7 +17,7 @@ const (
 	SelectorHash2SigMapPrefix = "hash2Sig"
 )
 
-func StateLookupWithRetry[T address.Address | *filTypes.Actor | *ethtypes.EthHash](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
+func NodeApiCallWithRetry[T address.Address | *filTypes.Actor | *ethtypes.EthHash](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
 	// try without backoff
 	result, err := request()
 	if err != nil {

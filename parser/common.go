@@ -120,7 +120,7 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 
 func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
 	ctx := context.Background()
-	ethHash, err := impl.StateLookupWithRetry([]string{"RPC client error"}, 3, 10*time.Second, func() (*ethtypes.EthHash, error) {
+	ethHash, err := impl.NodeApiCallWithRetry([]string{"RPC client error"}, 3, 10*time.Second, func() (*ethtypes.EthHash, error) {
 		ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
 		if err != nil || ethHash == nil {
 			return nil, err
