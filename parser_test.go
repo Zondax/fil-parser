@@ -396,14 +396,19 @@ func TestParser_InDepthCompare(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			var p *FilecoinParser
-			var err error
+			var p1 *FilecoinParser
+			var p2 *FilecoinParser
+			var err1 error
+			var err2 error
 			if tt.url == nodeUrl {
-				p, err = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+				p1, err1 = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+				p2, err2 = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
 			} else {
-				p, err = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+				p1, err1 = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+				p2, err2 = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
 			}
-			require.NoError(t, err)
+			require.NoError(t, err1)
+			require.NoError(t, err2)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
@@ -416,9 +421,6 @@ func TestParser_InDepthCompare(t *testing.T) {
 			wg.Add(2)
 			var parsedResultV1 *types.TxsParsedResult
 			var parsedResultV2 *types.TxsParsedResult
-			var err1 error
-			var err2 error
-
 			go func() {
 				txsData1 := types.TxsData{
 					EthLogs:  ethlogs,
@@ -427,7 +429,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 					Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
 				}
 				defer wg.Done()
-				parsedResultV1, err1 = p.ParseTransactions(context.Background(), txsData1)
+				parsedResultV1, err1 = p1.ParseTransactions(context.Background(), txsData1)
 			}()
 			go func() {
 				defer wg.Done()
@@ -437,7 +439,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 					Traces:   traces,
 					Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}},
 				}
-				parsedResultV2, err2 = p.ParseTransactions(context.Background(), txsData2)
+				parsedResultV2, err2 = p2.ParseTransactions(context.Background(), txsData2)
 			}()
 
 			wg.Wait()
@@ -565,7 +567,6 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			var p *FilecoinParser
 			var err error
 			if tt.url == nodeUrl {
@@ -1768,7 +1769,6 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			var p *FilecoinParser
 			var err error
 			if tt.url == nodeUrl {
