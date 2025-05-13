@@ -29,10 +29,15 @@ func NodeApiCallWithRetry[T address.Address | *filTypes.Actor | *ethtypes.EthHas
 	// try without backoff
 	result, err := request()
 	if err != nil {
+		shouldRetry := false
 		for _, errString := range errStrings {
-			if !strings.Contains(err.Error(), errString) {
-				return result, err
+			if strings.Contains(err.Error(), errString) {
+				shouldRetry = true
+				break
 			}
+		}
+		if !shouldRetry {
+			return result, err
 		}
 	} else {
 		return result, nil
