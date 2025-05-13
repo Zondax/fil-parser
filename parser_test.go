@@ -679,7 +679,6 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			var p *FilecoinParser
 			var err error
 			if tt.url == nodeUrl {
