@@ -58,14 +58,18 @@ func (p *Evm) Parse(_ context.Context, network string, height int64, txType stri
 
 func (p *Evm) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodSend:                   actors.ParseSend,
-		parser.MethodConstructor:            p.Constructor,
-		parser.MethodResurrect:              p.Resurrect,
-		parser.MethodInvokeContract:         p.InvokeContract,
-		parser.MethodInvokeContractReadOnly: p.InvokeContract,
-		parser.MethodInvokeContractDelegate: p.InvokeContractDelegate,
-		parser.MethodGetBytecode:            p.GetBytecode,
-		parser.MethodGetBytecodeHash:        p.GetBytecodeHash,
-		parser.MethodGetStorageAt:           p.GetStorageAt,
+		parser.MethodSend:                       actors.ParseSend,
+		parser.MethodConstructor:                p.Constructor,
+		parser.MethodResurrect:                  p.Resurrect,
+		parser.MethodInvokeContract:             p.InvokeContract,
+		parser.MethodInvokeContractReadOnly:     p.InvokeContract,
+		parser.MethodInvokeContractDelegate:     p.InvokeContractDelegate,
+		parser.MethodGetBytecode:                p.GetBytecode,
+		parser.MethodGetBytecodeHash:            p.GetBytecodeHash,
+		parser.MethodGetStorageAt:               p.GetStorageAt,
+		parser.MethodHandleFilecoinMethod:       p.HandleFilecoinMethod,
+		parser.MethodChangeOwnerAddressExported: p.ChangeOwnerAddress,
+		parser.MethodChangeMultiaddrsExported:   p.ChangeMultiAddrs,
+		parser.MethodValueTransfer:              p.ValueTransfer,
 	}
 }

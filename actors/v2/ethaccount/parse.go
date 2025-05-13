@@ -92,6 +92,8 @@ func (e *EthAccount) Parse(_ context.Context, network string, height int64, txTy
 		resp, err = e.ChangeOwnerAddress(network, height, msg.Params)
 	case parser.MethodChangeMultiaddrsExported:
 		resp, err = e.ChangeMultiAddrs(network, height, msg.Params)
+	case parser.MethodValueTransfer:
+		resp, err = e.ValueTransfer(network, height, msg.Params)
 	default:
 		resp, err = e.parseEthAccountAny(msg.Params, msgRct.Return)
 	}
@@ -101,8 +103,11 @@ func (e *EthAccount) Parse(_ context.Context, network string, height int64, txTy
 
 func (e *EthAccount) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodConstructor: e.Constructor,
-		parser.MethodSend:        actors.ParseSend,
+		parser.MethodConstructor:                e.Constructor,
+		parser.MethodSend:                       actors.ParseSend,
+		parser.MethodChangeOwnerAddressExported: e.ChangeOwnerAddress,
+		parser.MethodChangeMultiaddrsExported:   e.ChangeMultiAddrs,
+		parser.MethodValueTransfer:              e.ValueTransfer,
 	}
 }
 
@@ -132,4 +137,8 @@ func (e *EthAccount) ChangeOwnerAddress(network string, height int64, rawParams 
 func (e *EthAccount) ChangeMultiAddrs(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	m := miner.New(e.logger)
 	return m.ChangeMultiaddrsExported(network, height, rawParams)
+}
+
+func (e *EthAccount) ValueTransfer(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return map[string]interface{}{}, nil
 }
