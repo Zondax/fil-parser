@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/tools"
@@ -45,7 +46,7 @@ var CalibrationActorsId = map[string]bool{
 	"f01002": true,
 }
 
-func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
 	var offChainCache IActorsCache
 	var onChainCache impl.OnChain
 

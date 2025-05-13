@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
-	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
@@ -56,9 +57,12 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:             false,
-			ConsolidateRobustAddress: false,
-			RobustAddressBestEffort:  false,
+			FeesAsColumn:                  false,
+			ConsolidateRobustAddress:      false,
+			RobustAddressBestEffort:       false,
+			NodeMaxRetries:                3,
+			NodeMaxWaitBeforeRetrySeconds: 1,
+			NodeRetryStrategy:             "linear",
 		},
 	}
 	for _, opt := range opts {
@@ -66,17 +70,21 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
+	if helper == nil {
+		return nil, errors.New("helper is nil")
+	}
 
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Error(err.Error())
+		return nil, err
 	}
 
 	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
@@ -95,9 +103,12 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:             false,
-			ConsolidateRobustAddress: false,
-			RobustAddressBestEffort:  false,
+			FeesAsColumn:                  false,
+			ConsolidateRobustAddress:      false,
+			RobustAddressBestEffort:       false,
+			NodeMaxRetries:                3,
+			NodeMaxWaitBeforeRetrySeconds: 1,
+			NodeRetryStrategy:             "linear",
 		},
 	}
 	for _, opt := range opts {
@@ -105,17 +116,20 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
 	}
 
 	helper := helper2.NewHelper(lib, actorsCache, cacheSource.Node, logger, defaultOpts.metrics)
-
+	if helper == nil {
+		return nil, errors.New("helper is nil")
+	}
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Error(err.Error())
+		return nil, err
 	}
 	networkName := tools.ParseRawNetworkName(string(network))
 
@@ -286,7 +300,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		shortAdd, _ := p.Helper.GetActorsCache().GetShortAddress(filAdd)
 		robustAdd, _ := p.Helper.GetActorsCache().GetRobustAddress(filAdd)
 		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK, false)
-		actorName, _ := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
+		_, actorName, _ := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
 
 		addresses.Set(balance.Key, &types.AddressInfo{
 			Short:     shortAdd,
@@ -336,14 +350,14 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		}
 
 		// get actor name from address
-		actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
+		_, actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
 		if err != nil {
 			p.logger.Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
 			continue
 		}
 
 		// check if the address is a multisig address
-		if !strings.EqualFold(actorName, manifest.MultisigKey) {
+		if !strings.Contains(actorName, manifest.MultisigKey) {
 			continue
 		}
 

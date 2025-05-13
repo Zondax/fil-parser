@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 )
 
@@ -29,26 +30,22 @@ func (e *ExtendedTipSet) GetParentCidString() string {
 }
 
 func (e *ExtendedTipSet) GetBlockMiner(blockCid string) (string, error) {
-	for _, blocks := range e.BlockMessages {
-		for _, block := range blocks {
-			if block.Cid == blockCid {
-				return block.BlockMiner, nil
-			}
+	blockMessages := e.Blocks()
+	for _, block := range blockMessages {
+		if block.Cid().String() == blockCid {
+			return block.Miner.String(), nil
 		}
 	}
-
 	return "", fmt.Errorf("could not find miner that mined block '%s'", blockCid)
 }
 
 func (e *ExtendedTipSet) GetBlockMinedByMiner(minerAddress string) (string, error) {
-	for _, blocks := range e.BlockMessages {
-		for _, block := range blocks {
-			if block.BlockMiner == minerAddress {
-				return block.Cid, nil
-			}
+	blockMessages := e.Blocks()
+	for _, block := range blockMessages {
+		if block.Miner.String() == minerAddress {
+			return block.Cid().String(), nil
 		}
 	}
-
 	return "", fmt.Errorf("could not find block mined by miner '%s'", minerAddress)
 }
 

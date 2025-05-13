@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -163,12 +164,20 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 		ret, err = p.LockBalance(network, msg, height, key, msg.Params, p.parseMsigParams)
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
 		ret, err = p.UniversalReceiverHook(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+	case parser.MethodFallback:
+		ret, err = p.Fallback(network, height, msg.Params)
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
 	}
 
 	return ret, nil, err
+}
+
+func (p *Msig) Fallback(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	metadata := make(map[string]interface{})
+	metadata[parser.ParamsRawKey] = hex.EncodeToString(raw)
+	return metadata, nil
 }
 
 func (p *Msig) TransactionTypes() map[string]any {

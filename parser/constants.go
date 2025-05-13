@@ -138,6 +138,7 @@ const (
 	MethodInitialPledge                       = "InitialPledge"                       // MethodsMiner
 	MethodInitialPledgeExported               = "InitialPledgeExported"               // MethodsMiner
 	MethodMaxTerminationFee                   = "MaxTerminationFee"                   // MethodsMiner
+	MethodMovePartitions                      = "MovePartitions"                      // MethodsMiner
 	MethodMaxTerminationFeeExported           = "MaxTerminationFeeExported"           // MethodsMiner
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
@@ -192,6 +193,7 @@ const (
 	MethodInvokeContractReadOnly              = "InvokeContractReadOnly"              // MethodsEVM
 	MethodInvokeContractDelegate              = "InvokeContractDelegate"              // MethodsEVM
 	MethodInvokeContractFilecoinHandler       = "InvokeContractFilecoinHandler"       // MethodsEVM
+	MethodValueTransfer                       = "ValueTransfer"                       // MethodsEVM
 	MethodCreate                              = "Create"                              // MethodsEam
 	MethodCreate2                             = "Create2"                             // MethodsEam
 	MethodCreateExternal                      = "CreateExternal"                      // MethodsEam

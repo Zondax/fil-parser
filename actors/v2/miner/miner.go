@@ -50,6 +50,7 @@ func (*Miner) StartNetworkHeight() int64 {
 // implemented in the rust builtin-actors but not the golang version
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
+var movePartionsMethodNum = abi.MethodNum(33)
 
 func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	m := &Miner{}
@@ -136,6 +137,10 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 		nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetBeneficiary): {
 			Name:   parser.MethodGetBeneficiary,
 			Method: m.GetBeneficiary,
+		},
+		movePartionsMethodNum: {
+			Name:   parser.MethodMovePartitions,
+			Method: m.MovePartitions,
 		},
 	}
 }
@@ -337,4 +342,8 @@ func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []by
 
 func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	return parseGeneric(rawParams, rawReturn, true, &types.MaxTerminationFeeParams{}, &types.MaxTerminationFeeReturn{}, parser.ParamsKey)
+}
+
+func (*Miner) MovePartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, nil, false, &types.MovePartitionsParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 }

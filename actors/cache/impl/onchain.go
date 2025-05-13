@@ -3,6 +3,9 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
@@ -18,8 +21,10 @@ const OnChainImpl = "on-chain"
 
 // OnChain implementation
 type OnChain struct {
-	Node   api.FullNode
-	logger *logger.Logger
+	Node               api.FullNode
+	logger             *logger.Logger
+	maxRetries         int
+	maxWaitBeforeRetry time.Duration
 }
 
 func (m *OnChain) StoreAddressInfo(info types.AddressInfo) {
@@ -95,10 +100,15 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 }
 
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
-	actor, err := m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+	retryErrStrings := []string{"ipld: could not find", "RPC client error"}
+	actor, err := StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+		return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+	})
 	if err != nil {
 		// Try again but using the corresponding tipset Key
-		actor, err = m.Node.StateGetActor(context.Background(), add, key)
+		actor, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+			return m.Node.StateGetActor(context.Background(), add, key)
+		})
 		if err != nil {
 			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
 			return cid.Cid{}, err
@@ -111,15 +121,30 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool) (string, error) {
 	var key address.Address
 	var err error
+	retryErrStrings := []string{"RPC client error"}
 	if reverse {
-		key, err = m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
+		key, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+			return m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
+		})
 	} else {
-		key, err = m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
+		key, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+			return m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
+		})
 	}
 
 	if err != nil {
-		m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus: %s", err.Error())
-		return "", common.ErrKeyNotFound
+		if strings.Contains(err.Error(), "actor code is not account") {
+			key, err = StateLookupWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+				return m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
+			})
+			if err != nil {
+				m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus(StateLookupRobustAddress): %s", err.Error())
+				return "", common.ErrKeyNotFound
+			}
+		} else {
+			m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus: %s", err.Error())
+			return "", common.ErrKeyNotFound
+		}
 	}
 
 	// Must check here because if lotus cannot find the pair, it will return the same address as result

@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/zondax/fil-parser/actors/v2/internal"
 
@@ -51,7 +52,7 @@ func (p *ActorParser) GetMetadata(ctx context.Context, txType string, msg *parse
 		return "", metadata, nil, nil
 	}
 
-	actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
+	_, actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		return "", metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
 	}
@@ -75,7 +76,7 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 }
 
 func (p *ActorParser) GetActor(actor string) (Actor, error) {
-	if actor == manifest.MultisigKey {
+	if strings.Contains(actor, manifest.MultisigKey) {
 		return multisig.New(p.helper, p.logger, p.metrics), nil
 	}
 
