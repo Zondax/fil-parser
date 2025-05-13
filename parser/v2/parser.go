@@ -12,6 +12,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
@@ -160,6 +161,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 		if err != nil {
 			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
 		}
 	}
 
@@ -354,7 +356,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		Method: trace.Msg.Method,
 		Cid:    mainMsgCid,
 		Params: trace.Msg.Params,
-	}, tipset.Key())
+	}, tipset.Key(), tipset.Height())
 
 	blockCid, err := actorsV2.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset, p.logger)
 	if err != nil {
@@ -496,16 +498,16 @@ func (p *Parser) getFromToRobustAddresses(from, to address.Address) (string, str
 	return txFrom, txTo
 }
 
-func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey) {
+func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey, height abi.ChainEpoch) {
 	if msg == nil {
 		return
 	}
 	if msg.From != address.Undef {
-		fromAdd := p.helper.GetActorAddressInfo(msg.From, key)
+		fromAdd := p.helper.GetActorAddressInfo(msg.From, key, height)
 		parser.AppendToAddressesMap(p.addresses, fromAdd)
 	}
 	if msg.To != address.Undef {
-		toAdd := p.helper.GetActorAddressInfo(msg.To, key)
+		toAdd := p.helper.GetActorAddressInfo(msg.To, key, height)
 		parser.AppendToAddressesMap(p.addresses, toAdd)
 	}
 }
@@ -528,7 +530,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	}
 
 	if txType == "" {
-		actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+		_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
 		if err != nil {
 			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}

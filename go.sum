@@ -41,6 +41,8 @@ github.com/bytedance/sonic v1.13.2/go.mod h1:o68xyaF9u2gvVBuGHPlUVCy+ZfmNNO5ETf1
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
 github.com/bytedance/sonic/loader v0.2.4 h1:ZWCw4stuXUsn1/+zQDqeE7JKP+QO47tz7QCNan80NzY=
 github.com/bytedance/sonic/loader v0.2.4/go.mod h1:N8A3vUdtUebEY2/VQC0MyhYeKUFosQU6FxH2JmUe6VI=
+github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
+github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
@@ -811,8 +813,8 @@ github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
 github.com/zondax/golem v0.21.1 h1:w4vbokuO9qdjRtpy7dpiJwn60Bt6QG9s3ah6LrrHtFc=
 github.com/zondax/golem v0.21.1/go.mod h1:vJQwxaOn5swyz8BtGjJUxMqlXlkiq4tjUGp5xRvePwk=
-github.com/zondax/rosetta-filecoin-lib v1.3202.0 h1:OM82Aikbt3gkNOnlnFZIDsAH4wPGP7mJQ/GcX+RbMfw=
-github.com/zondax/rosetta-filecoin-lib v1.3202.0/go.mod h1:o/pFk+DvYKB9J0GqpmQuGrh9LYWm2ImUNHEqtxFo+8s=
+github.com/zondax/rosetta-filecoin-lib v1.3202.1 h1:pzaCoerToVaxaeUNJlP/MI+VxlrxX1+obDrUWGSUAbA=
+github.com/zondax/rosetta-filecoin-lib v1.3202.1/go.mod h1:o/pFk+DvYKB9J0GqpmQuGrh9LYWm2ImUNHEqtxFo+8s=
 gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b h1:CzigHMRySiX3drau9C6Q5CAbNIApmLdat5jPMqChvDA=
 gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b/go.mod h1:/y/V339mxv2sZmYYR64O07VuCpdNZqCTwO8ZcouTMI8=
 gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 h1:qwDnMxjkyLmAFgcfgTnfJrmYKWhHnci3GjDqcZp1M3Q=

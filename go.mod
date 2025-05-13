@@ -6,6 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/bytedance/sonic v1.13.2
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-state-types v0.16.0
@@ -20,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	github.com/zondax/golem v0.21.1
-	github.com/zondax/rosetta-filecoin-lib v1.3202.0
+	github.com/zondax/rosetta-filecoin-lib v1.3202.1
 	gotest.tools v2.2.0+incompatible
 )
 

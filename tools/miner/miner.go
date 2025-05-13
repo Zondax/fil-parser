@@ -2,8 +2,9 @@ package miner
 
 import (
 	"context"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -62,7 +63,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		}
 
 		// #nosec G115
-		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
+		_, actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			eg.logger.Errorf("could not get actor name from address. Err: %s", err)

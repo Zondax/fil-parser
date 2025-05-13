@@ -53,6 +53,12 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 			}
 		}
 
+		if actorName == manifest.MultisigKey {
+			if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
+				return parser.MethodFallback, nil
+			}
+		}
+
 		return parser.UnknownStr, nil
 
 	}
@@ -101,7 +107,7 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 		}
 		miner := reward.GetMinerFromAwardBlockRewardParams(params)
 		if miner == "" {
-			logger.Errorf("Could not parse parameters for tx '%s'", txType)
+			logger.Errorf("Could not parse parameters for tx '%s', param type: %T", txType, params)
 			return blockCid, nil
 		}
 		// Get the block that this miner mined

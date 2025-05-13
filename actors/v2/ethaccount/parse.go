@@ -22,6 +22,7 @@ import (
 	ethaccountv16 "github.com/filecoin-project/go-state-types/builtin/v16/ethaccount"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/miner"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -45,15 +46,28 @@ func (*EthAccount) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
+func customMethods(e *EthAccount) map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		abi.MethodNum(23): {
+			Name:   parser.MethodChangeOwnerAddressExported,
+			Method: e.ChangeOwnerAddress,
+		},
+		abi.MethodNum(18): {
+			Name:   parser.MethodChangeMultiaddrsExported,
+			Method: e.ChangeMultiAddrs,
+		},
+	}
+}
+
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V18.String(): actors.CopyMethods(ethaccountv10.Methods),
-	tools.V19.String(): actors.CopyMethods(ethaccountv11.Methods),
-	tools.V20.String(): actors.CopyMethods(ethaccountv11.Methods),
-	tools.V21.String(): actors.CopyMethods(ethaccountv12.Methods),
-	tools.V22.String(): actors.CopyMethods(ethaccountv13.Methods),
-	tools.V23.String(): actors.CopyMethods(ethaccountv14.Methods),
-	tools.V24.String(): actors.CopyMethods(ethaccountv15.Methods),
-	tools.V25.String(): actors.CopyMethods(ethaccountv16.Methods),
+	tools.V18.String(): actors.CopyMethods(ethaccountv10.Methods, customMethods(&EthAccount{})),
+	tools.V19.String(): actors.CopyMethods(ethaccountv11.Methods, customMethods(&EthAccount{})),
+	tools.V20.String(): actors.CopyMethods(ethaccountv11.Methods, customMethods(&EthAccount{})),
+	tools.V21.String(): actors.CopyMethods(ethaccountv12.Methods, customMethods(&EthAccount{})),
+	tools.V22.String(): actors.CopyMethods(ethaccountv13.Methods, customMethods(&EthAccount{})),
+	tools.V23.String(): actors.CopyMethods(ethaccountv14.Methods, customMethods(&EthAccount{})),
+	tools.V24.String(): actors.CopyMethods(ethaccountv15.Methods, customMethods(&EthAccount{})),
+	tools.V25.String(): actors.CopyMethods(ethaccountv16.Methods, customMethods(&EthAccount{})),
 }
 
 func (e *EthAccount) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -74,6 +88,12 @@ func (e *EthAccount) Parse(_ context.Context, network string, height int64, txTy
 		resp, err = e.Constructor()
 	case parser.MethodFallback:
 		resp, err = e.Fallback(network, height, msg.Params)
+	case parser.MethodChangeOwnerAddressExported:
+		resp, err = e.ChangeOwnerAddress(network, height, msg.Params)
+	case parser.MethodChangeMultiaddrsExported:
+		resp, err = e.ChangeMultiAddrs(network, height, msg.Params)
+	case parser.MethodValueTransfer:
+		resp, err = e.ValueTransfer(network, height, msg.Params)
 	default:
 		resp, err = e.parseEthAccountAny(msg.Params, msgRct.Return)
 	}
@@ -83,8 +103,11 @@ func (e *EthAccount) Parse(_ context.Context, network string, height int64, txTy
 
 func (e *EthAccount) TransactionTypes() map[string]any {
 	return map[string]any{
-		parser.MethodConstructor: e.Constructor,
-		parser.MethodSend:        actors.ParseSend,
+		parser.MethodConstructor:                e.Constructor,
+		parser.MethodSend:                       actors.ParseSend,
+		parser.MethodChangeOwnerAddressExported: e.ChangeOwnerAddress,
+		parser.MethodChangeMultiaddrsExported:   e.ChangeMultiAddrs,
+		parser.MethodValueTransfer:              e.ValueTransfer,
 	}
 }
 
@@ -104,4 +127,18 @@ func (e *EthAccount) Fallback(network string, height int64, raw []byte) (map[str
 	metadata := make(map[string]interface{})
 	metadata[parser.ParamsRawKey] = hex.EncodeToString(raw)
 	return metadata, nil
+}
+
+func (e *EthAccount) ChangeOwnerAddress(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	m := miner.New(e.logger)
+	return m.ChangeOwnerAddressExported(network, height, rawParams)
+}
+
+func (e *EthAccount) ChangeMultiAddrs(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	m := miner.New(e.logger)
+	return m.ChangeMultiaddrsExported(network, height, rawParams)
+}
+
+func (e *EthAccount) ValueTransfer(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return map[string]interface{}{}, nil
 }
