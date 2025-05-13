@@ -129,6 +129,10 @@ func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string
 	})
 
 	if err != nil || ethHash == nil {
+		hash, err := ethtypes.EthHashFromCid(mainMsgCid)
+		if err == nil {
+			return hash.String(), nil
+		}
 		return "", err
 	}
 
