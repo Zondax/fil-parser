@@ -59,7 +59,10 @@ const (
 	feeType           = "fee"
 )
 
-var gLogger = logger.NewDevelopmentLogger()
+var gLogger = logger.NewLogger(logger.Config{
+	Level:    "error",
+	Encoding: "text",
+})
 
 // var nodeUrlParserV1 *FilecoinParser
 // var calibNextNodeParserV1 *FilecoinParser
