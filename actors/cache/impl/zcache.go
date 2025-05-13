@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/filecoin-project/go-address"
@@ -41,6 +42,10 @@ type ZCache struct {
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
+	var newImplMu sync.Mutex
+	newImplMu.Lock()
+	defer newImplMu.Unlock()
+
 	var err error
 	m.logger = logger2.GetSafeLogger(logger)
 

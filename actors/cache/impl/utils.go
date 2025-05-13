@@ -17,14 +17,27 @@ const (
 	SelectorHash2SigMapPrefix = "hash2Sig"
 )
 
-func StateLookupWithRetry[T address.Address | *filTypes.Actor | *ethtypes.EthHash](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
+// NodeApiCallWithRetry makes an API call with automatic retries for specific errors.
+// Parameters:
+//   - errStrings: list of error strings that SHOULD trigger a retry
+//   - maxAttempts: maximum number of retry attempts
+//   - maxWaitBeforeRetry: maximum duration to wait before retrying
+//   - request: the function that makes the actual API call
+//
+// Returns the result of the API call and any error encountered.
+func NodeApiCallWithRetry[T address.Address | *filTypes.Actor | *ethtypes.EthHash](errStrings []string, maxAttempts int, maxWaitBeforeRetry time.Duration, request func() (T, error)) (T, error) {
 	// try without backoff
 	result, err := request()
 	if err != nil {
+		shouldRetry := false
 		for _, errString := range errStrings {
 			if strings.Contains(err.Error(), errString) {
-				return result, err
+				shouldRetry = true
+				break
 			}
+		}
+		if !shouldRetry {
+			return result, err
 		}
 	} else {
 		return result, nil

@@ -10,6 +10,8 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
+// ClaimAllocationsReturn is implemented in the rust builtin-actors correctly, but the message order is not consistent.
+// This struct has custom parsing to allow dynamic positioning of the parameters.
 type ClaimAllocationsReturn struct {
 	BatchInfo    batch.BatchReturn
 	ClaimedSpace big.Int
