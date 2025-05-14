@@ -326,7 +326,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	if mErr != nil {
 		if !trace.MsgRct.ExitCode.IsError() {
 			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-			p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
+			p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 		}
 	}
 
