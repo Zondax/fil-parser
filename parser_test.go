@@ -2045,7 +2045,10 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 				}
 				if metadataV1[parser.ReturnKey] != nil {
-					require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					// ClaimAllocations return struct changed to support slices
+					if tx.TxType != parser.MethodClaimAllocations {
+						require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					}
 				}
 
 			}
