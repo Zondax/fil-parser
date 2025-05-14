@@ -65,7 +65,7 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	// reset the reader to the original position
 	cr = cbg.NewCborReader(bytes.NewReader(curr))
 
-	// t.ClaimedSpace (big.Int) (struct) or (SectorClaimSummary) (struct)
+	// t.ClaimedSpace (big.Int) (struct) or (SectorClaimSummary) ([]slice)
 	t.ClaimedSpace = []big.Int{}
 	switch maj {
 	case cbg.MajArray:
@@ -74,7 +74,7 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("failed to read header for ClaimAllocationsReturn element: %w", err)
 		}
 
-		for i := 0; i < int(extra); i++ {
+		for i := uint64(0); i < extra; i++ {
 			var claimedSpace big.Int
 			if err := claimedSpace.UnmarshalCBOR(cr); err != nil {
 				return fmt.Errorf("unmarshaling t.ClaimedSpace: %w", err)
