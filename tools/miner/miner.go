@@ -45,6 +45,8 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		MinerSectors: []*types.MinerSectorEvent{},
 	}
 
+	parsedInfoTotalsByTxType := make(map[string]float64)
+	parsedSectorsTotalsByTxType := make(map[string]float64)
 	for _, tx := range transactions {
 		if !strings.EqualFold(tx.Status, txStatusOk) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -89,10 +91,15 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 				continue
 			}
 			events.MinerSectors = append(events.MinerSectors, minerSectors...)
-			_ = eg.metrics.UpdateProcessedMinerSectorsTotalMetric(tx.TxType)
+			parsedSectorsTotalsByTxType[tx.TxType] += float64(len(minerSectors))
 		}
-
-		_ = eg.metrics.UpdateProcessedMinerInfoTotalMetric(tx.TxType)
+		parsedInfoTotalsByTxType[tx.TxType] += 1
+	}
+	for txType, total := range parsedInfoTotalsByTxType {
+		_ = eg.metrics.UpdateProcessedMinerInfoTotalMetric(txType, total)
+	}
+	for txType, total := range parsedSectorsTotalsByTxType {
+		_ = eg.metrics.UpdateProcessedMinerSectorsTotalMetric(txType, total)
 	}
 	return events, nil
 }

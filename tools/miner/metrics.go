@@ -64,7 +64,7 @@ var (
 	// Usage: Increment counter when a block has been processed based on the amount of events successfully processed by type
 	processedMinerSectorsTotalMetric = metrics.Metric{
 		Name:    processedMinerSectorsTotal,
-		Help:    "Total number of processed miner events in indexer",
+		Help:    "Total number of processed miner sectors in indexer",
 		Labels:  []string{"tx_type"},
 		Handler: &collectors.Gauge{},
 	}
@@ -84,14 +84,19 @@ func (c *minerMetricsClient) IncrementMetric(name string, labels ...string) erro
 	return c.MetricsClient.IncrementMetric(name, labels...)
 }
 
+func (c *minerMetricsClient) UpdateMetric(name string, value float64, labels ...string) error {
+	labels = append(labels, c.name)
+	return c.MetricsClient.UpdateMetric(name, value, labels...)
+}
+
 func (c *minerMetricsClient) UpdateActorNameFromAddressMetric() error {
 	return c.IncrementMetric(actorNameFromAddress)
 }
 
-func (c *minerMetricsClient) UpdateProcessedMinerInfoTotalMetric(txType string) error {
-	return c.IncrementMetric(processedMinerEventsTotal, txType)
+func (c *minerMetricsClient) UpdateProcessedMinerInfoTotalMetric(txType string, total float64) error {
+	return c.UpdateMetric(processedMinerEventsTotal, total, txType)
 }
 
-func (c *minerMetricsClient) UpdateProcessedMinerSectorsTotalMetric(txType string) error {
-	return c.IncrementMetric(processedMinerSectorsTotal, txType)
+func (c *minerMetricsClient) UpdateProcessedMinerSectorsTotalMetric(txType string, total float64) error {
+	return c.UpdateMetric(processedMinerSectorsTotal, total, txType)
 }

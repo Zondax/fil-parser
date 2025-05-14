@@ -119,9 +119,10 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		if ok := hasExecutionTrace(trace); !ok {
 			// Create tx
 			//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
-			txType, err := p.getTxType(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset)
+			actorName, txType, err := p.getTxType(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset)
 			if err != nil {
 				p.logger.Errorf("Error when trying to get tx type: %v", err)
+				_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 				continue
 			}
 			blockCid, err := actorsV2.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset, p.logger)
@@ -194,6 +195,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 		if err != nil {
 			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
 		}
 	}
 
@@ -272,13 +274,13 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
-	txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
+	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height())
 	}
 
@@ -479,19 +481,19 @@ func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
 }
 
-func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (string, error) {
+func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
 	msg := &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
 	}
-	txType, err := p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
 	if err != nil {
-		return "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
 	if txType == "" {
-		_, actorName, err := p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+		_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
 		if err != nil {
 			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		}
@@ -503,5 +505,5 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, 
 			}
 		}
 	}
-	return txType, nil
+	return actorName, txType, nil
 }

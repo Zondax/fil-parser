@@ -303,13 +303,13 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
-	txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
+	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
 	} else if txType == parser.UnknownStr {
-		_ = p.metrics.UpdateMethodNameErrorMetric(fmt.Sprint(trace.Msg.Method))
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
 	}
 
@@ -512,12 +512,7 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 	}
 }
 
-func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (string, error) {
-	var (
-		actorName string
-		txType    string
-		err       error
-	)
+func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
 
 	msg := &parser.LotusMessage{
 		To:     trace.Msg.To,
@@ -526,7 +521,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	}
 	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
 	if err != nil {
-		return "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
 	if txType == "" {
@@ -557,5 +552,5 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 		}
 	}
 
-	return txType, err
+	return actorName, txType, nil
 }
