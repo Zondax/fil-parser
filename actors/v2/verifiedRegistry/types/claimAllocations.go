@@ -14,7 +14,7 @@ import (
 // This struct has custom parsing to allow dynamic positioning of the parameters.
 type ClaimAllocationsReturn struct {
 	BatchInfo    batch.BatchReturn
-	ClaimedSpace big.Int
+	ClaimedSpace []big.Int
 }
 
 func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
@@ -66,6 +66,7 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	cr = cbg.NewCborReader(bytes.NewReader(curr))
 
 	// t.ClaimedSpace (big.Int) (struct) or (SectorClaimSummary) (struct)
+	t.ClaimedSpace = []big.Int{}
 	switch maj {
 	case cbg.MajArray:
 		_, extra, err := cr.ReadHeader()
@@ -73,19 +74,19 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("failed to read header for ClaimAllocationsReturn element: %w", err)
 		}
 
-		if extra != 1 {
-			return fmt.Errorf("cbor input had wrong number of fields")
-		}
-
 		for i := 0; i < int(extra); i++ {
-			if err := t.ClaimedSpace.UnmarshalCBOR(cr); err != nil {
+			var claimedSpace big.Int
+			if err := claimedSpace.UnmarshalCBOR(cr); err != nil {
 				return fmt.Errorf("unmarshaling t.ClaimedSpace: %w", err)
 			}
+			t.ClaimedSpace = append(t.ClaimedSpace, claimedSpace)
 		}
 	case cbg.MajByteString:
-		if err := t.ClaimedSpace.UnmarshalCBOR(cr); err != nil {
+		var claimedSpace big.Int
+		if err := claimedSpace.UnmarshalCBOR(cr); err != nil {
 			return fmt.Errorf("unmarshaling t.ClaimedSpace: %w", err)
 		}
+		t.ClaimedSpace = append(t.ClaimedSpace, claimedSpace)
 	default:
 		return fmt.Errorf("cbor input had wrong type")
 	}
