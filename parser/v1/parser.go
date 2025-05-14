@@ -505,5 +505,5 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, 
 			}
 		}
 	}
-	return actorName, txType, nil
+	return actorName, txType, err
 }

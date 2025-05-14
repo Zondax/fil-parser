@@ -30,9 +30,7 @@ func newClient(metricsClient metrics.MetricsClient, name string) *minerMetricsCl
 		name:          name,
 	}
 
-	s.registerModuleMetrics(actorNameFromAddressMetric)
-	s.registerModuleMetrics(processedMinerInfoTotalMetric)
-	s.registerModuleMetrics(processedMinerSectorsTotalMetric)
+	s.registerModuleMetrics(actorNameFromAddressMetric, processedMinerInfoTotalMetric, processedMinerSectorsTotalMetric)
 
 	return s
 }
