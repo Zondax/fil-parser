@@ -62,7 +62,7 @@ func (t *VerifyDealsForActivationParams) UnmarshalCBOR(r io.Reader) (err error) 
 		}
 
 		for i := 0; i < int(extra); i++ {
-			t.Sectors[i] = sectorDeals[version]()
+			t.Sectors[i] = customSectorDeals[version]()
 			if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
 				return fmt.Errorf("unmarshaling t.Sectors[%d]: %w", i, err)
 			}
