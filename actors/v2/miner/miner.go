@@ -326,7 +326,22 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	metadata, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok := applyRewardParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, err
 }
 
 func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -335,7 +350,22 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	metadata, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok := deferredCronEventParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, err
 }
 
 func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {

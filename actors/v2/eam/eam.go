@@ -73,7 +73,7 @@ func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.
 	return methods, nil
 }
 
-func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
+func (e *Eam) newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
 	getReturnStruct := func(actorID uint64, robustAddress *address.Address, ethAddress string) (string, *types.AddressInfo, parser.EamCreateReturn, error) {
 		createReturn := parser.EamCreateReturn{
 			ActorId:       actorID,
@@ -81,14 +81,26 @@ func newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *types.Add
 			EthAddress:    ethAddress,
 		}
 
+		var ethHashStr string
+		var robustAddressStr string
 		ethHash, err := ethtypes.EthHashFromCid(msgCid)
 		if err != nil {
-			return "", nil, createReturn, fmt.Errorf("error getting ethHash: %s", err)
+			e.logger.Warnf("error getting ethHash msgCid: %s actorID: %d ethAddress: %s", msgCid.String(), actorID, ethAddress)
+		} else {
+			ethHashStr = ethHash.String()
 		}
 
-		return ethHash.String(), &types.AddressInfo{
+		if robustAddress != nil {
+			if robustAddress.Empty() {
+				robustAddressStr = ""
+			} else {
+				robustAddressStr = robustAddress.String()
+			}
+		}
+
+		return ethHashStr, &types.AddressInfo{
 			Short:         parser.FilPrefix + strconv.FormatUint(actorID, 10),
-			Robust:        robustAddress.String(),
+			Robust:        robustAddressStr,
 			EthAddress:    parser.EthPrefix + ethAddress,
 			ActorType:     "evm",
 			CreationTxCid: msgCid.String(),
@@ -159,7 +171,9 @@ func validateEamReturn(ret typegen.CBORUnmarshaler) error {
 		if *addr == nil {
 			emptyAdd, _ := address.NewFromString("")
 			*addr = &emptyAdd
-			return fmt.Errorf("RobustAddress field is nil. Replaced with empty address")
+			// the robust address can be nil
+			// calibration: bafy2bzacedinpapwbjgevxivauhnqlunr6m2hsckgz2mmxdf67smxq4x47jn6
+			return nil
 		}
 		return nil
 	}

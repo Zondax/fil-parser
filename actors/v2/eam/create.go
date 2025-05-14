@@ -18,7 +18,7 @@ func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn 
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseCreateExternal(rawParams, rawReturn, msgCid, params, returnValue(), e.helper)
+	return parseCreateExternal(e, rawParams, rawReturn, msgCid, params, returnValue(), e.helper)
 }
 
 func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
@@ -31,7 +31,7 @@ func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, 
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseCreate(rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
+	return parseCreate(e, rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
 }
 
 func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
@@ -44,5 +44,5 @@ func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte,
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseCreate(rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
+	return parseCreate(e, rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
 }
