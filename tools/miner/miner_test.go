@@ -32,13 +32,17 @@ var (
 	actorCid    cid.Cid
 )
 
-func setupTest(t *testing.T) miner.EventGenerator {
-	logger := logger.NewDevelopmentLogger()
-	metrics := filMetrics.NewMetricsClient(metrics2.NewNoopMetrics())
-
+func init() {
 	var err error
 	actorCid, err = cid.Parse(actorCidStr)
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func setupTest(*testing.T) miner.EventGenerator {
+	logger := logger.NewDevelopmentLogger()
+	metrics := filMetrics.NewMetricsClient(metrics2.NewNoopMetrics())
 
 	node := &mocks.FullNode{}
 	node.On("StateNetworkName", mock.Anything).Return(dtypes.NetworkName("calibrationnet"), nil)
