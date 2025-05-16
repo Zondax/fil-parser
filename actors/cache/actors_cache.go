@@ -47,6 +47,8 @@ var CalibrationActorsId = map[string]bool{
 	"f01002": true,
 }
 
+const combinedCacheImpl = "combined"
+
 func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
 	var setupMu sync.Mutex
 	setupMu.Lock()
@@ -94,7 +96,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	}
 
 	if !onChainOnly {
-		actorCode, err := a.offChainCache.GetActorCode(add, key)
+		actorCode, err := a.offChainCache.GetActorCode(add, key, onChainOnly)
 		if err == nil {
 			return actorCode, nil
 		}
@@ -102,7 +104,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 
 	a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
-	actorCode, err := a.onChainCache.GetActorCode(add, key)
+	actorCode, err := a.onChainCache.GetActorCode(add, key, onChainOnly)
 	if err != nil {
 		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
@@ -244,6 +246,10 @@ func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) 
 	return sig, nil
 }
 
+func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string) error {
+	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig)
+}
+
 func (a *ActorsCache) storeActorCode(add address.Address, info types.AddressInfo) error {
 	shortAddress, err := a.GetShortAddress(add)
 	if err != nil {
@@ -291,6 +297,18 @@ func (a *ActorsCache) isBadAddress(add address.Address) bool {
 	return bad
 }
 
-func (a *ActorsCache) StoreAddressInfoAddress(addInfo types.AddressInfo) {
+func (a *ActorsCache) BackFill() error {
+	return a.offChainCache.BackFill()
+}
+
+func (a *ActorsCache) ImplementationType() string {
+	return combinedCacheImpl
+}
+
+func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger) error {
+	return nil
+}
+
+func (a *ActorsCache) StoreAddressInfo(addInfo types.AddressInfo) {
 	a.offChainCache.StoreAddressInfo(addInfo)
 }
