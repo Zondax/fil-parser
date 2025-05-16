@@ -293,7 +293,7 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 }
 
 func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
-	sectorActivations, err := getSlice[map[string]interface{}](params, KeySectorActivations, false)
+	sectorActivations, err := getSlice[map[string]interface{}](params, KeySectors, false)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +376,7 @@ func (eg *eventGenerator) parseConfirmSectorProofsValid(_ context.Context, tx *t
 }
 
 func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
-	sectorBitField, err := getIntegerSlice[int](params, KeySectors, false)
+	sectorBitField, err := getIntegerSlice[int](params, KeySectorNumbers, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing integer slice: %w", err)
 	}
