@@ -84,7 +84,7 @@ func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, meta
 	}
 	metadata[parser.EthHashKey] = ethHash
 
-	h.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+	h.GetActorsCache().StoreAddressInfo(*createdEvmActor)
 
 	return metadata, createdEvmActor, nil
 }

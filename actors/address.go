@@ -9,7 +9,7 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 )
 
-func ConsolidateRobustAddress(addr address.Address, actorCache *cache.ActorsCache, logger *logger.Logger, bestEffort bool) (string, error) {
+func ConsolidateRobustAddress(addr address.Address, actorCache cache.IActorsCache, logger *logger.Logger, bestEffort bool) (string, error) {
 	if isRobust, _ := common.IsRobustAddress(addr); isRobust {
 		// we need to handle cases where a f2 address for evm actors is used
 		// f2 -> f0 -> f4, as we want to consolidate the address to f4 style

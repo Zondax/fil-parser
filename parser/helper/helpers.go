@@ -75,13 +75,13 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
 	node       api.FullNode
-	actorCache *cache.ActorsCache
+	actorCache cache.IActorsCache
 	logger     *logger.Logger
 	metrics    *parsermetrics.ParserMetricsClient
 	network    string
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache cache.IActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
 	h := &Helper{
 		lib:        lib,
 		actorCache: actorsCache,
@@ -98,7 +98,7 @@ func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache 
 	return h
 }
 
-func (h *Helper) GetActorsCache() *cache.ActorsCache {
+func (h *Helper) GetActorsCache() cache.IActorsCache {
 	return h.actorCache
 }
 

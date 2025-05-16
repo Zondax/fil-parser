@@ -51,7 +51,7 @@ func (m *OnChain) ImplementationType() string {
 	return OnChainImpl
 }
 
-func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
+func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
 	actorCid, err := m.retrieveActorFromLotus(address, key)
 	if err != nil {
 		return cid.Undef.String(), err
@@ -161,4 +161,8 @@ func (m *OnChain) GetEVMSelectorSig(ctx context.Context, selectorHash string) (s
 
 func (m *OnChain) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error {
 	return fmt.Errorf("unimplimented")
+}
+
+func (m *OnChain) ClearBadAddressCache() {
+	// Nothing to do
 }

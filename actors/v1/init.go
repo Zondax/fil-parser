@@ -79,7 +79,7 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, rawReturn []byte) (map
 	}
 	metadata[parser.ReturnKey] = createdActor
 
-	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdActor)
+	p.helper.GetActorsCache().StoreAddressInfo(*createdActor)
 
 	return metadata, createdActor, nil
 }
@@ -119,7 +119,7 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, rawReturn []byte) (ma
 	}
 	metadata[parser.ReturnKey] = createdActor
 
-	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdActor)
+	p.helper.GetActorsCache().StoreAddressInfo(*createdActor)
 
 	return metadata, createdActor, nil
 }

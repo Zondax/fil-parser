@@ -1,0 +1,19 @@
+with-expecter: false
+
+packages:
+  github.com/filecoin-project/lotus/api:
+    interfaces:
+      FullNode:
+        config:
+          filename: "fullnode_mock.go"
+          dir: "tools/mocks"
+          outpkg: mocks
+          mockname: "FullNode"
+  github.com/zondax/fil-parser/actors/cache:
+    interfaces:
+      IActorsCache:
+        config:
+          filename: "actors_cache_mock.go"
+          dir: "tools/mocks"
+          outpkg: mocks
+          mockname: "IActorsCache"
