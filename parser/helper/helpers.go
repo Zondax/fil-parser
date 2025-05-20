@@ -162,8 +162,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 			return cid.Undef, actors.UnknownStr, err
 		}
 
-		version := tools.VersionFromHeight(h.network, height)
-		actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
+		actorName, err := h.GetActorNameFromCid(c, height)
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
@@ -174,6 +173,15 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 			return c, actorName, nil
 		}
 	}
+}
+
+func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) {
+	version := tools.VersionFromHeight(h.network, height)
+	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
+	if err != nil {
+		return "", err
+	}
+	return actorName, nil
 }
 
 // Deprecated: Use v2/tools.GetMethodName instead
