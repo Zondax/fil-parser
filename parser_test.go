@@ -1872,22 +1872,25 @@ func TestParseGenesis(t *testing.T) {
 
 func TestParseGenesisMultisig(t *testing.T) {
 	tests := []struct {
-		name            string
-		network         string
-		nodeUrl         string
-		cacheDataSource common.DataSource
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedAddresses int
 	}{
 		{
-			name:            "mainnet",
-			network:         "mainnet",
-			nodeUrl:         nodeUrl,
-			cacheDataSource: mainnetCacheDataSource,
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedAddresses: 9,
 		},
 		{
-			name:            "calibration",
-			network:         "calibration",
-			nodeUrl:         calibNextNodeUrl,
-			cacheDataSource: calibNextNodeCacheDataSource,
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedAddresses: 1,
 		},
 	}
 
@@ -1909,10 +1912,10 @@ func TestParseGenesisMultisig(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := context.Background()
-			gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+			gotMultiSigInfo, addresses, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
 			require.NoError(t, err)
 			require.NotNil(t, gotMultiSigInfo)
-
+			require.Equal(t, tt.expectedAddresses, addresses.Len())
 			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
 			require.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
 		})

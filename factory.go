@@ -334,7 +334,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 	return genesisTxs, addresses
 }
 
-func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
+func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, *types.AddressInfoMap, error) {
 	var multisigInfos []*types.MultisigInfo
 	addresses := types.NewAddressInfoMap()
 	for _, actor := range genesis.Actors.All {
@@ -357,12 +357,12 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		api := p.Helper.GetFilecoinNodeClient()
 		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)
 		if err != nil {
-			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
+			return nil, nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
 		}
 
 		metadataJson, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, fmt.Errorf("json.Marshal(): %s", err)
+			return nil, nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
 		multisigInfo := &types.MultisigInfo{
@@ -380,7 +380,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		multisigInfos = append(multisigInfos, multisigInfo)
 
 	}
-	return multisigInfos, nil
+	return multisigInfos, addresses, nil
 }
 
 func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
@@ -397,7 +397,7 @@ func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.
 	if err != nil {
 		return nil, fmt.Errorf("could not get robust address: %s. err: %s", addrStr, err)
 	}
-	actorCode, err := helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK, false)
+	actorCode, err := helper.GetActorsCache().GetActorCode(filAdd, tipsetKey, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor code: %s. err: %s", addrStr, err)
 	}
@@ -410,6 +410,14 @@ func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.
 		Short:     shortAdd,
 		Robust:    robustAdd,
 		ActorCid:  actorCode,
-		ActorType: actorName,
+		ActorType: parseActor(actorName),
 	}, nil
+}
+
+func parseActor(actor string) string {
+	s := strings.Split(actor, "/")
+	if len(s) < 1 {
+		return actor
+	}
+	return s[len(s)-1]
 }
