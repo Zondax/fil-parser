@@ -197,7 +197,7 @@ func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, he
 	}
 
 	if addressInfo != nil {
-		p.helper.GetActorsCache().StoreAddressInfoAddress(*addressInfo)
+		p.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
 	}
 
 	return data, addressInfo, err
