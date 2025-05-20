@@ -40,11 +40,14 @@ var SystemActorsId = map[string]bool{
 }
 
 // CalibrationActorsId Map to identify system actors which don't have an associated robust address in the calibration network
-// These are storage miners that initiated the calibration network
+// These are storage miners and multisig addresses that initiated the calibration network
 var CalibrationActorsId = map[string]bool{
+	// miners
 	"f01000": true,
 	"f01001": true,
 	"f01002": true,
+	// multisig
+	"f080": true,
 }
 
 func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
