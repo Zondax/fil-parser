@@ -525,16 +525,9 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	}
 
 	if txType == "" {
-		_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+		actorName, txType, err = p.getActorAndMethodName(ctx, trace, mainMsgCid, tipset)
 		if err != nil {
-			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
-		}
-		if actorName != "" {
-			txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
-			if err != nil {
-				p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
-				txType = parser.UnknownStr
-			}
+			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
 		}
 	}
 
@@ -553,4 +546,27 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	}
 
 	return actorName, txType, nil
+}
+
+func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
+	actorAddress := trace.Msg.To
+
+	_, actorName, err = p.helper.GetActorNameFromAddress(actorAddress, int64(tipset.Height()), tipset.Key())
+	if err != nil || actorName == "" {
+		p.logger.Warnf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
+		if trace.InvokedActor != nil {
+			actorName, err = p.helper.GetActorNameFromCid(trace.InvokedActor.State.Code, int64(tipset.Height()))
+			if err != nil {
+				p.logger.Errorf("Error when trying to get actor name from cid in tx cid'%s' using invoked actor: %v", mainMsgCid.String(), err)
+			}
+		}
+	}
+
+	if actorName != "" {
+		txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+		if err != nil {
+			txType = parser.UnknownStr
+		}
+	}
+	return actorName, txType, err
 }
