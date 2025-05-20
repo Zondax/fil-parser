@@ -37,6 +37,18 @@ var SystemActorsId = map[string]bool{
 	"f07":  true,
 	"f010": true,
 	"f099": true,
+
+	// multisig
+	"f080":  true,
+	"f090":  true,
+	"f0115": true,
+	"f0116": true,
+	"f0117": true,
+	"f0121": true,
+	"f0118": true,
+	"f0119": true,
+	"f0120": true,
+	"f0122": true,
 }
 
 // CalibrationActorsId Map to identify system actors which don't have an associated robust address in the calibration network
