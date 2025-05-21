@@ -244,6 +244,10 @@ func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) 
 	return sig, nil
 }
 
+func (a *ActorsCache) IsSystemActor(addr string) bool {
+	return SystemActorsId[addr]
+}
+
 func (a *ActorsCache) storeActorCode(add address.Address, info types.AddressInfo) error {
 	shortAddress, err := a.GetShortAddress(add)
 	if err != nil {

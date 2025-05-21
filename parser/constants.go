@@ -13,15 +13,16 @@ const (
 	FilPrefix   = "f0"
 
 	// metadata keys
-	ParamsKey    = "Params"
-	ReturnKey    = "Return"
-	ParamsRawKey = "ParamsRaw"
-	ReturnRawKey = "ReturnRaw"
-	ErrorKey     = "Error"
-	MethodNumKey = "MethodNum"
-	EthHashKey   = "ethHash"
-	AddressKey   = "address"
-	EthLogsKey   = "ethLogs"
+	ParamsKey          = "Params"
+	ReturnKey          = "Return"
+	ParamsRawKey       = "ParamsRaw"
+	ReturnRawKey       = "ReturnRaw"
+	ErrorKey           = "Error"
+	MethodNumKey       = "MethodNum"
+	EthHashKey         = "ethHash"
+	AddressKey         = "address"
+	EthLogsKey         = "ethLogs"
+	SystemExecutionKey = "SystemExecution"
 
 	UnknownStr = "unknown"
 

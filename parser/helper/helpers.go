@@ -269,6 +269,18 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 	return result, nil
 }
 
+func (h *Helper) IsSystemActor(addr address.Address) bool {
+	return h.actorCache.IsSystemActor(addr.String())
+}
+
+func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey) bool {
+	_, actorName, err := h.GetActorNameFromAddress(addr, height, tipsetKey)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(actorName, manifest.CronKey)
+}
+
 func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string) (bool, error) {
 	for _, addr := range addresses {
 		if addr == address.Undef {
