@@ -23,6 +23,7 @@ import (
 	evmv16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/miner"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -47,15 +48,36 @@ func (*Evm) StartNetworkHeight() int64 {
 	return tools.V18.Height()
 }
 
+func customMethods(e *Evm) map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		// This is a miner method verified from testing with CID: bafy2bzacealgb5zr5g2cc5emi7yc2mpragoufvt5lm54xzdkhdorpfgjhbshi on calibration.
+		abi.MethodNum(23): {
+			Name:   parser.MethodChangeOwnerAddressExported,
+			Method: e.ChangeOwnerAddress,
+		},
+
+		// This is a miner method verified from testing with CID: f3vmqpcytevkwn6fktjd2zelo4lftq6xzsb2vnmp2r3qarbr4vnso7c7y3nqi5gmxifp22m2pbqdctfxrwkmga on calibration.
+		abi.MethodNum(18): {
+			Name:   parser.MethodChangeMultiaddrsExported,
+			Method: e.ChangeMultiAddrs,
+		},
+		// https://github.com/filecoin-project/ref-fvm/issues/835#issuecomment-1236096270
+		abi.MethodNum(0): {
+			Name:   parser.MethodValueTransfer,
+			Method: e.ValueTransfer,
+		},
+	}
+}
+
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V18.String(): actors.CopyMethods(evmv10.Methods),
-	tools.V19.String(): actors.CopyMethods(evmv11.Methods),
-	tools.V20.String(): actors.CopyMethods(evmv11.Methods),
-	tools.V21.String(): actors.CopyMethods(evmv12.Methods),
-	tools.V22.String(): actors.CopyMethods(evmv13.Methods),
-	tools.V23.String(): actors.CopyMethods(evmv14.Methods),
-	tools.V24.String(): actors.CopyMethods(evmv15.Methods),
-	tools.V25.String(): actors.CopyMethods(evmv16.Methods),
+	tools.V18.String(): actors.CopyMethods(evmv10.Methods, customMethods(&Evm{})),
+	tools.V19.String(): actors.CopyMethods(evmv11.Methods, customMethods(&Evm{})),
+	tools.V20.String(): actors.CopyMethods(evmv11.Methods, customMethods(&Evm{})),
+	tools.V21.String(): actors.CopyMethods(evmv12.Methods, customMethods(&Evm{})),
+	tools.V22.String(): actors.CopyMethods(evmv13.Methods, customMethods(&Evm{})),
+	tools.V23.String(): actors.CopyMethods(evmv14.Methods, customMethods(&Evm{})),
+	tools.V24.String(): actors.CopyMethods(evmv15.Methods, customMethods(&Evm{})),
+	tools.V25.String(): actors.CopyMethods(evmv16.Methods, customMethods(&Evm{})),
 }
 
 func (e *Evm) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -163,4 +185,18 @@ func (*Evm) HandleFilecoinMethod(network string, height int64, rawParams, rawRet
 	}
 	return metadata, nil
 
+}
+
+func (e *Evm) ChangeOwnerAddress(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	m := miner.New(e.logger)
+	return m.ChangeOwnerAddressExported(network, height, rawParams)
+}
+
+func (e *Evm) ChangeMultiAddrs(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	m := miner.New(e.logger)
+	return m.ChangeMultiaddrsExported(network, height, rawParams)
+}
+
+func (e *Evm) ValueTransfer(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return map[string]interface{}{}, nil
 }

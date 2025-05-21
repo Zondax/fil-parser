@@ -4,18 +4,21 @@ import (
 	"container/list"
 	"fmt"
 	"math"
+
+	"github.com/filecoin-project/go-state-types/network"
 )
 
 const (
-	CalibrationNetwork = "calibration"
-	MainnetNetwork     = "mainnet"
+	CalibrationNetworkNodeType = "calibrationnet"
+	CalibrationNetwork         = "calibration"
+	MainnetNetwork             = "mainnet"
 )
 
 type version struct {
 	calibration int64
 	mainnet     int64
 
-	nodeVersion    int64
+	nodeVersion    uint
 	currentNetwork string
 }
 
@@ -69,7 +72,7 @@ func LatestVersion(network string) version {
 }
 
 func ParseRawNetworkName(network string) string {
-	if network == "calibrationnet" || network == CalibrationNetwork {
+	if network == CalibrationNetworkNodeType || network == CalibrationNetwork {
 		return CalibrationNetwork
 	}
 	return MainnetNetwork
@@ -183,8 +186,12 @@ func (v version) Height() int64 {
 	return v.mainnet
 }
 
-func (v version) NodeVersion() int64 {
+func (v version) NodeVersion() uint {
 	return v.nodeVersion
+}
+
+func (v version) FilNetworkVersion() network.Version {
+	return network.Version(v.nodeVersion)
 }
 
 // GetSupportedVersions returns all supported versions for a given network

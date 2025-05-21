@@ -14,7 +14,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
@@ -38,6 +40,8 @@ import (
 	v2 "github.com/zondax/fil-parser/parser/v2"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/golem/pkg/logger"
+	"github.com/zondax/golem/pkg/metrics"
+	"github.com/zondax/golem/pkg/zcache"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 
 	"github.com/zondax/fil-parser/types"
@@ -50,12 +54,23 @@ const (
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
 	nativeLogPrefix   = "nativelog"
-	nodeUrl           = "https://node-fil-mainnet-stable.zondax.ch/rpc/v1"
+	nodeUrl           = "https://node-fil-mainnet-light.zondax.ch/rpc/v1"
 	calibNextNodeUrl  = "https://node-fil-calibration-stable.zondax.ch/rpc/v1"
 	feeType           = "fee"
 )
 
-var gLogger = logger.NewDevelopmentLogger()
+var gLogger = logger.NewLogger(logger.Config{
+	Level:    "error",
+	Encoding: "text",
+})
+
+// var nodeUrlParserV1 *FilecoinParser
+// var calibNextNodeParserV1 *FilecoinParser
+// var nodeUrlParserV2 *FilecoinParser
+// var calibNextNodeParserV2 *FilecoinParser
+
+var mainnetCacheDataSource = getCacheDataSource("mainnet", nodeUrl)
+var calibNextNodeCacheDataSource = getCacheDataSource("calibration", calibNextNodeUrl)
 
 func getFilename(prefix, height string) string {
 	return fmt.Sprintf(`%s/%s_%s.%s`, dataPath, prefix, height, fileDataExtension)
@@ -136,25 +151,46 @@ func readNativeLogs(height string) ([]*filTypes.ActorEvent, error) {
 	return logs, nil
 }
 
-func getLotusClient(t *testing.T, url string) api.FullNode {
+func getLotusClient(url string) api.FullNode {
 	lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), url, http.Header{})
-	require.NoError(t, err)
-	require.NotNil(t, lotusClient, "Lotus client should not be nil")
+	if err != nil {
+		panic(err)
+	}
 
 	return lotusClient
 }
 
-func getLib(t *testing.T, nodeURL string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
-	lotusClient := getLotusClient(t, nodeURL)
+func getLib(nodeURL string) *rosettaFilecoinLib.RosettaConstructionFilecoin {
+	lotusClient := getLotusClient(nodeURL)
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-	require.NotNil(t, lib, "Rosetta lib should not be nil")
+	if lib == nil {
+		panic("Rosetta lib should not be nil")
+	}
 	return lib
 }
 
-func getCacheDataSource(t *testing.T, nodeURL string) common.DataSource {
+func getCacheDataSource(networkName string, nodeURL string) common.DataSource {
+	cacheTTL := -1
+
 	return common.DataSource{
-		Node: getLotusClient(t, nodeURL),
+		Node: getLotusClient(nodeURL),
+		Config: common.DataSourceConfig{
+			NetworkName: networkName,
+			Cache: &common.CacheConfig{
+				CombinedConfig: &zcache.CombinedConfig{
+					Local: &zcache.LocalConfig{},
+					Remote: &zcache.RemoteConfig{
+						Addr:     os.Getenv("REDIS_ADDR"),
+						Password: os.Getenv("REDIS_SECRET"),
+					},
+					IsRemoteBestEffort: false,
+					GlobalPrefix:       "ci",
+					GlobalMetricServer: metrics.NewNoopMetrics(),
+				},
+				Ttl: time.Duration(cacheTTL) * time.Second,
+			},
+		},
 	}
 }
 
@@ -180,8 +216,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 98,
-				totalTxCids:  99,
+				totalAddress: 224,
+				totalTxCids:  102,
 			},
 		},
 		{
@@ -191,8 +227,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "845259",
 			results: expectedResults{
 				totalTraces:  31,
-				totalAddress: 2,
-				totalTxCids:  0,
+				totalAddress: 6,
+				totalTxCids:  10,
 			},
 		},
 		{
@@ -202,8 +238,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 88,
-				totalTxCids:  147,
+				totalAddress: 227,
+				totalTxCids:  151,
 			},
 		},
 		{
@@ -213,8 +249,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 70,
-				totalTxCids:  118,
+				totalAddress: 201,
+				totalTxCids:  121,
 			},
 		},
 		{
@@ -224,8 +260,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 75,
-				totalTxCids:  97,
+				totalAddress: 196,
+				totalTxCids:  101,
 			},
 		},
 		{
@@ -235,8 +271,8 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 102,
-				totalTxCids:  177,
+				totalAddress: 266,
+				totalTxCids:  187,
 			},
 		},
 		{
@@ -247,22 +283,28 @@ func TestParser_ParseTransactions(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  37,
 				totalAddress: 11,
-				totalTxCids:  2,
+				totalTxCids:  5,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
+			l := getLib(tt.url)
+
+			var p *FilecoinParser
+			var err error
+			if tt.url == nodeUrl {
+				p, err = NewFilecoinParser(l, mainnetCacheDataSource, gLogger)
+			} else {
+				p, err = NewFilecoinParser(l, calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -310,15 +352,20 @@ func TestParser_GetBaseFee(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
+			var p *FilecoinParser
+			var err error
+			if tt.url == nodeUrl {
+				p, err = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+			} else {
+				p, err = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
-			require.NoError(t, err)
 			baseFee, err := p.GetBaseFee(traces, types.BlockMetadata{}, tipset)
 			require.NoError(t, err)
 			require.Equal(t, baseFee, tt.baseFee.Uint64())
@@ -348,7 +395,19 @@ func TestParser_InDepthCompare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
+			var p1 *FilecoinParser
+			var p2 *FilecoinParser
+			var err1 error
+			var err2 error
+			if tt.url == nodeUrl {
+				p1, err1 = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+				p2, err2 = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+			} else {
+				p1, err1 = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+				p2, err2 = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err1)
+			require.NoError(t, err2)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
@@ -357,23 +416,38 @@ func TestParser_InDepthCompare(t *testing.T) {
 			traces, err := readGzFile(tracesFilename(tt.height))
 			require.NoError(t, err)
 
-			p, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
-			require.NoError(t, err)
+			wg := sync.WaitGroup{}
+			wg.Add(2)
+			var parsedResultV1 *types.TxsParsedResult
+			var parsedResultV2 *types.TxsParsedResult
+			go func() {
+				txsData1 := types.TxsData{
+					EthLogs:  ethlogs,
+					Tipset:   tipset,
+					Traces:   traces,
+					Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
+				}
+				defer wg.Done()
+				parsedResultV1, err1 = p1.ParseTransactions(context.Background(), txsData1)
+			}()
+			go func() {
+				defer wg.Done()
+				txsData2 := types.TxsData{
+					EthLogs:  ethlogs,
+					Tipset:   tipset,
+					Traces:   traces,
+					Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}},
+				}
+				parsedResultV2, err2 = p2.ParseTransactions(context.Background(), txsData2)
+			}()
 
-			txsData := types.TxsData{
-				EthLogs:  ethlogs,
-				Tipset:   tipset,
-				Traces:   traces,
-				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
-			}
-			parsedResultV1, err := p.ParseTransactions(context.Background(), txsData)
-			require.NoError(t, err)
+			wg.Wait()
+
+			require.NoError(t, err1)
+			require.NoError(t, err2)
+
 			require.NotNil(t, parsedResultV1.Txs)
 			require.NotNil(t, parsedResultV1.Addresses)
-
-			txsData.Metadata = types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}}
-			parsedResultV2, err := p.ParseTransactions(context.Background(), txsData)
-			require.NoError(t, err)
 			require.NotNil(t, parsedResultV2.Txs)
 			require.NotNil(t, parsedResultV2.Addresses)
 
@@ -492,14 +566,18 @@ func TestParser_ParseEvents_EVM_FromTraceFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
+			var p *FilecoinParser
+			var err error
+			if tt.url == nodeUrl {
+				p, err = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+			} else {
+				p, err = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
 			ethlogs, err := readEthLogs(tt.height)
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -601,14 +679,18 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
+			var p *FilecoinParser
+			var err error
+			if tt.url == nodeUrl {
+				p, err = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+			} else {
+				p, err = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
 			nativeLogs, err := readNativeLogs(tt.height)
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			eventsData := types.EventsData{
@@ -662,7 +744,7 @@ func TestParser_ParseNativeEvents_FVM(t *testing.T) {
 		BlockMessages: nil,
 	}
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
+	parser, err := NewFilecoinParser(getLib(calibNextNodeUrl), calibNextNodeCacheDataSource, gLogger)
 	require.NoError(t, err)
 
 	eventType := ipldEncode(t, basicnode.Prototype.String.NewBuilder(), "market_deals_event")
@@ -1117,7 +1199,7 @@ func TestParser_ParseNativeEvents_EVM(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
+	parser, err := NewFilecoinParser(getLib(calibNextNodeUrl), calibNextNodeCacheDataSource, gLogger)
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1278,7 +1360,7 @@ func TestParser_ParseEthLogs(t *testing.T) {
 	assert.NoError(t, err)
 	eventDataHex := hex.EncodeToString(eventData)
 
-	parser, err := NewFilecoinParser(nil, getCacheDataSource(t, calibNextNodeUrl), gLogger)
+	parser, err := NewFilecoinParser(getLib(calibNextNodeUrl), calibNextNodeCacheDataSource, gLogger)
 	require.NoError(t, err)
 
 	tb := []struct {
@@ -1685,16 +1767,20 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
+			var p *FilecoinParser
+			var err error
+			if tt.url == nodeUrl {
+				p, err = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+			} else {
+				p, err = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
-			require.NoError(t, err)
-
-			p, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1737,46 +1823,103 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 }
 
 func TestParseGenesis(t *testing.T) {
-	network := "mainnet"
-	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
-	if err != nil {
-		t.Fatalf("Error getting genesis data: %s", err)
+	tests := []struct {
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedTxs       int
+		expectedBlockCid  string
+		expectedTipsetCid string
+	}{
+		{
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedTxs:       21,
+			expectedBlockCid:  "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2",
+			expectedTipsetCid: "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6",
+		},
+		{
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedTxs:       8,
+			expectedBlockCid:  "bafy2bzacecyaggy24wol5ruvs6qm73gjibs2l2iyhcqmvi7r7a4ph7zx3yqd4",
+			expectedTipsetCid: "bafy2bzacebbqulnhstepn4hdbgaxf2grjqxgu6itf53ml7tvyps2z7f726s32",
+		},
 	}
 
-	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger)
-	assert.NoError(t, err)
-	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			network := tt.network
+			genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+			require.NoError(t, err)
 
-	assert.Equal(t, len(actualTxs), 21)
-	assert.Equal(t, actualTxs[0].BlockCid, "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2")
-	assert.Equal(t, actualTxs[0].TipsetCid, "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6")
+			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
+			require.NoError(t, err)
+			actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+
+			assert.Equal(t, len(actualTxs), tt.expectedTxs)
+			assert.Equal(t, actualTxs[0].BlockCid, tt.expectedBlockCid)
+			assert.Equal(t, actualTxs[0].TipsetCid, tt.expectedTipsetCid)
+		})
+	}
+
 }
 
 func TestParseGenesisMultisig(t *testing.T) {
-	network := "mainnet"
-	genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
-	content, err := os.ReadFile(genesisFilePath)
-	require.NoError(t, err)
+	tests := []struct {
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedAddresses int
+	}{
+		{
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedAddresses: 9,
+		},
+		{
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedAddresses: 1,
+		},
+	}
 
-	var expectedMultisigInfo []*types.MultisigInfo
-	err = json.Unmarshal(content, &expectedMultisigInfo)
-	require.NoError(t, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			network := tt.network
+			genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
+			content, err := os.ReadFile(genesisFilePath)
+			require.NoError(t, err)
 
-	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
-	require.NoError(t, err)
+			var expectedMultisigInfo []*types.MultisigInfo
+			err = json.Unmarshal(content, &expectedMultisigInfo)
+			require.NoError(t, err)
 
-	lib := getLib(t, nodeUrl)
-	p, err := NewFilecoinParser(lib, getCacheDataSource(t, nodeUrl), gLogger)
-	require.NoError(t, err)
+			genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+			require.NoError(t, err)
 
-	ctx := context.Background()
-	gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
-	require.NoError(t, err)
-	require.NotNil(t, gotMultiSigInfo)
+			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
+			require.NoError(t, err)
 
-	assert.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
-	assert.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+			ctx := context.Background()
+			gotMultiSigInfo, addresses, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+			require.NoError(t, err)
+			require.NotNil(t, gotMultiSigInfo)
+			require.Equal(t, tt.expectedAddresses, addresses.Len())
+			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
+			require.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+		})
+	}
 }
 
 func TestParser_ActorVersionComparison(t *testing.T) {
@@ -1800,8 +1943,8 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 98,
-				totalTxCids:  99,
+				totalAddress: 224,
+				totalTxCids:  102,
 			},
 		},
 		{
@@ -1811,8 +1954,8 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 88,
-				totalTxCids:  147,
+				totalAddress: 227,
+				totalTxCids:  151,
 			},
 		},
 		{
@@ -1822,8 +1965,8 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 70,
-				totalTxCids:  118,
+				totalAddress: 201,
+				totalTxCids:  121,
 			},
 		},
 		{
@@ -1833,8 +1976,8 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 75,
-				totalTxCids:  97,
+				totalAddress: 196,
+				totalTxCids:  101,
 			},
 			shouldFail: true,
 		},
@@ -1845,8 +1988,8 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 102,
-				totalTxCids:  177,
+				totalAddress: 266,
+				totalTxCids:  187,
 			},
 		},
 		{
@@ -1857,25 +2000,31 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			results: expectedResults{
 				totalTraces:  37,
 				totalAddress: 11,
-				totalTxCids:  2,
+				totalTxCids:  5,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lib := getLib(t, tt.url)
-
+			var pv1 *FilecoinParser
+			var pv2 *FilecoinParser
+			var err1 error
+			var err2 error
+			if tt.url == nodeUrl {
+				pv1, err1 = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+				pv2, err2 = NewFilecoinParserWithActorV2(getLib(tt.url), mainnetCacheDataSource, gLogger)
+			} else {
+				pv1, err1 = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+				pv2, err2 = NewFilecoinParserWithActorV2(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+			}
+			require.NoError(t, err1)
+			require.NoError(t, err2)
 			tipset, err := readTipset(tt.height)
 			require.NoError(t, err)
 			fmt.Println("tipset", tipset.Height())
 			ethlogs, err := readEthLogs(tt.height)
 			require.NoError(t, err)
 			traces, err := readGzFile(tracesFilename(tt.height))
-			require.NoError(t, err)
-
-			pv1, err := NewFilecoinParser(lib, getCacheDataSource(t, tt.url), gLogger)
-			require.NoError(t, err)
-			pv2, err := NewFilecoinParserWithActorV2(lib, getCacheDataSource(t, tt.url), gLogger)
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
@@ -1885,22 +2034,35 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
 			}
 
-			parsedResultActorV1, err := pv1.ParseTransactions(context.Background(), txsData)
-			require.NoError(t, err)
-			parsedResultActorV2, err := pv2.ParseTransactions(context.Background(), txsData)
-			require.NoError(t, err)
+			wg := sync.WaitGroup{}
+			wg.Add(2)
+			var parsedResultActorV1 *types.TxsParsedResult
+			var parsedResultActorV2 *types.TxsParsedResult
+			go func() {
+				defer wg.Done()
+				parsedResultActorV1, err1 = pv1.ParseTransactions(context.Background(), txsData)
+			}()
+			go func() {
+				defer wg.Done()
+				parsedResultActorV2, err2 = pv2.ParseTransactions(context.Background(), txsData)
+			}()
+
+			wg.Wait()
+
+			require.NoErrorf(t, err1, "error parsing v1: %s", err1)
+			require.NoErrorf(t, err2, "error parsing v2: %s", err2)
 
 			require.NotNil(t, parsedResultActorV1.Txs)
 			require.NotNil(t, parsedResultActorV2.Txs)
 
 			require.Equal(t, len(parsedResultActorV1.Txs), len(parsedResultActorV2.Txs))
-			require.Equal(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
-			require.Equal(t, len(parsedResultActorV1.TxCids), len(parsedResultActorV2.TxCids))
 
-			require.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
-			require.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
-			require.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
+			assert.Equal(t, len(parsedResultActorV1.TxCids), len(parsedResultActorV2.TxCids))
+			assert.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
+			assert.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
+			assert.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
 
+			require.Equalf(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len(), "v1 %d , v2 %d", parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
 			// compare tx metadata
 			failedTxType := map[string]string{}
 			for i, tx := range parsedResultActorV1.Txs {
@@ -1942,7 +2104,10 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 				}
 				if metadataV1[parser.ReturnKey] != nil {
-					require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					// ClaimAllocations return struct changed to support slices
+					if tx.TxType != parser.MethodClaimAllocations {
+						require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					}
 				}
 
 			}

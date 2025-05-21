@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"math"
@@ -20,7 +21,8 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-var sectorDeals = map[string]func() cbg.CBORUnmarshaler{
+// some sector deals DO NOT deals include the sector number
+var customSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	// From V20!
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.SectorDeals) },
 	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.SectorDeals) },
@@ -29,6 +31,17 @@ var sectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
+}
+
+// some sector deals INCLUDE the sector number
+var canonicalSectorDeals = map[string]func() cbg.CBORUnmarshaler{
+	// From V20!
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.SectorDeals) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.SectorDeals) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.SectorDeals) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.SectorDeals) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.SectorDeals) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SectorDeals) },
 }
 
 var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
@@ -77,6 +90,8 @@ type SectorDealActivation struct {
 	NonVerifiedDealSpace big.Int
 	VerifiedInfos        []cbg.CBORUnmarshaler
 	UnsealedCid          cbg.CborCid
+
+	nextSectorDealsBytes []byte
 }
 
 func (t *BatchActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
@@ -102,38 +117,86 @@ func (t *BatchActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Sectors ([]SectorDeals) (slice)
-	{
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-
-		if extra > 8192 {
-			return fmt.Errorf("t.Sectors: array too large (%d)", extra)
-		}
-
-		if maj != cbg.MajArray {
-			return fmt.Errorf("expected cbor array")
-		}
-
-		if extra > 0 {
-			t.Sectors = make([]cbg.CBORUnmarshaler, extra)
-		}
-
-		for i := 0; i < int(extra); i++ {
-			t.Sectors[i] = sectorDeals[version]()
-			if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
-				return fmt.Errorf("unmarshaling t.Sectors[%d]: %w", i, err)
-			}
-		}
+	data, err := io.ReadAll(cr)
+	if err != nil {
+		return fmt.Errorf("reading t.Sectors: %w", err)
 	}
 
-	// t.ComputeCID (cbg.CborBool) (bool)
+	err = t.customSectorDeal(version, bytes.NewReader(data))
+	if err != nil {
+		err = t.canonicalSectorDeal(version, bytes.NewReader(data))
+	}
+	if err != nil {
+		return fmt.Errorf("t.Sectors error: %w", err)
+	}
+
+	return nil
+}
+
+func (t *BatchActivateDealsParams) customSectorDeal(version string, data io.Reader) error {
+	cr := cbg.NewCborReader(data)
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Sectors = make([]cbg.CBORUnmarshaler, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		t.Sectors[i] = customSectorDeals[version]()
+		err := t.Sectors[i].UnmarshalCBOR(cr)
+		if err != nil {
+			return fmt.Errorf("unmarshaling version: %s, t.Sectors[%d]: %w", version, i, err)
+		}
+	}
 	if err := t.ComputeCID.UnmarshalCBOR(cr); err != nil {
 		return fmt.Errorf("unmarshaling t.ComputeCID: %w", err)
 	}
+	return nil
+}
 
+func (t *BatchActivateDealsParams) canonicalSectorDeal(version string, data io.Reader) error {
+	cr := cbg.NewCborReader(data)
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Sectors = make([]cbg.CBORUnmarshaler, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		t.Sectors[i] = canonicalSectorDeals[version]()
+
+		err := t.Sectors[i].UnmarshalCBOR(cr)
+
+		if err != nil {
+			return fmt.Errorf("unmarshaling version: %s, t.Sectors[%d]: %w", version, i, err)
+		}
+	}
+
+	if err := t.ComputeCID.UnmarshalCBOR(cr); err != nil {
+		return fmt.Errorf("unmarshaling t.ComputeCID: %w", err)
+	}
 	return nil
 }
 
@@ -191,7 +254,11 @@ func (t *BatchActivateDealsResult) UnmarshalCBOR(r io.Reader) (err error) {
 				version: version,
 			}
 			if err := t.Activations[i].UnmarshalCBOR(cr); err != nil {
-				return fmt.Errorf("unmarshaling t.Activations[%d]: %w", i, err)
+				return fmt.Errorf("unmarshaling version: %s, t.Activations[%d]: %w", version, i, err)
+			}
+			// reset reader to next bytes
+			if t.Activations[i].nextSectorDealsBytes != nil {
+				cr = cbg.NewCborReader(bytes.NewReader(t.Activations[i].nextSectorDealsBytes))
 			}
 		}
 	}
@@ -208,6 +275,7 @@ func (t *SectorDealActivation) UnmarshalCBOR(r io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
@@ -218,17 +286,33 @@ func (t *SectorDealActivation) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 3 && extra != 2 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.NonVerifiedDealSpace (big.Int) (struct)
-	{
+	// read all bytes
+	// NOTE: Once we do this, and this structure is part of an array we need to return the remaining bytes to the caller to continue processing.( t.nextSectorDealsBytes )
+	data, err := io.ReadAll(cr)
+	if err != nil {
+		return fmt.Errorf("reading t.NonVerifiedDealSpace: %w", err)
+	}
+	// read next data type
+	cr = cbg.NewCborReader(bytes.NewReader(data))
+	maj, _, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	// reset cbor reader to read actual data
+	cr = cbg.NewCborReader(bytes.NewReader(data))
+
+	// NonVerifiedDealSpace may not be included
+	if maj == cbg.MajByteString {
+		// t.NonVerifiedDealSpace (big.Int) (struct)
 
 		if err := t.NonVerifiedDealSpace.UnmarshalCBOR(cr); err != nil {
 			return fmt.Errorf("unmarshaling t.NonVerifiedDealSpace: %w", err)
 		}
-
 	}
 
 	// t.VerifiedInfos ([]VerifiedDealInfo) (slice)
@@ -261,15 +345,24 @@ func (t *SectorDealActivation) UnmarshalCBOR(r io.Reader) (err error) {
 	// The UnsealedCID will be a valid CID only when ActivateDealParams.ComputeCID was equal to true
 	// The UnsealedCID will be= null when ActivateDealParams.ComputeCID was equal to false
 	// null in CBOR: Major = MajOther and extra = 22
+
+	// we need to read all bytes because checking the header reads bytes from the original buffer
+	data, err = io.ReadAll(cr)
+	if err != nil {
+		return fmt.Errorf("reading t.UnsealedCid: %w", err)
+	}
+
+	cr = cbg.NewCborReader(bytes.NewReader(data))
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
 	}
-
 	if maj == cbg.MajOther && extra == 22 {
-		return nil
+		return t.setRemainingBytes(cr)
 	}
 
+	// reset buffer and read the unsealed cid
+	cr = cbg.NewCborReader(bytes.NewReader(data))
 	// t.UnsealedCid (cid.Cid) (struct)
 	{
 		if err := t.UnsealedCid.UnmarshalCBOR(cr); err != nil {
@@ -277,6 +370,15 @@ func (t *SectorDealActivation) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 	}
 
+	return t.setRemainingBytes(cr)
+}
+func (t *SectorDealActivation) setRemainingBytes(cr *cbg.CborReader) error {
+	// read remaining bytes
+	data, err := io.ReadAll(cr)
+	if err != nil {
+		return fmt.Errorf("reading remaining bytes: %w", err)
+	}
+	t.nextSectorDealsBytes = data
 	return nil
 }
 

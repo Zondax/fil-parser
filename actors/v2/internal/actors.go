@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors"
@@ -28,7 +29,12 @@ import (
 // GetActor returns a new instance of the specified actor type. It does not return multisig actors to avoid
 // circular dependencies, as multisig also needs all actors to parse 'propose'.
 func GetActor(actor string, logger *logger.Logger, helper *helper.Helper, metrics *actormetrics.ActorsMetricsClient) (actors.Actor, error) {
-	switch actor {
+	actorName := actor
+	if strings.Contains(actor, "/") {
+		parts := strings.Split(actor, "/")
+		actorName = parts[len(parts)-1]
+	}
+	switch actorName {
 	case manifest.AccountKey:
 		return account.New(logger), nil
 	case manifest.CronKey:

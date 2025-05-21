@@ -13,15 +13,16 @@ func authenticateMessageGeneric[P typegen.CBORUnmarshaler, R typegen.CBORUnmarsh
 	reader := bytes.NewReader(raw)
 	err := params.UnmarshalCBOR(reader)
 	if err != nil {
-		fmt.Println("error unmarshalling params", len(raw))
 		return metadata, fmt.Errorf("error unmarshalling params: %w", err)
 	}
 	metadata[parser.ParamsKey] = params
-	reader = bytes.NewReader(rawReturn)
-	err = r.UnmarshalCBOR(reader)
-	if err != nil {
-		return metadata, fmt.Errorf("error unmarshalling return: %w", err)
+	if len(rawReturn) > 0 {
+		reader = bytes.NewReader(rawReturn)
+		err = r.UnmarshalCBOR(reader)
+		if err != nil {
+			return metadata, fmt.Errorf("error unmarshalling return: %w", err)
+		}
+		metadata[parser.ReturnKey] = r
 	}
-	metadata[parser.ReturnKey] = r
 	return metadata, nil
 }

@@ -36,7 +36,9 @@ func newClient(metricsClient metrics.MetricsClient, name string) *minerMetricsCl
 }
 
 const (
-	actorNameFromAddress = "fil-parser_miner_actor_name_from_address"
+	actorNameFromAddress       = "fil-parser_miner_actor_name_from_address"
+	processedMinerEventsTotal  = "fil-parser_miner_processed_events_total"
+	processedMinerSectorsTotal = "fil-parser_miner_processed_sectors_total"
 )
 
 var (
@@ -60,6 +62,11 @@ func (c *minerMetricsClient) registerModuleMetrics(metrics ...metrics.Metric) {
 func (c *minerMetricsClient) IncrementMetric(name string, labels ...string) error {
 	labels = append(labels, c.name)
 	return c.MetricsClient.IncrementMetric(name, labels...)
+}
+
+func (c *minerMetricsClient) UpdateMetric(name string, value float64, labels ...string) error {
+	labels = append(labels, c.name)
+	return c.MetricsClient.UpdateMetric(name, value, labels...)
 }
 
 func (c *minerMetricsClient) UpdateActorNameFromAddressMetric() error {

@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	actormetrics "github.com/zondax/fil-parser/actors/metrics"
-	"github.com/zondax/fil-parser/metrics"
-	"github.com/zondax/golem/pkg/logger"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
+	actormetrics "github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -33,9 +37,38 @@ var SystemActorsId = map[string]bool{
 	"f07":  true,
 	"f010": true,
 	"f099": true,
+
+	// multisig
+	"f080":  true,
+	"f090":  true,
+	"f0115": true,
+	"f0116": true,
+	"f0117": true,
+	"f0121": true,
+	"f0118": true,
+	"f0119": true,
+	"f0120": true,
+	"f0122": true,
 }
 
-func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient) (*ActorsCache, error) {
+// CalibrationActorsId Map to identify system actors which don't have an associated robust address in the calibration network
+// These are storage miners and multisig addresses that initiated the calibration network
+var CalibrationActorsId = map[string]bool{
+	// miners
+	"f01000": true,
+	"f01001": true,
+	"f01002": true,
+	// multisig
+	"f080": true,
+}
+
+const combinedCacheImpl = "combined"
+
+func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
+	var setupMu sync.Mutex
+	setupMu.Lock()
+	defer setupMu.Unlock()
+
 	var offChainCache IActorsCache
 	var onChainCache impl.OnChain
 
@@ -63,6 +96,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 		logger:        logger,
 		httpClient:    resty.New().SetTimeout(30 * time.Second),
 		metrics:       actormetrics.NewClient(metrics, "actorsCache"),
+		networkName:   dataSource.Config.NetworkName,
 	}, nil
 }
 
@@ -77,7 +111,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	}
 
 	if !onChainOnly {
-		actorCode, err := a.offChainCache.GetActorCode(add, key)
+		actorCode, err := a.offChainCache.GetActorCode(add, key, onChainOnly)
 		if err == nil {
 			return actorCode, nil
 		}
@@ -85,7 +119,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 
 	a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
-	actorCode, err := a.onChainCache.GetActorCode(add, key)
+	actorCode, err := a.onChainCache.GetActorCode(add, key, onChainOnly)
 	if err != nil {
 		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
@@ -111,6 +145,12 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	if _, ok := SystemActorsId[add.String()]; ok {
 		return add.String(), nil
+	}
+
+	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
+		if _, ok := CalibrationActorsId[add.String()]; ok {
+			return add.String(), nil
+		}
 	}
 
 	// Try offline store cache
@@ -221,6 +261,10 @@ func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) 
 	return sig, nil
 }
 
+func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string) error {
+	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig)
+}
+
 func (a *ActorsCache) storeActorCode(add address.Address, info types.AddressInfo) error {
 	shortAddress, err := a.GetShortAddress(add)
 	if err != nil {
@@ -268,6 +312,18 @@ func (a *ActorsCache) isBadAddress(add address.Address) bool {
 	return bad
 }
 
-func (a *ActorsCache) StoreAddressInfoAddress(addInfo types.AddressInfo) {
+func (a *ActorsCache) BackFill() error {
+	return a.offChainCache.BackFill()
+}
+
+func (a *ActorsCache) ImplementationType() string {
+	return combinedCacheImpl
+}
+
+func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger) error {
+	return nil
+}
+
+func (a *ActorsCache) StoreAddressInfo(addInfo types.AddressInfo) {
 	a.offChainCache.StoreAddressInfo(addInfo)
 }

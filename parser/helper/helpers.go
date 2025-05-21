@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/ipfs/go-cid"
 	// The following import is necessary to ensure that the init() function
@@ -37,6 +38,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/tools"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 	"github.com/zondax/rosetta-filecoin-lib/actors"
 
@@ -73,22 +75,30 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
 	node       api.FullNode
-	actorCache *cache.ActorsCache
+	actorCache cache.IActorsCache
 	logger     *logger.Logger
 	metrics    *parsermetrics.ParserMetricsClient
+	network    string
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
-	return &Helper{
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache cache.IActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
+	h := &Helper{
 		lib:        lib,
 		actorCache: actorsCache,
 		node:       node,
 		logger:     logger2.GetSafeLogger(logger),
 		metrics:    parsermetrics.NewClient(metrics, "helper"),
 	}
+	network, err := h.node.StateNetworkName(context.Background())
+	if err != nil {
+		h.logger.Errorf("could not get network name: %v", err)
+		return nil
+	}
+	h.network = tools.ParseRawNetworkName(string(network))
+	return h
 }
 
-func (h *Helper) GetActorsCache() *cache.ActorsCache {
+func (h *Helper) GetActorsCache() cache.IActorsCache {
 	return h.actorCache
 }
 
@@ -100,7 +110,7 @@ func (h *Helper) GetFilecoinNodeClient() api.FullNode {
 	return h.node
 }
 
-func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey) *types.AddressInfo {
+func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey, height abi.ChainEpoch) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
 
@@ -108,6 +118,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
+	version := tools.VersionFromHeight(h.network, int64(height))
 	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 	if err != nil {
 		h.logger.Errorf("could not get actor code from address. Err: %s", err)
@@ -116,17 +127,12 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		if err != nil {
 			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 		}
-		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCid(c)
+		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
-	}
-
-	// Ignore searching robust addresses for Msig and miners
-	if addInfo.ActorType == manifest.MinerKey || addInfo.ActorType == manifest.MultisigKey {
-		return addInfo
 	}
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
@@ -137,9 +143,9 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	return addInfo
 }
 
-func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
 	if add == address.Undef {
-		return "", errors.New("address is undefined")
+		return cid.Undef, "", errors.New("address is undefined")
 	}
 
 	onChainOnly := false
@@ -147,26 +153,35 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		// Search for actor in cache
 		actorCode, err := h.actorCache.GetActorCode(add, key, onChainOnly)
 		if err != nil {
-			return actors.UnknownStr, err
+			return cid.Undef, actors.UnknownStr, err
 		}
 
 		c, err := cid.Parse(actorCode)
 		if err != nil {
 			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
-			return actors.UnknownStr, err
+			return cid.Undef, actors.UnknownStr, err
 		}
 
-		actorName, err := h.lib.BuiltinActors.GetActorNameFromCid(c)
+		actorName, err := h.GetActorNameFromCid(c, height)
 		if err != nil {
-			return actors.UnknownStr, err
+			return cid.Undef, actors.UnknownStr, err
 		}
 
 		if actorName == manifest.PlaceholderKey && !onChainOnly {
 			onChainOnly = true
 		} else {
-			return actorName, nil
+			return c, actorName, nil
 		}
 	}
+}
+
+func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) {
+	version := tools.VersionFromHeight(h.network, height)
+	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
+	if err != nil {
+		return "", err
+	}
+	return actorName, nil
 }
 
 // Deprecated: Use v2/tools.GetMethodName instead
@@ -185,7 +200,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	_, actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
 	}
@@ -267,7 +282,7 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		if addr == address.Undef {
 			continue
 		}
-		actorName, err := h.GetActorNameFromAddress(addr, height, key)
+		_, actorName, err := h.GetActorNameFromAddress(addr, height, key)
 		if err != nil {
 			return false, err
 		}

@@ -6,6 +6,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/miner/types"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -123,7 +124,8 @@ func (*Miner) PreCommitSectorBatch(network string, height int64, rawParams []byt
 }
 
 func (*Miner) GetSectorSize(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	return nil, fmt.Errorf("unsupported height: %d", height)
+
+	return parseGeneric(rawReturn, nil, false, &types.GetSectorSizeReturn{}, &abi.EmptyValue{}, parser.ParamsKey)
 }
 
 func (*Miner) ProveCommitSectorsNI(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

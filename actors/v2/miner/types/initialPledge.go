@@ -9,6 +9,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// InitialPledgeReturn is implemented in the rust builtin-actors but not the golang version
 type InitialPledgeReturn struct {
 	Amount abi.TokenAmount
 }

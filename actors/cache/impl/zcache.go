@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/filecoin-project/go-address"
@@ -41,6 +42,10 @@ type ZCache struct {
 }
 
 func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
+	var newImplMu sync.Mutex
+	newImplMu.Lock()
+	defer newImplMu.Unlock()
+
 	var err error
 	m.logger = logger2.GetSafeLogger(logger)
 
@@ -159,7 +164,7 @@ func (m *ZCache) BackFill() error {
 	return nil
 }
 
-func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
+func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
 		m.logger.Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
@@ -334,4 +339,8 @@ func (m *ZCache) tryToGetF4Address(ctx context.Context, address address.Address)
 
 	m.logger.Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
 	return ""
+}
+
+func (m *ZCache) ClearBadAddressCache() {
+	// Nothing to do
 }

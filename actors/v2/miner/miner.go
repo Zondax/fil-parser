@@ -47,9 +47,12 @@ func (*Miner) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-// implemented in the rust builtin-actors but not the golang version
+// Implemented in the rust builtin-actors but not the golang version
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
+
+// Implemented in a fork https://github.com/ipfs-force-community/builtin-actors/blob/99642572098400e6bbdff27c5126714781350fce/actors/miner/src/lib.rs#L131
+var movePartitionsMethodNum = abi.MethodNum(33)
 
 func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	m := &Miner{}
@@ -136,6 +139,10 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 		nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetBeneficiary): {
 			Name:   parser.MethodGetBeneficiary,
 			Method: m.GetBeneficiary,
+		},
+		movePartitionsMethodNum: {
+			Name:   parser.MethodMovePartitions,
+			Method: m.MovePartitions,
 		},
 	}
 }
@@ -319,7 +326,22 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	metadata, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok := applyRewardParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, err
 }
 
 func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
@@ -328,7 +350,22 @@ func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	metadata, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok := deferredCronEventParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+			if err != nil {
+				continue
+			}
+			break
+		}
+	}
+	return metadata, err
 }
 
 func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
@@ -337,4 +374,8 @@ func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []by
 
 func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	return parseGeneric(rawParams, rawReturn, true, &types.MaxTerminationFeeParams{}, &types.MaxTerminationFeeReturn{}, parser.ParamsKey)
+}
+
+func (*Miner) MovePartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	return parseGeneric(rawParams, nil, false, &types.MovePartitionsParams{}, &abi.EmptyValue{}, parser.ParamsKey)
 }

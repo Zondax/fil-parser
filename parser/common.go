@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
 	"time"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors/cache/impl"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -57,11 +60,32 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 
 	for _, i := range info {
 		switch i.ActorType {
-		case manifest.MultisigKey:
+		case manifest.EvmKey:
+			if i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != "" {
+				prev, ok := addressMap.Get(i.Short)
+				if ok {
+					// this may happen because of direct storage from the evm parser
+					if prev.CreationTxCid == "" || prev.ActorCid == "" {
+						ok = false
+					}
+				}
+				if !ok {
+					addressMap.Set(i.Short, i)
+				}
+			}
+		// miner & multisig: we skip any addressInfo without a CreationTxCid. The CreationTxCid is only obtained from parsing init.Exec Txs.
+		case manifest.MultisigKey, manifest.MinerKey:
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
-			if i.Short != "" {
-				if _, ok := addressMap.Get(i.Short); !ok {
+			if i.Short != "" && i.CreationTxCid != "" && i.ActorCid != "" {
+				prev, ok := addressMap.Get(i.Short)
+				if ok {
+					// this may happen because of direct storage from the miner/msig parser for diff. tx_types on the same address
+					if prev.CreationTxCid == "" || prev.ActorCid == "" {
+						ok = false
+					}
+				}
+				if !ok {
 					addressMap.Set(i.Short, i)
 				}
 			}
@@ -93,8 +117,19 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 
 func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
 	ctx := context.Background()
-	ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+	ethHash, err := impl.NodeApiCallWithRetry([]string{"RPC client error"}, 3, 10*time.Second, func() (*ethtypes.EthHash, error) {
+		ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+		if err != nil || ethHash == nil {
+			return nil, err
+		}
+		return ethHash, nil
+	})
+
 	if err != nil || ethHash == nil {
+		hash, err := ethtypes.EthHashFromCid(mainMsgCid)
+		if err == nil {
+			return hash.String(), nil
+		}
 		return "", err
 	}
 

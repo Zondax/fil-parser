@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/parser"
-	"strconv"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin/v11/eam"
@@ -108,7 +109,7 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 		CreationTxCid: msgCid.String(),
 	}
 
-	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+	p.helper.GetActorsCache().StoreAddressInfo(*createdEvmActor)
 
 	return metadata, createdEvmActor, nil
 }
@@ -144,7 +145,7 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 		CreationTxCid: msgCid.String(),
 	}
 
-	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+	p.helper.GetActorsCache().StoreAddressInfo(*createdEvmActor)
 
 	return metadata, createdEvmActor, nil
 }
@@ -184,7 +185,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 		CreationTxCid: msgCid.String(),
 	}
 
-	p.helper.GetActorsCache().StoreAddressInfoAddress(*createdEvmActor)
+	p.helper.GetActorsCache().StoreAddressInfo(*createdEvmActor)
 
 	return metadata, createdEvmActor, nil
 }

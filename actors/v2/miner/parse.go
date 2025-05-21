@@ -156,6 +156,9 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodMaxTerminationFee, parser.MethodMaxTerminationFeeExported:
 		resp, err := m.MaxTerminationFeeExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
+	case parser.MethodMovePartitions:
+		resp, err := m.MovePartitions(network, height, msg.Params)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -223,5 +226,6 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodInitialPledge:                      m.InitialPledgeExported,
 		parser.MethodMaxTerminationFee:                  m.MaxTerminationFeeExported,
 		parser.MethodMaxTerminationFeeExported:          m.MaxTerminationFeeExported,
+		parser.MethodMovePartitions:                     m.MovePartitions,
 	}
 }

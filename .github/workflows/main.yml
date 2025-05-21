@@ -51,10 +51,7 @@ jobs:
 
   tests:
     runs-on: zondax-runners
-    container:
-      image: golang:1.23.7
-      options: --tty
-    timeout-minutes: 50
+    timeout-minutes: 120
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,7 +60,16 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.7'
+
+      - name: Install dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y build-essential wget curl gettext-base jq git
+      
       - name: test
+        env:
+          REDIS_ADDR: ${{ secrets.REDIS_ADDR }}
+          REDIS_SECRET: ${{ secrets.REDIS_SECRET }}
         run: |
           git config --global --add safe.directory "*"
           make test
