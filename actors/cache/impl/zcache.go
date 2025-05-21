@@ -164,7 +164,9 @@ func (m *ZCache) BackFill() error {
 	return nil
 }
 
-// IsSystemActor returns false for all ZCache implementations
+// IsSystemActor returns false for all ZCache implementations as the system actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
 func (m *ZCache) IsSystemActor(_ string) bool {
 	return false
 }

@@ -99,7 +99,9 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 	return shortAdd, nil
 }
 
-// IsSystemActor returns false for all OnChain implementations
+// IsSystemActor returns false for all OnChain implementations as the system actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
 func (m *OnChain) IsSystemActor(_ string) bool {
 	return false
 }

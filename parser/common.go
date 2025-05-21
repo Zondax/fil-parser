@@ -62,9 +62,6 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 		switch i.ActorType {
 		case manifest.EvmKey:
 			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != ""
-			if i.IsSystemActor {
-				cond = i.Robust != "" && i.Short != "" && i.ActorCid != "" && i.ActorType != ""
-			}
 			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
@@ -83,7 +80,7 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 			// addresses do not have a robust address (genesis addresses)
 			cond := i.Short != "" && i.CreationTxCid != "" && i.ActorCid != ""
 			if i.IsSystemActor {
-				cond = i.Short != "" && i.Robust != "" && i.ActorCid != "" && i.ActorType != ""
+				cond = i.Short != "" && i.ActorCid != "" && i.ActorType != ""
 			}
 			if cond {
 				prev, ok := addressMap.Get(i.Short)
@@ -100,7 +97,7 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 		default:
 			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short
 			if i.IsSystemActor {
-				cond = i.Robust != "" && i.Short != "" && i.ActorCid != "" && i.ActorType != ""
+				cond = i.Short != "" && i.ActorCid != "" && i.ActorType != ""
 			}
 			if cond {
 				if _, ok := addressMap.Get(i.Short); !ok {
