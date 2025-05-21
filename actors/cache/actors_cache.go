@@ -261,6 +261,9 @@ func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) 
 	return sig, nil
 }
 
+func (a *ActorsCache) IsSystemActor(addr string) bool {
+	return SystemActorsId[addr]
+}
 func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string) error {
 	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig)
 }

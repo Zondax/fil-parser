@@ -164,6 +164,13 @@ func (m *ZCache) BackFill() error {
 	return nil
 }
 
+// IsSystemActor returns false for all ZCache implementations as the system actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *ZCache) IsSystemActor(_ string) bool {
+	return false
+}
+
 func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {

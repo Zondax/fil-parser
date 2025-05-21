@@ -28,13 +28,13 @@ func (*Miner) GetVestingFundsExported(network string, height int64, rawReturn []
 	return parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 }
 
-func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+func (*Miner) WithdrawBalanceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := getWithdrawBalanceParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	return parseGeneric(rawParams, rawReturn, true, params(), &abi.TokenAmount{}, parser.ParamsKey)
 }
 
 func (*Miner) AddLockedFund(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
