@@ -3,7 +3,6 @@ package market
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
@@ -136,13 +135,13 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	resp, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{})
+	resp, err := parseGeneric(rawParams, rawReturn, true, params(), &abi.TokenAmount{})
 	if err != nil {
 		return nil, err
 	}
-	if rawReturn != nil {
-		resp[parser.ReturnKey] = base64.StdEncoding.EncodeToString(rawReturn)
-	}
+	// if rawReturn != nil {
+	// 	resp[parser.ReturnKey] = base64.StdEncoding.EncodeToString(rawReturn)
+	// }
 	return resp, nil
 }
 
