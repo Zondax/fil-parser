@@ -296,18 +296,14 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			continue
 		}
 
-		filAdd, _ := address.NewFromString(balance.Key)
-		shortAdd, _ := p.Helper.GetActorsCache().GetShortAddress(filAdd)
-		robustAdd, _ := p.Helper.GetActorsCache().GetRobustAddress(filAdd)
-		actorCode, _ := p.Helper.GetActorsCache().GetActorCode(filAdd, types2.EmptyTSK, false)
-		_, actorName, _ := p.Helper.GetActorNameFromAddress(filAdd, 0, types2.EmptyTSK)
+		addressInfo, err := getAddressInfo(balance.Key, genesisTipset.Key(), p.Helper)
+		if err != nil {
+			p.logger.Errorf("genesis could not get address info: %s. err: %s", balance.Key, err)
 
-		addresses.Set(balance.Key, &types.AddressInfo{
-			Short:     shortAdd,
-			Robust:    robustAdd,
-			ActorCid:  actorCode,
-			ActorType: actorName,
-		})
+		} else {
+			addresses.Set(balance.Key, addressInfo)
+		}
+
 		amount, _ := big.FromString(balance.Value.Balance)
 
 		tipsetCid := genesisTipset.GetCidString()
@@ -338,43 +334,40 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 	return genesisTxs, addresses
 }
 
-func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
+func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, *types.AddressInfoMap, error) {
 	var multisigInfos []*types.MultisigInfo
+	addresses := types.NewAddressInfoMap()
 	for _, actor := range genesis.Actors.All {
-		addrStr := actor.Key
-		// parse address
-		addr, err := address.NewFromString(addrStr)
+		addressInfo, err := getAddressInfo(actor.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
-			p.logger.Errorf("could not parse address: %s. err: %s", addrStr, err)
+			p.logger.Errorf("multisig genesis could not get address info: %s. err: %s", actor.Key, err)
 			continue
 		}
-
-		// get actor name from address
-		_, actorName, err := p.Helper.GetActorNameFromAddress(addr, int64(parser.GenesisHeight), genesisTipset.Key())
-		if err != nil {
-			p.logger.Errorf("could not get actor name from address: %s. err: %s", addrStr, err)
-			continue
-		}
+		actorName := addressInfo.ActorType
 
 		// check if the address is a multisig address
 		if !strings.Contains(actorName, manifest.MultisigKey) {
 			continue
 		}
 
+		addresses.Set(actor.Key, addressInfo)
+
+		addr, _ := address.NewFromString(actor.Key)
+
 		api := p.Helper.GetFilecoinNodeClient()
 		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)
 		if err != nil {
-			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", addrStr, err)
+			return nil, nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
 		}
 
 		metadataJson, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, fmt.Errorf("json.Marshal(): %s", err)
+			return nil, nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
 		multisigInfo := &types.MultisigInfo{
-			ID:              tools.BuildId(genesisTipset.GetCidString(), addrStr, fmt.Sprint(parser.GenesisHeight), "", parser.TxTypeGenesis),
-			MultisigAddress: addrStr,
+			ID:              tools.BuildId(genesisTipset.GetCidString(), actor.Key, fmt.Sprint(parser.GenesisHeight), "", parser.TxTypeGenesis),
+			MultisigAddress: actor.Key,
 			Height:          parser.GenesisHeight,
 			ActionType:      parser.MultisigConstructorMethod,
 			Value:           string(metadataJson),
@@ -387,5 +380,44 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		multisigInfos = append(multisigInfos, multisigInfo)
 
 	}
-	return multisigInfos, nil
+	return multisigInfos, addresses, nil
+}
+
+func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
+	filAdd, err := address.NewFromString(addrStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse address: %s. err: %s", addrStr, err)
+	}
+
+	shortAdd, err := helper.GetActorsCache().GetShortAddress(filAdd)
+	if err != nil {
+		return nil, fmt.Errorf("could not get short address: %s. err: %s", addrStr, err)
+	}
+	robustAdd, err := helper.GetActorsCache().GetRobustAddress(filAdd)
+	if err != nil {
+		return nil, fmt.Errorf("could not get robust address: %s. err: %s", addrStr, err)
+	}
+	actorCode, err := helper.GetActorsCache().GetActorCode(filAdd, tipsetKey, false)
+	if err != nil {
+		return nil, fmt.Errorf("could not get actor code: %s. err: %s", addrStr, err)
+	}
+	_, actorName, err := helper.GetActorNameFromAddress(filAdd, 0, tipsetKey)
+	if err != nil {
+		return nil, fmt.Errorf("could not get actor name: %s. err: %s", addrStr, err)
+	}
+
+	return &types.AddressInfo{
+		Short:     shortAdd,
+		Robust:    robustAdd,
+		ActorCid:  actorCode,
+		ActorType: parseActor(actorName),
+	}, nil
+}
+
+func parseActor(actor string) string {
+	s := strings.Split(actor, "/")
+	if len(s) < 1 {
+		return actor
+	}
+	return s[len(s)-1]
 }

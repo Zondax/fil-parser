@@ -1823,44 +1823,103 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 }
 
 func TestParseGenesis(t *testing.T) {
-	network := "mainnet"
-	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
-	if err != nil {
-		t.Fatalf("Error getting genesis data: %s", err)
+	tests := []struct {
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedTxs       int
+		expectedBlockCid  string
+		expectedTipsetCid string
+	}{
+		{
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedTxs:       21,
+			expectedBlockCid:  "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2",
+			expectedTipsetCid: "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6",
+		},
+		{
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedTxs:       8,
+			expectedBlockCid:  "bafy2bzacecyaggy24wol5ruvs6qm73gjibs2l2iyhcqmvi7r7a4ph7zx3yqd4",
+			expectedTipsetCid: "bafy2bzacebbqulnhstepn4hdbgaxf2grjqxgu6itf53ml7tvyps2z7f726s32",
+		},
 	}
 
-	p, err := NewFilecoinParser(getLib(nodeUrl), mainnetCacheDataSource, gLogger)
-	require.NoError(t, err)
-	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			network := tt.network
+			genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+			require.NoError(t, err)
 
-	assert.Equal(t, len(actualTxs), 21)
-	assert.Equal(t, actualTxs[0].BlockCid, "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2")
-	assert.Equal(t, actualTxs[0].TipsetCid, "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6")
+			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
+			require.NoError(t, err)
+			actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+
+			assert.Equal(t, len(actualTxs), tt.expectedTxs)
+			assert.Equal(t, actualTxs[0].BlockCid, tt.expectedBlockCid)
+			assert.Equal(t, actualTxs[0].TipsetCid, tt.expectedTipsetCid)
+		})
+	}
+
 }
 
 func TestParseGenesisMultisig(t *testing.T) {
-	network := "mainnet"
-	genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
-	content, err := os.ReadFile(genesisFilePath)
-	require.NoError(t, err)
+	tests := []struct {
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedAddresses int
+	}{
+		{
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedAddresses: 9,
+		},
+		{
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedAddresses: 1,
+		},
+	}
 
-	var expectedMultisigInfo []*types.MultisigInfo
-	err = json.Unmarshal(content, &expectedMultisigInfo)
-	require.NoError(t, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			network := tt.network
+			genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
+			content, err := os.ReadFile(genesisFilePath)
+			require.NoError(t, err)
 
-	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
-	require.NoError(t, err)
+			var expectedMultisigInfo []*types.MultisigInfo
+			err = json.Unmarshal(content, &expectedMultisigInfo)
+			require.NoError(t, err)
 
-	p, err := NewFilecoinParser(getLib(nodeUrl), mainnetCacheDataSource, gLogger)
-	require.NoError(t, err)
+			genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+			require.NoError(t, err)
 
-	ctx := context.Background()
-	gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
-	require.NoError(t, err)
-	require.NotNil(t, gotMultiSigInfo)
+			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
+			require.NoError(t, err)
 
-	assert.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
-	assert.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+			ctx := context.Background()
+			gotMultiSigInfo, addresses, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+			require.NoError(t, err)
+			require.NotNil(t, gotMultiSigInfo)
+			require.Equal(t, tt.expectedAddresses, addresses.Len())
+			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
+			require.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+		})
+	}
 }
 
 func TestParser_ActorVersionComparison(t *testing.T) {

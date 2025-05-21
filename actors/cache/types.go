@@ -17,13 +17,14 @@ const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
 
 type IActorsCache interface {
 	NewImpl(source common.DataSource, logger *logger.Logger) error
-	GetActorCode(add address.Address, key filTypes.TipSetKey) (string, error)
+	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error)
 	GetRobustAddress(add address.Address) (string, error)
 	GetShortAddress(add address.Address) (string, error)
 	StoreAddressInfo(info types.AddressInfo)
 	GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error)
 	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error
 	BackFill() error
+	ClearBadAddressCache()
 	ImplementationType() string
 }
 
