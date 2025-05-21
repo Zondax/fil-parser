@@ -40,10 +40,18 @@ func (e *ExtendedTipSet) GetBlockMiner(blockCid string) (string, error) {
 }
 
 func (e *ExtendedTipSet) GetBlockMinedByMiner(minerAddress string) (string, error) {
-	blockMessages := e.Blocks()
-	for _, block := range blockMessages {
+	blocks := e.Blocks()
+	for _, block := range blocks {
 		if block.Miner.String() == minerAddress {
 			return block.Cid().String(), nil
+		}
+	}
+	// fallback to checking messages
+	for _, block := range e.BlockMessages {
+		for _, message := range block {
+			if message.BlockMiner == minerAddress {
+				return message.Cid, nil
+			}
 		}
 	}
 	return "", fmt.Errorf("could not find block mined by miner '%s'", minerAddress)
