@@ -216,7 +216,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 224,
+				totalAddress: 232,
 				totalTxCids:  102,
 			},
 		},
@@ -227,7 +227,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "845259",
 			results: expectedResults{
 				totalTraces:  31,
-				totalAddress: 6,
+				totalAddress: 12,
 				totalTxCids:  10,
 			},
 		},
@@ -238,7 +238,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 227,
+				totalAddress: 234,
 				totalTxCids:  151,
 			},
 		},
@@ -249,7 +249,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 201,
+				totalAddress: 209,
 				totalTxCids:  121,
 			},
 		},
@@ -260,7 +260,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 196,
+				totalAddress: 206,
 				totalTxCids:  101,
 			},
 		},
@@ -271,7 +271,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 266,
+				totalAddress: 274,
 				totalTxCids:  187,
 			},
 		},
@@ -282,7 +282,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 11,
+				totalAddress: 16,
 				totalTxCids:  5,
 			},
 		},
