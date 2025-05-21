@@ -51,7 +51,7 @@ func (m *OnChain) ImplementationType() string {
 	return OnChainImpl
 }
 
-func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
+func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
 	actorCid, err := m.retrieveActorFromLotus(address, key)
 	if err != nil {
 		return cid.Undef.String(), err
@@ -97,6 +97,13 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 	}
 
 	return shortAdd, nil
+}
+
+// IsSystemActor returns false for all OnChain implementations as the system actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *OnChain) IsSystemActor(_ string) bool {
+	return false
 }
 
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
@@ -161,4 +168,8 @@ func (m *OnChain) GetEVMSelectorSig(ctx context.Context, selectorHash string) (s
 
 func (m *OnChain) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error {
 	return fmt.Errorf("unimplimented")
+}
+
+func (m *OnChain) ClearBadAddressCache() {
+	// Nothing to do
 }

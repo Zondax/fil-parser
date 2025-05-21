@@ -216,7 +216,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 224,
+				totalAddress: 232,
 				totalTxCids:  102,
 			},
 		},
@@ -227,7 +227,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "845259",
 			results: expectedResults{
 				totalTraces:  31,
-				totalAddress: 6,
+				totalAddress: 12,
 				totalTxCids:  10,
 			},
 		},
@@ -238,7 +238,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 227,
+				totalAddress: 234,
 				totalTxCids:  151,
 			},
 		},
@@ -249,7 +249,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 201,
+				totalAddress: 209,
 				totalTxCids:  121,
 			},
 		},
@@ -260,7 +260,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 196,
+				totalAddress: 206,
 				totalTxCids:  101,
 			},
 		},
@@ -271,7 +271,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 266,
+				totalAddress: 274,
 				totalTxCids:  187,
 			},
 		},
@@ -282,7 +282,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 11,
+				totalAddress: 16,
 				totalTxCids:  5,
 			},
 		},
@@ -1823,44 +1823,103 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 }
 
 func TestParseGenesis(t *testing.T) {
-	network := "mainnet"
-	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
-	if err != nil {
-		t.Fatalf("Error getting genesis data: %s", err)
+	tests := []struct {
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedTxs       int
+		expectedBlockCid  string
+		expectedTipsetCid string
+	}{
+		{
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedTxs:       21,
+			expectedBlockCid:  "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2",
+			expectedTipsetCid: "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6",
+		},
+		{
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedTxs:       8,
+			expectedBlockCid:  "bafy2bzacecyaggy24wol5ruvs6qm73gjibs2l2iyhcqmvi7r7a4ph7zx3yqd4",
+			expectedTipsetCid: "bafy2bzacebbqulnhstepn4hdbgaxf2grjqxgu6itf53ml7tvyps2z7f726s32",
+		},
 	}
 
-	p, err := NewFilecoinParser(getLib(nodeUrl), mainnetCacheDataSource, gLogger)
-	require.NoError(t, err)
-	actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			network := tt.network
+			genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+			require.NoError(t, err)
 
-	assert.Equal(t, len(actualTxs), 21)
-	assert.Equal(t, actualTxs[0].BlockCid, "bafy2bzacecnamqgqmifpluoeldx7zzglxcljo6oja4vrmtj7432rphldpdmm2")
-	assert.Equal(t, actualTxs[0].TipsetCid, "bafy2bzacea3l7hchfijz5fvswab36fxepf6oagecp5hrstmol7zpm2l4tedf6")
+			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
+			require.NoError(t, err)
+			actualTxs, _ := p.ParseGenesis(genesisBalances, genesisTipset)
+
+			assert.Equal(t, len(actualTxs), tt.expectedTxs)
+			assert.Equal(t, actualTxs[0].BlockCid, tt.expectedBlockCid)
+			assert.Equal(t, actualTxs[0].TipsetCid, tt.expectedTipsetCid)
+		})
+	}
+
 }
 
 func TestParseGenesisMultisig(t *testing.T) {
-	network := "mainnet"
-	genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
-	content, err := os.ReadFile(genesisFilePath)
-	require.NoError(t, err)
+	tests := []struct {
+		name              string
+		network           string
+		nodeUrl           string
+		cacheDataSource   common.DataSource
+		expectedAddresses int
+	}{
+		{
+			name:              "mainnet",
+			network:           "mainnet",
+			nodeUrl:           nodeUrl,
+			cacheDataSource:   mainnetCacheDataSource,
+			expectedAddresses: 9,
+		},
+		{
+			name:              "calibration",
+			network:           "calibration",
+			nodeUrl:           calibNextNodeUrl,
+			cacheDataSource:   calibNextNodeCacheDataSource,
+			expectedAddresses: 1,
+		},
+	}
 
-	var expectedMultisigInfo []*types.MultisigInfo
-	err = json.Unmarshal(content, &expectedMultisigInfo)
-	require.NoError(t, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			network := tt.network
+			genesisFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_multisig_info.json", network))
+			content, err := os.ReadFile(genesisFilePath)
+			require.NoError(t, err)
 
-	genesisBalances, genesisTipset, err := getStoredGenesisData(network)
-	require.NoError(t, err)
+			var expectedMultisigInfo []*types.MultisigInfo
+			err = json.Unmarshal(content, &expectedMultisigInfo)
+			require.NoError(t, err)
 
-	p, err := NewFilecoinParser(getLib(nodeUrl), mainnetCacheDataSource, gLogger)
-	require.NoError(t, err)
+			genesisBalances, genesisTipset, err := getStoredGenesisData(network)
+			require.NoError(t, err)
 
-	ctx := context.Background()
-	gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
-	require.NoError(t, err)
-	require.NotNil(t, gotMultiSigInfo)
+			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
+			require.NoError(t, err)
 
-	assert.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
-	assert.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+			ctx := context.Background()
+			gotMultiSigInfo, addresses, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+			require.NoError(t, err)
+			require.NotNil(t, gotMultiSigInfo)
+			require.Equal(t, tt.expectedAddresses, addresses.Len())
+			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
+			require.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
+		})
+	}
 }
 
 func TestParser_ActorVersionComparison(t *testing.T) {
@@ -1884,7 +1943,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907480",
 			results: expectedResults{
 				totalTraces:  650,
-				totalAddress: 224,
+				totalAddress: 232,
 				totalTxCids:  102,
 			},
 		},
@@ -1895,7 +1954,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "2907520",
 			results: expectedResults{
 				totalTraces:  907,
-				totalAddress: 227,
+				totalAddress: 234,
 				totalTxCids:  151,
 			},
 		},
@@ -1906,7 +1965,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573062",
 			results: expectedResults{
 				totalTraces:  773,
-				totalAddress: 201,
+				totalAddress: 209,
 				totalTxCids:  121,
 			},
 		},
@@ -1917,7 +1976,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573064",
 			results: expectedResults{
 				totalTraces:  734,
-				totalAddress: 196,
+				totalAddress: 206,
 				totalTxCids:  101,
 			},
 			shouldFail: true,
@@ -1929,7 +1988,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "3573066",
 			results: expectedResults{
 				totalTraces:  1118,
-				totalAddress: 266,
+				totalAddress: 274,
 				totalTxCids:  187,
 			},
 		},
@@ -1940,7 +1999,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 11,
+				totalAddress: 16,
 				totalTxCids:  5,
 			},
 		},

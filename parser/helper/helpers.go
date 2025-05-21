@@ -75,13 +75,13 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
 	node       api.FullNode
-	actorCache *cache.ActorsCache
+	actorCache cache.IActorsCache
 	logger     *logger.Logger
 	metrics    *parsermetrics.ParserMetricsClient
 	network    string
 }
 
-func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache *cache.ActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
+func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache cache.IActorsCache, node api.FullNode, logger *logger.Logger, metrics metrics.MetricsClient) *Helper {
 	h := &Helper{
 		lib:        lib,
 		actorCache: actorsCache,
@@ -98,7 +98,7 @@ func NewHelper(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, actorsCache 
 	return h
 }
 
-func (h *Helper) GetActorsCache() *cache.ActorsCache {
+func (h *Helper) GetActorsCache() cache.IActorsCache {
 	return h.actorCache
 }
 
@@ -140,6 +140,8 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
+	addInfo.IsSystemActor = h.IsSystemActor(add)
+
 	return addInfo
 }
 
@@ -162,8 +164,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 			return cid.Undef, actors.UnknownStr, err
 		}
 
-		version := tools.VersionFromHeight(h.network, height)
-		actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
+		actorName, err := h.GetActorNameFromCid(c, height)
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
@@ -174,6 +175,15 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 			return c, actorName, nil
 		}
 	}
+}
+
+func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) {
+	version := tools.VersionFromHeight(h.network, height)
+	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
+	if err != nil {
+		return "", err
+	}
+	return actorName, nil
 }
 
 // Deprecated: Use v2/tools.GetMethodName instead
@@ -267,6 +277,18 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 	}
 
 	return result, nil
+}
+
+func (h *Helper) IsSystemActor(addr address.Address) bool {
+	return h.actorCache.IsSystemActor(addr.String())
+}
+
+func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey) bool {
+	_, actorName, err := h.GetActorNameFromAddress(addr, height, tipsetKey)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(actorName, manifest.CronKey)
 }
 
 func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string) (bool, error) {

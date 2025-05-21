@@ -164,7 +164,14 @@ func (m *ZCache) BackFill() error {
 	return nil
 }
 
-func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
+// IsSystemActor returns false for all ZCache implementations as the system actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *ZCache) IsSystemActor(_ string) bool {
+	return false
+}
+
+func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
 		m.logger.Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
@@ -339,4 +346,8 @@ func (m *ZCache) tryToGetF4Address(ctx context.Context, address address.Address)
 
 	m.logger.Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
 	return ""
+}
+
+func (m *ZCache) ClearBadAddressCache() {
+	// Nothing to do
 }
