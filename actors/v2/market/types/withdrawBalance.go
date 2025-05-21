@@ -6,12 +6,12 @@ import (
 	"io"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/big"
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 type WithdrawBalanceReturn struct {
 	AmountWithdrawn abi.TokenAmount
+	Raw             []byte
 }
 
 func (t *WithdrawBalanceReturn) UnmarshalCBOR(r io.Reader) (err error) {
@@ -34,14 +34,9 @@ func (t *WithdrawBalanceReturn) UnmarshalCBOR(r io.Reader) (err error) {
 
 	switch maj {
 	case cbg.MajByteString:
-		cr = cbg.NewCborReader(bytes.NewReader(data))
-		if err := t.AmountWithdrawn.UnmarshalCBOR(cr); err != nil {
-			rawBytes, err := io.ReadAll(cr)
-			if err != nil {
-				return err
-			}
-			tmp := big.PositiveFromUnsignedBytes(rawBytes)
-			t.AmountWithdrawn = abi.TokenAmount(tmp)
+		newCr := cbg.NewCborReader(bytes.NewReader(data))
+		if err := t.AmountWithdrawn.UnmarshalCBOR(newCr); err != nil {
+			t.Raw = data
 			return nil
 		}
 	default:
