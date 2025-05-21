@@ -140,6 +140,8 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
+	addInfo.IsSystemActor = h.IsSystemActor(add)
+
 	return addInfo
 }
 

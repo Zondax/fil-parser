@@ -61,7 +61,11 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 	for _, i := range info {
 		switch i.ActorType {
 		case manifest.EvmKey:
-			if i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != "" {
+			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != ""
+			if i.IsSystemActor {
+				cond = i.Robust != "" && i.Short != "" && i.ActorCid != "" && i.ActorType != ""
+			}
+			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
 					// this may happen because of direct storage from the evm parser
@@ -77,7 +81,11 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 		case manifest.MultisigKey, manifest.MinerKey:
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
-			if i.Short != "" && i.CreationTxCid != "" && i.ActorCid != "" {
+			cond := i.Short != "" && i.CreationTxCid != "" && i.ActorCid != ""
+			if i.IsSystemActor {
+				cond = i.Short != "" && i.Robust != "" && i.ActorCid != "" && i.ActorType != ""
+			}
+			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
 					// this may happen because of direct storage from the miner/msig parser for diff. tx_types on the same address
@@ -90,7 +98,11 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 				}
 			}
 		default:
-			if i.Robust != "" && i.Short != "" && i.Robust != i.Short {
+			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short
+			if i.IsSystemActor {
+				cond = i.Robust != "" && i.Short != "" && i.ActorCid != "" && i.ActorType != ""
+			}
+			if cond {
 				if _, ok := addressMap.Get(i.Short); !ok {
 					addressMap.Set(i.Short, i)
 				}
