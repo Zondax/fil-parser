@@ -315,19 +315,14 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool) (*types.Transaction, error) {
+	failedTx := trace.MsgRct.ExitCode.IsError()
 	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-			p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
-		}
 		txType = parser.UnknownStr
-
-	} else if txType == parser.UnknownStr {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-			p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
-		}
+	}
+	if !failedTx && (txType == parser.UnknownStr || err != nil) {
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
+		p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
 	}
 
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
@@ -340,11 +335,9 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
-	if mErr != nil {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-			p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
-		}
+	if mErr != nil && !failedTx {
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+		p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 
 	if addressInfo != nil {
