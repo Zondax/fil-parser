@@ -64,7 +64,7 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 		resp, err := m.ReportConsensusFault(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
-		resp, err := m.WithdrawBalanceExported(network, height, msg.Params)
+		resp, err := m.WithdrawBalanceExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodConfirmSectorProofsValid:
 		resp, err := m.ConfirmSectorProofsValid(network, height, msg.Params)

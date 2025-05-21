@@ -23,6 +23,7 @@ type IActorsCache interface {
 	StoreAddressInfo(info types.AddressInfo)
 	GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error)
 	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error
+	IsSystemActor(addr string) bool
 	BackFill() error
 	ClearBadAddressCache()
 	ImplementationType() string

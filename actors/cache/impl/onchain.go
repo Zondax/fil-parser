@@ -99,6 +99,11 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 	return shortAdd, nil
 }
 
+// IsSystemActor returns false for all OnChain implementations
+func (m *OnChain) IsSystemActor(_ string) bool {
+	return false
+}
+
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	retryErrStrings := []string{"ipld: could not find", "RPC client error"}
 	actor, err := NodeApiCallWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
