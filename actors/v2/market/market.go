@@ -135,7 +135,7 @@ func (*Market) WithdrawBalance(network string, height int64, rawParams, rawRetur
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	resp, err := parseGeneric(rawParams, rawReturn, true, params(), &abi.TokenAmount{})
+	resp, err := parseGeneric(rawParams, rawReturn, true, params(), &types.WithdrawBalanceReturn{})
 	if err != nil {
 		return nil, err
 	}
