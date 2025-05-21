@@ -126,8 +126,7 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 	case parser.MethodApplyRewards, parser.MethodUpdatePledgeTotal, parser.MethodCronTick,
 		parser.MethodEpochTick, parser.MethodThisEpochReward, parser.MethodConfirmSectorProofsValid,
 		parser.MethodActivateDeals, parser.MethodClaimAllocations, parser.MethodBurnExported,
-		parser.MethodEnrollCronEvent, parser.MethodOnDeferredCronEvent, parser.MethodUpdateNetworkKPI,
-		parser.MethodFallback, parser.MethodHandleFilecoinMethod:
+		parser.MethodEnrollCronEvent, parser.MethodOnDeferredCronEvent, parser.MethodUpdateNetworkKPI:
 		// These txs are not included in a block
 		return blockCid, nil
 	}
