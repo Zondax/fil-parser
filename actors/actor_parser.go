@@ -16,7 +16,7 @@ import (
 )
 
 type ActorParserInterface interface {
-	GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+	GetMetadata(ctx context.Context, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 		height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error)
 }
 
