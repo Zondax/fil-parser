@@ -128,13 +128,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		// Main transaction
 
 		// check the 1st execution
-		systemExecution := false
-		if len(trace.ExecutionTrace.Subcalls) > 0 {
-			txFrom := trace.ExecutionTrace.Subcalls[0].Msg.From
-			txTo := trace.ExecutionTrace.Subcalls[0].Msg.To
-
-			systemExecution = p.helper.IsSystemActor(txFrom) && p.helper.IsCronActor(tipsetHeight, txTo, tipsetKey)
-		}
+		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.ExecutionTrace.Msg.To, tipsetKey)
 
 		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
 		if err != nil {
