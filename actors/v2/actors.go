@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/zondax/fil-parser/actors/v2/internal"
@@ -45,23 +44,19 @@ func NewActorParser(network string, helper *helper.Helper, logger *logger.Logger
 	}
 }
 
-func (p *ActorParser) GetMetadata(ctx context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+func (p *ActorParser) GetMetadata(ctx context.Context, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return "", metadata, nil, nil
 	}
 
-	_, actor, err := p.helper.GetActorNameFromAddress(msg.To, height, key)
+	actorParser, err := p.GetActor(actorName)
 	if err != nil {
-		return "", metadata, nil, fmt.Errorf("error getting actor name from address: %w", err)
-	}
-	actorParser, err := p.GetActor(actor)
-	if err != nil {
-		return actor, nil, nil, parser.ErrNotValidActor
+		return actorName, nil, nil, parser.ErrNotValidActor
 	}
 	metadata, addressInfo, err := actorParser.Parse(ctx, p.network, height, txType, msg, msgRct, mainMsgCid, key)
-	return actor, metadata, addressInfo, err
+	return actorName, metadata, addressInfo, err
 }
 
 func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
