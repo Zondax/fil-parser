@@ -118,11 +118,8 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		systemExecution := false
 		tipsetHeight := int64(txsData.Tipset.Height())
 		tipsetKey := txsData.Tipset.Key()
-		if len(trace.ExecutionTrace.Subcalls) > 0 {
-			txFrom := trace.ExecutionTrace.Subcalls[0].Msg.From
-			txTo := trace.ExecutionTrace.Subcalls[0].Msg.To
-
-			systemExecution = p.helper.IsSystemActor(txFrom) && p.helper.IsCronActor(tipsetHeight, txTo, tipsetKey)
+		if trace.Msg != nil {
+			systemExecution = p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.ExecutionTrace.Msg.To, tipsetKey)
 		}
 
 		// TODO find a way to not having this special case handled outside func parseTrace
