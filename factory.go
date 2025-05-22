@@ -334,9 +334,9 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 	return genesisTxs, addresses
 }
 
-func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
 	var multisigInfos []*types.MultisigInfo
-	addresses := types.NewAddressInfoMap()
+
 	for _, actor := range genesis.Actors.All {
 		addressInfo, err := getAddressInfo(actor.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
@@ -350,17 +350,16 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			continue
 		}
 		addr, _ := address.NewFromString(actor.Key)
-		parser.AppendToAddressesMap(addresses, addressInfo)
 
 		api := p.Helper.GetFilecoinNodeClient()
 		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)
 		if err != nil {
-			return nil, nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
+			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
 		}
 
 		metadataJson, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, nil, fmt.Errorf("json.Marshal(): %s", err)
+			return nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
 		multisigInfo := &types.MultisigInfo{
@@ -378,7 +377,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		multisigInfos = append(multisigInfos, multisigInfo)
 
 	}
-	return multisigInfos, addresses, nil
+	return multisigInfos, nil
 }
 
 func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {

@@ -158,7 +158,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution)
 			if p.config.FeesAsColumn {
 				transaction.FeeData = feeTx.TxMetadata
 			} else {
@@ -315,19 +315,14 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool) (*types.Transaction, error) {
+	failedTx := trace.MsgRct.ExitCode.IsError()
 	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-			p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
-		}
 		txType = parser.UnknownStr
-
-	} else if txType == parser.UnknownStr {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-			p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
-		}
+	}
+	if !failedTx && (txType == parser.UnknownStr || err != nil) {
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
+		p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
 	}
 
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
@@ -340,11 +335,9 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		ExitCode: trace.MsgRct.ExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
-	if mErr != nil {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-			p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
-		}
+	if mErr != nil && !failedTx {
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+		p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 
 	if addressInfo != nil {
@@ -416,14 +409,20 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution bool) *types.Transaction {
+	var blockCid string
+	var err error
+
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	blockCid, err := actorsV2.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset, p.logger)
-	if err != nil {
-		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
+
+	if !systemExecution {
+		blockCid, err = actorsV2.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset, p.logger)
+		if err != nil {
+			p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
+		}
 	}
 
-	metadata := p.feesMetadata(msg, tipset, txType, blockCid)
+	metadata := p.feesMetadata(msg, tipset, txType, blockCid, systemExecution)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
@@ -449,11 +448,16 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 	}
 }
 
-func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string) string {
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
-		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
-		p.logger.Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution bool) string {
+	var minerAddress string
+	var err error
+
+	if !systemExecution {
+		minerAddress, err = tipset.GetBlockMiner(blockCid)
+		if err != nil {
+			_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
+			p.logger.Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+		}
 	}
 
 	if p.config.ConsolidateRobustAddress && err == nil {
