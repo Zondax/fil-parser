@@ -115,20 +115,32 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			continue
 		}
 
+		systemExecution := false
+		tipsetHeight := int64(txsData.Tipset.Height())
+		tipsetKey := txsData.Tipset.Key()
+		if len(trace.ExecutionTrace.Subcalls) > 0 {
+			txFrom := trace.ExecutionTrace.Subcalls[0].Msg.From
+			txTo := trace.ExecutionTrace.Subcalls[0].Msg.To
+
+			systemExecution = p.helper.IsSystemActor(txFrom) && p.helper.IsCronActor(tipsetHeight, txTo, tipsetKey)
+		}
+
 		// TODO find a way to not having this special case handled outside func parseTrace
 		if ok := hasExecutionTrace(trace); !ok {
 			// Create tx
-			//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
 			actorName, txType, err := p.getTxType(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset)
 			if err != nil {
 				p.logger.Errorf("Error when trying to get tx type: %v", err)
 				_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 				continue
 			}
-			blockCid, err := actorsV2.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset, p.logger)
-			if err != nil {
-				_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
-				p.logger.Errorf("Error when trying to get block cid from message,txType '%s': cid '%s': %v", txType, trace.MsgCid.String(), err)
+			var blockCid string
+			if !systemExecution {
+				blockCid, err = actorsV2.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset, p.logger)
+				if err != nil {
+					_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
+					p.logger.Errorf("Error when trying to get block cid from message,txType '%s': cid '%s': %v", txType, trace.MsgCid.String(), err)
+				}
 			}
 			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
 
@@ -162,7 +174,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		// Main transaction
-		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String())
+		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
 		if err != nil {
 			continue
 		}
@@ -172,7 +184,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		// Only process sub-calls if the parent call was successfully executed
 		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
-				trace.Msg.Cid().String(), transaction.Id, 0)
+				trace.Msg.Cid().String(), transaction.Id, 0, systemExecution)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -180,7 +192,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id)
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution)
 			if p.config.FeesAsColumn {
 				transaction.FeeData = feeTx.TxMetadata
 			} else {
@@ -258,30 +270,32 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 }
 
 func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
-	parentId string, level uint16) (txs []*types.Transaction) {
+	parentId string, level uint16, systemExecution bool) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId)
+		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level)...)
+		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string) (*types.Transaction, error) {
+func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool) (*types.Transaction, error) {
+	failedTx := trace.MsgRct.ExitCode.IsError()
+
 	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
-		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-		p.logger.Errorf("Error when trying to get method name in tx cid'%s': %v", mainMsgCid.String(), err)
 		txType = parser.UnknownStr
-	} else if txType == parser.UnknownStr {
+	}
+
+	if !failedTx && (txType == parser.UnknownStr || err != nil) {
 		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height())
+		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d err: %s", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height(), err)
 	}
 
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, txType, &parser.LotusMessage{
@@ -295,11 +309,9 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
 
-	if mErr != nil {
-		if !trace.MsgRct.ExitCode.IsError() {
-			_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
-			p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
-		}
+	if mErr != nil && !failedTx {
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 	if addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
@@ -326,10 +338,13 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 
 	p.appendAddressInfo(trace.Msg, tipset.Key(), tipset.Height())
 
-	blockCid, err := actorsV2.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset, p.logger)
-	if err != nil {
-		_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
-		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
+	var blockCid string
+	if !systemExecution {
+		blockCid, err = actorsV2.GetBlockCidFromMsgCid(mainMsgCid.String(), txType, metadata, tipset, p.logger)
+		if err != nil {
+			_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
+			p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, mainMsgCid.String(), err)
+		}
 	}
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
@@ -358,14 +373,19 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution bool) *types.Transaction {
+	var blockCid string
+	var err error
+
 	timestamp := parser.GetTimestamp(tipset.MinTimestamp())
-	blockCid, err := actorsV2.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset, p.logger)
-	if err != nil {
-		p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
+	if !systemExecution {
+		blockCid, err = actorsV2.GetBlockCidFromMsgCid(msg.MsgCid.String(), txType, nil, tipset, p.logger)
+		if err != nil {
+			p.logger.Errorf("Error when trying to get block cid from message, txType '%s' cid '%s': %v", txType, msg.MsgCid.String(), err)
+		}
 	}
 
-	metadata := p.feesMetadata(msg, tipset, txType, blockCid)
+	metadata := p.feesMetadata(msg, tipset, txType, blockCid, systemExecution)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
@@ -390,12 +410,16 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 	}
 }
 
-func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, blockCid string) string {
-	minerAddress, err := tipset.GetBlockMiner(blockCid)
-	if err != nil {
-		// added a new error to avoid cardinality of GetBlockMiner error results which include cid
-		_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
-		p.logger.Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution bool) string {
+	var minerAddress string
+	var err error
+	if !systemExecution {
+		minerAddress, err = tipset.GetBlockMiner(blockCid)
+		if err != nil {
+			// added a new error to avoid cardinality of GetBlockMiner error results which include cid
+			_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
+			p.logger.Errorf("Error when trying to get miner address from block cid '%s': %v", blockCid, err)
+		}
 	}
 
 	if p.config.ConsolidateRobustAddress && err == nil {
