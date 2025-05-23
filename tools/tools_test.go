@@ -251,6 +251,43 @@ func TestGetSupportedVersions(t *testing.T) {
 	}
 }
 
+func TestVersionFromHeight(t *testing.T) {
+	tests := []struct {
+		name    string
+		network string
+		height  int64
+		want    version
+	}{
+		{name: "mainnet", network: "mainnet", height: 0, want: V7},
+		{name: "mainnet", network: "mainnet", height: 7000, want: V7},
+		{name: "mainnet", network: "mainnet", height: 7123, want: V7},
+		{name: "mainnet", network: "mainnet", height: 265100, want: V8},
+		{name: "mainnet", network: "mainnet", height: 265200, want: V9},
+		{name: "mainnet", network: "mainnet", height: 550321, want: V10},
+		{name: "mainnet", network: "mainnet", height: 665280, want: V11},
+		{name: "mainnet", network: "mainnet", height: 712320, want: V12},
+		{name: "mainnet", network: "mainnet", height: 892800, want: V13},
+		{name: "mainnet", network: "mainnet", height: 1231620, want: V14},
+		{name: "mainnet", network: "mainnet", height: 1594680, want: V15},
+		{name: "mainnet", network: "mainnet", height: 1960320, want: V16},
+		{name: "mainnet", network: "mainnet", height: 2383680, want: V17},
+		{name: "mainnet", network: "mainnet", height: 2683348, want: V18},
+		{name: "mainnet", network: "mainnet", height: 2809800, want: V19},
+		{name: "mainnet", network: "mainnet", height: 2809800, want: V19},
+		{name: "mainnet", network: "mainnet", height: 3469380, want: V21},
+		{name: "mainnet", network: "mainnet", height: 3817920, want: V22},
+		{name: "mainnet", network: "mainnet", height: 4154640, want: V23},
+		{name: "mainnet", network: "mainnet", height: 4461240, want: V24},
+		{name: "mainnet", network: "mainnet", height: 4878840, want: V25},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			version := VersionFromHeight(tt.network, tt.height)
+			assert.Equalf(t, tt.want, version, "version for height %d on network %s should be %v, got %v", tt.height, tt.network, tt.want.nodeVersion, version.nodeVersion)
+		})
+	}
+}
+
 /*
 func TestBuildCidFromMessageTrace(t *testing.T) {
 	h1, err := multihash.Sum([]byte("TEST"), multihash.SHA2_256, -1)
