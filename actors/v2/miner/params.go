@@ -11,6 +11,7 @@ import (
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
+	builtinv1 "github.com/filecoin-project/specs-actors/actors/builtin"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	builtinv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
@@ -795,6 +796,24 @@ var submitWindowedPoStParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var confirmSectorProofsParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(builtinv1.ConfirmSectorProofsParams) },
+
+	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(builtinv2.ConfirmSectorProofsParams) },
+	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(builtinv2.ConfirmSectorProofsParams) },
+
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(builtinv3.ConfirmSectorProofsParams) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(builtinv3.ConfirmSectorProofsParams) },
+
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(builtinv4.ConfirmSectorProofsParams) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(builtinv5.ConfirmSectorProofsParams) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(builtinv6.ConfirmSectorProofsParams) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(builtinv7.ConfirmSectorProofsParams) },
 	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(miner8.ConfirmSectorProofsParams) },
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(miner9.ConfirmSectorProofsParams) },
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(miner10.ConfirmSectorProofsParams) },

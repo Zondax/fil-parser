@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -461,6 +462,11 @@ func TestParser_InDepthCompare(t *testing.T) {
 				if parsedResultV1.Txs[i].TxType == parser.TotalFeeOp {
 					parsedResultV1.Txs[i].TxTo = parser.BurnAddress
 					parsedResultV2.Txs[i].TxTo = parser.BurnAddress
+				}
+
+				if strings.EqualFold(parsedResultV1.Txs[i].TxType, parser.MethodUnknown) && !strings.EqualFold(parsedResultV2.Txs[i].TxType, parser.MethodUnknown) {
+					// v2 fixed the unknown method
+					continue
 				}
 
 				require.Truef(t, parsedResultV1.Txs[i].Equal(*parsedResultV2.Txs[i]), "tx %d is not equal\n%s\n%s", i, tmp1, tmp2)

@@ -121,6 +121,22 @@ func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodWithdrawBalance,
 			Method: m.WithdrawBalanceExported,
 		},
+		legacyBuiltin.MethodsMiner.ConfirmSectorProofsValid: {
+			Name:   parser.MethodConfirmSectorProofsValid,
+			Method: m.ConfirmSectorProofsValid,
+		},
+		legacyBuiltin.MethodsMiner.ChangeMultiaddrs: {
+			Name:   parser.MethodChangeMultiaddrs,
+			Method: m.ChangeMultiaddrsExported,
+		},
+		legacyBuiltin.MethodsMiner.CompactPartitions: {
+			Name:   parser.MethodCompactPartitions,
+			Method: m.CompactPartitions,
+		},
+		legacyBuiltin.MethodsMiner.CompactSectorNumbers: {
+			Name:   parser.MethodCompactSectorNumbers,
+			Method: m.CompactSectorNumbers,
+		},
 	}
 }
 
