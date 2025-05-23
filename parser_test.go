@@ -463,6 +463,11 @@ func TestParser_InDepthCompare(t *testing.T) {
 					parsedResultV2.Txs[i].TxTo = parser.BurnAddress
 				}
 
+				if parsedResultV1.Txs[i].TxType == parser.MethodUnknown && parsedResultV2.Txs[i].TxType != parser.MethodUnknown {
+					// v2 fixed the unknown method
+					continue
+				}
+
 				require.Truef(t, parsedResultV1.Txs[i].Equal(*parsedResultV2.Txs[i]), "tx %d is not equal\n%s\n%s", i, tmp1, tmp2)
 			}
 
