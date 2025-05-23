@@ -125,7 +125,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 				systemExecution = p.helper.IsSystemActor(trace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.Msg.To, tipsetKey)
 			}
 			// Create tx
-			actorName, txType, err := p.getTxType(ctx, trace.Msg.From, trace.Msg.To, trace.Msg.Method, trace.MsgCid, txsData.Tipset)
+			actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, trace.MsgCid, txsData.Tipset)
 			if err != nil {
 				p.logger.Errorf("Error when trying to get tx type: %v", err)
 				_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
@@ -286,7 +286,7 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTrac
 func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool) (*types.Transaction, error) {
 	failedTx := trace.MsgRct.ExitCode.IsError()
 
-	actorName, txType, err := p.getTxType(ctx, trace.Msg.From, trace.Msg.To, trace.Msg.Method, mainMsgCid, tipset)
+	actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, mainMsgCid, tipset)
 	if err != nil {
 		txType = parser.UnknownStr
 	}
