@@ -98,13 +98,11 @@ func isSupported(network string, height int64, iter *VersionIterator) bool {
 		return false
 	}
 
-	if height == 0 && v.mainnet == 0 {
-		return true
-	}
 	if height >= LatestMainnetVersion.mainnet {
 		return v.nodeVersion == LatestMainnetVersion.nodeVersion
 	}
-	if height <= V7.mainnet {
+
+	if height <= V8.mainnet {
 		return v.nodeVersion == V7.nodeVersion
 	}
 	// edge case: check if two new versions have the same mainnet height
