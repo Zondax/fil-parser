@@ -531,32 +531,21 @@ func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSet
 }
 
 func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
-
 	msg := &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
 	}
-	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
-	if err != nil {
-		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
-	}
 
-	if txType == "" {
-		actorName, txType, err = p.getActorAndMethodName(ctx, trace, mainMsgCid, tipset)
-		if err != nil {
-			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
-		}
+	actorName, txType, err = p.getActorAndMethodName(ctx, trace, msg, mainMsgCid, tipset)
+	if err != nil {
+		p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
 	}
 
 	// fallback to depracated method
 	if txType == parser.UnknownStr || txType == "" {
 		//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
-		txType, err = p.helper.GetMethodName(&parser.LotusMessage{
-			To:     trace.Msg.To,
-			From:   trace.Msg.From,
-			Method: trace.Msg.Method,
-		}, int64(tipset.Height()), tipset.Key())
+		txType, err = p.helper.GetMethodName(msg, int64(tipset.Height()), tipset.Key())
 		if err != nil {
 			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v1: %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
@@ -566,8 +555,8 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	return actorName, txType, nil
 }
 
-func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
-	actorAddress := trace.Msg.To
+func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.ExecutionTraceV2, msg *parser.LotusMessage, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
+	actorAddress := msg.To
 
 	_, actorName, err = p.helper.GetActorNameFromAddress(actorAddress, int64(tipset.Height()), tipset.Key())
 	if err != nil || actorName == "" {
@@ -580,7 +569,12 @@ func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.Execut
 		}
 	}
 
-	if actorName != "" {
+	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	if err != nil {
+		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+	}
+
+	if actorName != "" && txType == "" {
 		txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 		if err != nil {
 			txType = parser.UnknownStr
