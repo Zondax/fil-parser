@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -463,7 +464,7 @@ func TestParser_InDepthCompare(t *testing.T) {
 					parsedResultV2.Txs[i].TxTo = parser.BurnAddress
 				}
 
-				if parsedResultV1.Txs[i].TxType == parser.MethodUnknown && parsedResultV2.Txs[i].TxType != parser.MethodUnknown {
+				if strings.EqualFold(parsedResultV1.Txs[i].TxType, parser.MethodUnknown) && !strings.EqualFold(parsedResultV2.Txs[i].TxType, parser.MethodUnknown) {
 					// v2 fixed the unknown method
 					continue
 				}
