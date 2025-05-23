@@ -509,22 +509,21 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV1.ExecutionTraceV1, 
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
 	}
+	_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+	if err != nil {
+		p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
+	}
+
 	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
 	if err != nil {
 		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
-	if txType == "" {
-		_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+	if txType == "" && actorName != "" {
+		txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 		if err != nil {
-			p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
-		}
-		if actorName != "" {
-			txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
-			if err != nil {
-				p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
-				txType = parser.UnknownStr
-			}
+			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
+			txType = parser.UnknownStr
 		}
 	}
 	return actorName, txType, err
