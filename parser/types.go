@@ -1,29 +1,44 @@
 package parser
 
-import "github.com/filecoin-project/go-state-types/cbor"
+import (
+	"encoding/json"
 
-type controlAddress struct {
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/cbor"
+	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/lotus/api"
+	"github.com/ipfs/go-cid"
+)
+
+type ControlAddress struct {
 	Owner        string   `json:"owner"`
 	Worker       string   `json:"worker"`
 	ControlAddrs []string `json:"controlAddrs"`
 }
 
-type execParams struct {
+type ExecParams struct {
 	CodeCid           string `json:"CodeCid"`
 	ConstructorParams string `json:"constructorParams"`
 }
 
-type beneficiaryTerm struct {
+type Exec4Params struct {
+	CodeCid           string `json:"CodeCid"`
+	ConstructorParams string `json:"constructorParams"`
+	SubAddress        string `json:"subAddress"`
+}
+
+type BeneficiaryTerm struct {
 	Quota      string `json:"quota"`
 	UsedQuota  string `json:"usedQuota"`
 	Expiration int64  `json:"expiration"`
 }
-type activeBeneficiary struct {
+type ActiveBeneficiary struct {
 	Beneficiary string          `json:"beneficiary"`
-	Term        beneficiaryTerm `json:"term"`
+	Term        BeneficiaryTerm `json:"term"`
 }
 
-type proposed struct {
+type Proposed struct {
 	NewBeneficiary        string `json:"newBeneficiary"`
 	NewQuota              string `json:"newQuota"`
 	NewExpiration         int64  `json:"newExpiration"`
@@ -31,14 +46,83 @@ type proposed struct {
 	ApprovedByNominee     bool   `json:"approvedByNominee"`
 }
 
-type getBeneficiryReturn struct {
-	Active   activeBeneficiary `json:"active"`
-	Proposed proposed          `json:"proposed"`
+type GetBeneficiaryReturn struct {
+	Active   ActiveBeneficiary `json:"active"`
+	Proposed Proposed          `json:"proposed"`
 }
 
-type propose struct {
+// TODO: look how to combine these two proposes
+type MultisigPropose struct {
 	To     string
 	Value  string
-	Method uint64
+	Method string
+	Params map[string]interface{}
+}
+
+type Propose struct {
+	To     string
+	Value  string
+	Method string
 	Params cbor.Unmarshaler
+}
+
+type EamCreateReturn struct {
+	ActorId       uint64
+	RobustAddress *address.Address
+	EthAddress    string
+}
+
+type MinerFee struct {
+	MinerAddress string
+	Amount       string
+}
+
+type OverEstimationBurnFee struct {
+	BurnAddress string
+	Amount      string
+}
+
+type BurnFee struct {
+	BurnAddress string
+	Amount      string
+}
+
+type FeesMetadata struct {
+	TxType                string `json:"TxType,omitempty"`
+	MinerFee              MinerFee
+	OverEstimationBurnFee OverEstimationBurnFee
+	BurnFee               BurnFee
+	TotalCost             string
+}
+
+type LotusMessage struct {
+	To     address.Address
+	From   address.Address
+	Method abi.MethodNum
+	Cid    cid.Cid
+	Params []byte
+}
+
+type RawLotusMessage LotusMessage
+
+type mCid struct {
+	*RawLotusMessage
+	CID cid.Cid
+}
+
+func (m *LotusMessage) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&mCid{
+		RawLotusMessage: (*RawLotusMessage)(m),
+		CID:             m.Cid,
+	})
+}
+
+type LotusMessageReceipt struct {
+	ExitCode exitcode.ExitCode
+	Return   []byte
+}
+
+type ComputeOutputVersioned struct {
+	api.ComputeStateOutput
+	Version string
 }

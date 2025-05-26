@@ -1,0 +1,48 @@
+{
+    "Cids": [
+        {
+            "/": "bafy2bzacecyaggy24wol5ruvs6qm73gjibs2l2iyhcqmvi7r7a4ph7zx3yqd4"
+        }
+    ],
+    "Blocks": [
+        {
+            "Miner": "t00",
+            "Ticket": {
+                "VRFProof": "evexpm1I25DFirHObPhTnrUBxwGNE7uVZ+K6IWGTur0="
+            },
+            "ElectionProof": {
+                "WinCount": 0,
+                "VRFProof": null
+            },
+            "BeaconEntries": [
+                {
+                    "Round": 0,
+                    "Data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                }
+            ],
+            "WinPoStProof": null,
+            "Parents": [
+                {
+                    "/": "bafyreiaqpwbbyjo4a42saasj36kkrpv4tsherf2e7bvezkert2a7dhonoi"
+                }
+            ],
+            "ParentWeight": "0",
+            "Height": 0,
+            "ParentStateRoot": {
+                "/": "bafy2bzacecgqgzh3gxpariy3mzqb37y2vvxoaw5nwbrlzkhso6owus3zqckwe"
+            },
+            "ParentMessageReceipts": {
+                "/": "bafy2bzacedswlcz5ddgqnyo3sak3jmhmkxashisnlpq6ujgyhe4mlobzpnhs6"
+            },
+            "Messages": {
+                "/": "bafy2bzacecmda75ovposbdateg7eyhwij65zklgyijgcjwynlklmqazpwlhba"
+            },
+            "BLSAggregate": null,
+            "Timestamp": 1667326380,
+            "BlockSig": null,
+            "ForkSignaling": 0,
+            "ParentBaseFee": "100000000"
+        }
+    ],
+    "Height": 0
+}

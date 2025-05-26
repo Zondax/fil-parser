@@ -1,0 +1,4 @@
+  network_name: "calibration"
+  symbol: "fil"
+  node_url: "wss://node-fil-calibration-stable.zondax.ch/rpc/v1"
+  node_token: ""

@@ -152,3 +152,7 @@ fabric.properties
 # Ignore all local history of files
 .history
 .ionide
+
+cmd/tracedl/tracedl
+cmd/tracedl/parserfixes
+cmd/tracedl/fallbackfixes

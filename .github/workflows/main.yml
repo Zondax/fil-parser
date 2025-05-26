@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build:
+    runs-on: zondax-runners
+    container:
+      image: golang:1.23.7
+      options: --tty
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.7'
+      - name: Build
+        run: |
+          git config --global --add safe.directory "*"
+          make build
+        env:
+          TOKEN: ${{ secrets.PECORINO_READ_TOKEN }}
+
+  checks:
+    runs-on: zondax-runners
+    container:
+      image: golang:1.23.7
+      options: --tty
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.7'
+      - name: ModTidy check
+        run: |
+          git config --global --add safe.directory "*"
+          make check-modtidy
+      - name: Lint check
+        run: |
+          make install_lint
+          make lint
+
+  tests:
+    runs-on: zondax-runners
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.7'
+
+      - name: Install dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y build-essential wget curl gettext-base jq git
+      
+      - name: test
+        env:
+          REDIS_ADDR: ${{ secrets.REDIS_ADDR }}
+          REDIS_SECRET: ${{ secrets.REDIS_SECRET }}
+        run: |
+          git config --global --add safe.directory "*"
+          make test
