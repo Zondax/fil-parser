@@ -187,6 +187,7 @@ var verifyDealsForActivationReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationReturn) },
 
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationReturn) },
+
 	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.VerifyDealsForActivationReturn) },
 	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(v13Market.VerifyDealsForActivationReturn) },
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.VerifyDealsForActivationReturn) },

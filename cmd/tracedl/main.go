@@ -16,12 +16,7 @@ func main() {
 	defer cli.Close()
 
 	cli.GetRoot().AddCommand(GetStartCommand(cli))
-	cli.GetRoot().AddCommand(GetActorParseCommand(cli))
-	cli.GetRoot().AddCommand(GetUploadCommand(cli))
-	cli.GetRoot().AddCommand(GetGasCommand(cli))
-	cli.GetRoot().AddCommand(GetActorCommand(cli))
-	cli.GetRoot().AddCommand(GetBatchParseCommand(cli))
-	cli.GetRoot().AddCommand(GetMinerStateCommand(cli))
+
 	cli.Run()
 }
 

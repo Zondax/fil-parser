@@ -1,12 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
-
 	logger2 "github.com/zondax/fil-parser/logger"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
 
 	"github.com/bytedance/sonic"
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/klauspost/compress/s2"
 	"github.com/spf13/cobra"
 	"github.com/zondax/golem/pkg/cli"
 )
@@ -16,80 +22,13 @@ func GetStartCommand(c *cli.CLI) *cobra.Command {
 		Use:   "get",
 		Short: "Get",
 		Run: func(cmd *cobra.Command, args []string) {
-			download(c, cmd, args)
+			get(c, cmd, args)
 		},
 	}
-	cmd.Flags().String("type", "traces", "--type traces")
+	cmd.Flags().String("type", "traces", "--type trace")
 	cmd.Flags().String("outPath", ".", "--outPath ../")
 	cmd.Flags().String("compress", "gz", "--compress s2")
-	cmd.Flags().UintSlice("heights", []uint{387926}, "--heights 387926")
-	cmd.Flags().Bool("useDataStore", false, "--useDataStore true")
-	return cmd
-}
-
-func GetActorParseCommand(c *cli.CLI) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "actor-parse",
-		Short: "Actor Parse",
-		Run: func(cmd *cobra.Command, args []string) {
-			parse(c, cmd, args)
-		},
-	}
-	cmd.Flags().String("tracesPath", ".", "--tracesPath .")
-	cmd.Flags().Uint64("height", 387926, "--height 387926")
-	cmd.Flags().Bool("useDataStore", false, "--useDataStore true")
-	cmd.Flags().String("actorAddress", "", "--actorAddress f01")
-	cmd.Flags().String("actorName", "", "--actorName account")
-	cmd.Flags().String("actorMethod", "", "--actorMethod Constructor")
-	cmd.Flags().Bool("parseSubTxs", false, "--parseSubTxs true")
-	return cmd
-}
-
-func GetMinerStateCommand(c *cli.CLI) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "miner",
-		Short: "miner",
-		Run: func(cmd *cobra.Command, args []string) {
-			miner(c, cmd, args)
-		},
-	}
-	cmd.Flags().String("tracesPath", ".", "--tracesPath .")
-	cmd.Flags().Uint64("height", 387926, "--height 387926")
-	cmd.Flags().Bool("useDataStore", false, "--useDataStore true")
-	cmd.Flags().String("minerAddress", "", "--minerAddress f01")
-
-	return cmd
-}
-
-func GetActorCommand(c *cli.CLI) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "actors",
-		Short: "Actor",
-		Run: func(cmd *cobra.Command, args []string) {
-			actorscmd(c, cmd, args)
-		},
-	}
-	cmd.Flags().String("tracesPath", ".", "--tracesPath .")
-	cmd.Flags().Bool("useDataStore", false, "--useDataStore true")
-	cmd.Flags().String("actors", "", "--actors ./actors.json")
-	cmd.Flags().String("out", "out.json", "--out out.json")
-
-	return cmd
-}
-
-func GetBatchParseCommand(c *cli.CLI) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "batch-parse",
-		Short: "Batch Parse",
-		Run: func(cmd *cobra.Command, args []string) {
-			batch(c, cmd, args)
-		},
-	}
-	cmd.Flags().String("tracesPath", ".", "--tracesPath .")
-	cmd.Flags().Bool("useDataStore", false, "--useDataStore true")
-	cmd.Flags().String("inFile", "", "--inFile ./fallback.json")
-	cmd.Flags().String("outFile", "./unknown_methods.json", "--outFile ./unknown_methods.json")
-	cmd.Flags().Bool("parseSubTxs", false, "--parseSubTxs true")
+	cmd.Flags().Uint64("height", 0, "--height 387926")
 	return cmd
 }
 
@@ -132,7 +71,7 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 	var data any
 	switch logType {
 	case "traces":
-		_, data, err = getTraceFileByHeight(height, rpcClient.client)
+		data, err = getTraceFileByHeight(height, rpcClient.client)
 	case "tipset":
 		data, err = getTipsetFileByHeight(height, lotusChainTypes.EmptyTSK, rpcClient.client)
 	case "ethlog":
@@ -172,16 +111,37 @@ func get(c *cli.CLI, cmd *cobra.Command, _ []string) {
 
 }
 
-func GetUploadCommand(c *cli.CLI) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "upload",
-		Short: "Upload",
-		Run: func(cmd *cobra.Command, args []string) {
-			upload(c, cmd, args)
-		},
+func writeToFile(path, filename string, data []byte) error {
+	tmp, err := filepath.Abs(path)
+	if err != nil {
+		return err
 	}
-	cmd.Flags().String("traceFile", "", "--traceFile ./tmp.txt")
-	cmd.Flags().String("outPath", "", "--outPath /tmp/")
 
-	return cmd
+	return os.WriteFile(fmt.Sprintf("%s/%s", tmp, filename), data, fs.ModePerm)
+}
+
+func compress(format string, data []byte) ([]byte, error) {
+	// Compress data using s2
+	var b bytes.Buffer
+	dataBuff := bytes.NewBuffer(data)
+
+	var enc io.WriteCloser
+	switch format {
+	case "s2":
+		enc = s2.NewWriter(&b)
+	case "gz":
+		enc = gzip.NewWriter(&b)
+	default:
+		return nil, fmt.Errorf("invalid format,expected s2 or gz")
+	}
+
+	_, err := io.Copy(enc, dataBuff)
+	if err != nil {
+		_ = enc.Close()
+		return nil, err
+	}
+	// Blocks until compression is done.
+	_ = enc.Close()
+
+	return b.Bytes(), nil
 }

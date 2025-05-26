@@ -53,9 +53,6 @@ func GetTimestamp(timestamp uint64) time.Time {
 	return time.Unix(blockTimeStamp/1000, blockTimeStamp%1000)
 }
 
-// TODO: RM SPECIAL CASE
-// evm: skip if f2 & tx_cid is not there
-
 func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.AddressInfo) {
 	if addressMap == nil {
 		return

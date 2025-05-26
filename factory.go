@@ -350,7 +350,6 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			continue
 		}
 		addr, _ := address.NewFromString(actor.Key)
-		parser.AppendToAddressesMap(addresses, addressInfo)
 
 		api := p.Helper.GetFilecoinNodeClient()
 		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)

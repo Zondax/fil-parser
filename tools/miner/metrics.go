@@ -31,8 +31,6 @@ func newClient(metricsClient metrics.MetricsClient, name string) *minerMetricsCl
 	}
 
 	s.registerModuleMetrics(actorNameFromAddressMetric)
-	s.registerModuleMetrics(processedMinerInfoTotalMetric)
-	s.registerModuleMetrics(processedMinerSectorsTotalMetric)
 
 	return s
 }
@@ -48,24 +46,6 @@ var (
 		Name:    actorNameFromAddress,
 		Help:    "get actor name from address",
 		Labels:  []string{},
-		Handler: &collectors.Gauge{},
-	}
-
-	// Register metrics for processed miner events
-	// Usage: Increment counter when a block has been processed based on the amount of events successfully processed by type
-	processedMinerInfoTotalMetric = metrics.Metric{
-		Name:    processedMinerEventsTotal,
-		Help:    "Total number of processed miner info in indexer",
-		Labels:  []string{"tx_type"},
-		Handler: &collectors.Gauge{},
-	}
-
-	// Register metrics for processed miner events
-	// Usage: Increment counter when a block has been processed based on the amount of events successfully processed by type
-	processedMinerSectorsTotalMetric = metrics.Metric{
-		Name:    processedMinerSectorsTotal,
-		Help:    "Total number of processed miner sectors in indexer",
-		Labels:  []string{"tx_type"},
 		Handler: &collectors.Gauge{},
 	}
 )
@@ -91,12 +71,4 @@ func (c *minerMetricsClient) UpdateMetric(name string, value float64, labels ...
 
 func (c *minerMetricsClient) UpdateActorNameFromAddressMetric() error {
 	return c.IncrementMetric(actorNameFromAddress)
-}
-
-func (c *minerMetricsClient) UpdateProcessedMinerInfoTotalMetric(txType string, total float64) error {
-	return c.UpdateMetric(processedMinerEventsTotal, total, txType)
-}
-
-func (c *minerMetricsClient) UpdateProcessedMinerSectorsTotalMetric(txType string, total float64) error {
-	return c.UpdateMetric(processedMinerSectorsTotal, total, txType)
 }

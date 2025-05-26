@@ -154,5 +154,3 @@ fabric.properties
 .ionide
 
 cmd/tracedl/tracedl
-cmd/tracedl/parserfixes
-cmd/tracedl/fallbackfixes
