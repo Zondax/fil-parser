@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
@@ -23,7 +22,6 @@ import (
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -45,52 +43,25 @@ func (*VerifiedRegistry) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	v := &VerifiedRegistry{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsVerifiedRegistry.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsVerifiedRegistry.AddVerifier: {
-			Name:   parser.MethodAddVerifier,
-			Method: v.AddVerifier,
-		},
-		legacyBuiltin.MethodsVerifiedRegistry.RemoveVerifier: {
-			Name:   parser.MethodRemoveVerifier,
-			Method: v.RemoveVerifier,
-		},
-		legacyBuiltin.MethodsVerifiedRegistry.AddVerifiedClient: {
-			Name:   parser.MethodAddVerifiedClient,
-			Method: v.AddVerifiedClientExported,
-		},
-		legacyBuiltin.MethodsVerifiedRegistry.UseBytes: {
-			Name:   parser.MethodUseBytes,
-			Method: v.UseBytes,
-		},
-		legacyBuiltin.MethodsVerifiedRegistry.RestoreBytes: {
-			Name:   parser.MethodRestoreBytes,
-			Method: v.RestoreBytes,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
+	tools.V1.String(): v1Methods(),
+	tools.V2.String(): v1Methods(),
+	tools.V3.String(): v1Methods(),
+
+	tools.V4.String(): v2Methods(),
+	tools.V5.String(): v2Methods(),
+	tools.V6.String(): v2Methods(),
+	tools.V7.String(): v2Methods(),
+	tools.V8.String(): v2Methods(),
+	tools.V9.String(): v2Methods(),
+
+	tools.V10.String(): v3Methods(),
+	tools.V11.String(): v3Methods(),
+
+	tools.V12.String(): v4Methods(),
+	tools.V13.String(): v5Methods(),
+	tools.V14.String(): v6Methods(),
+	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(verifregv8.Methods),
 	tools.V17.String(): actors.CopyMethods(verifregv9.Methods),
 	tools.V18.String(): actors.CopyMethods(verifregv10.Methods),

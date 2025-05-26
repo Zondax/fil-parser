@@ -10,7 +10,6 @@ import (
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/proof"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
 	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
@@ -48,64 +47,25 @@ func (*Power) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	p := &Power{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsPower.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsPower.CreateMiner: {
-			Name:   parser.MethodCreateMiner,
-			Method: p.CreateMinerExported,
-		},
-		legacyBuiltin.MethodsPower.UpdateClaimedPower: {
-			Name:   parser.MethodUpdateClaimedPower,
-			Method: p.UpdateClaimedPower,
-		},
-		legacyBuiltin.MethodsPower.EnrollCronEvent: {
-			Name:   parser.MethodEnrollCronEvent,
-			Method: p.EnrollCronEvent,
-		},
-		legacyBuiltin.MethodsPower.OnEpochTickEnd: {
-			Name:   parser.MethodOnEpochTickEnd,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-		legacyBuiltin.MethodsPower.UpdatePledgeTotal: {
-			Name:   parser.MethodUpdatePledgeTotal,
-			Method: p.UpdatePledgeTotal,
-		},
-		legacyBuiltin.MethodsPower.OnConsensusFault: {
-			Name:   parser.MethodOnConsensusFault,
-			Method: p.OnConsensusFault,
-		},
-		legacyBuiltin.MethodsPower.SubmitPoRepForBulkVerify: {
-			Name:   parser.MethodSubmitPoRepForBulkVerify,
-			Method: p.SubmitPoRepForBulkVerify,
-		},
-		legacyBuiltin.MethodsPower.CurrentTotalPower: {
-			Name:   parser.MethodCurrentTotalPower,
-			Method: p.CurrentTotalPower,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
+	tools.V1.String(): v1Methods(),
+	tools.V2.String(): v1Methods(),
+	tools.V3.String(): v1Methods(),
+
+	tools.V4.String(): v2Methods(),
+	tools.V5.String(): v2Methods(),
+	tools.V6.String(): v2Methods(),
+	tools.V7.String(): v2Methods(),
+	tools.V8.String(): v2Methods(),
+	tools.V9.String(): v2Methods(),
+
+	tools.V10.String(): v3Methods(),
+	tools.V11.String(): v3Methods(),
+
+	tools.V12.String(): v4Methods(),
+	tools.V13.String(): v5Methods(),
+	tools.V14.String(): v6Methods(),
+	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(powerv8.Methods),
 	tools.V17.String(): actors.CopyMethods(powerv9.Methods),
 	tools.V18.String(): actors.CopyMethods(powerv10.Methods),

@@ -1,6 +1,8 @@
 package init
 
 import (
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	builtinInitv11 "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	builtinInitv12 "github.com/filecoin-project/go-state-types/builtin/v12/init"
@@ -10,6 +12,7 @@ import (
 	builtinInitv16 "github.com/filecoin-project/go-state-types/builtin/v16/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/init"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/init"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/init"
@@ -18,18 +21,58 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/init"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/init"
 	typegen "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
+
+func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	i := &Init{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsInit.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsInit.Exec: {
+			Name:   parser.MethodExec,
+			Method: i.Exec,
+		},
+	}
+}
+
+func v2Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v3Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v4Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v5Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v6Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
 
 var constructorParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 
+	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V8.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V9.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 
@@ -58,10 +101,11 @@ var execParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
-	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
-	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
-	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
-	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
+
+	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
+	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
+	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
+	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
 	tools.V8.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
 	tools.V9.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecParams) },
 
@@ -90,11 +134,11 @@ var execReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
-	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
-	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
-	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
-	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 
+	tools.V4.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
+	tools.V5.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
+	tools.V6.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
+	tools.V7.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
 	tools.V8.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
 	tools.V9.String(): func() typegen.CBORUnmarshaler { return new(legacyv2.ExecReturn) },
 

@@ -1,6 +1,8 @@
 package power
 
 import (
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	powerv10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
 	powerv11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
 	powerv12 "github.com/filecoin-project/go-state-types/builtin/v12/power"
@@ -18,18 +20,89 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/power"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/power"
 	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
+
+func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	p := &Power{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		1: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		2: {
+			Name:   parser.MethodCreateMiner,
+			Method: p.CreateMinerExported,
+		},
+		3: {
+			Name:   parser.MethodUpdateClaimedPower,
+			Method: p.UpdateClaimedPower,
+		},
+		4: {
+			Name:   parser.MethodEnrollCronEvent,
+			Method: p.EnrollCronEvent,
+		},
+		5: {
+			Name:   parser.MethodOnEpochTickEnd,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+		6: {
+			Name:   parser.MethodUpdatePledgeTotal,
+			Method: p.UpdatePledgeTotal,
+		},
+		7: {
+			Name:   parser.MethodOnConsensusFault,
+			Method: p.OnConsensusFault,
+		},
+		8: {
+			Name:   parser.MethodSubmitPoRepForBulkVerify,
+			Method: p.SubmitPoRepForBulkVerify,
+		},
+		9: {
+			Name:   parser.MethodCurrentTotalPower,
+			Method: p.CurrentTotalPower,
+		},
+	}
+}
+func v2Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	methods := v1Methods()
+	return methods
+}
+func v3Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	methods := v2Methods()
+	return methods
+}
+
+func v4Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	methods := v3Methods()
+	return methods
+}
+
+func v5Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	methods := v4Methods()
+	return methods
+}
+
+func v6Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	methods := v5Methods()
+	return methods
+}
+func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	methods := v6Methods()
+	return methods
+}
 
 var currentTotalPowerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CurrentTotalPowerReturn) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CurrentTotalPowerReturn) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CurrentTotalPowerReturn) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CurrentTotalPowerReturn) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CurrentTotalPowerReturn) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CurrentTotalPowerReturn) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CurrentTotalPowerReturn) },
 
@@ -58,11 +131,11 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.MinerConstructorParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.MinerConstructorParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.MinerConstructorParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.MinerConstructorParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.MinerConstructorParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.MinerConstructorParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.MinerConstructorParams) },
 
@@ -91,11 +164,11 @@ var createMinerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerParams) },
 
@@ -124,11 +197,11 @@ var createMinerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.CreateMinerReturn) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerReturn) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerReturn) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerReturn) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerReturn) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerReturn) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.CreateMinerReturn) },
 
@@ -157,11 +230,11 @@ var enrollCronEventParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.EnrollCronEventParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.EnrollCronEventParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.EnrollCronEventParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.EnrollCronEventParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.EnrollCronEventParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.EnrollCronEventParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.EnrollCronEventParams) },
 
@@ -190,11 +263,11 @@ var updateClaimedPowerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateClaimedPowerParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateClaimedPowerParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateClaimedPowerParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateClaimedPowerParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateClaimedPowerParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateClaimedPowerParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateClaimedPowerParams) },
 
