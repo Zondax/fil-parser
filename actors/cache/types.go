@@ -8,7 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
-	"github.com/zondax/fil-parser/actors/metrics"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
 )
@@ -16,7 +16,7 @@ import (
 const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
 
 type IActorsCache interface {
-	NewImpl(source common.DataSource, logger *logger.Logger) error
+	NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error
 	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error)
 	GetRobustAddress(add address.Address) (string, error)
 	GetShortAddress(add address.Address) (string, error)
@@ -35,8 +35,8 @@ type ActorsCache struct {
 	badAddress    cmap.ConcurrentMap
 	logger        *logger.Logger
 	httpClient    *resty.Client
-	metrics       *metrics.ActorsMetricsClient
 	networkName   string
+	metrics       *cacheMetrics.ActorsCacheMetricsClient
 }
 
 // FourBytesSignatureResult represents the response from SignatureDBURL
