@@ -25,6 +25,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/power"
+
 func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	p := &Power{}
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{

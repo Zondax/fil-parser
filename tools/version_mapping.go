@@ -10,6 +10,11 @@ import (
 	"github.com/filecoin-project/lotus/build/buildconstants"
 )
 
+// All versions and actor versions are listed here:
+// https://github.com/filecoin-project/go-state-types/blob/master/network/version.go
+
+// The minimimum calibration version is V16 because of a calibration reset.
+
 const (
 	CalibrationNetworkNodeType = "calibrationnet"
 	CalibrationNetwork         = "calibration"
@@ -31,32 +36,75 @@ var (
 	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}
 	supportedVersionsList *list.List
 
-	V0  version = version{calibration: 0, mainnet: 0, nodeVersion: 0}
-	V1  version = version{calibration: 0, mainnet: buildconstants.UpgradeBreezeHeight, nodeVersion: 1}
-	V2  version = version{calibration: 0, mainnet: buildconstants.UpgradeSmokeHeight, nodeVersion: 2}
-	V3  version = version{calibration: 0, mainnet: buildconstants.UpgradeIgnitionHeight, nodeVersion: 3}
-	V4  version = version{calibration: 0, mainnet: buildconstants.UpgradeRefuelHeight, nodeVersion: 4}
-	V5  version = version{calibration: 0, mainnet: buildconstants.UpgradeTapeHeight, nodeVersion: 5}
-	V6  version = version{calibration: 0, mainnet: buildconstants.UpgradeKumquatHeight, nodeVersion: 6}
-	V7  version = version{calibration: 0, mainnet: buildconstants.UpgradeCalicoHeight, nodeVersion: 7}
-	V8  version = version{calibration: 0, mainnet: buildconstants.UpgradePersianHeight, nodeVersion: 8}
-	V9  version = version{calibration: 0, mainnet: buildconstants.UpgradeOrangeHeight, nodeVersion: 9}
+	// V0 genesis, spec-actors: v1
+	V0 version = version{calibration: 0, mainnet: 0, nodeVersion: 0}
+	// V1 Breeze, spec-actors: v1
+	V1 version = version{calibration: 0, mainnet: buildconstants.UpgradeBreezeHeight, nodeVersion: 1}
+	// V2 Smoke spec-actors: v1
+	V2 version = version{calibration: 0, mainnet: buildconstants.UpgradeSmokeHeight, nodeVersion: 2}
+	// V3 Ignition, spec-actors: v1
+	V3 version = version{calibration: 0, mainnet: buildconstants.UpgradeIgnitionHeight, nodeVersion: 3}
+
+	// V4 Refuel, spec-actors: v2
+	V4 version = version{calibration: 0, mainnet: buildconstants.UpgradeRefuelHeight, nodeVersion: 4}
+	// V5 Tape, spec-actors: v2
+	V5 version = version{calibration: 0, mainnet: buildconstants.UpgradeTapeHeight, nodeVersion: 5}
+	// V6 Kumquat, spec-actors: v2
+	V6 version = version{calibration: 0, mainnet: buildconstants.UpgradeKumquatHeight, nodeVersion: 6}
+	// V7 Calico, spec-actors: v2
+	V7 version = version{calibration: 0, mainnet: buildconstants.UpgradeCalicoHeight, nodeVersion: 7}
+	// V8 Persian, spec-actors: v2
+	V8 version = version{calibration: 0, mainnet: buildconstants.UpgradePersianHeight, nodeVersion: 8}
+	// V9 Orange, spec-actors: v2
+	V9 version = version{calibration: 0, mainnet: buildconstants.UpgradeOrangeHeight, nodeVersion: 9}
+
+	// V10 Trust, spec-actors: v3
 	V10 version = version{calibration: 0, mainnet: buildconstants.UpgradeTrustHeight, nodeVersion: 10}
+	// V11 Norwegian, spec-actors: v3
 	V11 version = version{calibration: 0, mainnet: buildconstants.UpgradeNorwegianHeight, nodeVersion: 11}
-	// parsing all calibration heights from 0->16800 with V16
-	V12 version = version{calibration: 0, mainnet: buildconstants.UpgradeTurboHeight, nodeVersion: 12}      // actual: 193789
-	V13 version = version{calibration: 0, mainnet: buildconstants.UpgradeHyperdriveHeight, nodeVersion: 13} // calibration reset
-	V14 version = version{calibration: 0, mainnet: buildconstants.UpgradeChocolateHeight, nodeVersion: 14}  // actual: 312746
-	V15 version = version{calibration: 0, mainnet: buildconstants.UpgradeOhSnapHeight, nodeVersion: 15}     // actual: 682006
-	V16 version = version{calibration: 0, mainnet: buildconstants.UpgradeSkyrHeight, nodeVersion: 16}       // actual: 1044660
-	V17 version = version{calibration: 16800, mainnet: buildconstants.UpgradeSharkHeight, nodeVersion: 17}  // calibration reset
+
+	// V12 Turbo, spec-actors: v4, actual(calibration): 193789
+	V12 version = version{calibration: 0, mainnet: buildconstants.UpgradeTurboHeight, nodeVersion: 12}
+
+	// V13 Hyperdrive, spec-actors: v5, calibration reset
+	V13 version = version{calibration: 0, mainnet: buildconstants.UpgradeHyperdriveHeight, nodeVersion: 13}
+
+	// V14 Chocolate, spec-actors: v6 actual(calibration): 312746
+	V14 version = version{calibration: 0, mainnet: buildconstants.UpgradeChocolateHeight, nodeVersion: 14}
+
+	// V15 OhSnap,spec-actors: v7, actual(calibration): 682006
+	V15 version = version{calibration: 0, mainnet: buildconstants.UpgradeOhSnapHeight, nodeVersion: 15}
+
+	// V16 Skyr, builtin-actors(go-state-types): v8.
+	// parsing all calibration heights from 0->16799 with V16.
+	// (actual(calibration): 1044660)
+	V16 version = version{calibration: 0, mainnet: buildconstants.UpgradeSkyrHeight, nodeVersion: 16}
+
+	// V17 Shark, builtin-actors(go-state-types): v9.
+	// calibration reset
+	V17 version = version{calibration: 16800, mainnet: buildconstants.UpgradeSharkHeight, nodeVersion: 17}
+
+	// V18 Hygge, builtin-actors(go-state-types): v10.
 	V18 version = version{calibration: 322354, mainnet: buildconstants.UpgradeHyggeHeight, nodeVersion: 18}
+
+	// V19 Lightning, builtin-actors(go-state-types): v11.
 	V19 version = version{calibration: 489094, mainnet: buildconstants.UpgradeLightningHeight, nodeVersion: 19}
+	// V20 Thunder, builtin-actors(go-state-types): v11.
 	V20 version = version{calibration: 492214, mainnet: buildconstants.UpgradeThunderHeight, nodeVersion: 20}
+
+	// V21 Watermelon, builtin-actors(go-state-types): v12.
 	V21 version = version{calibration: 1108174, mainnet: buildconstants.UpgradeWatermelonHeight, nodeVersion: 21}
+
+	// V22 Dragon, builtin-actors(go-state-types): v13.
 	V22 version = version{calibration: 1427974, mainnet: buildconstants.UpgradeDragonHeight, nodeVersion: 22}
+
+	// V23 Waffle, builtin-actors(go-state-types): v14.
 	V23 version = version{calibration: 1779094, mainnet: buildconstants.UpgradeWaffleHeight, nodeVersion: 23}
+
+	// V24 Tuktuk, builtin-actors(go-state-types): v15.
 	V24 version = version{calibration: 2081674, mainnet: buildconstants.UpgradeTuktukHeight, nodeVersion: 24}
+
+	// V25 Teep, builtin-actors(go-state-types): v16.
 	V25 version = version{calibration: 2523454, mainnet: buildconstants.UpgradeTeepHeight, nodeVersion: 25}
 )
 
@@ -260,6 +308,9 @@ func VersionFromString(version string) version {
 	return V1
 }
 
+// VersionFromHeight returns the version for a given network and height.
+// https://github.com/filecoin-project/go-state-types/blob/master/network/version.go
+// The minimum calibration version is V16 ( height 0 -> 16799 will always return V16 for calibration).
 func VersionFromHeight(network string, height int64) version {
 	switch {
 	case V0.IsSupported(network, height):

@@ -2,20 +2,24 @@ package market
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
+
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
+
+	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
+	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
+	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
+
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
 	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	v12Market "github.com/filecoin-project/go-state-types/builtin/v12/market"
 	v13Market "github.com/filecoin-project/go-state-types/builtin/v13/market"
-	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
 	v14Market "github.com/filecoin-project/go-state-types/builtin/v14/market"
-	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
-	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
-	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
+
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/market"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/market"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/market"
@@ -23,12 +27,17 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/market"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/market"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/market"
+
 	cbg "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/market/types"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
+
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/market"
 
 func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	m := &Market{}

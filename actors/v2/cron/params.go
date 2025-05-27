@@ -26,6 +26,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/cron"
+
 func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 		legacyBuiltin.MethodsCron.Constructor: {

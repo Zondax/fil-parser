@@ -27,6 +27,9 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/paych"
+
 func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	p := &PaymentChannel{}
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
