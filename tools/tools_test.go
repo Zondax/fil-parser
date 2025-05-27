@@ -49,12 +49,12 @@ func TestIsSupported(t *testing.T) {
 		{name: "V7 on calibration", version: V7, network: "calibration", height: 2383680, want: false},
 		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 170000, want: false},
 		{name: "V7 on calibration", version: V7, network: "calibration", height: 0, want: true},
-		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 10000, want: true},
+		{name: "V7 on mainnet", version: V7, network: "mainnet", height: 10000, want: false},
 
 		{name: "V9 on calibration", version: V9, network: "calibration", height: 265100, want: false},
-		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265201, want: true},
+		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265201, want: false},
 		{name: "V9 on calibration", version: V9, network: "calibration", height: 265200, want: false},
-		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265200, want: true},
+		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265200, want: false},
 
 		{name: "V24 on calibration", version: V24, network: "calibration", height: 2081674, want: true},
 		{name: "V24 on mainnet", version: V24, network: "mainnet", height: 1427974, want: false},
@@ -152,9 +152,9 @@ func TestVersionIterator(t *testing.T) {
 		network          string
 		expectedVersions []version
 	}{
-		{name: "V1 on calibration", version: V1, network: "calibration",
-			expectedVersions: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
-		{name: "V1 on mainnet", version: V1, network: "mainnet", expectedVersions: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
+		{name: "V1 on calibration", version: V0, network: "calibration",
+			expectedVersions: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
+		{name: "V1 on mainnet", version: V0, network: "mainnet", expectedVersions: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -183,14 +183,14 @@ func TestVersionsBefore(t *testing.T) {
 		version version
 		want    []version
 	}{
-		{name: "V1", version: V1, want: []version{V1}},
-		{name: "V2", version: V2, want: []version{V1, V2}},
-		{name: "V3", version: V3, want: []version{V1, V2, V3}},
-		{name: "V4", version: V4, want: []version{V1, V2, V3, V4}},
-		{name: "V5", version: V5, want: []version{V1, V2, V3, V4, V5}},
-		{name: "V6", version: V6, want: []version{V1, V2, V3, V4, V5, V6}},
-		{name: "V7", version: V7, want: []version{V1, V2, V3, V4, V5, V6, V7}},
-		{name: "V8", version: V8, want: []version{V1, V2, V3, V4, V5, V6, V7, V8}}}
+		{name: "V1", version: V1, want: []version{V0, V1}},
+		{name: "V2", version: V2, want: []version{V0, V1, V2}},
+		{name: "V3", version: V3, want: []version{V0, V1, V2, V3}},
+		{name: "V4", version: V4, want: []version{V0, V1, V2, V3, V4}},
+		{name: "V5", version: V5, want: []version{V0, V1, V2, V3, V4, V5}},
+		{name: "V6", version: V6, want: []version{V0, V1, V2, V3, V4, V5, V6}},
+		{name: "V7", version: V7, want: []version{V0, V1, V2, V3, V4, V5, V6, V7}},
+		{name: "V8", version: V8, want: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8}}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -235,8 +235,8 @@ func TestGetSupportedVersions(t *testing.T) {
 		network string
 		want    []version
 	}{
-		{name: "calibration", network: "calibration", want: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
-		{name: "mainnet", network: "mainnet", want: []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
+		{name: "calibration", network: "calibration", want: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
+		{name: "mainnet", network: "mainnet", want: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -258,11 +258,16 @@ func TestVersionFromHeight(t *testing.T) {
 		height  int64
 		want    version
 	}{
-		{name: "mainnet", network: "mainnet", height: 0, want: V7},
-		{name: "mainnet", network: "mainnet", height: 7000, want: V7},
-		{name: "mainnet", network: "mainnet", height: 7123, want: V7},
-		{name: "mainnet", network: "mainnet", height: 265100, want: V8},
-		{name: "mainnet", network: "mainnet", height: 265200, want: V9},
+		{name: "mainnet", network: "mainnet", height: 0, want: V0},
+		{name: "mainnet", network: "mainnet", height: 41280, want: V1},
+		{name: "mainnet", network: "mainnet", height: 51000, want: V2},
+		{name: "mainnet", network: "mainnet", height: 94000, want: V3},
+		{name: "mainnet", network: "mainnet", height: 130800, want: V4},
+		{name: "mainnet", network: "mainnet", height: 140760, want: V5},
+		{name: "mainnet", network: "mainnet", height: 170000, want: V6},
+		{name: "mainnet", network: "mainnet", height: 265200, want: V7},
+		{name: "mainnet", network: "mainnet", height: 272400, want: V8},
+		{name: "mainnet", network: "mainnet", height: 336458, want: V9},
 		{name: "mainnet", network: "mainnet", height: 550321, want: V10},
 		{name: "mainnet", network: "mainnet", height: 665280, want: V11},
 		{name: "mainnet", network: "mainnet", height: 712320, want: V12},
@@ -275,7 +280,7 @@ func TestVersionFromHeight(t *testing.T) {
 		{name: "mainnet", network: "mainnet", height: 2809800, want: V19},
 		{name: "mainnet", network: "mainnet", height: 2809800, want: V19},
 		{name: "mainnet", network: "mainnet", height: 3469380, want: V21},
-		{name: "mainnet", network: "mainnet", height: 3817920, want: V22},
+		{name: "mainnet", network: "mainnet", height: 3855360, want: V22},
 		{name: "mainnet", network: "mainnet", height: 4154640, want: V23},
 		{name: "mainnet", network: "mainnet", height: 4461240, want: V24},
 		{name: "mainnet", network: "mainnet", height: 4878840, want: V25},

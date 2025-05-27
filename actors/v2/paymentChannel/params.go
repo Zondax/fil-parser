@@ -1,6 +1,8 @@
 package paymentChannel
 
 import (
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	paychv10 "github.com/filecoin-project/go-state-types/builtin/v10/paych"
 	paychv11 "github.com/filecoin-project/go-state-types/builtin/v11/paych"
 	paychv12 "github.com/filecoin-project/go-state-types/builtin/v12/paych"
@@ -10,6 +12,7 @@ import (
 	paychv16 "github.com/filecoin-project/go-state-types/builtin/v16/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/paych"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/paych"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/paych"
@@ -17,20 +20,72 @@ import (
 	legacyv5 "github.com/filecoin-project/specs-actors/v5/actors/builtin/paych"
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/paych"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/paych"
+	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/paych"
+
+func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	p := &PaymentChannel{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsPaych.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsPaych.UpdateChannelState: {
+			Name:   parser.MethodUpdateChannelState,
+			Method: p.UpdateChannelState,
+		},
+		legacyBuiltin.MethodsPaych.Settle: {
+			Name:   parser.MethodSettle,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+		legacyBuiltin.MethodsPaych.Collect: {
+			Name:   parser.MethodCollect,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+	}
+}
+
+func v2Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v3Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v2Methods()
+}
+
+func v4Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v3Methods()
+}
+
+func v5Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v4Methods()
+}
+
+func v6Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v5Methods()
+}
+
+func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v6Methods()
+}
+
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 
@@ -57,14 +112,15 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var updateChannelStateParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateChannelStateParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateChannelStateParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateChannelStateParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateChannelStateParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateChannelStateParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UpdateChannelStateParams) },
 
