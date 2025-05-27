@@ -13,6 +13,8 @@ import (
 
 	logger "github.com/zondax/golem/pkg/logger"
 
+	metrics "github.com/zondax/fil-parser/actors/cache/metrics"
+
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/filecoin-project/lotus/chain/types"
@@ -194,17 +196,17 @@ func (_m *IActorsCache) IsSystemActor(addr string) bool {
 	return r0
 }
 
-// NewImpl provides a mock function with given fields: source, _a1
-func (_m *IActorsCache) NewImpl(source common.DataSource, _a1 *logger.Logger) error {
-	ret := _m.Called(source, _a1)
+// NewImpl provides a mock function with given fields: source, _a1, _a2
+func (_m *IActorsCache) NewImpl(source common.DataSource, _a1 *logger.Logger, _a2 *metrics.ActorsCacheMetricsClient) error {
+	ret := _m.Called(source, _a1, _a2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NewImpl")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(common.DataSource, *logger.Logger) error); ok {
-		r0 = rf(source, _a1)
+	if rf, ok := ret.Get(0).(func(common.DataSource, *logger.Logger, *metrics.ActorsCacheMetricsClient) error); ok {
+		r0 = rf(source, _a1, _a2)
 	} else {
 		r0 = ret.Error(0)
 	}

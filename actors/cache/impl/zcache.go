@@ -13,6 +13,7 @@ import (
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
@@ -39,14 +40,16 @@ type ZCache struct {
 	logger             *logger.Logger
 	cacheType          string
 	ttl                time.Duration
+	metrics            *cacheMetrics.ActorsCacheMetricsClient
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
 	var newImplMu sync.Mutex
 	newImplMu.Lock()
 	defer newImplMu.Unlock()
 
 	m.logger = logger2.GetSafeLogger(logger)
+	m.metrics = metrics
 
 	// If no config was provided, the combined cache is configured as
 	// remote best effort, as the remote cache will fail. However, the cache will
