@@ -746,6 +746,7 @@ var getMultiAddrsReturn = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var getControlAddressesReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.GetControlAddressesReturn) },
