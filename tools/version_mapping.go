@@ -63,16 +63,20 @@ var (
 	// V11 Norwegian, spec-actors: v3
 	V11 version = version{calibration: 0, mainnet: buildconstants.UpgradeNorwegianHeight, nodeVersion: 11}
 
-	// V12 Turbo, spec-actors: v4, actual(calibration): 193789
+	// V12 Turbo, spec-actors: v4.
+	// actual(calibration): 193789
 	V12 version = version{calibration: 0, mainnet: buildconstants.UpgradeTurboHeight, nodeVersion: 12}
 
-	// V13 Hyperdrive, spec-actors: v5, calibration reset
+	// V13 Hyperdrive, spec-actors: v5.
+	// calibration reset
 	V13 version = version{calibration: 0, mainnet: buildconstants.UpgradeHyperdriveHeight, nodeVersion: 13}
 
-	// V14 Chocolate, spec-actors: v6 actual(calibration): 312746
+	// V14 Chocolate, spec-actors: v6.
+	// actual(calibration): 312746
 	V14 version = version{calibration: 0, mainnet: buildconstants.UpgradeChocolateHeight, nodeVersion: 14}
 
-	// V15 OhSnap,spec-actors: v7, actual(calibration): 682006
+	// V15 OhSnap,spec-actors: v7.
+	// actual(calibration): 682006.
 	V15 version = version{calibration: 0, mainnet: buildconstants.UpgradeOhSnapHeight, nodeVersion: 15}
 
 	// V16 Skyr, builtin-actors(go-state-types): v8.
