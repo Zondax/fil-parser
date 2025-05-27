@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/golem/pkg/logger"
@@ -21,6 +20,8 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/zondax/fil-parser/actors/cache/impl"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
+
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 )
@@ -64,7 +65,7 @@ var CalibrationActorsId = map[string]bool{
 
 const combinedCacheImpl = "combined"
 
-func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metricsClient metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
 	var setupMu sync.Mutex
 	setupMu.Lock()
 	defer setupMu.Unlock()
@@ -73,14 +74,15 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 	var onChainCache impl.OnChain
 
 	logger = logger2.GetSafeLogger(logger)
+	metrics := cacheMetrics.NewClient(metricsClient, "actorsCache")
 
-	err := onChainCache.NewImpl(dataSource, logger)
+	err := onChainCache.NewImpl(dataSource, logger, metrics)
 	if err != nil {
 		return nil, err
 	}
 
 	var combinedCache impl.ZCache
-	if err = combinedCache.NewImpl(dataSource, logger); err != nil {
+	if err = combinedCache.NewImpl(dataSource, logger, metrics); err != nil {
 		logger.Errorf("[ActorsCache] - Unable to initialize combined cache: %s", err.Error())
 		return nil, err
 	}
@@ -95,7 +97,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 		badAddress:    cmap.New(),
 		logger:        logger,
 		httpClient:    resty.New().SetTimeout(30 * time.Second),
-		metrics:       actormetrics.NewClient(metrics, "actorsCache"),
+		metrics:       metrics,
 		networkName:   dataSource.Config.NetworkName,
 	}, nil
 }
@@ -323,7 +325,7 @@ func (a *ActorsCache) ImplementationType() string {
 	return combinedCacheImpl
 }
 
-func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger) error {
+func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
 	return nil
 }
 

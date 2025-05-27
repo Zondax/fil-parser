@@ -22,6 +22,12 @@ type ParserMetricsClient struct {
 	name string
 }
 
+func NewNoopMetricsClient() *ParserMetricsClient {
+	return &ParserMetricsClient{
+		MetricsClient: metrics.NewNoopMetricsClient(),
+	}
+}
+
 func NewClient(metricsClient metrics.MetricsClient, name string) *ParserMetricsClient {
 	s := &ParserMetricsClient{
 		MetricsClient: metricsClient,

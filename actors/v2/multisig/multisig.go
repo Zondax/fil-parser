@@ -35,9 +35,9 @@ import (
 
 func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return parse(raw, &legacyv1.ConstructorParams{}, cborUnmarshaller[*legacyv1.ConstructorParams])
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parse(raw, &legacyv2.ConstructorParams{}, cborUnmarshaller[*legacyv2.ConstructorParams])
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parse(raw, &legacyv3.ConstructorParams{}, cborUnmarshaller[*legacyv3.ConstructorParams])
@@ -74,7 +74,9 @@ func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[stri
 
 func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
+		return parseWithMsigParser[*legacyv1.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv1.ConstructorParams], false, nil)
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parseWithMsigParser[*legacyv2.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv2.ConstructorParams], false, nil)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parseWithMsigParser[*legacyv3.ConstructorParams](msg, height, key, parser, nil, jsonUnmarshaller[*legacyv3.ConstructorParams], false, nil)
@@ -110,7 +112,9 @@ func (m *Msig) MsigParams(network string, msg *parser.LotusMessage, height int64
 
 func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawReturn []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
+		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv1.ApproveReturn], true, &legacyv1.ApproveReturn{})
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv2.ApproveReturn], true, &legacyv2.ApproveReturn{})
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parseWithMsigParser(msg, height, key, parser, rawReturn, jsonUnmarshaller[*legacyv3.ApproveReturn], true, &legacyv3.ApproveReturn{})
@@ -188,7 +192,9 @@ func (*Msig) RemoveSigner(network string, msg *parser.LotusMessage, height int64
 
 func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
+		return parseWithMsigParser[*legacyv1.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv1.ChangeNumApprovalsThresholdParams], false, nil)
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parseWithMsigParser[*legacyv2.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv2.ChangeNumApprovalsThresholdParams], false, nil)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parseWithMsigParser[*legacyv3.ChangeNumApprovalsThresholdParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv3.ChangeNumApprovalsThresholdParams], false, nil)
@@ -224,7 +230,9 @@ func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessag
 
 func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, parser ParseFn) (map[string]interface{}, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
+		return parseWithMsigParser[*legacyv1.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv1.LockBalanceParams], false, nil)
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parseWithMsigParser[*legacyv2.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv2.LockBalanceParams], false, nil)
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parseWithMsigParser[*legacyv3.LockBalanceParams](msg, height, key, parser, rawParams, cborUnmarshaller[*legacyv3.LockBalanceParams], false, nil)

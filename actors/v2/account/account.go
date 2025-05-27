@@ -12,7 +12,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	accountv10 "github.com/filecoin-project/go-state-types/builtin/v10/account"
 	accountv11 "github.com/filecoin-project/go-state-types/builtin/v11/account"
@@ -29,36 +28,25 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	a := &Account{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsAccount.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsAccount.PubkeyAddress: {
-			Name:   parser.MethodPubkeyAddress,
-			Method: a.PubkeyAddress,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
+	tools.V0.String(): v1Methods(),
+	tools.V1.String(): v1Methods(),
+	tools.V2.String(): v1Methods(),
+	tools.V3.String(): v1Methods(),
+
+	tools.V4.String(): v2Methods(),
+	tools.V5.String(): v2Methods(),
+	tools.V6.String(): v2Methods(),
+	tools.V7.String(): v2Methods(),
+	tools.V8.String(): v2Methods(),
+	tools.V9.String(): v2Methods(),
+
+	tools.V10.String(): v3Methods(),
+	tools.V11.String(): v4Methods(),
+	tools.V12.String(): v5Methods(),
+	tools.V13.String(): v6Methods(),
+	tools.V14.String(): v7Methods(),
+	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(accountv8.Methods),
 	tools.V17.String(): actors.CopyMethods(accountv9.Methods),
 	tools.V18.String(): actors.CopyMethods(accountv10.Methods),

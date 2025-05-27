@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	paychv10 "github.com/filecoin-project/go-state-types/builtin/v10/paych"
 	paychv11 "github.com/filecoin-project/go-state-types/builtin/v11/paych"
@@ -23,7 +22,6 @@ import (
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
 
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -44,44 +42,26 @@ func (*PaymentChannel) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	p := &PaymentChannel{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsPaych.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsPaych.UpdateChannelState: {
-			Name:   parser.MethodUpdateChannelState,
-			Method: p.UpdateChannelState,
-		},
-		legacyBuiltin.MethodsPaych.Settle: {
-			Name:   parser.MethodSettle,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-		legacyBuiltin.MethodsPaych.Collect: {
-			Name:   parser.MethodCollect,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
+	tools.V0.String(): v1Methods(),
+	tools.V1.String(): v1Methods(),
+	tools.V2.String(): v1Methods(),
+	tools.V3.String(): v1Methods(),
+
+	tools.V4.String(): v2Methods(),
+	tools.V5.String(): v2Methods(),
+	tools.V6.String(): v2Methods(),
+	tools.V7.String(): v2Methods(),
+	tools.V8.String(): v2Methods(),
+	tools.V9.String(): v2Methods(),
+
+	tools.V10.String(): v3Methods(),
+	tools.V11.String(): v3Methods(),
+
+	tools.V12.String(): v4Methods(),
+	tools.V13.String(): v5Methods(),
+	tools.V14.String(): v6Methods(),
+	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(paychv8.Methods),
 	tools.V17.String(): actors.CopyMethods(paychv9.Methods),
 	tools.V18.String(): actors.CopyMethods(paychv10.Methods),
