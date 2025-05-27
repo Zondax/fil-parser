@@ -58,11 +58,13 @@ func v5Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 func v6Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	return v1Methods()
 }
+
 func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	return v1Methods()
 }
 
 var cronConstructorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },

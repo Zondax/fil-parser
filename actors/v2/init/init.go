@@ -52,6 +52,7 @@ func (*Init) StartNetworkHeight() int64 {
 }
 
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V0.String(): v1Methods(),
 	tools.V1.String(): v1Methods(),
 	tools.V2.String(): v1Methods(),
 	tools.V3.String(): v1Methods(),

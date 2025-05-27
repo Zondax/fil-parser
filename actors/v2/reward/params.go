@@ -73,6 +73,7 @@ func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 }
 
 var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AwardBlockRewardParams) },
@@ -106,6 +107,7 @@ var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ThisEpochRewardReturn) },

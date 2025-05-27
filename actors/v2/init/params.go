@@ -65,6 +65,7 @@ func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 }
 
 var constructorParams = map[string]func() typegen.CBORUnmarshaler{
+	tools.V0.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
@@ -98,6 +99,7 @@ var constructorParams = map[string]func() typegen.CBORUnmarshaler{
 }
 
 var execParams = map[string]func() typegen.CBORUnmarshaler{
+	tools.V0.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
 	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecParams) },
@@ -131,6 +133,7 @@ var execParams = map[string]func() typegen.CBORUnmarshaler{
 }
 
 var execReturn = map[string]func() typegen.CBORUnmarshaler{
+	tools.V0.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 	tools.V1.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 	tools.V2.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },
 	tools.V3.String(): func() typegen.CBORUnmarshaler { return new(legacyv1.ExecReturn) },

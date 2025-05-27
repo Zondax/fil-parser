@@ -74,6 +74,7 @@ func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
@@ -108,6 +109,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var updateChannelStateParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UpdateChannelStateParams) },

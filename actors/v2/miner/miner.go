@@ -77,6 +77,7 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 }
 
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V0.String(): actors.CopyMethods(customMethods(), v1Methods()),
 	tools.V1.String(): actors.CopyMethods(customMethods(), v1Methods()),
 	tools.V2.String(): actors.CopyMethods(customMethods(), v1Methods()),
 	tools.V3.String(): actors.CopyMethods(customMethods(), v1Methods()),

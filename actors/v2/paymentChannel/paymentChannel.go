@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	paychv10 "github.com/filecoin-project/go-state-types/builtin/v10/paych"
 	paychv11 "github.com/filecoin-project/go-state-types/builtin/v11/paych"
@@ -23,7 +22,6 @@ import (
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
 
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -44,29 +42,8 @@ func (*PaymentChannel) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	p := &PaymentChannel{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsPaych.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsPaych.UpdateChannelState: {
-			Name:   parser.MethodUpdateChannelState,
-			Method: p.UpdateChannelState,
-		},
-		legacyBuiltin.MethodsPaych.Settle: {
-			Name:   parser.MethodSettle,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-		legacyBuiltin.MethodsPaych.Collect: {
-			Name:   parser.MethodCollect,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+	tools.V0.String(): v1Methods(),
 	tools.V1.String(): v1Methods(),
 	tools.V2.String(): v1Methods(),
 	tools.V3.String(): v1Methods(),
