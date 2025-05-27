@@ -246,7 +246,7 @@ func (v version) FilNetworkVersion() network.Version {
 // GetSupportedVersions returns all supported versions for a given network
 func GetSupportedVersions(network string) []version {
 	var result []version
-	iter := NewVersionIterator(V1, network)
+	iter := NewVersionIterator(V0, network)
 	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
 		v.currentNetwork = network
 		result = append(result, v)
@@ -257,7 +257,7 @@ func GetSupportedVersions(network string) []version {
 // VersionsBefore returns all versions before the given version (inclusive of the start version)
 func VersionsBefore(uptoIncluding version) []version {
 	var result []version
-	iter := NewVersionIterator(V1, uptoIncluding.currentNetwork)
+	iter := NewVersionIterator(V0, uptoIncluding.currentNetwork)
 	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
 		if v.nodeVersion > uptoIncluding.nodeVersion {
 			break
@@ -308,7 +308,7 @@ func VersionFromString(version string) version {
 			return v
 		}
 	}
-	return V1
+	return V0
 }
 
 // VersionFromHeight returns the version for a given network and height.
