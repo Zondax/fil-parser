@@ -26,19 +26,32 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-// SystemActorsId Map to identify system actors which don't have an associated robust address
+// SystemActorsId Map to identify system actors which don't have an associated robust address.
+// https://github.com/filecoin-project/go-state-types/blob/571b84617a4b7fe032cf63c25e0c079f90e2f8a7/builtin/singletons.go#L9
 var SystemActorsId = map[string]bool{
-	"f00":  true,
-	"f01":  true,
-	"f02":  true,
-	"f03":  true,
-	"f04":  true,
-	"f05":  true,
-	"f06":  true,
-	"f07":  true,
+	// system actor
+	"f00": true,
+	// init actor
+	"f01": true,
+	// reward actor
+	"f02": true,
+	// cron actor
+	"f03": true,
+	// storagepower actor
+	"f04": true,
+	// storagemarket actor
+	"f05": true,
+	// verifiedregistry actor
+	"f06": true,
+	// datacap actor
+	"f07": true,
+	// eam actor
 	"f010": true,
-	"f099": true,
+}
 
+// GenesisActorsId Map to identify actors created at genesis and don't have an associated robust address.
+// Check data/genesis/{network}_genesis_balances.json
+var GenesisActorsId = map[string]bool{
 	// multisig
 	"f080":  true,
 	"f090":  true,
@@ -50,10 +63,13 @@ var SystemActorsId = map[string]bool{
 	"f0119": true,
 	"f0120": true,
 	"f0122": true,
+	// burn address
+	"f099": true,
 }
 
-// CalibrationActorsId Map to identify system actors which don't have an associated robust address in the calibration network
-// These are storage miners and multisig addresses that initiated the calibration network
+// CalibrationActorsId Map to identify actors created at genesis which don't have an associated robust address in the calibration network.
+// These are storage miners and multisig addresses that initiated the calibration network.
+// Check data/genesis/calibration_genesis_balances.json
 var CalibrationActorsId = map[string]bool{
 	// miners
 	"f01000": true,
@@ -145,10 +161,15 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 }
 
 func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
+	// check if the address is a system actor ( no robust address)
 	if _, ok := SystemActorsId[add.String()]; ok {
 		return add.String(), nil
 	}
-
+	// check if the address is a genesis actor ( no robust address)
+	if _, ok := GenesisActorsId[add.String()]; ok {
+		return add.String(), nil
+	}
+	// check if the address is a calibration genesis actor ( no robust address)
 	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
 		if _, ok := CalibrationActorsId[add.String()]; ok {
 			return add.String(), nil
@@ -263,9 +284,17 @@ func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) 
 	return sig, nil
 }
 
+// IsSystemActor checks if addr is a system actor as defined here:
+// https://github.com/filecoin-project/go-state-types/blob/571b84617a4b7fe032cf63c25e0c079f90e2f8a7/builtin/singletons.go#L9
 func (a *ActorsCache) IsSystemActor(addr string) bool {
 	return SystemActorsId[addr]
 }
+
+// IsGenesisActor checks if addr is a genesis actor as defined here:
+func (a *ActorsCache) IsGenesisActor(addr string) bool {
+	return GenesisActorsId[addr]
+}
+
 func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string) error {
 	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig)
 }

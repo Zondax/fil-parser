@@ -22,6 +22,8 @@ import (
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry/types"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
@@ -150,7 +152,13 @@ func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, rawReturn, true, params(), returnValue())
+	metadata, err := parse(raw, rawReturn, true, params(), returnValue())
+	if err != nil || metadata[parser.ReturnKey] == nil {
+		// if Considered is larger than 8192 the go-state-types parser will return an error
+		// try with a larger allowed slice for the return
+		metadata, err = parse(raw, rawReturn, true, params(), &types.RemoveExpiredAllocationsReturn{})
+	}
+	return metadata, err
 }
 
 func (*VerifiedRegistry) Deprecated1(network string, height int64, raw []byte) (map[string]interface{}, error) {

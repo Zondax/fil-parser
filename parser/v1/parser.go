@@ -120,13 +120,10 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		systemExecution := false
-		tipsetHeight := int64(txsData.Tipset.Height())
-		tipsetKey := txsData.Tipset.Key()
-
 		// TODO find a way to not having this special case handled outside func parseTrace
 		if ok := hasExecutionTrace(trace); !ok {
 			if trace.Msg != nil {
-				systemExecution = p.helper.IsSystemActor(trace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.Msg.To, tipsetKey)
+				systemExecution = p.helper.IsSystemActor(trace.Msg.From) && p.helper.IsSystemActor(trace.Msg.To)
 			}
 			// Create tx
 			actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, trace.MsgCid, txsData.Tipset)
@@ -173,7 +170,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			transactions = append(transactions, badTx)
 			continue
 		}
-		systemExecution = p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.ExecutionTrace.Msg.To, tipsetKey)
+		systemExecution = p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
 
 		// Main transaction
 		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)

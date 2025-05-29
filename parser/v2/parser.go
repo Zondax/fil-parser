@@ -122,8 +122,6 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	tipsetHeight := int64(txsData.Tipset.Height())
-	tipsetKey := txsData.Tipset.Key()
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
 			continue
@@ -132,7 +130,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		// Main transaction
 
 		// check the 1st execution
-		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.ExecutionTrace.Msg.To, tipsetKey)
+		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
 
 		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
 		if err != nil {

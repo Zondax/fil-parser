@@ -408,7 +408,7 @@ func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.
 		Robust:        robustAdd,
 		ActorCid:      actorCode,
 		ActorType:     parseActor(actorName),
-		IsSystemActor: helper.IsSystemActor(filAdd),
+		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil
 }
 
