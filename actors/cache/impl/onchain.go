@@ -109,6 +109,13 @@ func (m *OnChain) IsSystemActor(_ string) bool {
 	return false
 }
 
+// IsGenesisActor returns false for all OnChain implementations as the genesis actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *OnChain) IsGenesisActor(_ string) bool {
+	return false
+}
+
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[*filTypes.Actor]{
 		RequestName:        "StateGetActor",
@@ -129,7 +136,7 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 		}
 		actor, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 		if err != nil {
-			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
+			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus(%s): %s", add.String(), err.Error())
 			return cid.Cid{}, err
 		}
 	}

@@ -34,14 +34,12 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 		}
 
 		if strings.Contains(actorName, manifest.AccountKey) {
-			if version.NodeVersion() == tools.V17.NodeVersion() {
+			if version.NodeVersion() <= tools.V17.NodeVersion() {
 				// https://github.com/filecoin-project/builtin-actors/blob/0c3720c05da4733c3a5ed39c124bc8027c143aa8/actors/account/src/lib.rs#L107
 				return parser.MethodUniversalReceiverHook, nil
-			} else if version.NodeVersion() > tools.V17.NodeVersion() {
+			} else if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
 				// https://github.com/filecoin-project/builtin-actors/blob/8fdbdec5e3f46b60ba0132d90533783a44c5961f/actors/account/src/lib.rs#L96
-				if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
-					return parser.MethodFallback, nil
-				}
+				return parser.MethodFallback, nil
 			}
 		}
 

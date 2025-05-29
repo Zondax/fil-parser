@@ -140,7 +140,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
-	addInfo.IsSystemActor = h.IsSystemActor(add)
+	addInfo.IsSystemActor = h.IsSystemActor(add) || h.IsGenesisActor(add)
 
 	return addInfo
 }
@@ -281,6 +281,9 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 
 func (h *Helper) IsSystemActor(addr address.Address) bool {
 	return h.actorCache.IsSystemActor(addr.String())
+}
+func (h *Helper) IsGenesisActor(addr address.Address) bool {
+	return h.actorCache.IsGenesisActor(addr.String())
 }
 
 func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey) bool {
