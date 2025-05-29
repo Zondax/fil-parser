@@ -24,6 +24,7 @@ type IActorsCache interface {
 	GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error)
 	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error
 	IsSystemActor(addr string) bool
+	IsGenesisActor(addr string) bool
 	BackFill() error
 	ClearBadAddressCache()
 	ImplementationType() string

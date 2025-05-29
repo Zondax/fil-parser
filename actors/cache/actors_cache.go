@@ -290,6 +290,11 @@ func (a *ActorsCache) IsSystemActor(addr string) bool {
 	return SystemActorsId[addr]
 }
 
+// IsGenesisActor checks if addr is a genesis actor as defined here:
+func (a *ActorsCache) IsGenesisActor(addr string) bool {
+	return GenesisActorsId[addr]
+}
+
 func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string) error {
 	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig)
 }
