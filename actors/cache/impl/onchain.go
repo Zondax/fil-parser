@@ -129,7 +129,7 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 		}
 		actor, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 		if err != nil {
-			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
+			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus(%s): %s", add.String(), err.Error())
 			return cid.Cid{}, err
 		}
 	}

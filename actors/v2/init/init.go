@@ -121,6 +121,11 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = parseExecActor(createdActorName)
 		}
+		// Store the address info in the actors cache
+		// if an actor is created and it's Constructor is called in the next execution,
+		// we will not be able to get the actor type without this.
+		// NOT needed for Exec4(evm) as this is done in eam.Create
+		i.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
 	}
 
 	return metadata, addressInfo, err
