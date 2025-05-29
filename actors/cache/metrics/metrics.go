@@ -73,6 +73,11 @@ func (c *ActorsCacheMetricsClient) IncrementMetric(name string, labels ...string
 	return c.MetricsClient.IncrementMetric(name, labels...)
 }
 
+func (c *ActorsCacheMetricsClient) UpdateMetric(name string, value float64, labels ...string) error {
+	labels = append(labels, c.name)
+	return c.MetricsClient.UpdateMetric(name, value, labels...)
+}
+
 func (c *ActorsCacheMetricsClient) UpdateNodeApiCallMetric(requestName string, success, isRetry, isRetriable bool) error {
 	labels := []string{requestName, strconv.FormatBool(success), strconv.FormatBool(isRetry), strconv.FormatBool(isRetriable)}
 	return c.IncrementMetric(nodeApiCall, labels...)
