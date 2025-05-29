@@ -178,6 +178,24 @@ func (_m *IActorsCache) ImplementationType() string {
 	return r0
 }
 
+// IsGenesisActor provides a mock function with given fields: addr
+func (_m *IActorsCache) IsGenesisActor(addr string) bool {
+	ret := _m.Called(addr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsGenesisActor")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(addr)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // IsSystemActor provides a mock function with given fields: addr
 func (_m *IActorsCache) IsSystemActor(addr string) bool {
 	ret := _m.Called(addr)
