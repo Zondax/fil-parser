@@ -45,6 +45,7 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 		return err
 	}
 
+	// allow a larger []Considered
 	// if extra > 8192 {
 	// 	return fmt.Errorf("t.Considered: array too large (%d)", extra)
 	// }
@@ -58,46 +59,27 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 	}
 
 	for i := 0; i < int(extra); i++ {
-		{
-			var maj byte
-			var extra uint64
-			var err error
-			_ = maj
-			_ = extra
-			_ = err
-
-			{
-
-				maj, extra, err = cr.ReadHeader()
-				if err != nil {
-					return err
-				}
-				if maj != cbg.MajUnsignedInt {
-					return fmt.Errorf("wrong type for uint64 field")
-				}
-				t.Considered[i] = extra
-
-			}
-
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
 		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Considered[i] = extra
 	}
+
 	// t.Results (batch.BatchReturn) (struct)
 
-	{
-
-		if err := t.Results.UnmarshalCBOR(cr); err != nil {
-			return fmt.Errorf("unmarshaling t.Results: %w", err)
-		}
-
+	if err := t.Results.UnmarshalCBOR(cr); err != nil {
+		return fmt.Errorf("unmarshaling t.Results: %w", err)
 	}
+
 	// t.DataCapRecovered (big.Int) (struct)
 
-	{
-
-		if err := t.DataCapRecovered.UnmarshalCBOR(cr); err != nil {
-			return fmt.Errorf("unmarshaling t.DataCapRecovered: %w", err)
-		}
-
+	if err := t.DataCapRecovered.UnmarshalCBOR(cr); err != nil {
+		return fmt.Errorf("unmarshaling t.DataCapRecovered: %w", err)
 	}
+
 	return nil
 }
