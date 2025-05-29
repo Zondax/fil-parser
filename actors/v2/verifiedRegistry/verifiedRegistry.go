@@ -153,7 +153,7 @@ func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height
 	}
 
 	metadata, err := parse(raw, rawReturn, true, params(), returnValue())
-	if metadata[parser.ReturnKey] == nil {
+	if err != nil || metadata[parser.ReturnKey] == nil {
 		// if Considered is larger than 8192 the go-state-types parser will return an error
 		// try with a larger allowed slice for the return
 		metadata, err = parse(raw, rawReturn, true, params(), &types.RemoveExpiredAllocationsReturn{})
