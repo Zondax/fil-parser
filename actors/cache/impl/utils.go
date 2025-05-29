@@ -51,7 +51,15 @@ func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOption
 	errStrings := options.RetryErrStrings
 	maxAttempts := options.MaxAttempts
 	maxWaitBeforeRetry := options.MaxWaitBeforeRetry
-	request := options.Request
+
+	// time the request
+	request := func() (T, error) {
+		start := time.Now()
+		result, err := options.Request()
+		latency := time.Since(start)
+		_ = metrics.UpdateNodeApiCallLatencyMetric(options.RequestName, err == nil, latency)
+		return result, err
+	}
 
 	// try without backoff
 	result, err := request()
@@ -88,13 +96,16 @@ func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOption
 			_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isNotSuccess, isRetry, isRetriable)
 			return err
 		}
-		// update succesful retries
-		_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isSuccess, isRetry, isNotRetriable)
 		return nil
 	}, b)
 
-	// update failure after retry attempts
-	_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isNotSuccess, isRetry, isNotRetriable)
+	if err != nil {
+		// update failure after retry attempts
+		_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isNotSuccess, isRetry, isNotRetriable)
+	} else {
+		// update success after retry attempts
+		_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isSuccess, isRetry, isNotRetriable)
+	}
 
 	return result, err
 }

@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/zondax/fil-parser/metrics"
 	metrics2 "github.com/zondax/golem/pkg/metrics"
@@ -16,7 +17,8 @@ var (
 const parserModule = "parser_module"
 
 const (
-	nodeApiCall = "fil-parser_node_api_call_error"
+	nodeApiCall        = "fil-parser_node_api_call_error"
+	nodeApiCallLatency = "fil-parser_node_api_call_latency"
 
 	// Metrics labels
 	requestNameLabel = "requestName"
@@ -33,6 +35,12 @@ var (
 		Labels:  []string{requestNameLabel, successLabel, isRetryLabel, isRetriableLabel},
 		Handler: &collectors.Gauge{},
 	}
+	nodeApiCallLatencyMetric = metrics.Metric{
+		Name:    nodeApiCallLatency,
+		Help:    "Node API call latency",
+		Labels:  []string{requestNameLabel, successLabel},
+		Handler: &collectors.Gauge{},
+	}
 )
 
 type ActorsCacheMetricsClient struct {
@@ -46,7 +54,7 @@ func NewClient(metricsClient metrics.MetricsClient, name string) *ActorsCacheMet
 		name:          name,
 	}
 
-	s.registerModuleMetrics(nodeApiCallMetric)
+	s.registerModuleMetrics(nodeApiCallMetric, nodeApiCallLatencyMetric)
 
 	return s
 }
@@ -68,4 +76,9 @@ func (c *ActorsCacheMetricsClient) IncrementMetric(name string, labels ...string
 func (c *ActorsCacheMetricsClient) UpdateNodeApiCallMetric(requestName string, success, isRetry, isRetriable bool) error {
 	labels := []string{requestName, strconv.FormatBool(success), strconv.FormatBool(isRetry), strconv.FormatBool(isRetriable)}
 	return c.IncrementMetric(nodeApiCall, labels...)
+}
+
+func (c *ActorsCacheMetricsClient) UpdateNodeApiCallLatencyMetric(requestName string, success bool, duration time.Duration) error {
+	labels := []string{requestName, strconv.FormatBool(success)}
+	return c.UpdateMetric(nodeApiCallLatency, duration.Seconds(), labels...)
 }
