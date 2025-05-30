@@ -206,7 +206,7 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 	case parser.MethodInvokeContract:
 		ret, err = p.InvokeContract(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
-		ret, err = p.UniversalReceiverHook(network, msg, height, key, msgRct.Return)
+		ret, err = p.UniversalReceiverHook(network, msg, height, key, msg.Params)
 	case parser.MethodFallback:
 		ret, err = p.Fallback(network, height, msg.Params)
 	case parser.UnknownStr:
