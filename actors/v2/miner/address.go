@@ -7,6 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/miner/types"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -80,13 +81,18 @@ func (*Miner) GetPeerIDExported(network string, height int64, rawReturn []byte) 
 }
 
 func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
-	returnValue, ok := getMultiAddrsReturn[version.String()]
-	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	metadata, err := parseGeneric(rawReturn, nil, false, &types.GetMultiaddrsReturn{}, &abi.EmptyValue{}, parser.ReturnKey)
+	if err != nil {
+		// fallback to canonical parser
+		version := tools.VersionFromHeight(network, height)
+		returnValue, ok := getMultiAddrsReturn[version.String()]
+		if !ok {
+			return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		}
+		metadata, err = parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
 	}
 
-	return parseGeneric(rawReturn, nil, false, returnValue(), &abi.EmptyValue{}, parser.ReturnKey)
+	return metadata, err
 }
 
 func (*Miner) ControlAddresses(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {

@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -461,6 +462,11 @@ func TestParser_InDepthCompare(t *testing.T) {
 				if parsedResultV1.Txs[i].TxType == parser.TotalFeeOp {
 					parsedResultV1.Txs[i].TxTo = parser.BurnAddress
 					parsedResultV2.Txs[i].TxTo = parser.BurnAddress
+				}
+
+				if strings.EqualFold(parsedResultV1.Txs[i].TxType, parser.MethodUnknown) && !strings.EqualFold(parsedResultV2.Txs[i].TxType, parser.MethodUnknown) {
+					// v2 fixed the unknown method
+					continue
 				}
 
 				require.Truef(t, parsedResultV1.Txs[i].Equal(*parsedResultV2.Txs[i]), "tx %d is not equal\n%s\n%s", i, tmp1, tmp2)
@@ -1872,25 +1878,22 @@ func TestParseGenesis(t *testing.T) {
 
 func TestParseGenesisMultisig(t *testing.T) {
 	tests := []struct {
-		name              string
-		network           string
-		nodeUrl           string
-		cacheDataSource   common.DataSource
-		expectedAddresses int
+		name            string
+		network         string
+		nodeUrl         string
+		cacheDataSource common.DataSource
 	}{
 		{
-			name:              "mainnet",
-			network:           "mainnet",
-			nodeUrl:           nodeUrl,
-			cacheDataSource:   mainnetCacheDataSource,
-			expectedAddresses: 9,
+			name:            "mainnet",
+			network:         "mainnet",
+			nodeUrl:         nodeUrl,
+			cacheDataSource: mainnetCacheDataSource,
 		},
 		{
-			name:              "calibration",
-			network:           "calibration",
-			nodeUrl:           calibNextNodeUrl,
-			cacheDataSource:   calibNextNodeCacheDataSource,
-			expectedAddresses: 1,
+			name:            "calibration",
+			network:         "calibration",
+			nodeUrl:         calibNextNodeUrl,
+			cacheDataSource: calibNextNodeCacheDataSource,
 		},
 	}
 
@@ -1912,10 +1915,9 @@ func TestParseGenesisMultisig(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx := context.Background()
-			gotMultiSigInfo, addresses, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+			gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
 			require.NoError(t, err)
 			require.NotNil(t, gotMultiSigInfo)
-			require.Equal(t, tt.expectedAddresses, addresses.Len())
 			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
 			require.ElementsMatch(t, expectedMultisigInfo, gotMultiSigInfo)
 		})
@@ -2104,8 +2106,9 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 				}
 				if metadataV1[parser.ReturnKey] != nil {
-					// ClaimAllocations return struct changed to support slices
-					if tx.TxType != parser.MethodClaimAllocations {
+					// ClaimAllocations return struct changed to support slices.
+					// ActivateDeals metadata was fixed to parse correctly in v2.
+					if tx.TxType != parser.MethodClaimAllocations && tx.TxType != parser.MethodActivateDeals {
 						require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 					}
 				}

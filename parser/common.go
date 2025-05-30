@@ -15,6 +15,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -124,15 +125,24 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 	return parentBaseFee.Uint64(), nil
 }
 
-func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
+func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient) (string, error) {
 	ctx := context.Background()
-	ethHash, err := impl.NodeApiCallWithRetry([]string{"RPC client error"}, 3, 10*time.Second, func() (*ethtypes.EthHash, error) {
-		ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
-		if err != nil || ethHash == nil {
-			return nil, err
-		}
-		return ethHash, nil
-	})
+
+	nodeApiCallOptions := &impl.NodeApiCallWithRetryOptions[*ethtypes.EthHash]{
+		RequestName:        "EthGetTransactionHashByCid",
+		MaxAttempts:        3,
+		MaxWaitBeforeRetry: 10 * time.Second,
+		Request: func() (*ethtypes.EthHash, error) {
+			ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+			if err != nil || ethHash == nil {
+				return nil, err
+			}
+			return ethHash, nil
+		},
+		RetryErrStrings: []string{"RPC client error"},
+	}
+
+	ethHash, err := impl.NodeApiCallWithRetry(nodeApiCallOptions, metrics)
 
 	if err != nil || ethHash == nil {
 		hash, err := ethtypes.EthHashFromCid(mainMsgCid)

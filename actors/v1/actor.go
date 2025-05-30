@@ -34,7 +34,7 @@ func NewActorParser(helper *helper.Helper, logger *logger.Logger, metrics metric
 	}
 }
 
-func (p *ActorParser) GetMetadata(_ context.Context, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {

@@ -15,6 +15,7 @@ import (
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
+	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/multisig"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/multisig"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/multisig"
 	legacyv4 "github.com/filecoin-project/specs-actors/v4/actors/builtin/multisig"
@@ -134,7 +135,11 @@ func (*Msig) ParseChangeNumApprovalsThresholdValue(network string, height int64,
 
 	var ret multisigParams
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
+		return parseValue(txMetadata, &legacyv1.ChangeNumApprovalsThresholdParams{
+			NewThreshold: threshold,
+		})
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parseValue(txMetadata, &legacyv2.ChangeNumApprovalsThresholdParams{
 			NewThreshold: threshold,
 		})
@@ -203,7 +208,9 @@ func (*Msig) ParseConstructorValue(network string, height int64, txMetadata stri
 		return nil, err
 	}
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V9)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
+		return parseValue(txMetadata, &legacyv1.ConstructorParams{})
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return parseValue(txMetadata, &legacyv2.ConstructorParams{})
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return parseValue(txMetadata, &legacyv3.ConstructorParams{})
