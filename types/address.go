@@ -15,6 +15,8 @@ type AddressInfo struct {
 	ActorType string `json:"actor_type"`
 	// CreationTxCid is the tx cid were this actor was created (if applicable)
 	CreationTxCid string `json:"creation_tx_cid" gorm:"index:idx_addresses_creation_tx_cid"`
+
+	IsSystemActor bool `json:"-" gorm:"-"`
 }
 
 type AddressInfoMap struct {

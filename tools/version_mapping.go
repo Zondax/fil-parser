@@ -5,8 +5,15 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/network"
+	"github.com/filecoin-project/lotus/build/buildconstants"
 )
+
+// All versions and actor versions are listed here:
+// https://github.com/filecoin-project/go-state-types/blob/master/network/version.go
+
+// The minimimum calibration version is V16 because of a calibration reset.
 
 const (
 	CalibrationNetworkNodeType = "calibrationnet"
@@ -15,8 +22,8 @@ const (
 )
 
 type version struct {
-	calibration int64
-	mainnet     int64
+	calibration abi.ChainEpoch
+	mainnet     abi.ChainEpoch
 
 	nodeVersion    uint
 	currentNetwork string
@@ -26,35 +33,82 @@ var (
 	LatestMainnetVersion     version = V25
 	LatestCalibrationVersion version = V25
 
-	supportedVersions     = []version{V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}
+	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}
 	supportedVersionsList *list.List
 
-	V1  version = version{calibration: 0, mainnet: 0, nodeVersion: 1}
-	V2  version = version{calibration: 0, mainnet: 0, nodeVersion: 2}
-	V3  version = version{calibration: 0, mainnet: 0, nodeVersion: 3}
-	V4  version = version{calibration: 0, mainnet: 0, nodeVersion: 4}
-	V5  version = version{calibration: 0, mainnet: 0, nodeVersion: 5}
-	V6  version = version{calibration: 0, mainnet: 0, nodeVersion: 6}
-	V7  version = version{calibration: 0, mainnet: 0, nodeVersion: 7}
-	V8  version = version{calibration: 0, mainnet: 170000, nodeVersion: 8}
-	V9  version = version{calibration: 0, mainnet: 265200, nodeVersion: 9}
-	V10 version = version{calibration: 0, mainnet: 550321, nodeVersion: 10}
-	V11 version = version{calibration: 0, mainnet: 665280, nodeVersion: 11}
-	// parsing all calibration heights from 0->16800 with V16
-	V12 version = version{calibration: 0, mainnet: 712320, nodeVersion: 12}      // actual: 193789
-	V13 version = version{calibration: 0, mainnet: 892800, nodeVersion: 13}      // calibration reset
-	V14 version = version{calibration: 0, mainnet: 1231620, nodeVersion: 14}     // actual: 312746
-	V15 version = version{calibration: 0, mainnet: 1594680, nodeVersion: 15}     // actual: 682006
-	V16 version = version{calibration: 0, mainnet: 1960320, nodeVersion: 16}     // actual: 1044660
-	V17 version = version{calibration: 16800, mainnet: 2383680, nodeVersion: 17} // calibration reset
-	V18 version = version{calibration: 322354, mainnet: 2683348, nodeVersion: 18}
-	V19 version = version{calibration: 489094, mainnet: 2809800, nodeVersion: 19}
-	V20 version = version{calibration: 492214, mainnet: 2809800, nodeVersion: 20}
-	V21 version = version{calibration: 1108174, mainnet: 3469380, nodeVersion: 21}
-	V22 version = version{calibration: 1427974, mainnet: 3817920, nodeVersion: 22}
-	V23 version = version{calibration: 1779094, mainnet: 4154640, nodeVersion: 23}
-	V24 version = version{calibration: 2081674, mainnet: 4461240, nodeVersion: 24}
-	V25 version = version{calibration: 2523454, mainnet: 4878840, nodeVersion: 25}
+	// V0 genesis, spec-actors: v1, calibration: 0, mainnet: 0
+	V0 version = version{calibration: 0, mainnet: 0, nodeVersion: 0}
+	// V1 Breeze, spec-actors: v1, calibration: 0, mainnet: 41280
+	V1 version = version{calibration: 0, mainnet: buildconstants.UpgradeBreezeHeight, nodeVersion: 1}
+	// V2 Smoke spec-actors: v1, calibration: 0, mainnet: 51000
+	V2 version = version{calibration: 0, mainnet: buildconstants.UpgradeSmokeHeight, nodeVersion: 2}
+	// V3 Ignition, spec-actors: v1, calibration: 0, mainnet: 94000
+	V3 version = version{calibration: 0, mainnet: buildconstants.UpgradeIgnitionHeight, nodeVersion: 3}
+
+	// V4 Refuel, spec-actors: v2, calibration: 0, mainnet: 130800
+	V4 version = version{calibration: 0, mainnet: buildconstants.UpgradeRefuelHeight, nodeVersion: 4}
+	// V5 Tape, spec-actors: v2, calibration: 0, mainnet: 140760
+	V5 version = version{calibration: 0, mainnet: buildconstants.UpgradeTapeHeight, nodeVersion: 5}
+	// V6 Kumquat, spec-actors: v2, calibration: 0, mainnet: 170000
+	V6 version = version{calibration: 0, mainnet: buildconstants.UpgradeKumquatHeight, nodeVersion: 6}
+	// V7 Calico, spec-actors: v2, calibration: 0, mainnet: 265200
+	V7 version = version{calibration: 0, mainnet: buildconstants.UpgradeCalicoHeight, nodeVersion: 7}
+	// V8 Persian, spec-actors: v2, calibration: 0, mainnet: 272400
+	V8 version = version{calibration: 0, mainnet: buildconstants.UpgradePersianHeight, nodeVersion: 8}
+	// V9 Orange, spec-actors: v2, calibration: 0, mainnet: 336458
+	V9 version = version{calibration: 0, mainnet: buildconstants.UpgradeOrangeHeight, nodeVersion: 9}
+
+	// V10 Trust, spec-actors: v3, calibration: 0, mainnet: 550321
+	V10 version = version{calibration: 0, mainnet: buildconstants.UpgradeTrustHeight, nodeVersion: 10}
+	// V11 Norwegian, spec-actors: v3, calibration: 0, mainnet: 665280
+	V11 version = version{calibration: 0, mainnet: buildconstants.UpgradeNorwegianHeight, nodeVersion: 11}
+
+	// V12 Turbo, spec-actors: v4, calibration: 0 (actual: 193789), mainnet: 712320
+	V12 version = version{calibration: 0, mainnet: buildconstants.UpgradeTurboHeight, nodeVersion: 12}
+
+	// V13 Hyperdrive, spec-actors: v5, calibration: 0, mainnet: 892800
+	//
+	// calibration reset
+	V13 version = version{calibration: 0, mainnet: buildconstants.UpgradeHyperdriveHeight, nodeVersion: 13}
+
+	// V14 Chocolate, spec-actors: v6, calibration: 0 (actual: 312746), mainnet: 1231620
+	V14 version = version{calibration: 0, mainnet: buildconstants.UpgradeChocolateHeight, nodeVersion: 14}
+
+	// V15 OhSnap,spec-actors: v7, calibration: 0 (actual: 682006), mainnet: 1594680
+	V15 version = version{calibration: 0, mainnet: buildconstants.UpgradeOhSnapHeight, nodeVersion: 15}
+
+	// V16 Skyr, builtin-actors(go-state-types): v8, calibration: 0 (actual: 1044660), mainnet: 1960320.
+	//
+	// parsing all calibration heights from 0->16799 with V16.
+	V16 version = version{calibration: 0, mainnet: buildconstants.UpgradeSkyrHeight, nodeVersion: 16}
+
+	// V17 Shark, builtin-actors(go-state-types): v9, calibration: 16800, mainnet: 2383680
+	//
+	// calibration reset
+	V17 version = version{calibration: 16800, mainnet: buildconstants.UpgradeSharkHeight, nodeVersion: 17}
+
+	// V18 Hygge, builtin-actors(go-state-types): v10, calibration: 322354, mainnet: 2683348
+	V18 version = version{calibration: 322354, mainnet: buildconstants.UpgradeHyggeHeight, nodeVersion: 18}
+
+	// V19 Lightning, builtin-actors(go-state-types): v11, calibration: 489094, mainnet: 2809800
+	V19 version = version{calibration: 489094, mainnet: buildconstants.UpgradeLightningHeight, nodeVersion: 19}
+	// V20 Thunder, builtin-actors(go-state-types): v11, calibration: 492214, mainnet: 2870280
+	V20 version = version{calibration: 492214, mainnet: buildconstants.UpgradeThunderHeight, nodeVersion: 20}
+
+	// V21 Watermelon, builtin-actors(go-state-types): v12, calibration: 1108174, mainnet: 3469380
+	V21 version = version{calibration: 1108174, mainnet: buildconstants.UpgradeWatermelonHeight, nodeVersion: 21}
+
+	// V22 Dragon, builtin-actors(go-state-types): v13, calibration: 1427974, mainnet: 3855360
+	V22 version = version{calibration: 1427974, mainnet: buildconstants.UpgradeDragonHeight, nodeVersion: 22}
+
+	// V23 Waffle, builtin-actors(go-state-types): v14, calibration: 1779094, mainnet: 4154640
+	V23 version = version{calibration: 1779094, mainnet: buildconstants.UpgradeWaffleHeight, nodeVersion: 23}
+
+	// V24 Tuktuk, builtin-actors(go-state-types): v15, calibration: 2081674, mainnet: 4461240
+	V24 version = version{calibration: 2081674, mainnet: buildconstants.UpgradeTuktukHeight, nodeVersion: 24}
+
+	// V25 Teep, builtin-actors(go-state-types): v16, calibration: 2523454, mainnet: 4878840
+	V25 version = version{calibration: 2523454, mainnet: buildconstants.UpgradeTeepHeight, nodeVersion: 25}
 )
 
 func init() {
@@ -81,10 +135,10 @@ func ParseRawNetworkName(network string) string {
 // IsSupported returns true if the height is within the version range for a given network
 func (v version) IsSupported(network string, height int64) bool {
 	iter := NewVersionIterator(v, network)
-	return isSupported(network, height, iter)
+	return isSupported(network, abi.ChainEpoch(height), iter)
 }
 
-func isSupported(network string, height int64, iter *VersionIterator) bool {
+func isSupported(network string, height abi.ChainEpoch, iter *VersionIterator) bool {
 	v, ok := iter.Peek()
 	if !ok {
 		return false
@@ -98,15 +152,10 @@ func isSupported(network string, height int64, iter *VersionIterator) bool {
 		return false
 	}
 
-	if height == 0 && v.mainnet == 0 {
-		return true
-	}
 	if height >= LatestMainnetVersion.mainnet {
 		return v.nodeVersion == LatestMainnetVersion.nodeVersion
 	}
-	if height <= V7.mainnet {
-		return v.nodeVersion == V7.nodeVersion
-	}
+
 	// edge case: check if two new versions have the same mainnet height
 	next, ok := iter.PeekNext()
 	if ok && v.mainnet == next.mainnet && !IsLatestVersion(v) {
@@ -121,7 +170,7 @@ func isSupported(network string, height int64, iter *VersionIterator) bool {
 
 }
 
-func checkCalibrationEdgeCases(network string, height int64, iter *VersionIterator) bool {
+func checkCalibrationEdgeCases(network string, height abi.ChainEpoch, iter *VersionIterator) bool {
 	v, ok := iter.Peek()
 	if !ok {
 		return false
@@ -181,9 +230,9 @@ func (v version) String() string {
 // otherwise, it returns the mainnet height
 func (v version) Height() int64 {
 	if v.currentNetwork == CalibrationNetwork {
-		return v.calibration
+		return int64(v.calibration)
 	}
-	return v.mainnet
+	return int64(v.mainnet)
 }
 
 func (v version) NodeVersion() uint {
@@ -197,7 +246,7 @@ func (v version) FilNetworkVersion() network.Version {
 // GetSupportedVersions returns all supported versions for a given network
 func GetSupportedVersions(network string) []version {
 	var result []version
-	iter := NewVersionIterator(V1, network)
+	iter := NewVersionIterator(V0, network)
 	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
 		v.currentNetwork = network
 		result = append(result, v)
@@ -208,7 +257,7 @@ func GetSupportedVersions(network string) []version {
 // VersionsBefore returns all versions before the given version (inclusive of the start version)
 func VersionsBefore(uptoIncluding version) []version {
 	var result []version
-	iter := NewVersionIterator(V1, uptoIncluding.currentNetwork)
+	iter := NewVersionIterator(V0, uptoIncluding.currentNetwork)
 	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
 		if v.nodeVersion > uptoIncluding.nodeVersion {
 			break
@@ -259,11 +308,16 @@ func VersionFromString(version string) version {
 			return v
 		}
 	}
-	return V1
+	return V0
 }
 
+// VersionFromHeight returns the version for a given network and height.
+// https://github.com/filecoin-project/go-state-types/blob/master/network/version.go
+// The minimum calibration version is V16 ( height 0 -> 16799 will always return V16 for calibration).
 func VersionFromHeight(network string, height int64) version {
 	switch {
+	case V0.IsSupported(network, height):
+		return V0
 	case V1.IsSupported(network, height):
 		return V1
 	case V2.IsSupported(network, height):

@@ -1,6 +1,8 @@
 package cron
 
 import (
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	cronv10 "github.com/filecoin-project/go-state-types/builtin/v10/cron"
 	cronv11 "github.com/filecoin-project/go-state-types/builtin/v11/cron"
 	cronv12 "github.com/filecoin-project/go-state-types/builtin/v12/cron"
@@ -10,6 +12,7 @@ import (
 	cronv16 "github.com/filecoin-project/go-state-types/builtin/v16/cron"
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
+	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/cron"
 	legacyv2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/cron"
 	legacyv3 "github.com/filecoin-project/specs-actors/v3/actors/builtin/cron"
@@ -18,18 +21,61 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/cron"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/cron"
 	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/cron"
+
+func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		legacyBuiltin.MethodsCron.Constructor: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		legacyBuiltin.MethodsCron.EpochTick: {
+			Name:   parser.MethodEpochTick,
+			Method: actors.ParseEmptyParamsAndReturn,
+		},
+	}
+}
+
+func v2Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v3Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v4Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v5Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v6Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
+func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+
 var cronConstructorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.ConstructorParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.ConstructorParams) },
 

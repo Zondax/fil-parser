@@ -299,9 +299,8 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 		addressInfo, err := getAddressInfo(balance.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
 			p.logger.Errorf("genesis could not get address info: %s. err: %s", balance.Key, err)
-
 		} else {
-			addresses.Set(balance.Key, addressInfo)
+			parser.AppendToAddressesMap(addresses, addressInfo)
 		}
 
 		amount, _ := big.FromString(balance.Value.Balance)
@@ -329,14 +328,15 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			TxType:      txType,
 			TxMetadata:  "{}",
 		})
+
 	}
 
 	return genesisTxs, addresses
 }
 
-func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
 	var multisigInfos []*types.MultisigInfo
-	addresses := types.NewAddressInfoMap()
+
 	for _, actor := range genesis.Actors.All {
 		addressInfo, err := getAddressInfo(actor.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
@@ -349,20 +349,17 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		if !strings.Contains(actorName, manifest.MultisigKey) {
 			continue
 		}
-
-		addresses.Set(actor.Key, addressInfo)
-
 		addr, _ := address.NewFromString(actor.Key)
 
 		api := p.Helper.GetFilecoinNodeClient()
 		metadata, err := multisigTools.GenerateGenesisMultisigData(ctx, api, addr, genesisTipset)
 		if err != nil {
-			return nil, nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
+			return nil, fmt.Errorf("multisigTools.GenerateGenesisMultisigData(%s): %s", actor.Key, err)
 		}
 
 		metadataJson, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, nil, fmt.Errorf("json.Marshal(): %s", err)
+			return nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
 		multisigInfo := &types.MultisigInfo{
@@ -380,7 +377,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 		multisigInfos = append(multisigInfos, multisigInfo)
 
 	}
-	return multisigInfos, addresses, nil
+	return multisigInfos, nil
 }
 
 func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
@@ -407,10 +404,11 @@ func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.
 	}
 
 	return &types.AddressInfo{
-		Short:     shortAdd,
-		Robust:    robustAdd,
-		ActorCid:  actorCode,
-		ActorType: parseActor(actorName),
+		Short:         shortAdd,
+		Robust:        robustAdd,
+		ActorCid:      actorCode,
+		ActorType:     parseActor(actorName),
+		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil
 }
 

@@ -146,7 +146,7 @@ func (m *Msig) innerProposeMethod(
 
 func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to address.Address, value string, params multisigParams, err error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		tmp := &legacyv1.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
@@ -154,13 +154,14 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 		}
 		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
 
-	case tools.AnyIsSupported(network, height, tools.V8, tools.V9):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		tmp := &legacyv2.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
 		if err != nil {
 			break
 		}
 		return tmp.Params, tmp.Method, tmp.To, tmp.Value.String(), tmp, nil
+
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		tmp := &legacyv3.ProposeParams{}
 		err = tmp.UnmarshalCBOR(bytes.NewReader(rawParams))
@@ -269,9 +270,9 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 
 func proposeReturn(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyv1.ProposeReturn{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyv2.ProposeReturn{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyv3.ProposeReturn{}, nil
@@ -307,9 +308,9 @@ func proposeReturn(network string, height int64) (multisigParams, error) {
 
 func addSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyv1.AddSignerParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyv2.AddSignerParams{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyv3.AddSignerParams{}, nil
@@ -345,9 +346,9 @@ func addSignerParams(network string, height int64) (multisigParams, error) {
 
 func removeSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyv1.RemoveSignerParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyv2.RemoveSignerParams{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyv3.RemoveSignerParams{}, nil
@@ -383,9 +384,9 @@ func removeSignerParams(network string, height int64) (multisigParams, error) {
 
 func swapSignerParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyv1.SwapSignerParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyv2.SwapSignerParams{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyv3.SwapSignerParams{}, nil
@@ -421,9 +422,9 @@ func swapSignerParams(network string, height int64) (multisigParams, error) {
 
 func lockBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyv1.LockBalanceParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyv2.LockBalanceParams{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyv3.LockBalanceParams{}, nil
@@ -458,9 +459,9 @@ func lockBalanceParams(network string, height int64) (multisigParams, error) {
 }
 func withdrawBalanceParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyminer1.WithdrawBalanceParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyminer2.WithdrawBalanceParams{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyminer3.WithdrawBalanceParams{}, nil
@@ -495,9 +496,9 @@ func withdrawBalanceParams(network string, height int64) (multisigParams, error)
 }
 func verifierParams(network string, height int64) (multisigParams, error) {
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V7)...):
+	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V3)...):
 		return &legacyverifreg1.AddVerifierParams{}, nil
-	case tools.AnyIsSupported(network, height, tools.V9, tools.V8):
+	case tools.AnyIsSupported(network, height, tools.V4, tools.V5, tools.V6, tools.V7, tools.V8, tools.V9):
 		return &legacyverifreg2.AddVerifierParams{}, nil
 	case tools.AnyIsSupported(network, height, tools.V10, tools.V11):
 		return &legacyverifreg3.AddVerifierParams{}, nil

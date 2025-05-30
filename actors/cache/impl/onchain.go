@@ -13,6 +13,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 )
@@ -25,6 +26,7 @@ type OnChain struct {
 	logger             *logger.Logger
 	maxRetries         int
 	maxWaitBeforeRetry time.Duration
+	metrics            *cacheMetrics.ActorsCacheMetricsClient
 }
 
 func (m *OnChain) StoreAddressInfo(info types.AddressInfo) {
@@ -36,7 +38,7 @@ func (m *OnChain) BackFill() error {
 	return nil
 }
 
-func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger) error {
+func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
 	// Node datastore is required
 	m.logger = logger2.GetSafeLogger(logger)
 	if source.Node == nil {
@@ -44,6 +46,7 @@ func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger) error
 	}
 
 	m.Node = source.Node
+	m.metrics = metrics
 	return nil
 }
 
@@ -99,18 +102,41 @@ func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
 	return shortAdd, nil
 }
 
+// IsSystemActor returns false for all OnChain implementations as the system actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *OnChain) IsSystemActor(_ string) bool {
+	return false
+}
+
+// IsGenesisActor returns false for all OnChain implementations as the genesis actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *OnChain) IsGenesisActor(_ string) bool {
+	return false
+}
+
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
-	retryErrStrings := []string{"ipld: could not find", "RPC client error"}
-	actor, err := NodeApiCallWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
-		return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
-	})
+	nodeApiCallOptions := &NodeApiCallWithRetryOptions[*filTypes.Actor]{
+		RequestName:        "StateGetActor",
+		MaxAttempts:        m.maxRetries,
+		MaxWaitBeforeRetry: m.maxWaitBeforeRetry,
+		Request: func() (*filTypes.Actor, error) {
+			return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+		},
+		RetryErrStrings: []string{"ipld: could not find", "RPC client error"},
+	}
+
+	actor, err := NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 	if err != nil {
 		// Try again but using the corresponding tipset Key
-		actor, err = NodeApiCallWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (*filTypes.Actor, error) {
+		nodeApiCallOptions.RequestName = "StateGetActorWithTipSetKey"
+		nodeApiCallOptions.Request = func() (*filTypes.Actor, error) {
 			return m.Node.StateGetActor(context.Background(), add, key)
-		})
+		}
+		actor, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 		if err != nil {
-			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus: %s", err.Error())
+			m.logger.Errorf("[ActorsCache] - retrieveActorFromLotus(%s): %s", add.String(), err.Error())
 			return cid.Cid{}, err
 		}
 	}
@@ -121,22 +147,34 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool) (string, error) {
 	var key address.Address
 	var err error
-	retryErrStrings := []string{"RPC client error"}
+
+	nodeApiCallOptions := &NodeApiCallWithRetryOptions[address.Address]{
+		MaxAttempts:        m.maxRetries,
+		MaxWaitBeforeRetry: m.maxWaitBeforeRetry,
+		RetryErrStrings:    []string{"RPC client error"},
+	}
+
 	if reverse {
-		key, err = NodeApiCallWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+		nodeApiCallOptions.RequestName = "StateLookupID"
+		nodeApiCallOptions.Request = func() (address.Address, error) {
 			return m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
-		})
+		}
+		key, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 	} else {
-		key, err = NodeApiCallWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+		nodeApiCallOptions.RequestName = "StateAccountKey"
+		nodeApiCallOptions.Request = func() (address.Address, error) {
 			return m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
-		})
+		}
+		key, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 	}
 
 	if err != nil {
 		if strings.Contains(err.Error(), "actor code is not account") {
-			key, err = NodeApiCallWithRetry(retryErrStrings, m.maxRetries, m.maxWaitBeforeRetry, func() (address.Address, error) {
+			nodeApiCallOptions.RequestName = "StateLookupRobustAddress"
+			nodeApiCallOptions.Request = func() (address.Address, error) {
 				return m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
-			})
+			}
+			key, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 			if err != nil {
 				m.logger.Errorf("[ActorsCache] - retrieveActorPubKeyFromLotus(StateLookupRobustAddress): %s", err.Error())
 				return "", common.ErrKeyNotFound

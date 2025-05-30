@@ -15,6 +15,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -61,7 +62,8 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 	for _, i := range info {
 		switch i.ActorType {
 		case manifest.EvmKey:
-			if i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != "" {
+			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != ""
+			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
 					// this may happen because of direct storage from the evm parser
@@ -77,7 +79,11 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 		case manifest.MultisigKey, manifest.MinerKey:
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
-			if i.Short != "" && i.CreationTxCid != "" && i.ActorCid != "" {
+			cond := i.Short != "" && i.CreationTxCid != "" && i.ActorCid != ""
+			if i.IsSystemActor {
+				cond = i.Short != "" && i.ActorCid != "" && i.ActorType != ""
+			}
+			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
 					// this may happen because of direct storage from the miner/msig parser for diff. tx_types on the same address
@@ -90,7 +96,11 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 				}
 			}
 		default:
-			if i.Robust != "" && i.Short != "" && i.Robust != i.Short {
+			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short
+			if i.IsSystemActor {
+				cond = i.Short != "" && i.ActorCid != "" && i.ActorType != ""
+			}
+			if cond {
 				if _, ok := addressMap.Get(i.Short); !ok {
 					addressMap.Set(i.Short, i)
 				}
@@ -115,15 +125,24 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 	return parentBaseFee.Uint64(), nil
 }
 
-func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid) (string, error) {
+func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient) (string, error) {
 	ctx := context.Background()
-	ethHash, err := impl.NodeApiCallWithRetry([]string{"RPC client error"}, 3, 10*time.Second, func() (*ethtypes.EthHash, error) {
-		ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
-		if err != nil || ethHash == nil {
-			return nil, err
-		}
-		return ethHash, nil
-	})
+
+	nodeApiCallOptions := &impl.NodeApiCallWithRetryOptions[*ethtypes.EthHash]{
+		RequestName:        "EthGetTransactionHashByCid",
+		MaxAttempts:        3,
+		MaxWaitBeforeRetry: 10 * time.Second,
+		Request: func() (*ethtypes.EthHash, error) {
+			ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
+			if err != nil || ethHash == nil {
+				return nil, err
+			}
+			return ethHash, nil
+		},
+		RetryErrStrings: []string{"RPC client error"},
+	}
+
+	ethHash, err := impl.NodeApiCallWithRetry(nodeApiCallOptions, metrics)
 
 	if err != nil || ethHash == nil {
 		hash, err := ethtypes.EthHashFromCid(mainMsgCid)
