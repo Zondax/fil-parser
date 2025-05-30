@@ -117,7 +117,21 @@ func (*Market) PublishStorageDealsExported(network string, height int64, rawPara
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil && metadata[parser.ReturnKey] == nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			returnValue, returnOk := publishStorageDealsReturn[v.String()]
+			if !returnOk {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Market) VerifyDealsForActivationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
@@ -202,7 +216,22 @@ func (*Market) ComputeDataCommitmentExported(network string, height int64, rawPa
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, paramsOk := computeDataCommitmentParams[v.String()]
+			returnValue, returnOk := computeDataCommitmentReturn[v.String()]
+			if !paramsOk || !returnOk {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Market) GetBalanceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {

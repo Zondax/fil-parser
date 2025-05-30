@@ -448,7 +448,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 	var minerAddress string
 	var err error
 
-	if !systemExecution {
+	if !systemExecution && blockCid != "" {
 		minerAddress, err = tipset.GetBlockMiner(blockCid)
 		if err != nil {
 			_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
@@ -456,7 +456,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 		}
 	}
 
-	if p.config.ConsolidateRobustAddress && err == nil {
+	if p.config.ConsolidateRobustAddress && minerAddress != "" {
 		minerAddr, err := address.NewFromString(minerAddress)
 		if err != nil {
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)

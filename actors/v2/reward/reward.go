@@ -111,7 +111,17 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 
 	metadata, err := parse(raw, returns(), parser.ReturnKey)
 	if err != nil {
-		return nil, err
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			returns, ok = thisEpochRewardReturn[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parse(raw, returns(), parser.ReturnKey)
+			if err == nil {
+				break
+			}
+		}
 	}
-	return metadata, nil
+	return metadata, err
 }

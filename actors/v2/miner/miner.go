@@ -73,6 +73,20 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodMovePartitions,
 			Method: m.MovePartitions,
 		},
+
+		// these methods appear in unexpected versions
+		25: {
+			Name:   parser.MethodPreCommitSectorBatch,
+			Method: m.PreCommitSectorBatch,
+		},
+		26: {
+			Name:   parser.MethodProveCommitAggregate,
+			Method: m.ProveCommitAggregate,
+		},
+		27: {
+			Name:   parser.MethodProveReplicaUpdates,
+			Method: m.ProveReplicaUpdates,
+		},
 	}
 }
 
@@ -110,11 +124,11 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	version := tools.VersionFromHeight(network, height)
-	methods, ok := methods[version.String()]
+	actorMethods, ok := methods[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return methods, nil
+	return actorMethods, nil
 }
 
 func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

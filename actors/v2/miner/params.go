@@ -129,7 +129,7 @@ func v2Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	methods := v1Methods()
 	// Method 14 changed to ApplyRewards
 	methods[14] = nonLegacyBuiltin.MethodMeta{
-		Name:   parser.MethodAddLockedFund,
+		Name:   parser.MethodApplyRewards,
 		Method: m.ApplyRewards,
 	}
 
@@ -327,6 +327,15 @@ var declareFaultsRecoveredParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var proveReplicaUpdatesParams = map[string]func() cbg.CBORUnmarshaler{
+	// SPECIAL CASE:
+	// THIS METHOD APPEARS IN V9 BUT THE LIBRARY INTRODUCED IT IN V15
+	tools.V9.String():  func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
+
 	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.ProveReplicaUpdatesParams) },
 	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(miner8.ProveReplicaUpdatesParams) },
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(miner9.ProveReplicaUpdatesParams) },
@@ -387,6 +396,13 @@ var proveReplicaUpdates3Return = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var proveCommitAggregateParams = map[string]func() cbg.CBORUnmarshaler{
+
+	// SPECIAL CASE:
+	// THIS METHOD APPEARS IN V9 BUT THE LIBRARY INTRODUCED IT IN V13
+	tools.V9.String():  func() cbg.CBORUnmarshaler { return new(legacyv5.ProveCommitAggregateParams) },
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ProveCommitAggregateParams) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ProveCommitAggregateParams) },
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ProveCommitAggregateParams) },
 
 	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.ProveCommitAggregateParams) },
 	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.ProveCommitAggregateParams) },
