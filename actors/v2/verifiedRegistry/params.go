@@ -1,6 +1,8 @@
 package verifiedRegistry
 
 import (
+	"github.com/filecoin-project/go-state-types/abi"
+	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
 	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	verifregv12 "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
@@ -18,19 +20,80 @@ import (
 	legacyv6 "github.com/filecoin-project/specs-actors/v6/actors/builtin/verifreg"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/verifreg"
 	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry/types"
+	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
 
+// All methods can be found in the Actor.Exports method in
+// the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
+
+func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	v := &VerifiedRegistry{}
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		1: {
+			Name:   parser.MethodConstructor,
+			Method: actors.ParseConstructor,
+		},
+		2: {
+			Name:   parser.MethodAddVerifier,
+			Method: v.AddVerifier,
+		},
+		3: {
+			Name:   parser.MethodRemoveVerifier,
+			Method: v.RemoveVerifier,
+		},
+		4: {
+			Name:   parser.MethodAddVerifiedClient,
+			Method: v.AddVerifiedClientExported,
+		},
+		5: {
+			Name:   parser.MethodUseBytes,
+			Method: v.UseBytes,
+		},
+		6: {
+			Name:   parser.MethodRestoreBytes,
+			Method: v.RestoreBytes,
+		},
+	}
+}
+
+func v2Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+func v3Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+func v4Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+func v5Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+func v6Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	return v1Methods()
+}
+func v7Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	v := &VerifiedRegistry{}
+	methods := v6Methods()
+	methods[7] = nonLegacyBuiltin.MethodMeta{
+		Name:   parser.MethodRemoveVerifiedClientDataCap,
+		Method: v.RemoveVerifiedClientDataCap,
+	}
+	return methods
+}
+
 var addVerifierParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifierParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifierParams) },
 
@@ -56,14 +119,15 @@ var addVerifierParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var addVerifiedClientParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.AddVerifiedClientParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.AddVerifiedClientParams) },
 
@@ -89,14 +153,15 @@ var addVerifiedClientParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var useBytesParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.UseBytesParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.UseBytesParams) },
 
@@ -122,14 +187,15 @@ var useBytesParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.RestoreBytesParams) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.RestoreBytesParams) },
 
@@ -155,14 +221,15 @@ var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var dataCap = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
 	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
 	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
 	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
 
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
 	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
 	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
 

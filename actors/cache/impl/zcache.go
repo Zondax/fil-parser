@@ -13,6 +13,7 @@ import (
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
@@ -39,15 +40,16 @@ type ZCache struct {
 	logger             *logger.Logger
 	cacheType          string
 	ttl                time.Duration
+	metrics            *cacheMetrics.ActorsCacheMetricsClient
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
 	var newImplMu sync.Mutex
 	newImplMu.Lock()
 	defer newImplMu.Unlock()
 
-	var err error
 	m.logger = logger2.GetSafeLogger(logger)
+	m.metrics = metrics
 
 	// If no config was provided, the combined cache is configured as
 	// remote best effort, as the remote cache will fail. However, the cache will
@@ -76,19 +78,21 @@ func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger) error 
 		}
 	}
 
-	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
-		Prefix:       Short2CidMapPrefix,
-		Logger:       m.logger,
-		MetricServer: metrics2.NewNoopMetrics()},
-	); err != nil {
-		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
-	}
-
 	return nil
 }
 
 func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *common.CacheConfig) error {
 	var err error
+
+	shortCidMapConfig := &zcache.CombinedConfig{
+		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Short2CidMapPrefix),
+		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
+		Local:              cacheConfig.Local,
+		Remote:             cacheConfig.Remote,
+		GlobalLogger:       m.logger,
+		GlobalMetricServer: cacheConfig.GlobalMetricServer,
+	}
+
 	robustShortMapConfig := &zcache.CombinedConfig{
 		GlobalPrefix:       fmt.Sprintf("%s%s", prefix, Robust2ShortMapPrefix),
 		IsRemoteBestEffort: cacheConfig.IsRemoteBestEffort,
@@ -125,6 +129,11 @@ func (m *ZCache) initMapsCombinedCache(prefix string, cacheConfig *common.CacheC
 	if m.selectorHashSigMap, err = zcache.NewCombinedCache(selectorHashSigMapConfig); err != nil {
 		return fmt.Errorf("error creating selectorHashSigMap for combined zcache, err: %s", err)
 	}
+
+	if m.shortCidMap, err = zcache.NewCombinedCache(shortCidMapConfig); err != nil {
+		return fmt.Errorf("error creating shortCidMap for combined zcache, err: %s", err)
+	}
+
 	return nil
 }
 
@@ -168,6 +177,13 @@ func (m *ZCache) BackFill() error {
 // Use the ActorsCache directly.
 // Only required to satisfy IActorsCache.
 func (m *ZCache) IsSystemActor(_ string) bool {
+	return false
+}
+
+// IsGenesisActor returns false for all ZCache implementations as the genesis actors list is maintained by the helper.
+// Use the ActorsCache directly.
+// Only required to satisfy IActorsCache.
+func (m *ZCache) IsGenesisActor(_ string) bool {
 	return false
 }
 
