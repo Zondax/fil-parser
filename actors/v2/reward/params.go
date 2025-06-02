@@ -23,6 +23,7 @@ import (
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/reward"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/reward/types"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -141,6 +142,43 @@ var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(rewardv14.ThisEpochRewardReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(rewardv15.ThisEpochRewardReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
+}
+
+var constructorParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(abi.StoragePower) },
+
+	// From V19 the storagePower is in a struct that is not present in the go-state-types package but present
+	// in the rust builtin-actors package.
+	// https://github.com/filecoin-project/builtin-actors/blob/cd9ac2bb0afcca7a59465e57cee6569e69070d7a/actors/reward/src/lib.rs#L54
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 }
 
 func GetMinerFromAwardBlockRewardParams(params any) string {

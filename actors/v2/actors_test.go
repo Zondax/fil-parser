@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"os"
 	"testing"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	metrics2 "github.com/zondax/fil-parser/metrics"
 
@@ -63,10 +64,17 @@ func TestVersionCoverage(t *testing.T) {
 					if actor.Name() != manifest.PlaceholderKey {
 						require.NotEmptyf(t, methods, "Methods are empty for actor: %s version: %s height: %d", actor.Name(), version, height)
 					}
+
 					for _, method := range methods {
 						if method.Method == nil {
 							// depracated
 							continue
+						}
+						// special cases where the methods are present in unexpected heights
+						if method.Name == parser.MethodProveReplicaUpdates || method.Name == parser.MethodProveCommitAggregate || method.Name == parser.MethodPreCommitSectorBatch {
+							if version.NodeVersion() < tools.V13.NodeVersion() {
+								continue
+							}
 						}
 						_, _, err := actor.Parse(context.Background(), tt.network, height, method.Name, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
 						require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", method.Name, actor.Name(), version, height)

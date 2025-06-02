@@ -118,21 +118,21 @@ func (m *OnChain) IsGenesisActor(_ string) bool {
 
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[*filTypes.Actor]{
-		RequestName:        "StateGetActor",
+		RequestName:        "StateGetActorWithTipSetKey",
 		MaxAttempts:        m.maxRetries,
 		MaxWaitBeforeRetry: m.maxWaitBeforeRetry,
 		Request: func() (*filTypes.Actor, error) {
-			return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+			return m.Node.StateGetActor(context.Background(), add, key)
 		},
 		RetryErrStrings: []string{"ipld: could not find", "RPC client error"},
 	}
 
 	actor, err := NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 	if err != nil {
-		// Try again but using the corresponding tipset Key
-		nodeApiCallOptions.RequestName = "StateGetActorWithTipSetKey"
+		// Try again but with an empty tipset Key
+		nodeApiCallOptions.RequestName = "StateGetActor"
 		nodeApiCallOptions.Request = func() (*filTypes.Actor, error) {
-			return m.Node.StateGetActor(context.Background(), add, key)
+			return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
 		}
 		actor, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 		if err != nil {
