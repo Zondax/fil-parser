@@ -1,6 +1,7 @@
 package actortest
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/csv"
@@ -11,6 +12,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
@@ -18,13 +21,13 @@ import (
 
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/actors/v2/multisig"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"gotest.tools/assert"
 )
 
 var multisigWithParamsOrReturnTests = []struct {
@@ -389,7 +392,7 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 	require.NotNil(t, actor)
 	msigActor := actor.(*multisig.Msig)
 
-	filePath := filepath.Join("..", "..", "data", "actors", "multisig", "Metadata", "metadata_test.csv")
+	filePath := filepath.Join("..", "..", "data", "actors", "multisig", "Metadata", "metadata_test_v2.csv")
 	file, err := os.Open(filePath)
 	require.NoError(t, err, "Error opening CSV file")
 	defer file.Close()
@@ -406,30 +409,26 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 		txMetadata := record[1]
 		expectedStr := record[2]
 
-		result, err := msigActor.ParseMultisigMetadata(network, height, txType, txMetadata)
+		rawParams, rawReturn, err := cborMetadata(txType, txMetadata)
+		require.NoError(t, err, "Error unmarshaling expected for txType %s", txType)
+
+		result, _, err := msigActor.Parse(context.Background(), network, height, txType, &parser.LotusMessage{
+			Params: rawParams,
+		}, &parser.LotusMessageReceipt{
+			Return: rawReturn,
+		}, cid.Undef, filTypes.EmptyTSK)
 		require.NoError(t, err, "Error parsing metadata for txType %s", txType)
 
-		expected, err := unmarshalExpected(txType, expectedStr)
+		// expected, err := unmarshalExpected(txType, expectedStr)
 		require.NoError(t, err, "Error unmarshaling expected for txType %s", txType)
 
 		resultJSON, err := json.Marshal(result)
 		require.NoError(t, err, "Error marshaling result to JSON")
 
-		expectedJSON, err := json.Marshal(expected)
+		// expectedJSON, err := json.Marshal(expected)
 		require.NoError(t, err, "Error marshaling expected to JSON")
 
-		var resultMap map[string]interface{}
-		var expectedMap map[string]interface{}
-		require.NoError(t, json.Unmarshal(resultJSON, &resultMap), "Error unmarshaling result JSON")
-		require.NoError(t, json.Unmarshal(expectedJSON, &expectedMap), "Error unmarshaling expected JSON")
-
-		compareRetField(t, txType, resultMap, expectedMap)
-		expectedJson, err := json.Marshal(expectedMap)
-		require.NoError(t, err)
-		resultJson, err := json.Marshal(resultMap)
-		require.NoError(t, err)
-		assert.Equal(t, string(expectedJson), string(resultJson), "Mismatch for other fields in txType %s \n expected: %s\ngot: %s", txType, string(expectedJson), string(resultJson))
-		// assert.Equal(t, expectedMap, resultMap, "Mismatch for other fields in txType %s", txType)
+		require.EqualValuesf(t, expectedStr, string(resultJSON), "Mismatch for other fields in txType %s \n expected: %s\ngot: %s", txType, expectedStr, string(resultJSON))
 	}
 }
 
@@ -469,6 +468,203 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 	}
 	err := json.Unmarshal([]byte(jsonStr), v)
 	return v, err
+}
+
+func getInnerParamAndReturnJson(jsonStr string) ([]byte, []byte, error) {
+	var data map[string]map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return nil, nil, err
+	}
+
+	var paramsBytes []byte
+	var retBytes []byte
+	var err error
+
+	params, ok := data["Params"]
+	if ok {
+		paramsBytes, err = json.Marshal(params)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	ret, ok := data["Return"]
+	if ok {
+		retBytes, err = json.Marshal(ret)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return paramsBytes, retBytes, nil
+}
+func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
+	var bufParams bytes.Buffer
+	var bufReturn bytes.Buffer
+	switch txType {
+	case parser.MethodAddSigner:
+		tmp := &multisig2.AddSignerParams{}
+		if err := json.Unmarshal([]byte(jsonStr), tmp); err != nil {
+			return nil, nil, err
+		}
+		err := tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodApprove:
+		params, ret, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		p := &multisig2.TxnIDParams{
+			ProposalHash: []byte{},
+		}
+		if err := json.Unmarshal(params, p); err != nil {
+			return nil, nil, err
+		}
+		err = p.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+		r := &multisig2.ApproveReturn{}
+		if err := json.Unmarshal(ret, r); err != nil {
+			return nil, nil, err
+		}
+		err = r.MarshalCBOR(&bufReturn)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodCancel:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &multisig2.TxnIDParams{
+			ProposalHash: []byte{},
+		}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodChangeNumApprovalsThreshold:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &multisig2.ChangeNumApprovalsThresholdParams{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodConstructor:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &multisig2.ConstructorParams{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodLockBalance:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &multisig2.LockBalanceParams{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodRemoveSigner:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &multisig2.RemoveSignerParams{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodSend:
+		tmp := abi.CborBytes([]byte("txData"))
+		err := tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodSwapSigner:
+		tmp := &multisig2.SwapSignerParams{}
+		if err := json.Unmarshal([]byte(jsonStr), tmp); err != nil {
+			return nil, nil, err
+		}
+		err := tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodMsigUniversalReceiverHook:
+		tmp := abi.CborBytes([]byte("txData"))
+		err := tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodAddVerifier:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &verifreg.AddVerifierParams{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodWithdrawBalance:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &miner.WithdrawBalanceParams{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+	case parser.MethodChangeOwnerAddress:
+		params, _, err := getInnerParamAndReturnJson(jsonStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmp := &address.Address{}
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
+		err = tmp.MarshalCBOR(&bufParams)
+		if err != nil {
+			return nil, nil, err
+		}
+
+	default:
+		return nil, nil, fmt.Errorf("unknown txType: %s", txType)
+	}
+	return bufParams.Bytes(), bufReturn.Bytes(), nil
 }
 
 func compareRetField(t *testing.T, txType string, resultMap, expectedMap map[string]interface{}) {

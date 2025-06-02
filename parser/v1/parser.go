@@ -412,7 +412,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution bool) string {
 	var minerAddress string
 	var err error
-	if !systemExecution {
+	if !systemExecution && blockCid != "" {
 		minerAddress, err = tipset.GetBlockMiner(blockCid)
 		if err != nil {
 			// added a new error to avoid cardinality of GetBlockMiner error results which include cid
@@ -421,7 +421,7 @@ func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.Extended
 		}
 	}
 
-	if p.config.ConsolidateRobustAddress && err == nil {
+	if p.config.ConsolidateRobustAddress && minerAddress != "" {
 		minerAddr, err := address.NewFromString(minerAddress)
 		if err != nil {
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)

@@ -23,7 +23,6 @@ require (
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	github.com/zondax/golem v0.22.0
 	github.com/zondax/rosetta-filecoin-lib v1.3202.1
-	gotest.tools v2.2.0+incompatible
 )
 
 require (
@@ -41,7 +40,6 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/icza/backscanner v0.0.0-20210726202459-ac2ffc679f94 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

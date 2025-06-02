@@ -39,10 +39,6 @@ func (r *Reward) Name() string {
 	return manifest.RewardKey
 }
 
-func (*Reward) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	return parse(raw, &abi.StoragePower{}, parser.ParamsKey)
-}
-
 func (*Reward) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
@@ -88,6 +84,29 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 	return methods, nil
 }
 
+func (*Reward) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := constructorParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	metadata, err := parse(raw, params(), parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok = constructorParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parse(raw, params(), parser.ParamsKey)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
+}
+
 func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := awardBlockRewardParams[version.String()]
@@ -111,7 +130,17 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 
 	metadata, err := parse(raw, returns(), parser.ReturnKey)
 	if err != nil {
-		return nil, err
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			returns, ok = thisEpochRewardReturn[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parse(raw, returns(), parser.ReturnKey)
+			if err == nil {
+				break
+			}
+		}
 	}
-	return metadata, nil
+	return metadata, err
 }
