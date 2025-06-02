@@ -25,6 +25,9 @@ import (
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/metrics"
+	"github.com/zondax/fil-parser/actors/v2/evm"
+	"github.com/zondax/fil-parser/actors/v2/miner"
+	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
@@ -32,16 +35,22 @@ import (
 )
 
 type Msig struct {
-	helper  *helper.Helper
-	logger  *logger.Logger
-	metrics *metrics.ActorsMetricsClient
+	helper   *helper.Helper
+	logger   *logger.Logger
+	metrics  *metrics.ActorsMetricsClient
+	miner    *miner.Miner
+	verifreg *verifiedRegistry.VerifiedRegistry
+	evm      *evm.Evm
 }
 
 func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient) *Msig {
 	return &Msig{
-		helper:  helper,
-		logger:  logger,
-		metrics: metrics,
+		helper:   helper,
+		logger:   logger,
+		metrics:  metrics,
+		miner:    miner.New(logger),
+		verifreg: verifiedRegistry.New(logger),
+		evm:      evm.New(logger, metrics),
 	}
 }
 
@@ -77,7 +86,7 @@ func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 		},
 		5: {
 			Name:   parser.MethodAddSigner,
-			Method: m.MsigParams,
+			Method: m.AddSigner,
 		},
 		6: {
 			Name:   parser.MethodRemoveSigner,
@@ -85,7 +94,7 @@ func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 		},
 		7: {
 			Name:   parser.MethodSwapSigner,
-			Method: m.MsigParams,
+			Method: m.SwapSigner,
 		},
 		8: {
 			Name:   parser.MethodChangeNumApprovalsThreshold,
@@ -173,21 +182,31 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 		resp := actors.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return, p.parseMsigParams)
+		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return)
 	case parser.MethodApprove, parser.MethodApproveExported:
-		ret, err = p.Approve(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+		ret, err = p.Approve(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodCancel, parser.MethodCancelExported:
-		ret, err = p.Cancel(network, msg, height, key, msgRct.Return, p.parseMsigParams)
-	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodSwapSigner, parser.MethodSwapSignerExported:
-		ret, err = p.MsigParams(network, msg, height, key, p.parseMsigParams)
+		ret, err = p.Cancel(network, msg, height, key, msg.Params)
+	case parser.MethodAddSigner, parser.MethodAddSignerExported:
+		ret, err = p.AddSigner(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
-		ret, err = p.RemoveSigner(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+		ret, err = p.RemoveSigner(network, msg, height, key, msg.Params)
+	case parser.MethodSwapSigner, parser.MethodSwapSignerExported:
+		ret, err = p.SwapSigner(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
-		ret, err = p.ChangeNumApprovalsThreshold(network, msg, height, key, msg.Params, p.parseMsigParams)
+		ret, err = p.ChangeNumApprovalsThreshold(network, msg, height, key, msg.Params)
 	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
-		ret, err = p.LockBalance(network, msg, height, key, msg.Params, p.parseMsigParams)
+		ret, err = p.LockBalance(network, msg, height, key, msg.Params)
+	case parser.MethodAddVerifier:
+		ret, err = p.AddVerifier(network, msg, height, key, msg.Params, msgRct.Return)
+	case parser.MethodChangeOwnerAddress, parser.MethodChangeOwnerAddressExported:
+		ret, err = p.ChangeOwnerAddress(network, msg, height, key, msg.Params, msgRct.Return)
+	case parser.MethodWithdrawBalance, parser.MethodWithdrawBalanceExported:
+		ret, err = p.WithdrawBalance(network, msg, height, key, msg.Params, msgRct.Return)
+	case parser.MethodInvokeContract:
+		ret, err = p.InvokeContract(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodMsigUniversalReceiverHook: // TODO: not tested
-		ret, err = p.UniversalReceiverHook(network, msg, height, key, msgRct.Return, p.parseMsigParams)
+		ret, err = p.UniversalReceiverHook(network, msg, height, key, msg.Params)
 	case parser.MethodFallback:
 		ret, err = p.Fallback(network, height, msg.Params)
 	case parser.UnknownStr:
@@ -214,10 +233,10 @@ func (p *Msig) TransactionTypes() map[string]any {
 		parser.MethodApproveExported:                     p.Approve,
 		parser.MethodCancel:                              p.Cancel,
 		parser.MethodCancelExported:                      p.Cancel,
-		parser.MethodAddSigner:                           p.MsigParams,
-		parser.MethodAddSignerExported:                   p.MsigParams,
-		parser.MethodSwapSigner:                          p.MsigParams,
-		parser.MethodSwapSignerExported:                  p.MsigParams,
+		parser.MethodAddSigner:                           p.AddSigner,
+		parser.MethodAddSignerExported:                   p.AddSigner,
+		parser.MethodSwapSigner:                          p.SwapSigner,
+		parser.MethodSwapSignerExported:                  p.SwapSigner,
 		parser.MethodRemoveSigner:                        p.RemoveSigner,
 		parser.MethodRemoveSignerExported:                p.RemoveSigner,
 		parser.MethodChangeNumApprovalsThreshold:         p.ChangeNumApprovalsThreshold,
