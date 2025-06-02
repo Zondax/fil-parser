@@ -9,7 +9,6 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 
 	filTypes "github.com/filecoin-project/lotus/chain/types"
-	"github.com/ipfs/go-cid"
 
 	"github.com/filecoin-project/go-state-types/abi"
 
@@ -172,30 +171,4 @@ func (m *Msig) ChangeOwnerAddress(network string, msg *parser.LotusMessage, heig
 
 func (*Msig) UniversalReceiverHook(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte) (map[string]interface{}, error) {
 	return parseCBOR(rawParams, nil, &abi.CborBytesTransparent{}, nil)
-}
-
-func (m *Msig) parseMsigParams(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
-	msgSerial, err := msg.MarshalJSON() // TODO: this may not work properly
-	if err != nil {
-		// m.helper.GetLogger().Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
-		return "", err
-	}
-
-	actorCode, err := m.helper.GetActorsCache().GetActorCode(msg.To, key, false)
-	if err != nil {
-		return "", err
-	}
-
-	c, err := cid.Parse(actorCode)
-	if err != nil {
-		// m.helper.GetLogger().Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
-		return "", err
-	}
-	parsedParams, err := m.helper.GetFilecoinLib().ParseParamsMultisigTx(string(msgSerial), c)
-	if err != nil {
-		// m.helper.GetLogger().Errorf("Could not parse params. ParseParamsMultisigTx returned with error: %v", err)
-		return "", err
-	}
-
-	return parsedParams, nil
 }
