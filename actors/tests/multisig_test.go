@@ -472,7 +472,9 @@ func unmarshalExpected(txType, jsonStr string) (interface{}, error) {
 
 func getInnerParamAndReturnJson(jsonStr string) ([]byte, []byte, error) {
 	var data map[string]map[string]interface{}
-	json.Unmarshal([]byte(jsonStr), &data)
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return nil, nil, err
+	}
 
 	var paramsBytes []byte
 	var retBytes []byte
@@ -501,7 +503,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 	switch txType {
 	case parser.MethodAddSigner:
 		tmp := &multisig2.AddSignerParams{}
-		json.Unmarshal([]byte(jsonStr), tmp)
+		if err := json.Unmarshal([]byte(jsonStr), tmp); err != nil {
+			return nil, nil, err
+		}
 		err := tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -522,7 +526,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		r := &multisig2.ApproveReturn{}
-		json.Unmarshal(ret, r)
+		if err := json.Unmarshal(ret, r); err != nil {
+			return nil, nil, err
+		}
 		err = r.MarshalCBOR(&bufReturn)
 		if err != nil {
 			return nil, nil, err
@@ -535,7 +541,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 		tmp := &multisig2.TxnIDParams{
 			ProposalHash: []byte{},
 		}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -546,7 +554,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &multisig2.ChangeNumApprovalsThresholdParams{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -557,7 +567,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &multisig2.ConstructorParams{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -568,7 +580,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &multisig2.LockBalanceParams{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -579,7 +593,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &multisig2.RemoveSignerParams{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -592,7 +608,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 		}
 	case parser.MethodSwapSigner:
 		tmp := &multisig2.SwapSignerParams{}
-		json.Unmarshal([]byte(jsonStr), tmp)
+		if err := json.Unmarshal([]byte(jsonStr), tmp); err != nil {
+			return nil, nil, err
+		}
 		err := tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -609,7 +627,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &verifreg.AddVerifierParams{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -620,7 +640,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &miner.WithdrawBalanceParams{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
@@ -631,7 +653,9 @@ func cborMetadata(txType, jsonStr string) ([]byte, []byte, error) {
 			return nil, nil, err
 		}
 		tmp := &address.Address{}
-		json.Unmarshal(params, tmp)
+		if err := json.Unmarshal(params, tmp); err != nil {
+			return nil, nil, err
+		}
 		err = tmp.MarshalCBOR(&bufParams)
 		if err != nil {
 			return nil, nil, err
