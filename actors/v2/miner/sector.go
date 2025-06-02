@@ -75,7 +75,21 @@ func (*Miner) ConfirmSectorProofsValid(network string, height int64, rawParams [
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	metadata, err := parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok := confirmSectorProofsParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
