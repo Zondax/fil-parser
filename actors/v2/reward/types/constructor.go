@@ -8,6 +8,8 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
+// ConstructorParams is the parameters for the reward actor constructor.
+// https://github.com/filecoin-project/builtin-actors/blob/cd9ac2bb0afcca7a59465e57cee6569e69070d7a/actors/reward/src/lib.rs#L54
 type ConstructorParams struct {
 	Power abi.StoragePower
 }

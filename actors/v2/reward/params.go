@@ -170,6 +170,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 
 	// From V19 the storagePower is in a struct that is not present in the go-state-types package but present
 	// in the rust builtin-actors package.
+	// https://github.com/filecoin-project/builtin-actors/blob/cd9ac2bb0afcca7a59465e57cee6569e69070d7a/actors/reward/src/lib.rs#L54
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 
