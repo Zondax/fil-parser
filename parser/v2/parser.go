@@ -163,13 +163,15 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		// TxCid <-> TxHash
-		txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
-		if err == nil && txHash != "" {
-			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
-		}
-		if err != nil {
-			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
-			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+		if int64(txsData.Tipset.Height()) >= p.config.TxHashTranslationStart {
+			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
+			if err == nil && txHash != "" {
+				p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
+			}
+			if err != nil {
+				_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+				p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+			}
 		}
 	}
 
