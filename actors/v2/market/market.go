@@ -9,7 +9,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/golem/pkg/logger"
 
@@ -46,64 +45,26 @@ func (*Market) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	m := &Market{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsMarket.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsMarket.AddBalance: {
-			Name:   parser.MethodAddBalance,
-			Method: m.AddBalance,
-		},
-		legacyBuiltin.MethodsMarket.WithdrawBalance: {
-			Name:   parser.MethodWithdrawBalance,
-			Method: m.WithdrawBalance,
-		},
-		legacyBuiltin.MethodsMarket.PublishStorageDeals: {
-			Name:   parser.MethodPublishStorageDeals,
-			Method: m.PublishStorageDealsExported,
-		},
-		legacyBuiltin.MethodsMarket.VerifyDealsForActivation: {
-			Name:   parser.MethodVerifyDealsForActivation,
-			Method: m.VerifyDealsForActivationExported,
-		},
-		legacyBuiltin.MethodsMarket.ActivateDeals: {
-			Name:   parser.MethodActivateDeals,
-			Method: m.ActivateDealsExported,
-		},
-		legacyBuiltin.MethodsMarket.OnMinerSectorsTerminate: {
-			Name:   parser.MethodOnMinerSectorsTerminate,
-			Method: m.OnMinerSectorsTerminateExported,
-		},
-		legacyBuiltin.MethodsMarket.ComputeDataCommitment: {
-			Name:   parser.MethodComputeDataCommitment,
-			Method: m.ComputeDataCommitmentExported,
-		},
-		legacyBuiltin.MethodsMarket.CronTick: {
-			Name:   parser.MethodCronTick,
-			Method: actors.ParseEmptyParamsAndReturn,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
+	tools.V0.String(): v1Methods(),
+	tools.V1.String(): v1Methods(),
+	tools.V2.String(): v1Methods(),
+	tools.V3.String(): v1Methods(),
+
+	tools.V4.String(): v2Methods(),
+	tools.V5.String(): v2Methods(),
+	tools.V6.String(): v2Methods(),
+	tools.V7.String(): v2Methods(),
+	tools.V8.String(): v2Methods(),
+	tools.V9.String(): v2Methods(),
+
+	tools.V10.String(): v3Methods(),
+	tools.V11.String(): v3Methods(),
+
+	tools.V12.String(): v4Methods(),
+	tools.V13.String(): v5Methods(),
+	tools.V14.String(): v6Methods(),
+	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(v8Market.Methods),
 	tools.V17.String(): actors.CopyMethods(v9Market.Methods),
 	tools.V18.String(): actors.CopyMethods(v10Market.Methods),
@@ -156,7 +117,21 @@ func (*Market) PublishStorageDealsExported(network string, height int64, rawPara
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil && metadata[parser.ReturnKey] == nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			returnValue, returnOk := publishStorageDealsReturn[v.String()]
+			if !returnOk {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Market) VerifyDealsForActivationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
@@ -241,7 +216,22 @@ func (*Market) ComputeDataCommitmentExported(network string, height int64, rawPa
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	metadata, err := parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, paramsOk := computeDataCommitmentParams[v.String()]
+			returnValue, returnOk := computeDataCommitmentReturn[v.String()]
+			if !paramsOk || !returnOk {
+				continue
+			}
+			metadata, err = parseGeneric(rawParams, rawReturn, true, params(), returnValue())
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Market) GetBalanceExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
