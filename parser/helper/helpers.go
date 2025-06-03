@@ -60,7 +60,7 @@ const (
 	accountCidStr = "bafk2bzacedbgei6jkx36fwdgvoohce4aghvpohqdhoco7p4thszgssms7olv2"
 )
 
-// Deprecated: Use v2/tools.ActorMethods instead
+// Deprecated: Use v2/tools.GetMethodName instead
 var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.InitKey:     filInit.Methods,
 	manifest.CronKey:     cron.Methods,
@@ -308,6 +308,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 	return method.Name, nil
 }
 
+// Deprecated: Use v2/tools.GetMethodName instead
 // CheckCommonMethods returns the method name for the given message if Send Or Constructor, otherwise returns an empty string
 func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
 	if msg == nil {
