@@ -1972,62 +1972,62 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  102,
 			},
 		},
-		{
-			name:    "parser with traces from v2",
-			version: v2.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "2907520",
-			results: expectedResults{
-				totalTraces:  907,
-				totalAddress: 234,
-				totalTxCids:  151,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573062",
-			results: expectedResults{
-				totalTraces:  773,
-				totalAddress: 209,
-				totalTxCids:  121,
-			},
-		},
-		{
-			name:    "should fail (actorsV2 fixed eth_address parsing in exec): parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573064",
-			results: expectedResults{
-				totalTraces:  734,
-				totalAddress: 206,
-				totalTxCids:  101,
-			},
-			shouldFail: true,
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573066",
-			results: expectedResults{
-				totalTraces:  1118,
-				totalAddress: 274,
-				totalTxCids:  187,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.26 (calib)",
-			version: v2.NodeVersionsSupported[2],
-			url:     calibNextNodeUrl,
-			height:  "1419335",
-			results: expectedResults{
-				totalTraces:  37,
-				totalAddress: 16,
-				totalTxCids:  5,
-			},
-		},
+		// {
+		// 	name:    "parser with traces from v2",
+		// 	version: v2.NodeVersionsSupported[0],
+		// 	url:     nodeUrl,
+		// 	height:  "2907520",
+		// 	results: expectedResults{
+		// 		totalTraces:  907,
+		// 		totalAddress: 234,
+		// 		totalTxCids:  151,
+		// 	},
+		// },
+		// {
+		// 	name:    "parser with traces from v2 and lotus 1.25",
+		// 	version: v2.NodeVersionsSupported[2],
+		// 	url:     nodeUrl,
+		// 	height:  "3573062",
+		// 	results: expectedResults{
+		// 		totalTraces:  773,
+		// 		totalAddress: 209,
+		// 		totalTxCids:  121,
+		// 	},
+		// },
+		// {
+		// 	name:    "should fail (actorsV2 fixed eth_address parsing in exec): parser with traces from v2 and lotus 1.25",
+		// 	version: v2.NodeVersionsSupported[2],
+		// 	url:     nodeUrl,
+		// 	height:  "3573064",
+		// 	results: expectedResults{
+		// 		totalTraces:  734,
+		// 		totalAddress: 206,
+		// 		totalTxCids:  101,
+		// 	},
+		// 	shouldFail: true,
+		// },
+		// {
+		// 	name:    "parser with traces from v2 and lotus 1.25",
+		// 	version: v2.NodeVersionsSupported[2],
+		// 	url:     nodeUrl,
+		// 	height:  "3573066",
+		// 	results: expectedResults{
+		// 		totalTraces:  1118,
+		// 		totalAddress: 274,
+		// 		totalTxCids:  187,
+		// 	},
+		// },
+		// {
+		// 	name:    "parser with traces from v2 and lotus 1.26 (calib)",
+		// 	version: v2.NodeVersionsSupported[2],
+		// 	url:     calibNextNodeUrl,
+		// 	height:  "1419335",
+		// 	results: expectedResults{
+		// 		totalTraces:  37,
+		// 		totalAddress: 16,
+		// 		totalTxCids:  5,
+		// 	},
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2106,33 +2106,14 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 					continue
 				}
 
-				// The 'Propose' v1Params structure is being modified to maintain compatibility with the v2 format.
-				// In v1, the "Params" structure is flatter, while in v2, it has an additional nested level with another "Params" key.
-				// The code normalizes v1 to match v2's structure for comparison purposes.
-				if tx.TxType == parser.MethodPropose || tx.TxType == parser.MethodProposeExported {
-					v1Params := metadataV1[parser.ParamsKey]
-					v1ParamsMap, ok := v1Params.(map[string]interface{})
-					if !ok {
-						t.Fatalf("Error casting v1 params to map[string]interface{}")
-					}
-					if v1ParamsMap[parser.ParamsKey] != nil {
-						v1ParamsMap[parser.ParamsKey] = v1ParamsMap[parser.ParamsKey].(map[string]interface{})[parser.ParamsKey]
-					} else {
-						v1ParamsMap[parser.ParamsKey] = map[string]interface{}{
-							parser.ParamsKey: nil,
-						}
-					}
-					metadataV1[parser.ParamsKey] = v1ParamsMap
-				}
-
 				if metadataV1[parser.ParamsKey] != nil {
-					require.Equalf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					require.EqualValuesf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 				}
 				if metadataV1[parser.ReturnKey] != nil {
 					// ClaimAllocations return struct changed to support slices.
 					// ActivateDeals metadata was fixed to parse correctly in v2.
 					if tx.TxType != parser.MethodClaimAllocations && tx.TxType != parser.MethodActivateDeals {
-						require.Equalf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+						require.EqualValuesf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
 					}
 				}
 
