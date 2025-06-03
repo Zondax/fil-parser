@@ -389,6 +389,7 @@ func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uin
 	return &types.MinerSectorEvent{
 		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
 		MinerAddress: tx.TxTo,
+		//nolint:gosec
 		SectorNumber: uint64(sectorNumber),
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
