@@ -132,15 +132,7 @@ func (eg *eventGenerator) parsePreCommitStage(_ context.Context, tx *types.Trans
 		if err != nil {
 			return fmt.Errorf("error marshaling event: %w", err)
 		}
-		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-			TxCid:        tx.TxCid,
-			Height:       tx.Height,
-			ActionType:   tx.TxType,
-			MinerAddress: tx.TxTo,
-			SectorNumber: sectorNumber,
-			Data:         string(jsonData),
-		})
+		sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, sectorNumber, jsonData))
 		return nil
 	}
 
@@ -180,15 +172,7 @@ func (eg *eventGenerator) parseProveCommitStage(ctx context.Context, tx *types.T
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
 		}
-		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-			MinerAddress: tx.TxTo,
-			SectorNumber: sectorNumber,
-			Height:       tx.Height,
-			TxCid:        tx.TxCid,
-			ActionType:   tx.TxType,
-			Data:         string(jsonData),
-		})
+		sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, sectorNumber, jsonData))
 
 		return sectorEvents, nil
 	case parser.MethodProveCommitAggregate:
@@ -235,15 +219,7 @@ func (eg *eventGenerator) parseSectorTerminationFaultAndRecoveries(_ context.Con
 			return nil, fmt.Errorf("error marshaling event: %w", err)
 		}
 		for _, sectorNumber := range sectorNumbers {
-			sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-				ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-				MinerAddress: tx.TxTo,
-				SectorNumber: uint64(sectorNumber),
-				Height:       tx.Height,
-				TxCid:        tx.TxCid,
-				ActionType:   tx.TxType,
-				Data:         string(jsonData),
-			})
+			sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, uint64(sectorNumber), jsonData))
 		}
 	}
 	return sectorEvents, nil
@@ -286,6 +262,7 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 				TxCid:        tx.TxCid,
 				ActionType:   tx.TxType,
 				Data:         string(jsonData),
+				TxTimestamp:  tx.TxTimestamp,
 			})
 		}
 	}
@@ -307,15 +284,7 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
 		}
-		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-			MinerAddress: tx.TxTo,
-			SectorNumber: sectorNumber,
-			Height:       tx.Height,
-			TxCid:        tx.TxCid,
-			ActionType:   tx.TxType,
-			Data:         string(jsonData),
-		})
+		sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, sectorNumber, jsonData))
 	}
 	return sectorEvents, nil
 }
@@ -335,15 +304,7 @@ func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
 		}
-		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-			MinerAddress: tx.TxTo,
-			SectorNumber: sectorNumber,
-			Height:       tx.Height,
-			TxCid:        tx.TxCid,
-			ActionType:   tx.TxType,
-			Data:         string(jsonData),
-		})
+		sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, sectorNumber, jsonData))
 	}
 	return sectorEvents, nil
 }
@@ -361,16 +322,7 @@ func (eg *eventGenerator) parseConfirmSectorProofsValid(_ context.Context, tx *t
 		return nil, fmt.Errorf("error marshaling event: %w", err)
 	}
 	for _, sector := range sectors {
-		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-			MinerAddress: tx.TxTo,
-			// #nosec G115
-			SectorNumber: uint64(sector),
-			Height:       tx.Height,
-			TxCid:        tx.TxCid,
-			ActionType:   tx.TxType,
-			Data:         string(jsonData),
-		})
+		sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, uint64(sector), jsonData))
 	}
 	return sectorEvents, nil
 }
@@ -393,15 +345,7 @@ func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types
 		return nil, fmt.Errorf("error marshaling event: %w", err)
 	}
 	for _, sectorNumber := range sectorNumbers {
-		sectorEvents = append(sectorEvents, &types.MinerSectorEvent{
-			ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-			MinerAddress: tx.TxTo,
-			SectorNumber: uint64(sectorNumber),
-			Height:       tx.Height,
-			TxCid:        tx.TxCid,
-			ActionType:   tx.TxType,
-			Data:         string(jsonData),
-		})
+		sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, sectorNumber, jsonData))
 	}
 	return sectorEvents, nil
 }
@@ -439,4 +383,17 @@ func jsonEncodedBitfieldToSectorNumbers(bitField []int) ([]uint64, error) {
 		sectorNumbers = append(sectorNumbers, sectorNumber)
 	}
 	return sectorNumbers, nil
+}
+
+func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uint64, jsonData []byte) *types.MinerSectorEvent {
+	return &types.MinerSectorEvent{
+		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+		MinerAddress: tx.TxTo,
+		SectorNumber: uint64(sectorNumber),
+		Height:       tx.Height,
+		TxCid:        tx.TxCid,
+		ActionType:   tx.TxType,
+		Data:         string(jsonData),
+		TxTimestamp:  tx.TxTimestamp,
+	}
 }
