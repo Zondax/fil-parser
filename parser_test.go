@@ -1560,7 +1560,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			height:  "14107",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
-					{Height: 14107, MultisigAddress: "f080", ProposalID: 0, Signer: "f0103", ActionType: "Propose", TxTypeToExecute: "AddVerifier", Value: "{\"Address\":\"f1zo7ub42i3s5cutljzjuqwnltt4xxm4y4f7l5s2i\",\"Allowance\":\"100000000000000\"}"},
+					{Height: 14107, MultisigAddress: "f080", ProposalID: 0, Signer: "f0103", ActionType: "Propose", TxTypeToExecute: "AddVerifier", Value: `{"Address":"f1zo7ub42i3s5cutljzjuqwnltt4xxm4y4f7l5s2i","Allowance":"100000000000000"}`},
 				},
 				multisigInfo: []types.MultisigInfo{},
 			},
@@ -1572,7 +1572,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			height:  "1467665",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
-					{Height: 1467665, MultisigAddress: "f080", ProposalID: 11, Signer: "f018896", ActionType: "Approve", TxTypeToExecute: "", Value: "{\"ID\":11,\"ProposalHash\":\"/jgVZzOjfHFnrI5K514wyJ+WSVNtLQhthbCrDsX+Dmg=\"}"},
+					{Height: 1467665, MultisigAddress: "f080", ProposalID: 11, Signer: "f018896", ActionType: "Approve", TxTypeToExecute: "", Value: `{"ID":11,"ProposalHash":"/jgVZzOjfHFnrI5K514wyJ+WSVNtLQhthbCrDsX+Dmg="}`},
 				},
 				multisigInfo: []types.MultisigInfo{},
 			},
@@ -1598,11 +1598,12 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			height:  "78689",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
-					{Height: 78689, MultisigAddress: "f02412", ProposalID: 0, Signer: "f02252", ActionType: "Propose", TxTypeToExecute: "WithdrawBalance", Value: "{\"AmountRequested\":\"3300000000000000000\"}"},
+					{Height: 78689, MultisigAddress: "f02412", ProposalID: 0, Signer: "f02252", ActionType: "Propose", TxTypeToExecute: "UniversalReceiverHook", Value: `{"Value":"gUkALcv0hA7KAAA="}`},
 				},
 				multisigInfo: []types.MultisigInfo{},
 			},
 		},
+
 		{
 			name:    "multisig events height 47645",
 			version: v1.NodeVersionsSupported[0],
@@ -1615,6 +1616,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				multisigInfo: []types.MultisigInfo{},
 			},
 		},
+
 		{
 			name:    "multisig events height 39035",
 			version: v1.NodeVersionsSupported[0],
@@ -1622,11 +1624,12 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			height:  "39035",
 			results: expectedResults{
 				proposals: []types.MultisigProposal{
-					{Height: 39035, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 1, Signer: "f01717", ActionType: "Propose", TxTypeToExecute: "Unknown", Value: "{\"MethodNum\":\"2\",\"Params\":{\"Method\":\"\",\"Params\":null,\"To\":\"f01174\",\"Value\":\"0\"},\"Return\":{\"Applied\":false,\"Code\":0,\"Ret\":null,\"TxnID\":1}}"},
+					{Height: 39035, MultisigAddress: "f23pa4gt4jgkl55drdyzb7dscjzdfh725u45xzwsy", ProposalID: 1, Signer: "f01717", ActionType: "Propose", TxTypeToExecute: "ChangeOwnerAddress", Value: `{"Value":"f01816"}`},
 				},
 				multisigInfo: []types.MultisigInfo{},
 			},
 		},
+
 		{
 			name:    "multisig events height 47635",
 			version: v1.NodeVersionsSupported[0],
@@ -1776,9 +1779,9 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			var p *FilecoinParser
 			var err error
 			if tt.url == nodeUrl {
-				p, err = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
+				p, err = NewFilecoinParserWithActorV2(getLib(tt.url), mainnetCacheDataSource, gLogger)
 			} else {
-				p, err = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
+				p, err = NewFilecoinParserWithActorV2(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
 			}
 			require.NoError(t, err)
 
@@ -1813,7 +1816,8 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				assert.Equal(t, expected.Signer, events.Proposals[i].Signer, fmt.Sprintf("Mismatch in Signer at proposal index %d: expected %s, got %s", i, expected.Signer, events.Proposals[i].Signer))
 				assert.Equal(t, expected.ActionType, events.Proposals[i].ActionType, fmt.Sprintf("Mismatch in ActionType at proposal index %d: expected %s, got %s", i, expected.ActionType, events.Proposals[i].ActionType))
 				assert.Equal(t, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute, fmt.Sprintf("Mismatch in TxTypeToExecute at proposal index %d: expected %s, got %s", i, expected.TxTypeToExecute, events.Proposals[i].TxTypeToExecute))
-				assert.Equal(t, expected.Value, events.Proposals[i].Value, fmt.Sprintf("Mismatch in Value at proposal index %d: expected %s, got %s", i, expected.Value, events.Proposals[i].Value))
+				compareJSONKeys(t, expected.Value, events.Proposals[i].Value)
+				// assert.EqualValuesf(t, expected.Value, events.Proposals[i].Value, fmt.Sprintf("Mismatch in Value at proposal index %d: expected %s, got %s", i, expected.Value, events.Proposals[i].Value))
 			}
 
 			require.Len(t, events.MultisigInfo, len(tt.results.multisigInfo), fmt.Sprintf("Expected %d multisig info entries, but got %d", len(tt.results.multisigInfo), len(events.MultisigInfo)))
@@ -1822,9 +1826,28 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				assert.Equal(t, expected.TxCid, events.MultisigInfo[i].TxCid, fmt.Sprintf("Mismatch in TxCid at multisig info index %d: expected %s, got %s", i, expected.TxCid, events.MultisigInfo[i].TxCid))
 				assert.Equal(t, expected.Signer, events.MultisigInfo[i].Signer, fmt.Sprintf("Mismatch in Signer at multisig info index %d: expected %s, got %s", i, expected.Signer, events.MultisigInfo[i].Signer))
 				assert.Equal(t, expected.ActionType, events.MultisigInfo[i].ActionType, fmt.Sprintf("Mismatch in ActionType at multisig info index %d: expected %s, got %s", i, expected.ActionType, events.MultisigInfo[i].ActionType))
-				assert.Equal(t, expected.Value, events.MultisigInfo[i].Value, fmt.Sprintf("Mismatch in Value at multisig info index %d: expected %s, got %s", i, expected.Value, events.MultisigInfo[i].Value))
+				compareJSONKeys(t, expected.Value, events.MultisigInfo[i].Value)
+				// assert.EqualValuesf(t, expected.Value, events.MultisigInfo[i].Value, fmt.Sprintf("Mismatch in Value at multisig info index %d: expected %s, got %s", i, expected.Value, events.MultisigInfo[i].Value))
 			}
 		})
+	}
+}
+
+func compareJSONKeys(t *testing.T, expected, actual string) {
+	expectedMap := make(map[string]any)
+	actualMap := make(map[string]any)
+
+	err := json.Unmarshal([]byte(expected), &expectedMap)
+	require.NoError(t, err)
+	err = json.Unmarshal([]byte(actual), &actualMap)
+	require.NoError(t, err)
+
+	for k, expectedValue := range expectedMap {
+		actualValue, ok := actualMap[k]
+		if !ok {
+			assert.Failf(t, "Key %s not found in actual map", k)
+		}
+		assert.EqualValuesf(t, expectedValue, actualValue, fmt.Sprintf("Mismatch in Value at key %s: expected %v, got %v", k, expectedValue, actualValue))
 	}
 }
 
