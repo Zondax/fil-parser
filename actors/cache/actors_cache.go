@@ -53,8 +53,10 @@ var SystemActorsId = map[string]bool{
 // Check data/genesis/{network}_genesis_balances.json
 var GenesisActorsId = map[string]bool{
 	// multisig
-	"f080":  true,
-	"f090":  true,
+	"f080": true,
+	// keyless account actor
+	"f090": true,
+
 	"f0115": true,
 	"f0116": true,
 	"f0117": true,
@@ -123,10 +125,10 @@ func (a *ActorsCache) ClearBadAddressCache() {
 }
 
 func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error) {
-	addrStr := add.String()
+	addStr := add.String()
 	// Check if this address is flagged as bad
 	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", addrStr)
+		return "", fmt.Errorf("address %s is flagged as bad", addStr)
 	}
 
 	if !onChainOnly {
@@ -134,7 +136,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 		if err == nil {
 			return actorCode, nil
 		}
-		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", addStr)
 	}
 
 	// Try on-chain cache
@@ -142,7 +144,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	if err != nil {
 		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
-			a.badAddress.Set(add.String(), true)
+			a.badAddress.Set(addStr, true)
 		}
 
 		return "", err
@@ -162,18 +164,19 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 }
 
 func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
+	addStr := add.String()
 	// check if the address is a system actor ( no robust address)
-	if _, ok := SystemActorsId[add.String()]; ok {
-		return add.String(), nil
+	if _, ok := SystemActorsId[addStr]; ok {
+		return addStr, nil
 	}
 	// check if the address is a genesis actor ( no robust address)
-	if _, ok := GenesisActorsId[add.String()]; ok {
-		return add.String(), nil
+	if _, ok := GenesisActorsId[addStr]; ok {
+		return addStr, nil
 	}
 	// check if the address is a calibration genesis actor ( no robust address)
 	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
-		if _, ok := CalibrationActorsId[add.String()]; ok {
-			return add.String(), nil
+		if _, ok := CalibrationActorsId[addStr]; ok {
+			return addStr, nil
 		}
 	}
 
@@ -185,10 +188,10 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 
 	// Check if this is a flagged address
 	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", add.String())
+		return "", fmt.Errorf("address %s is flagged as bad", addStr)
 	}
 
-	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying on-chain cache", addStr)
 
 	// Try on-chain cache
 	robust, err = a.onChainCache.GetRobustAddress(add)
@@ -211,6 +214,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 }
 
 func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
+	addStr := add.String()
 	// Try kv store cache
 	short, err := a.offChainCache.GetShortAddress(add)
 	if err == nil {
@@ -219,10 +223,10 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 
 	// Check if this is a flagged address
 	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", add.String())
+		return "", fmt.Errorf("address %s is flagged as bad", addStr)
 	}
 
-	a.logger.Debugf("[ActorsCache] - Unable to retrieve short address from offchain cache for address %s. Trying on-chain cache", add.String())
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve short address from offchain cache for address %s. Trying on-chain cache", addStr)
 
 	// Try on-chain cache
 	short, err = a.onChainCache.GetShortAddress(add)

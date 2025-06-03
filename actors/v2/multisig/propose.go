@@ -2,9 +2,11 @@ package multisig
 
 import (
 	"context"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors/v2/internal"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -55,11 +57,16 @@ func (m *Msig) innerProposeMethod(
 	if err != nil {
 		return nil, "", err
 	}
-
-	actor, err := internal.GetActor(actorName, m.logger, m.helper, m.metrics)
-	if err != nil {
-		return nil, "", err
+	var actor actors.Actor
+	if strings.Contains(actorName, manifest.MultisigKey) {
+		actor = m
+	} else {
+		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
+		if err != nil {
+			return nil, "", err
+		}
 	}
+
 	methodName, err := m.methodNameFn(context.Background(), msg.Method, actorName, height, network, m.helper, m.logger)
 	if err != nil {
 		return nil, "", err
