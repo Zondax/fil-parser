@@ -47,9 +47,7 @@ func (m *Msig) innerProposeParams(
 
 // innerProposeMethod determines the actor and method name for a multisig proposal by:
 // 1. Getting the actor name from the target address
-// 2. Getting the appropriate actor implementation
-// 3. Checking for common methods
-// 4. Looking up the method name in the actor's method list
+// 2. Using the methodNameFn to get the methodName from the methodNum for the actor.
 func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 ) (actors.Actor, string, error) {
