@@ -268,9 +268,6 @@ func GenerateGenesisMultisigData(ctx context.Context, api api.FullNode, addr add
 	if err != nil {
 		return nil, fmt.Errorf("api.StateGetActor(): %s", err)
 	}
-	if addr.String() == "f090" {
-		fmt.Println(act.Code)
-	}
 
 	mstate, err := multisig.Load(store, act)
 	if err != nil {
