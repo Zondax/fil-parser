@@ -199,8 +199,8 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			}
 		}
 
-		// TxCid <->
-		if int64(txsData.Tipset.Height()) >= p.config.TxHashTranslationStart {
+		// TxCid <-> TxHash
+		if int64(txsData.Tipset.Height()) >= p.config.TxCidTranslationStart {
 			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
 			if err == nil && txHash != "" {
 				p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
