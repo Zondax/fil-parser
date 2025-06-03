@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -154,4 +155,12 @@ func ParseTxMetadata(txMetadata string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to unmarshal TxMetadata: %v", err)
 	}
 	return metadata, nil
+}
+
+func ParseActorName(actor string) string {
+	s := strings.Split(actor, "/")
+	if len(s) < 1 {
+		return actor
+	}
+	return s[len(s)-1]
 }
