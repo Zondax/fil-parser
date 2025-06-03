@@ -1972,62 +1972,62 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				totalTxCids:  102,
 			},
 		},
-		// {
-		// 	name:    "parser with traces from v2",
-		// 	version: v2.NodeVersionsSupported[0],
-		// 	url:     nodeUrl,
-		// 	height:  "2907520",
-		// 	results: expectedResults{
-		// 		totalTraces:  907,
-		// 		totalAddress: 234,
-		// 		totalTxCids:  151,
-		// 	},
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.25",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     nodeUrl,
-		// 	height:  "3573062",
-		// 	results: expectedResults{
-		// 		totalTraces:  773,
-		// 		totalAddress: 209,
-		// 		totalTxCids:  121,
-		// 	},
-		// },
-		// {
-		// 	name:    "should fail (actorsV2 fixed eth_address parsing in exec): parser with traces from v2 and lotus 1.25",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     nodeUrl,
-		// 	height:  "3573064",
-		// 	results: expectedResults{
-		// 		totalTraces:  734,
-		// 		totalAddress: 206,
-		// 		totalTxCids:  101,
-		// 	},
-		// 	shouldFail: true,
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.25",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     nodeUrl,
-		// 	height:  "3573066",
-		// 	results: expectedResults{
-		// 		totalTraces:  1118,
-		// 		totalAddress: 274,
-		// 		totalTxCids:  187,
-		// 	},
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.26 (calib)",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     calibNextNodeUrl,
-		// 	height:  "1419335",
-		// 	results: expectedResults{
-		// 		totalTraces:  37,
-		// 		totalAddress: 16,
-		// 		totalTxCids:  5,
-		// 	},
-		// },
+		{
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907520",
+			results: expectedResults{
+				totalTraces:  907,
+				totalAddress: 234,
+				totalTxCids:  151,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573062",
+			results: expectedResults{
+				totalTraces:  773,
+				totalAddress: 209,
+				totalTxCids:  121,
+			},
+		},
+		{
+			name:    "should fail (actorsV2 fixed eth_address parsing in exec): parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573064",
+			results: expectedResults{
+				totalTraces:  734,
+				totalAddress: 206,
+				totalTxCids:  101,
+			},
+			shouldFail: true,
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573066",
+			results: expectedResults{
+				totalTraces:  1118,
+				totalAddress: 274,
+				totalTxCids:  187,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:  37,
+				totalAddress: 16,
+				totalTxCids:  5,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
