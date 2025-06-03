@@ -8,4 +8,6 @@ type Config struct {
 	NodeMaxWaitBeforeRetrySeconds int64
 	// linear, exponential default: linear
 	NodeRetryStrategy string
+	// Height at which to start translating txcids to txhashes
+	TxCidTranslationStart int64
 }
