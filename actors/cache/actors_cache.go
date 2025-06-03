@@ -134,9 +134,9 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 		if err == nil {
 			return actorCode, nil
 		}
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
 	}
 
-	a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", add.String())
 	// Try on-chain cache
 	actorCode, err := a.onChainCache.GetActorCode(add, key, onChainOnly)
 	if err != nil {
