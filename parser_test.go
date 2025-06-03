@@ -1912,12 +1912,12 @@ func TestParseGenesisMultisig(t *testing.T) {
 			nodeUrl:         nodeUrl,
 			cacheDataSource: mainnetCacheDataSource,
 		},
-		// {
-		// 	name:            "calibration",
-		// 	network:         "calibration",
-		// 	nodeUrl:         calibNextNodeUrl,
-		// 	cacheDataSource: calibNextNodeCacheDataSource,
-		// },
+		{
+			name:            "calibration",
+			network:         "calibration",
+			nodeUrl:         calibNextNodeUrl,
+			cacheDataSource: calibNextNodeCacheDataSource,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1939,8 +1939,6 @@ func TestParseGenesisMultisig(t *testing.T) {
 
 			ctx := context.Background()
 			gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
-			tmp, _ := json.MarshalIndent(gotMultiSigInfo, "", "  ")
-			fmt.Println(string(tmp))
 			require.NoError(t, err)
 			require.NotNil(t, gotMultiSigInfo)
 			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
