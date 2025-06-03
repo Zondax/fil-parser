@@ -178,7 +178,6 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 			addInfo.ActorCid = accountCidStr
 			addInfo.ActorType = manifest.AccountKey
 		}
-		err = nil
 	} else {
 		addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 		if err != nil {
