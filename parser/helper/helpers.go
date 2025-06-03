@@ -150,6 +150,20 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		return cid.Undef, "", errors.New("address is undefined")
 	}
 
+	// The f090 address was a multisig actor until V23 where it was converted to an account actor
+	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
+	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
+	if add.String() == "f090" {
+		version := tools.VersionFromHeight(h.network, int64(height))
+		if version.NodeVersion() < tools.V23.NodeVersion() {
+			// actor code: multisig
+			actorCid, err := cid.Parse("bafk2bzacedef4sqdsfebspu7dqnk7naj27ac4lyho4zmvjrei5qnf2wn6v64u")
+			return actorCid, manifest.MultisigKey, err
+		}
+		actorCid, err := cid.Parse("bafk2bzacedbgei6jkx36fwdgvoohce4aghvpohqdhoco7p4thszgssms7olv2")
+		return actorCid, manifest.AccountKey, err
+	}
+
 	onChainOnly := false
 	for {
 		// Search for actor in cache
@@ -181,8 +195,10 @@ func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) 
 	version := tools.VersionFromHeight(h.network, height)
 	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
 	if err != nil {
+		// todo: fallback
 		return "", err
 	}
+
 	return actorName, nil
 }
 

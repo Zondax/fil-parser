@@ -129,15 +129,6 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 		return "", fmt.Errorf("address %s is flagged as bad", addrStr)
 	}
 
-	if a.networkName == tools.CalibrationNetwork {
-		if CalibrationActorsId[addrStr] {
-			onChainOnly = true
-		}
-	}
-	if a.IsSystemActor(addrStr) || a.IsGenesisActor(addrStr) {
-		onChainOnly = true
-	}
-
 	if !onChainOnly {
 		actorCode, err := a.offChainCache.GetActorCode(add, key, onChainOnly)
 		if err == nil {
