@@ -117,6 +117,13 @@ var (
 		"bafkqafdgnfwc6mrpobqxs3lfnz2gg2dbnzxgk3a":    manifest.PaychKey,
 		"bafkqaetgnfwc6mrpon2g64tbm5sw22lomvza":       manifest.MinerKey,
 	}
+
+	// https://github.com/filecoin-project/lotus/blob/58c1ed844b2424a66008728e4c135fa2f6097b60/build/builtin_actors.go#L59
+	calibrationBuggyActors = map[string]string{
+		"bafk2bzacecnh2ouohmonvebq7uughh4h3ppmg4cjsk74dzxlbbtlcij4xbzxq": manifest.MinerKey,
+		"bafk2bzaced7emkbbnrewv5uvrokxpf5tlm4jslu2jsv77ofw2yqdglg657uie": manifest.MinerKey,
+		"bafk2bzacednskl3bykz5qpo54z2j2p4q44t5of4ktd6vs6ymmg2zebsbxazkm": manifest.VerifregKey,
+	}
 )
 
 type Helper struct {
@@ -165,19 +172,9 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
-	version := tools.VersionFromHeight(h.network, int64(height))
-
-	// The f090 address was a multisig actor until V23 where it was converted to an account actor
-	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
-	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
-	if add.String() == keylessAccountActor {
-		if version.NodeVersion() < tools.V23.NodeVersion() {
-			addInfo.ActorCid = msigCidStr
-			addInfo.ActorType = manifest.MultisigKey
-		} else {
-			addInfo.ActorCid = accountCidStr
-			addInfo.ActorType = manifest.AccountKey
-		}
+	if ok, actorCid, actorName := h.isKeylessAccountActor(add, int64(height)); ok {
+		addInfo.ActorCid = actorCid.String()
+		addInfo.ActorType = actorName
 	} else {
 		addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
 		if err != nil {
@@ -210,16 +207,11 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 	if add == address.Undef {
 		return cid.Undef, "", errors.New("address is undefined")
 	}
-
 	// The f090 address was a multisig actor until V23 where it was converted to an account actor
 	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
 	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
-	if add.String() == keylessAccountActor {
-		version := tools.VersionFromHeight(h.network, int64(height))
-		if version.NodeVersion() < tools.V23.NodeVersion() {
-			return msigCid, manifest.MultisigKey, nil
-		}
-		return accountCid, manifest.AccountKey, nil
+	if ok, cid, actorName := h.isKeylessAccountActor(add, height); ok {
+		return cid, actorName, nil
 	}
 
 	onChainOnly := false
@@ -249,13 +241,31 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 	}
 }
 
+// The f090 address was a multisig actor until V23 where it was converted to an account actor
+// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
+// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
+func (h *Helper) isKeylessAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
+	if h.network != tools.MainnetNetwork || add.String() != keylessAccountActor {
+		return false, cid.Undef, ""
+	}
+	version := tools.VersionFromHeight(h.network, int64(height))
+	if version.NodeVersion() < tools.V23.NodeVersion() {
+		return true, msigCid, manifest.MultisigKey
+	}
+	return true, accountCid, manifest.AccountKey
+}
+
 // GetActorNameFromCid returns the actor name for the given cid and height from rosetta and fallsback to specialLegacyActors.
 func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) {
 	version := tools.VersionFromHeight(h.network, height)
 	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
 	if err != nil {
 		// fallback to specialLegacyActors
-		if name, ok := specialLegacyActors[cid.String()]; ok {
+		if name, ok := specialLegacyActors[cid.String()]; ok && h.network == tools.MainnetNetwork {
+			return name, nil
+		}
+		// fallback to calibrationBuggyActors
+		if name, ok := calibrationBuggyActors[cid.String()]; ok && h.network == tools.CalibrationNetwork {
 			return name, nil
 		}
 		return "", err

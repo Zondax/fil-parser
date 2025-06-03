@@ -2,9 +2,6 @@ package multisig
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/filecoin-project/go-state-types/manifest"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/exitcode"
@@ -58,32 +55,14 @@ func (m *Msig) innerProposeMethod(
 	if err != nil {
 		return nil, "", err
 	}
-	var actor actors.Actor
-	actor = m
-	if actorName != manifest.MultisigKey {
-		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
-		if err != nil {
-			return nil, "", err
-		}
-	}
 
-	method, err := m.helper.CheckCommonMethods(msg, height, key)
+	actor, err := internal.GetActor(actorName, m.logger, m.helper, m.metrics)
 	if err != nil {
 		return nil, "", err
 	}
-	if method != "" {
-		return actor, method, nil
-	}
-
-	actorMethods, err := actor.Methods(context.Background(), network, height)
+	methodName, err := m.methodNameFn(context.Background(), msg.Method, actorName, height, network, m.helper, m.logger)
 	if err != nil {
 		return nil, "", err
 	}
-
-	proposeMethod, ok := actorMethods[msg.Method]
-	if !ok {
-		return nil, "", fmt.Errorf("unrecognized propose method: %s for actor %s", method, actorName)
-	}
-
-	return actor, proposeMethod.Name, nil
+	return actor, methodName, nil
 }

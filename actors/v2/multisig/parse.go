@@ -41,16 +41,19 @@ type Msig struct {
 	miner    *miner.Miner
 	verifreg *verifiedRegistry.VerifiedRegistry
 	evm      *evm.Evm
+
+	methodNameFn actors.MethodNameFn
 }
 
-func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient) *Msig {
+func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient, methodNameFn actors.MethodNameFn) *Msig {
 	return &Msig{
-		helper:   helper,
-		logger:   logger,
-		metrics:  metrics,
-		miner:    miner.New(logger),
-		verifreg: verifiedRegistry.New(logger),
-		evm:      evm.New(logger, metrics),
+		helper:       helper,
+		logger:       logger,
+		metrics:      metrics,
+		miner:        miner.New(logger),
+		verifreg:     verifiedRegistry.New(logger),
+		evm:          evm.New(logger, metrics),
+		methodNameFn: methodNameFn,
 	}
 }
 
