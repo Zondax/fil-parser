@@ -187,7 +187,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 			if err != nil {
 				h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
 			}
-			addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
+			addInfo.ActorType, _ = h.GetActorNameFromCid(c, int64(height))
 		}
 	}
 
