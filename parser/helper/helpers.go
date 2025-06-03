@@ -392,7 +392,7 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		if err != nil {
 			return false, err
 		}
-		if strings.EqualFold(actorName, actorType) {
+		if strings.Contains(actorName, actorType) {
 			return true, nil
 		}
 	}
