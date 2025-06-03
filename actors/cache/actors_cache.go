@@ -123,9 +123,19 @@ func (a *ActorsCache) ClearBadAddressCache() {
 }
 
 func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error) {
+	addrStr := add.String()
 	// Check if this address is flagged as bad
 	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", add.String())
+		return "", fmt.Errorf("address %s is flagged as bad", addrStr)
+	}
+
+	if a.networkName == tools.CalibrationNetwork {
+		if CalibrationActorsId[addrStr] {
+			onChainOnly = true
+		}
+	}
+	if a.IsSystemActor(addrStr) || a.IsGenesisActor(addrStr) {
+		onChainOnly = true
 	}
 
 	if !onChainOnly {
