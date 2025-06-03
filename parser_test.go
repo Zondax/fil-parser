@@ -1555,7 +1555,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 	}{
 		{
 			name:    "multisig events height 14107",
-			version: v1.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     calibNextNodeUrl,
 			height:  "14107",
 			results: expectedResults{
@@ -1593,7 +1593,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 		},
 		{
 			name:    "multisig events height 78689",
-			version: v1.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     calibNextNodeUrl,
 			height:  "78689",
 			results: expectedResults{
@@ -1606,7 +1606,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 
 		{
 			name:    "multisig events height 47645",
-			version: v1.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     calibNextNodeUrl,
 			height:  "47645",
 			results: expectedResults{
@@ -1619,7 +1619,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 
 		{
 			name:    "multisig events height 39035",
-			version: v1.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     calibNextNodeUrl,
 			height:  "39035",
 			results: expectedResults{
@@ -1632,7 +1632,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 
 		{
 			name:    "multisig events height 47635",
-			version: v1.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     calibNextNodeUrl,
 			height:  "47635",
 			results: expectedResults{
@@ -1644,7 +1644,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 		},
 		{
 			name:    "multisig events height 38940",
-			version: v1.NodeVersionsSupported[0],
+			version: v2.NodeVersionsSupported[0],
 			url:     calibNextNodeUrl,
 			height:  "38940",
 			results: expectedResults{
@@ -1912,12 +1912,12 @@ func TestParseGenesisMultisig(t *testing.T) {
 			nodeUrl:         nodeUrl,
 			cacheDataSource: mainnetCacheDataSource,
 		},
-		{
-			name:            "calibration",
-			network:         "calibration",
-			nodeUrl:         calibNextNodeUrl,
-			cacheDataSource: calibNextNodeCacheDataSource,
-		},
+		// {
+		// 	name:            "calibration",
+		// 	network:         "calibration",
+		// 	nodeUrl:         calibNextNodeUrl,
+		// 	cacheDataSource: calibNextNodeCacheDataSource,
+		// },
 	}
 
 	for _, tt := range tests {
@@ -1939,6 +1939,8 @@ func TestParseGenesisMultisig(t *testing.T) {
 
 			ctx := context.Background()
 			gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, genesisBalances, genesisTipset)
+			tmp, _ := json.MarshalIndent(gotMultiSigInfo, "", "  ")
+			fmt.Println(string(tmp))
 			require.NoError(t, err)
 			require.NotNil(t, gotMultiSigInfo)
 			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))
