@@ -2,12 +2,11 @@ package multisig
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/filecoin-project/go-state-types/manifest"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors/v2/internal"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -48,9 +47,7 @@ func (m *Msig) innerProposeParams(
 
 // innerProposeMethod determines the actor and method name for a multisig proposal by:
 // 1. Getting the actor name from the target address
-// 2. Getting the appropriate actor implementation
-// 3. Checking for common methods
-// 4. Looking up the method name in the actor's method list
+// 2. Using the methodNameFn to get the methodName from the methodNum for the actor.
 func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 ) (actors.Actor, string, error) {
@@ -59,31 +56,18 @@ func (m *Msig) innerProposeMethod(
 		return nil, "", err
 	}
 	var actor actors.Actor
-	actor = m
-	if actorName != manifest.MultisigKey {
+	if strings.Contains(actorName, manifest.MultisigKey) {
+		actor = m
+	} else {
 		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
 		if err != nil {
 			return nil, "", err
 		}
 	}
 
-	method, err := m.helper.CheckCommonMethods(msg, height, key)
+	methodName, err := m.methodNameFn(context.Background(), msg.Method, actorName, height, network, m.helper, m.logger)
 	if err != nil {
 		return nil, "", err
 	}
-	if method != "" {
-		return actor, method, nil
-	}
-
-	actorMethods, err := actor.Methods(context.Background(), network, height)
-	if err != nil {
-		return nil, "", err
-	}
-
-	proposeMethod, ok := actorMethods[msg.Method]
-	if !ok {
-		return nil, "", fmt.Errorf("unrecognized propose method: %s for actor %s", method, actorName)
-	}
-
-	return actor, proposeMethod.Name, nil
+	return actor, methodName, nil
 }

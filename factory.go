@@ -407,15 +407,7 @@ func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.
 		Short:         shortAdd,
 		Robust:        robustAdd,
 		ActorCid:      actorCode,
-		ActorType:     parseActor(actorName),
+		ActorType:     tools.ParseActorName(actorName),
 		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil
-}
-
-func parseActor(actor string) string {
-	s := strings.Split(actor, "/")
-	if len(s) < 1 {
-		return actor
-	}
-	return s[len(s)-1]
 }

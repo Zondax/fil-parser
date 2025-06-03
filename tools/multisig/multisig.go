@@ -17,7 +17,6 @@ import (
 	"github.com/filecoin-project/lotus/chain/actors/builtin/multisig"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	cbor "github.com/ipfs/go-ipld-cbor"
-	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/tools"
@@ -111,7 +110,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 				continue
 			}
 
-			multisigInfo, err := eg.createMultisigInfo(ctx, tx, tipsetCid)
+			multisigInfo, err := eg.createMultisigInfo(ctx, tx, tipsetCid, metadata[parser.ParamsKey])
 			if err != nil {
 				continue
 			}
@@ -146,13 +145,18 @@ func (eg *eventGenerator) processProposalParams(ctx context.Context, metadata ma
 		proposal.ActionType = cancelApproveTranslateMap[txType]
 		proposal.TxTypeToExecute = ""
 
-		metadata[metadataParams] = eg.parseParamsString(ctx, metadata)
+		metadata[metadataParams] = eg.parseParams(ctx, metadata)
 
 		if params, ok := metadata[metadataParams].(map[string]interface{}); ok {
 			if metadataID, ok := params[metadataIDField].(float64); ok {
 				proposal.ProposalID = int64(metadataID)
 			}
-			eg.processNestedParams(ctx, params, proposal)
+			jsonParams, err := json.Marshal(params)
+			if err != nil {
+				eg.logger.Errorf("Error marshaling nested params: %v", err)
+				return
+			}
+			proposal.Value = string(jsonParams)
 		}
 	} else {
 		proposal.ActionType = proposeTranslateMap[txType]
@@ -202,15 +206,8 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 
 }
 
-func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.MultisigInfo, error) {
-	value, err := actorsV1.ParseMultisigMetadata(tx.TxType, tx.TxMetadata)
-	if err != nil {
-		_ = eg.metrics.UpdateParseMultisigMetadataMetric(tx.TxType)
-		eg.logger.Errorf("Multisig error parsing metadata: %s", err.Error())
-		value = tx.TxMetadata // if there is an error then we need to store the raw metadata
-	}
-
-	b, err := json.Marshal(value)
+func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, parsedMetadata any) (*types.MultisigInfo, error) {
+	b, err := json.Marshal(parsedMetadata)
 	if err != nil {
 		_ = eg.metrics.UpdateMarshalMultisigMetadataMetric(tx.TxType)
 		eg.logger.Errorf("Multisig error marshaling value: %s", err.Error())
@@ -228,14 +225,20 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 	}, nil
 }
 
-func (eg *eventGenerator) parseParamsString(ctx context.Context, metadata map[string]interface{}) map[string]interface{} {
+func (eg *eventGenerator) parseParams(ctx context.Context, metadata map[string]interface{}) map[string]interface{} {
 	var params map[string]interface{}
-	if paramsStr, ok := metadata[metadataParams].(string); ok {
-		if err := json.Unmarshal([]byte(paramsStr), &params); err != nil {
+	switch data := metadata[metadataParams].(type) {
+	case string:
+		if err := json.Unmarshal([]byte(data), &params); err != nil {
 			eg.logger.Errorf("Error deserializing params string: %v", err)
 			return nil
 		}
+	case map[string]any:
+		params = data
+	default:
+		eg.logger.Errorf("Unknown params type: %T", data)
 	}
+
 	return params
 }
 
