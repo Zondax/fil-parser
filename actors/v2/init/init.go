@@ -119,7 +119,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(height, version.FilNetworkVersion(), addressInfo)
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
-			addressInfo.ActorType = parseExecActor(createdActorName)
+			addressInfo.ActorType = tools.ParseActorName(createdActorName)
 			// Store the address info in the actors cache
 			// if an actor is created and it's Constructor is called in the next execution,
 			// we will not be able to get the actor type without this.
@@ -147,7 +147,7 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(height, version.FilNetworkVersion(), addressInfo)
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
-			addressInfo.ActorType = parseExecActor(createdActorName)
+			addressInfo.ActorType = tools.ParseActorName(createdActorName)
 		}
 	}
 

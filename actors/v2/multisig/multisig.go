@@ -3,6 +3,7 @@ package multisig
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
@@ -66,8 +67,9 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 	params := innerParams
 	// get ParamsKey for innerParams if possible
 	if innerParams != nil && innerParams[parser.ParamsKey] != nil {
-		if inner, ok := innerParams[parser.ParamsKey].(map[string]any); ok {
-			params = inner
+		params, err = m.paramsToMap(innerParams[parser.ParamsKey])
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -91,6 +93,27 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 	metadata[parser.ReturnKey] = val
 
 	return metadata, nil
+}
+
+func (*Msig) paramsToMap(params any) (map[string]any, error) {
+	dataAsMap := make(map[string]any)
+
+	tmp, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(tmp, &dataAsMap)
+	if err != nil {
+		var dataAsAny any
+		err = json.Unmarshal(tmp, &dataAsAny)
+		if err != nil {
+			return nil, err
+		}
+		dataAsMap[parser.ValueKey] = dataAsAny
+	}
+
+	return dataAsMap, nil
 }
 
 func (*Msig) RemoveSigner(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte) (map[string]interface{}, error) {

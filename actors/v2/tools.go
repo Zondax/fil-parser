@@ -19,6 +19,16 @@ import (
 )
 
 func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error) {
+	// Shortcut 1 - Method "0" corresponds to "MethodSend"
+	if methodNum == 0 {
+		return parser.MethodSend, nil
+	}
+
+	// Shortcut 2 - Method "1" corresponds to "MethodConstructor"
+	if methodNum == 1 {
+		return parser.MethodConstructor, nil
+	}
+
 	actorMethods, err := ActorMethods(ctx, actorName, height, network, helper, logger)
 	if err != nil {
 		return "", err

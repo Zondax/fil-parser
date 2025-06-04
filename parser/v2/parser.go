@@ -163,13 +163,15 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		// TxCid <-> TxHash
-		txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
-		if err == nil && txHash != "" {
-			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
-		}
-		if err != nil {
-			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
-			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+		if int64(txsData.Tipset.Height()) >= p.config.TxCidTranslationStart {
+			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
+			if err == nil && txHash != "" {
+				p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
+			}
+			if err != nil {
+				_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+				p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+			}
 		}
 	}
 
@@ -571,16 +573,10 @@ func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.Execut
 		}
 	}
 
-	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 	if err != nil {
-		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+		txType = parser.UnknownStr
 	}
 
-	if actorName != "" && txType == "" {
-		txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
-		if err != nil {
-			txType = parser.UnknownStr
-		}
-	}
 	return actorName, txType, err
 }

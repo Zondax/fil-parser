@@ -200,13 +200,15 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		// TxCid <-> TxHash
-		txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
-		if err == nil && txHash != "" {
-			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
-		}
-		if err != nil {
-			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
-			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+		if int64(txsData.Tipset.Height()) >= p.config.TxCidTranslationStart {
+			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
+			if err == nil && txHash != "" {
+				p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
+			}
+			if err != nil {
+				p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+				_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+			}
 		}
 	}
 
@@ -515,17 +517,11 @@ func (p *Parser) getTxType(ctx context.Context, to, from address.Address, method
 		p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
 
-	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 	if err != nil {
-		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+		p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
+		txType = parser.UnknownStr
 	}
 
-	if txType == "" && actorName != "" {
-		txType, err = actorsV2.GetMethodName(ctx, msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
-		if err != nil {
-			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
-			txType = parser.UnknownStr
-		}
-	}
 	return actorName, txType, err
 }
