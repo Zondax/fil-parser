@@ -172,20 +172,12 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
-	if ok, actorCid, actorName := h.isKeylessAccountActor(add, int64(height)); ok {
+	actorCid, actorName, err := h.GetActorNameFromAddress(add, int64(height), key)
+	if err != nil {
+		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
+	} else {
 		addInfo.ActorCid = actorCid.String()
 		addInfo.ActorType = actorName
-	} else {
-		addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
-		if err != nil {
-			h.logger.Errorf("could not get actor code from address. Err: %s", err)
-		} else {
-			c, err := cid.Parse(addInfo.ActorCid)
-			if err != nil {
-				h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
-			}
-			addInfo.ActorType, _ = h.GetActorNameFromCid(c, int64(height))
-		}
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
