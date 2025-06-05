@@ -260,14 +260,11 @@ func (h *Helper) isSpecialAccountActor(add address.Address, height int64) (bool,
 // Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
 // Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
 func (h *Helper) isZeroAddressAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
-	if h.network != tools.MainnetNetwork || (add.String() != ZeroAddressAccountActorRobust && add.String() != ZeroAddressAccountActorShort) {
+	if h.network != tools.MainnetNetwork || (add.String() != ZeroAddressAccountActorRobust) { //&& add.String() != ZeroAddressAccountActorShort) {
 		return false, cid.Undef, ""
 	}
-	version := tools.VersionFromHeight(h.network, int64(height))
-	if version.NodeVersion() < tools.V23.NodeVersion() {
-		return true, accountCid, manifest.AccountKey
-	}
-	return false, cid.Undef, ""
+
+	return true, accountCid, manifest.AccountKey
 }
 
 // The f090 address was a multisig actor until V23 where it was converted to an account actor
