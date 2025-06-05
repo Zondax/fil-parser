@@ -24,7 +24,21 @@ func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[stri
 		return nil, fmt.Errorf("constructorParams: %s not found", version.String())
 	}
 
-	return parseCBOR(raw, nil, params(), nil)
+	metadata, err := parseCBOR(raw, nil, params(), nil)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, version := range versions {
+			params, ok := constructorParams[version.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parseCBOR(raw, nil, params(), nil)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams, rawReturn []byte) (map[string]interface{}, error) {
