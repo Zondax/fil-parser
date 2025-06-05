@@ -54,10 +54,14 @@ const (
 	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
 	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
 	keylessAccountActor = "f090"
-	// ZeroAddressAccountActor f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a is a zero address actor that existed until V10.
+	// ZeroAddressAccountActorRobust f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a is a zero address actor that existed until V10.
 	// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
 	// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
-	ZeroAddressAccountActor = "f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a"
+	ZeroAddressAccountActorRobust = "f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a"
+	// ZeroAddressAccountActorShort f067253 is a zero address actor that existed until V10.
+	// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+	// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+	ZeroAddressAccountActorShort = "f067253"
 	// multisig actorcode for nv22
 	msigCidStr = "bafk2bzacedef4sqdsfebspu7dqnk7naj27ac4lyho4zmvjrei5qnf2wn6v64u"
 	// account actorcode for nv23
@@ -186,11 +190,17 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
+		if ok, _, _ := h.isZeroAddressAccountActor(add, int64(height)); ok {
+			addInfo.Short = ZeroAddressAccountActorShort
+		}
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
+		if ok, _, _ := h.isZeroAddressAccountActor(add, int64(height)); ok {
+			addInfo.Robust = ZeroAddressAccountActorRobust
+		}
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
@@ -246,11 +256,11 @@ func (h *Helper) isSpecialAccountActor(add address.Address, height int64) (bool,
 	return false, cid.Undef, ""
 }
 
-// The f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a is a zero address actor that existed until V10.
+// The f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a(f067253) is a zero address actor that existed until V10.
 // Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
 // Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
 func (h *Helper) isZeroAddressAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
-	if h.network != tools.MainnetNetwork || add.String() != ZeroAddressAccountActor {
+	if h.network != tools.MainnetNetwork || (add.String() != ZeroAddressAccountActorRobust && add.String() != ZeroAddressAccountActorShort) {
 		return false, cid.Undef, ""
 	}
 	version := tools.VersionFromHeight(h.network, int64(height))
