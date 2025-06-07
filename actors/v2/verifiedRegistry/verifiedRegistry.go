@@ -1,7 +1,9 @@
 package verifiedRegistry
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -252,7 +254,7 @@ func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int6
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
 
-func (*VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (v *VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := universalReceiverParams[version.String()]
 	if !ok {
@@ -262,5 +264,75 @@ func (*VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params(), returnValue())
+
+	p := params()
+	metadata, err := parse(raw, rawReturn, true, p, returnValue())
+	if err != nil {
+		return metadata, err
+	}
+
+	// parse inner params
+	paramType, payload, err := getUniversalReceiverParams(p)
+	if err != nil {
+		return metadata, fmt.Errorf("failed to get universal receiver inner params: %w", err)
+	}
+	if paramType != FRC46TokenType() {
+		return metadata, fmt.Errorf("unsupported universal receiver param type: %d, expected: %d", paramType, FRC46TokenType())
+	}
+	innerParams, ok := frc46TokenReceived[version.String()]
+	if !ok {
+		return metadata, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	tokenReceived := innerParams()
+	err = tokenReceived.UnmarshalCBOR(bytes.NewReader(payload))
+	if err != nil {
+		return metadata, err
+	}
+	// retrieve token fields
+	from, to, operator, amount, operatorData, tokenData, err := getFRC46TokenReceivedParams(tokenReceived)
+	if err != nil {
+		return metadata, fmt.Errorf("failed to get FRC46 token received params: %w", err)
+	}
+
+	// get correct AllocationsResponse struct
+	allocations, ok := allocationsResponse[version.String()]
+	if !ok {
+		return metadata, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	allocationsResp := allocations()
+	err = allocationsResp.UnmarshalCBOR(bytes.NewReader(operatorData))
+	if err != nil {
+		v.logger.Errorf("failed to parse FRC46 token operator data using canonical structs: %s", err)
+		// use custom response
+		allocations, ok := customAllocationsResponse[version.String()]
+		if !ok {
+			return metadata, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		}
+		allocationsResp := allocations()
+		err = allocationsResp.UnmarshalCBOR(bytes.NewReader(operatorData))
+		if err != nil {
+			v.logger.Errorf("failed to parse FRC46 token operator data using custom struct: %s", err)
+		}
+	}
+
+	// update metadata
+	metadata[parser.ParamsKey] = map[string]interface{}{
+		universalReceiverHookParamsType: paramType,
+		universalReceiverHookPayload:    payload,
+		universalReceiverHookFRC46TokenReceived: map[string]interface{}{
+			"From":         from,
+			"To":           to,
+			"Operator":     operator,
+			"Amount":       amount,
+			"OperatorData": allocationsResp,
+			"TokenData":    tokenData,
+		},
+	}
+	if err != nil {
+		tmp, _ := json.MarshalIndent(metadata, "", "  ")
+		fmt.Println(string(tmp))
+	}
+
+	return metadata, err
 }

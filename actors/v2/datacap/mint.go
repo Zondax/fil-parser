@@ -8,7 +8,7 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (d *Datacap) MintExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := mintParams[version.String()]
 	if !ok {
@@ -18,5 +18,25 @@ func (*Datacap) MintExported(network string, height int64, raw, rawReturn []byte
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
+	metadata, err := parse(raw, rawReturn, true, params(), returnValue(), parser.ParamsKey)
+	if err != nil {
+		return metadata, err
+	}
+
+	balance, supply, recipientData, err := getMintReturnFields(params())
+	if err != nil {
+		return metadata, err
+	}
+
+	allocations, err := d.verifreg.ParseFRC46TokenOperatorDataReq(network, height, recipientData)
+	if err != nil {
+		return metadata, err
+	}
+
+	metadata[parser.ParamsKey] = map[string]interface{}{
+		"balance":       balance,
+		"supply":        supply,
+		"recipientData": allocations,
+	}
+	return metadata, nil
 }

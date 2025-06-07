@@ -1,6 +1,8 @@
 package verifiedRegistry
 
 import (
+	"errors"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
@@ -25,6 +27,18 @@ import (
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 )
+
+const (
+	universalReceiverHookParamsType         = "Type_"
+	universalReceiverHookPayload            = "Payload"
+	universalReceiverHookFRC46TokenReceived = "FRC46TokenReceived"
+)
+
+var fRC46TokenType = nonLegacyBuiltin.MustGenerateFRCMethodNum("FRC46")
+
+func FRC46TokenType() uint64 {
+	return uint64(fRC46TokenType)
+}
 
 // All methods can be found in the Actor.Exports method in
 // the correct version package for "github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
@@ -408,6 +422,21 @@ var universalReceiverParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.UniversalReceiverParams) },
 }
 
+// same custom implementation but done in version style for extensibility
+var frc46TokenReceived = map[string]func() cbg.CBORUnmarshaler{
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.FRC46TokenReceived) },
+}
+
 var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.AllocationsResponse) },
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.AllocationsResponse) },
@@ -420,4 +449,47 @@ var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.AllocationsResponse) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.AllocationsResponse) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AllocationsResponse) },
+}
+
+var customAllocationsResponse = map[string]func() cbg.CBORUnmarshaler{
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationsResponse) },
+}
+
+func getUniversalReceiverParams(params cbg.CBORUnmarshaler) (uint64, []byte, error) {
+	switch parsed := params.(type) {
+	case *verifregv9.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv10.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv11.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv12.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv13.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv14.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv15.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	case *verifregv16.UniversalReceiverParams:
+		return uint64(parsed.Type_), parsed.Payload, nil
+	}
+	return 0, nil, errors.New("unsupported params")
+}
+
+func getFRC46TokenReceivedParams(params cbg.CBORUnmarshaler) (from, to, operator string, amount uint64, operatorData, tokenData []byte, err error) {
+	switch parsed := params.(type) {
+	case *types.FRC46TokenReceived:
+		return parsed.FromStr, parsed.ToStr, parsed.OperatorStr, parsed.Amount.Uint64(), parsed.OperatorData, parsed.TokenData, nil
+	}
+	err = errors.New("unsupported params")
+	return
 }

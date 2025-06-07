@@ -1,6 +1,10 @@
 package datacap
 
 import (
+	"errors"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
 	datacapv10 "github.com/filecoin-project/go-state-types/builtin/v10/datacap"
 	datacapv11 "github.com/filecoin-project/go-state-types/builtin/v11/datacap"
 	datacapv12 "github.com/filecoin-project/go-state-types/builtin/v12/datacap"
@@ -156,6 +160,59 @@ var mintReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.MintReturn) },
 }
 
+func getMintReturnFields(params typegen.CBORUnmarshaler) (balance, supply uint64, recipientData []byte, err error) {
+	var (
+		parsedBalance       abi.TokenAmount
+		parsedSupply        abi.TokenAmount
+		parsedRecipientData []byte
+	)
+	switch parsed := params.(type) {
+	case *datacapv9.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv10.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv11.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv12.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv13.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv14.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv15.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv16.MintReturn:
+		parsedBalance = parsed.Balance
+		parsedSupply = parsed.Supply
+		parsedRecipientData = parsed.RecipientData
+	default:
+		err = errors.New("unsupported params")
+		return
+	}
+
+	if !parsedBalance.IsZero() {
+		balance = parsedBalance.Uint64()
+	}
+	if !parsedSupply.IsZero() {
+		supply = parsedSupply.Uint64()
+	}
+	return balance, supply, parsedRecipientData, nil
+}
+
 var transferParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V17.String(): func() typegen.CBORUnmarshaler { return new(datacapv9.TransferParams) },
 	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(datacapv10.TransferParams) },
@@ -166,6 +223,56 @@ var transferParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.TransferParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.TransferParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferParams) },
+}
+
+func getTransferParamsFields(params typegen.CBORUnmarshaler) (to address.Address, amount uint64, operatorData []byte, err error) {
+	var (
+		parsedTo           address.Address
+		parsedAmount       abi.TokenAmount
+		parsedOperatorData []byte
+	)
+	switch parsed := params.(type) {
+	case *datacapv9.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv10.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv11.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv12.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv13.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv14.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv15.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv16.TransferParams:
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	default:
+		err = errors.New("unsupported params")
+		return
+	}
+
+	if !parsedAmount.IsZero() {
+		amount = parsedAmount.Uint64()
+	}
+	return parsedTo, amount, parsedOperatorData, nil
 }
 
 var transferReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -180,6 +287,59 @@ var transferReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferReturn) },
 }
 
+func getTransferReturnFields(params typegen.CBORUnmarshaler) (fromBalance, toBalance uint64, recipientData []byte, err error) {
+	var (
+		parsedFromBalance   abi.TokenAmount
+		parsedToBalance     abi.TokenAmount
+		parsedRecipientData []byte
+	)
+	switch parsed := params.(type) {
+	case *datacapv9.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv10.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv11.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv12.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv13.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv14.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv15.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv16.TransferReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedRecipientData = parsed.RecipientData
+	default:
+		err = errors.New("unsupported params")
+		return
+	}
+
+	if !parsedFromBalance.IsZero() {
+		fromBalance = parsedFromBalance.Uint64()
+	}
+	if !parsedToBalance.IsZero() {
+		toBalance = parsedToBalance.Uint64()
+	}
+	return fromBalance, toBalance, parsedRecipientData, nil
+}
+
 var transferFromParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V17.String(): func() typegen.CBORUnmarshaler { return new(datacapv9.TransferFromParams) },
 	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(datacapv10.TransferFromParams) },
@@ -192,6 +352,65 @@ var transferFromParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferFromParams) },
 }
 
+func getTransferFromParamsFields(params typegen.CBORUnmarshaler) (from address.Address, to address.Address, amount uint64, operatorData []byte, err error) {
+	var (
+		parsedFrom         address.Address
+		parsedTo           address.Address
+		parsedAmount       abi.TokenAmount
+		parsedOperatorData []byte
+	)
+	switch parsed := params.(type) {
+	case *datacapv9.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv10.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv11.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv12.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv13.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv14.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv15.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	case *datacapv16.TransferFromParams:
+		parsedFrom = parsed.From
+		parsedTo = parsed.To
+		parsedAmount = parsed.Amount
+		parsedOperatorData = parsed.OperatorData
+	default:
+		err = errors.New("unsupported params")
+		return
+	}
+
+	if !parsedAmount.IsZero() {
+		amount = parsedAmount.Uint64()
+	}
+	return parsedFrom, parsedTo, amount, parsedOperatorData, nil
+}
+
 var transferFromReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V17.String(): func() typegen.CBORUnmarshaler { return new(datacapv9.TransferFromReturn) },
 	tools.V18.String(): func() typegen.CBORUnmarshaler { return new(datacapv10.TransferFromReturn) },
@@ -202,4 +421,69 @@ var transferFromReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.TransferFromReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.TransferFromReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferFromReturn) },
+}
+
+func getTransferFromReturnFields(params typegen.CBORUnmarshaler) (fromBalance, toBalance, allowance uint64, recipientData []byte, err error) {
+	var (
+		parsedFromBalance   abi.TokenAmount
+		parsedToBalance     abi.TokenAmount
+		parsedAllowance     abi.TokenAmount
+		parsedRecipientData []byte
+	)
+	switch parsed := params.(type) {
+	case *datacapv9.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv10.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv11.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv12.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv13.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv14.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv15.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	case *datacapv16.TransferFromReturn:
+		parsedFromBalance = parsed.FromBalance
+		parsedToBalance = parsed.ToBalance
+		parsedAllowance = parsed.Allowance
+		parsedRecipientData = parsed.RecipientData
+	default:
+		err = errors.New("unsupported params")
+		return
+	}
+
+	if !parsedFromBalance.IsZero() {
+		fromBalance = parsedFromBalance.Uint64()
+	}
+	if !parsedToBalance.IsZero() {
+		toBalance = parsedToBalance.Uint64()
+	}
+	if !parsedAllowance.IsZero() {
+		allowance = parsedAllowance.Uint64()
+	}
+	return fromBalance, toBalance, allowance, parsedRecipientData, nil
 }

@@ -22,18 +22,21 @@ import (
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
 
 type Datacap struct {
-	logger *logger.Logger
+	logger   *logger.Logger
+	verifreg *verifiedRegistry.VerifiedRegistry
 }
 
 func New(logger *logger.Logger) *Datacap {
 	return &Datacap{
-		logger: logger,
+		logger:   logger,
+		verifreg: verifiedRegistry.New(logger),
 	}
 }
 
