@@ -17,6 +17,7 @@ import (
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v2 "github.com/zondax/fil-parser/actors/v2"
+	"github.com/zondax/fil-parser/types"
 
 	logger2 "github.com/zondax/fil-parser/logger"
 	filMetrics "github.com/zondax/fil-parser/metrics"
@@ -73,6 +74,11 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 	parseSubTxs, err := cmd.Flags().GetBool("parseSubTxs")
 	if err != nil {
 		zap.S().Errorf("Error loading parseSubTxs: %s", err)
+		return
+	}
+	txCid, err := cmd.Flags().GetString("txCid")
+	if err != nil {
+		zap.S().Errorf("Error loading txCid: %s", err)
 		return
 	}
 
@@ -133,14 +139,30 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 		return
 	}
 
+	tmp, _ := sonic.Marshal(computeState)
+	os.WriteFile("min.json", tmp, fs.ModePerm)
+
 	resp := []map[string]any{}
 	subcalls := []typesV2.ExecutionTraceV2{}
+	actorParser := v2.NewActorParser(config.NetworkName, helper, logger, filMetrics.NewMetricsClient(metrics2.NewNoopMetrics()))
+
 	for traceId, trace := range computeState.Trace {
+		if txCid != "" && trace.MsgCid.String() != txCid {
+			fmt.Println("skipping tx cid", trace.Msg.Cid().String())
+			continue
+		}
 		if len(trace.ExecutionTrace.Subcalls) > 0 {
 			subcalls = append(subcalls, trace.ExecutionTrace.Subcalls...)
 		}
 		if actorAddress != "" && trace.Msg.To.String() != actorAddress {
 			continue
+		}
+		if trace.Msg.To.String() == "f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a" {
+			fmt.Println("trace.Msg.To", trace.Msg.To.String())
+			fmt.Println("trace.Msg.From", trace.Msg.From.String())
+			fmt.Println("trace.Msg.Method", trace.Msg.Method)
+			fmt.Println("trace.Msg.Params", trace.Msg.Params)
+			fmt.Println("trace.MsgRct.ExitCode", trace.MsgRct.ExitCode)
 		}
 		_, foundActorName, err := helper.GetActorNameFromAddress(trace.Msg.To, int64(height), tipset.Key())
 		if err != nil {
@@ -160,7 +182,6 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 			ExitCode: trace.MsgRct.ExitCode,
 			Return:   trace.MsgRct.Return,
 		}
-		actorParser := v2.NewActorParser(config.NetworkName, helper, logger, filMetrics.NewMetricsClient(metrics2.NewNoopMetrics()))
 		methodName, err := v2.GetMethodName(context.Background(), msg.Method, foundActorName, int64(height), config.NetworkName, helper, logger)
 		// methodName, err := helper.GetMethodName(&msg, int64(height), tipset.Key())
 		if err != nil {
@@ -171,7 +192,17 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 			continue
 		}
 
-		_, got, _, err := actorParser.GetMetadata(context.Background(), foundActorName, methodName, &msg, trace.Msg.Cid(), &rct, int64(height), tipset.Key())
+		_, got, addressInfo, err := actorParser.GetMetadata(context.Background(), foundActorName, methodName, &msg, trace.Msg.Cid(), &rct, int64(height), tipset.Key())
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		if addressInfo != nil {
+			actorsCache.StoreAddressInfo(*addressInfo)
+		}
+		et := &types.ExtendedTipSet{
+			TipSet: *tipset,
+		}
+		blockCid, err := v2.GetBlockCidFromMsgCid(trace.MsgCid.String(), methodName, got, et, logger)
 		if err != nil {
 			logger.Error(err.Error())
 		}
@@ -183,11 +214,14 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 			"methodNum":   trace.Msg.Method,
 			"traceId":     traceId,
 			"got":         got,
+			"blockCid":    blockCid,
+			"addrsInfo":   addressInfo,
 		})
 	}
 
 	if parseSubTxs {
 		for _, trace := range subcalls {
+
 			fmt.Printf("parsing subcalls: %d\n", len(trace.Subcalls))
 			resps, _ := parseSubCall(0, int64(height), config.NetworkName, actorName, actorMethod, actorAddress, trace, tipset, helper, logger)
 			resp = append(resp, resps...)
@@ -214,6 +248,14 @@ func parseSubCall(level, height int64, network, actorName, actorMethod string, a
 	if actorAddress != "" && trace.Msg.To.String() != actorAddress {
 		return res, subcalls
 	}
+	if trace.Msg.To.String() == "f067253" {
+		fmt.Println("trace.Msg.To", trace.Msg.To.String())
+		fmt.Println("trace.Msg.From", trace.Msg.From.String())
+		fmt.Println("trace.Msg.Method", trace.Msg.Method)
+		fmt.Println("trace.Msg.Params", trace.Msg.Params)
+		fmt.Println("trace.MsgRct.ExitCode", trace.MsgRct.ExitCode)
+	}
+
 	_, foundActorName, err := helper.GetActorNameFromAddress(trace.Msg.To, int64(height), tipset.Key())
 	if err != nil || foundActorName == "" {
 		if trace.InvokedActor != nil {
@@ -250,7 +292,7 @@ func parseSubCall(level, height int64, network, actorName, actorMethod string, a
 		return res, subcalls
 	}
 
-	_, got, _, err := actorParser.GetMetadata(context.Background(), foundActorName, methodName, &msg, cid.Undef, &rct, int64(height), tipset.Key())
+	_, got, addrsInfo, err := actorParser.GetMetadata(context.Background(), foundActorName, methodName, &msg, cid.Undef, &rct, int64(height), tipset.Key())
 	if err != nil {
 		logger.Errorf("error getting metadata: %s, actorName: %s, address:%s, methodName: %s, traceId: %s", err, foundActorName, trace.Msg.To.String(), methodName, "SUBCALL")
 		// fmt.Println(hex.EncodeToString(trace.Msg.Params))
@@ -271,6 +313,7 @@ func parseSubCall(level, height int64, network, actorName, actorMethod string, a
 		"methodNum":   trace.Msg.Method,
 		"traceId":     fmt.Sprintf("SUBCALL_%d", level),
 		"got":         got,
+		"addrsInfo":   addrsInfo,
 	})
 	return res, subcalls
 }
