@@ -5,7 +5,7 @@ go 1.23.7
 toolchain go1.24.1
 
 require (
-	github.com/bytedance/sonic v1.13.2
+	github.com/bytedance/sonic v1.13.3
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
