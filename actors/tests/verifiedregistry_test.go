@@ -45,11 +45,7 @@ var verifiedRegistryWithParamsOrReturnTests = []struct {
 		txType: parser.MethodRestoreBytes,
 		key:    parser.ParamsKey,
 	},
-	{
-		name:   "Remove Verified Client DataCap",
-		txType: parser.MethodRemoveVerifiedClientDataCap,
-		key:    parser.ParamsKey,
-	},
+
 	{
 		name:   "Deprecated1",
 		txType: parser.MethodVerifiedDeprecated1,
@@ -105,6 +101,10 @@ var verifiedRegistryWithParamsAndReturnTests = []struct {
 	{
 		name:   "Remove Expired Claims Exported",
 		txType: parser.MethodRemoveExpiredClaimsExported,
+	},
+	{
+		name:   "Remove Verified Client DataCap",
+		txType: parser.MethodRemoveVerifiedClientDataCap,
 	},
 }
 
