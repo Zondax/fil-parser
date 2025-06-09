@@ -72,7 +72,7 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 
 func (p *ActorParser) GetActor(actor string) (Actor, error) {
 	if strings.Contains(actor, manifest.MultisigKey) {
-		return multisig.New(p.helper, p.logger, p.metrics), nil
+		return multisig.New(p.helper, p.logger, p.metrics, GetMethodName), nil
 	}
 
 	return internal.GetActor(actor, p.logger, p.helper, p.metrics)

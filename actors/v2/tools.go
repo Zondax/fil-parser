@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -20,6 +19,16 @@ import (
 )
 
 func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error) {
+	// Shortcut 1 - Method "0" corresponds to "MethodSend"
+	if methodNum == 0 {
+		return parser.MethodSend, nil
+	}
+
+	// Shortcut 2 - Method "1" corresponds to "MethodConstructor"
+	if methodNum == 1 {
+		return parser.MethodConstructor, nil
+	}
+
 	actorMethods, err := ActorMethods(ctx, actorName, height, network, helper, logger)
 	if err != nil {
 		return "", err
@@ -34,14 +43,12 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 		}
 
 		if strings.Contains(actorName, manifest.AccountKey) {
-			if version.NodeVersion() == tools.V17.NodeVersion() {
+			if version.NodeVersion() <= tools.V17.NodeVersion() {
 				// https://github.com/filecoin-project/builtin-actors/blob/0c3720c05da4733c3a5ed39c124bc8027c143aa8/actors/account/src/lib.rs#L107
 				return parser.MethodUniversalReceiverHook, nil
-			} else if version.NodeVersion() > tools.V17.NodeVersion() {
+			} else if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
 				// https://github.com/filecoin-project/builtin-actors/blob/8fdbdec5e3f46b60ba0132d90533783a44c5961f/actors/account/src/lib.rs#L96
-				if methodNum >= abi.MethodNum(parser.FirstExportedMethodNumber) {
-					return parser.MethodFallback, nil
-				}
+				return parser.MethodFallback, nil
 			}
 		}
 
@@ -109,18 +116,16 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 		// Get the miner that received the reward
 		params, ok := txMetadata["Params"]
 		if !ok {
-			logger.Errorf("Could no get paramater 'Params' inside tx '%s'", txType)
-			return blockCid, nil
+			return blockCid, fmt.Errorf("could not get paramater 'Params' inside tx '%s' height: %d", txType, tipset.Height())
 		}
 		miner := reward.GetMinerFromAwardBlockRewardParams(params)
 		if miner == "" {
-			logger.Errorf("Could not parse parameters for tx '%s', param type: %T", txType, params)
-			return blockCid, nil
+			return blockCid, fmt.Errorf("could not parse parameters for height: %d, tx '%s', param type: %T", tipset.Height(), txType, params)
 		}
 		// Get the block that this miner mined
 		c, err := tipset.GetBlockMinedByMiner(miner)
 		if err != nil {
-			return blockCid, err
+			return blockCid, fmt.Errorf("could not find block mined by miner for height: %d, tx '%s', miner: '%s': %w", tipset.Height(), txType, miner, err)
 		}
 		return c, nil
 	case parser.MethodApplyRewards, parser.MethodUpdatePledgeTotal, parser.MethodCronTick,
@@ -133,11 +138,13 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 
 	blockCids, ok := tipset.BlockMessages[msgCid]
 	if !ok {
-		return blockCid, errors.New("could not find block hash for message cid")
+		// not found is not an error
+		return blockCid, nil
 	}
 
 	if len(blockCids) == 0 {
-		return blockCid, errors.New("could not find block hash for message cid. Slice is empty")
+		// not found is not an error
+		return blockCid, nil
 	} else {
 		blockCid = blockCids[0].Cid
 	}

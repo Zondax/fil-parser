@@ -9,7 +9,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	rewardv10 "github.com/filecoin-project/go-state-types/builtin/v10/reward"
 	rewardv11 "github.com/filecoin-project/go-state-types/builtin/v11/reward"
@@ -40,52 +39,30 @@ func (r *Reward) Name() string {
 	return manifest.RewardKey
 }
 
-func (*Reward) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	return parse(raw, &abi.StoragePower{}, parser.ParamsKey)
-}
-
 func (*Reward) StartNetworkHeight() int64 {
 	return tools.V1.Height()
 }
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	r := &Reward{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsReward.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: actors.ParseConstructor,
-		},
-		legacyBuiltin.MethodsReward.AwardBlockReward: {
-			Name:   parser.MethodAwardBlockReward,
-			Method: r.AwardBlockReward,
-		},
-		legacyBuiltin.MethodsReward.ThisEpochReward: {
-			Name:   parser.MethodThisEpochReward,
-			Method: r.ThisEpochReward,
-		},
-		legacyBuiltin.MethodsReward.UpdateNetworkKPI: {
-			Name:   parser.MethodUpdateNetworkKPI,
-			Method: r.UpdateNetworkKPI,
-		},
-	}
-}
-
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  legacyMethods(),
-	tools.V2.String():  legacyMethods(),
-	tools.V3.String():  legacyMethods(),
-	tools.V4.String():  legacyMethods(),
-	tools.V5.String():  legacyMethods(),
-	tools.V6.String():  legacyMethods(),
-	tools.V7.String():  legacyMethods(),
-	tools.V8.String():  legacyMethods(),
-	tools.V9.String():  legacyMethods(),
-	tools.V10.String(): legacyMethods(),
-	tools.V11.String(): legacyMethods(),
-	tools.V12.String(): legacyMethods(),
-	tools.V13.String(): legacyMethods(),
-	tools.V14.String(): legacyMethods(),
-	tools.V15.String(): legacyMethods(),
+	tools.V0.String(): v1Methods(),
+	tools.V1.String(): v1Methods(),
+	tools.V2.String(): v1Methods(),
+	tools.V3.String(): v1Methods(),
+
+	tools.V4.String(): v2Methods(),
+	tools.V5.String(): v2Methods(),
+	tools.V6.String(): v2Methods(),
+	tools.V7.String(): v2Methods(),
+	tools.V8.String(): v2Methods(),
+	tools.V9.String(): v2Methods(),
+
+	tools.V10.String(): v3Methods(),
+	tools.V11.String(): v3Methods(),
+
+	tools.V12.String(): v4Methods(),
+	tools.V13.String(): v5Methods(),
+	tools.V14.String(): v6Methods(),
+	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(rewardv8.Methods),
 	tools.V17.String(): actors.CopyMethods(rewardv9.Methods),
 	tools.V18.String(): actors.CopyMethods(rewardv10.Methods),
@@ -105,6 +82,29 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 	return methods, nil
+}
+
+func (*Reward) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := constructorParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	metadata, err := parse(raw, params(), parser.ParamsKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			params, ok = constructorParams[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parse(raw, params(), parser.ParamsKey)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }
 
 func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
@@ -128,5 +128,19 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, returns(), parser.ReturnKey)
+	metadata, err := parse(raw, returns(), parser.ReturnKey)
+	if err != nil {
+		versions := tools.GetSupportedVersions(network)
+		for _, v := range versions {
+			returns, ok = thisEpochRewardReturn[v.String()]
+			if !ok {
+				continue
+			}
+			metadata, err = parse(raw, returns(), parser.ReturnKey)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return metadata, err
 }

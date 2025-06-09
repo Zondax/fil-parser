@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	logger2 "github.com/zondax/fil-parser/logger"
@@ -47,6 +48,7 @@ type Parser struct {
 	multisigEventGenerator multisigTools.EventGenerator
 	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
+	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
 
 	config parser.Config
 }
@@ -67,6 +69,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
+		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
 	}
 
@@ -83,6 +86,7 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
+		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
 	}
 }
@@ -118,8 +122,6 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	tipsetHeight := int64(txsData.Tipset.Height())
-	tipsetKey := txsData.Tipset.Key()
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
 			continue
@@ -128,7 +130,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		// Main transaction
 
 		// check the 1st execution
-		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsCronActor(tipsetHeight, trace.ExecutionTrace.Msg.To, tipsetKey)
+		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
 
 		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
 		if err != nil {
@@ -161,13 +163,15 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		}
 
 		// TxCid <-> TxHash
-		txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid)
-		if err == nil && txHash != "" {
-			p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
-		}
-		if err != nil {
-			_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
-			p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+		if int64(txsData.Tipset.Height()) >= p.config.TxCidTranslationStart {
+			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
+			if err == nil && txHash != "" {
+				p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
+			}
+			if err != nil {
+				_ = p.metrics.UpdateTranslateTxCidToTxHashMetric()
+				p.logger.Warnf("Error when trying to translate tx cid to tx hash: %v", err)
+			}
 		}
 	}
 
@@ -446,7 +450,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 	var minerAddress string
 	var err error
 
-	if !systemExecution {
+	if !systemExecution && blockCid != "" {
 		minerAddress, err = tipset.GetBlockMiner(blockCid)
 		if err != nil {
 			_ = p.metrics.UpdateGetBlockMinerMetric(fmt.Sprint(uint64(msg.Msg.Method)), txType)
@@ -454,7 +458,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 		}
 	}
 
-	if p.config.ConsolidateRobustAddress && err == nil {
+	if p.config.ConsolidateRobustAddress && minerAddress != "" {
 		minerAddr, err := address.NewFromString(minerAddress)
 		if err != nil {
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)
@@ -569,16 +573,10 @@ func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.Execut
 		}
 	}
 
-	txType, err = p.helper.CheckCommonMethods(msg, int64(tipset.Height()), tipset.Key())
+	txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 	if err != nil {
-		return "", "", fmt.Errorf("error when trying to check common methods in tx cid'%s': %v", mainMsgCid.String(), err)
+		txType = parser.UnknownStr
 	}
 
-	if actorName != "" && txType == "" {
-		txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
-		if err != nil {
-			txType = parser.UnknownStr
-		}
-	}
 	return actorName, txType, err
 }

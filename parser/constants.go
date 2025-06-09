@@ -13,6 +13,7 @@ const (
 	FilPrefix   = "f0"
 
 	// metadata keys
+	ValueKey     = "Value"
 	ParamsKey    = "Params"
 	ReturnKey    = "Return"
 	ParamsRawKey = "ParamsRaw"

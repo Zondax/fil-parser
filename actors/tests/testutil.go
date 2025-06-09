@@ -1,26 +1,25 @@
 package actortest
 
 import (
-	"context"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
+	"github.com/ipfs/go-cid"
+	"github.com/stretchr/testify/mock"
 	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/tools/mocks"
 
-	"github.com/filecoin-project/lotus/api/client"
+	"github.com/filecoin-project/go-state-types/manifest"
+	filApiTypes "github.com/filecoin-project/lotus/api/types"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/node/modules/dtypes"
 	"github.com/zondax/fil-parser/actors"
-	"github.com/zondax/fil-parser/actors/cache"
-	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/parser"
 	helper2 "github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
-	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 )
 
@@ -32,23 +31,21 @@ const (
 )
 
 func getActorParser(actorParserFn any) actors.ActorParserInterface {
-	lotusClient, _, err := client.NewFullNodeRPCV1(context.Background(), testUrl, http.Header{})
-	if err != nil {
-		return nil
-	}
-	actorsCache, err := cache.SetupActorsCache(common.DataSource{
-		Node: lotusClient,
-	}, nil, metrics.NewNoopMetricsClient(), golemBackoff.New().
-		WithMaxAttempts(3).
-		WithMaxDuration(1*time.Second).
-		WithInitialDuration(1*time.Second).Linear())
+	actorCid := cid.MustParse("bafk2bzaceaclpbrhoqdruvsuqqgknvy2k5dywzmjoehk4uarce3uvt3w2rewu")
+	lotusClient := &mocks.FullNode{}
+	lotusClient.On("StateNetworkName", mock.Anything).Return(dtypes.NetworkName("calibrationnet"), nil)
+	lotusClient.On("StateNetworkVersion", mock.Anything, mock.Anything).Return(filApiTypes.NetworkVersion(16), nil)
+	lotusClient.On("StateActorCodeCIDs", mock.Anything, mock.Anything).Return(map[string]cid.Cid{
+		manifest.MultisigKey: actorCid,
+	}, nil)
 
-	if err != nil {
-		return nil
-	}
+	cache := &mocks.IActorsCache{}
+	cache.On("StoreAddressInfo", mock.Anything).Return(nil)
+	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything).Return(actorCid.String(), nil)
+	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything).Return(manifest.MultisigKey, nil)
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
-	helper := helper2.NewHelper(lib, actorsCache, lotusClient, nil, metrics.NewNoopMetricsClient())
+	helper := helper2.NewHelper(lib, cache, lotusClient, nil, metrics.NewNoopMetricsClient())
 	gLogger := logger.NewDevelopmentLogger()
 	switch fn := actorParserFn.(type) {
 	case func(*helper2.Helper, *logger.Logger) actors.ActorParserInterface:

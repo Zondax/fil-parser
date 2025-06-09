@@ -11,7 +11,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -54,76 +53,6 @@ var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCM
 // Implemented in a fork https://github.com/ipfs-force-community/builtin-actors/blob/99642572098400e6bbdff27c5126714781350fce/actors/miner/src/lib.rs#L131
 var movePartitionsMethodNum = abi.MethodNum(33)
 
-func legacyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
-	m := &Miner{}
-	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		legacyBuiltin.MethodsMiner.Constructor: {
-			Name:   parser.MethodConstructor,
-			Method: m.Constructor,
-		},
-		legacyBuiltin.MethodsMiner.ControlAddresses: {
-			Name:   parser.MethodControlAddresses,
-			Method: m.ControlAddresses,
-		},
-		legacyBuiltin.MethodsMiner.ChangeWorkerAddress: {
-			Name:   parser.MethodChangeWorkerAddress,
-			Method: m.ChangeWorkerAddressExported,
-		},
-		legacyBuiltin.MethodsMiner.ChangePeerID: {
-			Name:   parser.MethodChangePeerID,
-			Method: m.ChangePeerIDExported,
-		},
-		legacyBuiltin.MethodsMiner.SubmitWindowedPoSt: {
-			Name:   parser.MethodSubmitWindowedPoSt,
-			Method: m.SubmitWindowedPoSt,
-		},
-		legacyBuiltin.MethodsMiner.PreCommitSector: {
-			Name:   parser.MethodPreCommitSector,
-			Method: m.PreCommitSector,
-		},
-		legacyBuiltin.MethodsMiner.ProveCommitSector: {
-			Name:   parser.MethodProveCommitSector,
-			Method: m.ProveCommitSector,
-		},
-		nonLegacyBuiltin.MethodsMiner.ExtendSectorExpiration: {
-			Name:   parser.MethodExtendSectorExpiration,
-			Method: m.ExtendSectorExpiration,
-		},
-		legacyBuiltin.MethodsMiner.TerminateSectors: {
-			Name:   parser.MethodTerminateSectors,
-			Method: m.TerminateSectors,
-		},
-		legacyBuiltin.MethodsMiner.DeclareFaults: {
-			Name:   parser.MethodDeclareFaults,
-			Method: m.DeclareFaults,
-		},
-		legacyBuiltin.MethodsMiner.DeclareFaultsRecovered: {
-			Name:   parser.MethodDeclareFaultsRecovered,
-			Method: m.DeclareFaultsRecovered,
-		},
-		legacyBuiltin.MethodsMiner.OnDeferredCronEvent: {
-			Name:   parser.MethodOnDeferredCronEvent,
-			Method: m.OnDeferredCronEvent,
-		},
-		legacyBuiltin.MethodsMiner.CheckSectorProven: {
-			Name:   parser.MethodCheckSectorProven,
-			Method: m.CheckSectorProven,
-		},
-		legacyBuiltin.MethodsMiner.AddLockedFund: {
-			Name:   parser.MethodAddLockedFund,
-			Method: m.AddLockedFund,
-		},
-		legacyBuiltin.MethodsMiner.ReportConsensusFault: {
-			Name:   parser.MethodReportConsensusFault,
-			Method: m.ReportConsensusFault,
-		},
-		legacyBuiltin.MethodsMiner.WithdrawBalance: {
-			Name:   parser.MethodWithdrawBalance,
-			Method: m.WithdrawBalanceExported,
-		},
-	}
-}
-
 func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	m := &Miner{}
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
@@ -144,25 +73,43 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 			Name:   parser.MethodMovePartitions,
 			Method: m.MovePartitions,
 		},
+
+		// these methods appear in unexpected versions
+		25: {
+			Name:   parser.MethodPreCommitSectorBatch,
+			Method: m.PreCommitSectorBatch,
+		},
+		26: {
+			Name:   parser.MethodProveCommitAggregate,
+			Method: m.ProveCommitAggregate,
+		},
+		27: {
+			Name:   parser.MethodProveReplicaUpdates,
+			Method: m.ProveReplicaUpdates,
+		},
 	}
 }
 
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-	tools.V1.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V2.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V3.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V4.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V5.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V6.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V7.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V8.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V9.String():  actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V10.String(): actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V11.String(): actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V12.String(): actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V13.String(): actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V14.String(): actors.CopyMethods(customMethods(), legacyMethods()),
-	tools.V15.String(): actors.CopyMethods(customMethods(), legacyMethods()),
+	tools.V0.String(): actors.CopyMethods(customMethods(), v1Methods()),
+	tools.V1.String(): actors.CopyMethods(customMethods(), v1Methods()),
+	tools.V2.String(): actors.CopyMethods(customMethods(), v1Methods()),
+	tools.V3.String(): actors.CopyMethods(customMethods(), v1Methods()),
+
+	tools.V4.String(): actors.CopyMethods(customMethods(), v2Methods()),
+	tools.V5.String(): actors.CopyMethods(customMethods(), v2Methods()),
+	tools.V6.String(): actors.CopyMethods(customMethods(), v2Methods()),
+	tools.V7.String(): actors.CopyMethods(customMethods(), v2Methods()),
+	tools.V8.String(): actors.CopyMethods(customMethods(), v2Methods()),
+	tools.V9.String(): actors.CopyMethods(customMethods(), v2Methods()),
+
+	tools.V10.String(): actors.CopyMethods(customMethods(), v3Methods()),
+	tools.V11.String(): actors.CopyMethods(customMethods(), v3Methods()),
+
+	tools.V12.String(): actors.CopyMethods(customMethods(), v4Methods()),
+	tools.V13.String(): actors.CopyMethods(customMethods(), v5Methods()),
+	tools.V14.String(): actors.CopyMethods(customMethods(), v6Methods()),
+	tools.V15.String(): actors.CopyMethods(customMethods(), v7Methods()),
 	tools.V16.String(): actors.CopyMethods(customMethods(), miner8.Methods),
 	tools.V17.String(): actors.CopyMethods(customMethods(), miner9.Methods),
 	tools.V18.String(): actors.CopyMethods(customMethods(), miner10.Methods),
@@ -177,11 +124,11 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
 	version := tools.VersionFromHeight(network, height)
-	methods, ok := methods[version.String()]
+	actorMethods, ok := methods[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return methods, nil
+	return actorMethods, nil
 }
 
 func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

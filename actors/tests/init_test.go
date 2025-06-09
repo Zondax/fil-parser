@@ -127,6 +127,7 @@ func TestActorParserV2_Exec(t *testing.T) {
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, cid.Undef, filTypes.EmptyTSK)
+
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.NotNil(t, addr)
