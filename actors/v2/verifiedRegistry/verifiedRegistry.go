@@ -133,12 +133,16 @@ func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) 
 
 func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := dataCap[version.String()]
+	params, ok := removeDataCapParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := removeDataCapReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
-	return parse(raw, nil, false, params(), &abi.EmptyValue{})
+	return parse(raw, nil, false, params(), returnValue())
 }
 
 func (*VerifiedRegistry) RemoveExpiredAllocationsExported(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
