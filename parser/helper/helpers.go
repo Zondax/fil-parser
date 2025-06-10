@@ -185,7 +185,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
 	} else {
 		addInfo.ActorCid = actorCid.String()
-		addInfo.ActorType = actorName
+		addInfo.ActorType = tools.ParseActorName(actorName)
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
@@ -236,6 +236,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
+		actorName = tools.ParseActorName(actorName)
 
 		if actorName == manifest.PlaceholderKey && !onChainOnly {
 			onChainOnly = true

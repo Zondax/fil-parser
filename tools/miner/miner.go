@@ -97,7 +97,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
-	case strings.EqualFold(actorName, manifest.MinerKey):
+	case strings.Contains(actorName, manifest.MinerKey):
 		return !strings.EqualFold(txType, parser.MethodOnDeferredCronEvent)
 	case strings.EqualFold(txType, parser.MethodAwardBlockReward):
 		return true

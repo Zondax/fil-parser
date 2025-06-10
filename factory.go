@@ -343,6 +343,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			p.logger.Errorf("multisig genesis could not get address info: %s. err: %s", actor.Key, err)
 			continue
 		}
+		// actorName already parsed in getAddressInfo
 		actorName := addressInfo.ActorType
 
 		// check if the address is a multisig address
