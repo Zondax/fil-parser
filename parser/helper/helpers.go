@@ -238,7 +238,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		}
 		actorName = tools.ParseActorName(actorName)
 
-		if actorName == manifest.PlaceholderKey && !onChainOnly {
+		if strings.Contains(actorName, manifest.PlaceholderKey) && !onChainOnly {
 			onChainOnly = true
 		} else {
 			return c, actorName, nil
