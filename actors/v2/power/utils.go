@@ -11,6 +11,7 @@ import (
 	powerv16 "github.com/filecoin-project/go-state-types/builtin/v16/power"
 	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
+	"github.com/filecoin-project/go-state-types/manifest"
 	legacyv7 "github.com/filecoin-project/specs-actors/v7/actors/builtin/power"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
@@ -22,7 +23,7 @@ func getAddressInfo(r powerReturn, msg *parser.LotusMessage) *types.AddressInfo 
 		return &types.AddressInfo{
 			Short:         idAddress.String(),
 			Robust:        robustAddress.String(),
-			ActorType:     "miner",
+			ActorType:     manifest.MinerKey,
 			CreationTxCid: cid.String(),
 		}
 	}

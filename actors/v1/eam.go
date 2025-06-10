@@ -105,7 +105,7 @@ func (p *ActorParser) parseCreate(rawParams, rawReturn []byte, msgCid cid.Cid) (
 		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:        r.RobustAddress.String(),
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:     "evm",
+		ActorType:     manifest.EvmKey,
 		CreationTxCid: msgCid.String(),
 	}
 
@@ -141,7 +141,7 @@ func (p *ActorParser) parseCreate2(rawParams, rawReturn []byte, msgCid cid.Cid) 
 		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:        r.RobustAddress.String(),
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:     "evm",
+		ActorType:     manifest.EvmKey,
 		CreationTxCid: msgCid.String(),
 	}
 
@@ -181,7 +181,7 @@ func (p *ActorParser) parseCreateExternal(rawParams, rawReturn []byte, msgCid ci
 		Short:         parser.FilPrefix + strconv.FormatUint(r.ActorID, 10),
 		Robust:        r.RobustAddress.String(),
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
-		ActorType:     "evm",
+		ActorType:     manifest.EvmKey,
 		CreationTxCid: msgCid.String(),
 	}
 

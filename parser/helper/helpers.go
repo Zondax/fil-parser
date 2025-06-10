@@ -185,7 +185,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
 	} else {
 		addInfo.ActorCid = actorCid.String()
-		addInfo.ActorType = tools.ParseActorName(actorName)
+		addInfo.ActorType = actorName
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
