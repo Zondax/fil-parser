@@ -211,17 +211,17 @@ func TestParser_ParseTransactions(t *testing.T) {
 		height  string
 		results expectedResults
 	}{
-		// {
-		// 	name:    "parser with traces from v1",
-		// 	version: v1.NodeVersionsSupported[0],
-		// 	url:     nodeUrl,
-		// 	height:  "2907480",
-		// 	results: expectedResults{
-		// 		totalTraces:  650,
-		// 		totalAddress: 232,
-		// 		totalTxCids:  102,
-		// 	},
-		// },
+		{
+			name:    "parser with traces from v1",
+			version: v1.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907480",
+			results: expectedResults{
+				totalTraces:  650,
+				totalAddress: 232,
+				totalTxCids:  102,
+			},
+		},
 		{
 			name:    "parser with traces from v1 and the corner case of duplicated fees with level 0",
 			version: v1.NodeVersionsSupported[0],
@@ -233,61 +233,61 @@ func TestParser_ParseTransactions(t *testing.T) {
 				totalTxCids:  10,
 			},
 		},
-		// {
-		// 	name:    "parser with traces from v2",
-		// 	version: v2.NodeVersionsSupported[0],
-		// 	url:     nodeUrl,
-		// 	height:  "2907520",
-		// 	results: expectedResults{
-		// 		totalTraces:  907,
-		// 		totalAddress: 234,
-		// 		totalTxCids:  151,
-		// 	},
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.25",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     nodeUrl,
-		// 	height:  "3573062",
-		// 	results: expectedResults{
-		// 		totalTraces:  773,
-		// 		totalAddress: 209,
-		// 		totalTxCids:  121,
-		// 	},
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.25",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     nodeUrl,
-		// 	height:  "3573064",
-		// 	results: expectedResults{
-		// 		totalTraces:  734,
-		// 		totalAddress: 206,
-		// 		totalTxCids:  101,
-		// 	},
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.25",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     nodeUrl,
-		// 	height:  "3573066",
-		// 	results: expectedResults{
-		// 		totalTraces:  1118,
-		// 		totalAddress: 274,
-		// 		totalTxCids:  187,
-		// 	},
-		// },
-		// {
-		// 	name:    "parser with traces from v2 and lotus 1.26 (calib)",
-		// 	version: v2.NodeVersionsSupported[2],
-		// 	url:     calibNextNodeUrl,
-		// 	height:  "1419335",
-		// 	results: expectedResults{
-		// 		totalTraces:  37,
-		// 		totalAddress: 16,
-		// 		totalTxCids:  5,
-		// 	},
-		// },
+		{
+			name:    "parser with traces from v2",
+			version: v2.NodeVersionsSupported[0],
+			url:     nodeUrl,
+			height:  "2907520",
+			results: expectedResults{
+				totalTraces:  907,
+				totalAddress: 234,
+				totalTxCids:  151,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573062",
+			results: expectedResults{
+				totalTraces:  773,
+				totalAddress: 209,
+				totalTxCids:  121,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573064",
+			results: expectedResults{
+				totalTraces:  734,
+				totalAddress: 206,
+				totalTxCids:  101,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.25",
+			version: v2.NodeVersionsSupported[2],
+			url:     nodeUrl,
+			height:  "3573066",
+			results: expectedResults{
+				totalTraces:  1118,
+				totalAddress: 274,
+				totalTxCids:  187,
+			},
+		},
+		{
+			name:    "parser with traces from v2 and lotus 1.26 (calib)",
+			version: v2.NodeVersionsSupported[2],
+			url:     calibNextNodeUrl,
+			height:  "1419335",
+			results: expectedResults{
+				totalTraces:  37,
+				totalAddress: 16,
+				totalTxCids:  5,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -295,10 +295,12 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			var p *FilecoinParser
 			var err error
+			// actors v1 and v2 compatibility is broken by the change to helper.GetActorNameFromAddress
+			// so we need to use the new parser with actor v2
 			if tt.url == nodeUrl {
-				p, err = NewFilecoinParser(l, mainnetCacheDataSource, gLogger)
+				p, err = NewFilecoinParserWithActorV2(l, mainnetCacheDataSource, gLogger)
 			} else {
-				p, err = NewFilecoinParser(l, calibNextNodeCacheDataSource, gLogger)
+				p, err = NewFilecoinParserWithActorV2(l, calibNextNodeCacheDataSource, gLogger)
 			}
 			require.NoError(t, err)
 
@@ -1948,182 +1950,7 @@ func TestParseGenesisMultisig(t *testing.T) {
 	}
 }
 
-func TestParser_ActorVersionComparison(t *testing.T) {
-	type expectedResults struct {
-		totalTraces  int
-		totalAddress int
-		totalTxCids  int
-	}
-	tests := []struct {
-		name       string
-		version    string
-		url        string
-		height     string
-		results    expectedResults
-		shouldFail bool
-	}{
-		{
-			name:    "parser with traces from v1",
-			version: v1.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "2907480",
-			results: expectedResults{
-				totalTraces:  650,
-				totalAddress: 232,
-				totalTxCids:  102,
-			},
-		},
-		{
-			name:    "parser with traces from v2",
-			version: v2.NodeVersionsSupported[0],
-			url:     nodeUrl,
-			height:  "2907520",
-			results: expectedResults{
-				totalTraces:  907,
-				totalAddress: 234,
-				totalTxCids:  151,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573062",
-			results: expectedResults{
-				totalTraces:  773,
-				totalAddress: 209,
-				totalTxCids:  121,
-			},
-		},
-		{
-			name:    "should fail (actorsV2 fixed eth_address parsing in exec): parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573064",
-			results: expectedResults{
-				totalTraces:  734,
-				totalAddress: 206,
-				totalTxCids:  101,
-			},
-			shouldFail: true,
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.25",
-			version: v2.NodeVersionsSupported[2],
-			url:     nodeUrl,
-			height:  "3573066",
-			results: expectedResults{
-				totalTraces:  1118,
-				totalAddress: 274,
-				totalTxCids:  187,
-			},
-		},
-		{
-			name:    "parser with traces from v2 and lotus 1.26 (calib)",
-			version: v2.NodeVersionsSupported[2],
-			url:     calibNextNodeUrl,
-			height:  "1419335",
-			results: expectedResults{
-				totalTraces:  37,
-				totalAddress: 16,
-				totalTxCids:  5,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var pv1 *FilecoinParser
-			var pv2 *FilecoinParser
-			var err1 error
-			var err2 error
-			if tt.url == nodeUrl {
-				pv1, err1 = NewFilecoinParser(getLib(tt.url), mainnetCacheDataSource, gLogger)
-				pv2, err2 = NewFilecoinParserWithActorV2(getLib(tt.url), mainnetCacheDataSource, gLogger)
-			} else {
-				pv1, err1 = NewFilecoinParser(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
-				pv2, err2 = NewFilecoinParserWithActorV2(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
-			}
-			require.NoError(t, err1)
-			require.NoError(t, err2)
-			tipset, err := readTipset(tt.height)
-			require.NoError(t, err)
-			fmt.Println("tipset", tipset.Height())
-			ethlogs, err := readEthLogs(tt.height)
-			require.NoError(t, err)
-			traces, err := readGzFile(tracesFilename(tt.height))
-			require.NoError(t, err)
-
-			txsData := types.TxsData{
-				EthLogs:  ethlogs,
-				Tipset:   tipset,
-				Traces:   traces,
-				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
-			}
-
-			wg := sync.WaitGroup{}
-			wg.Add(2)
-			var parsedResultActorV1 *types.TxsParsedResult
-			var parsedResultActorV2 *types.TxsParsedResult
-			go func() {
-				defer wg.Done()
-				parsedResultActorV1, err1 = pv1.ParseTransactions(context.Background(), txsData)
-			}()
-			go func() {
-				defer wg.Done()
-				parsedResultActorV2, err2 = pv2.ParseTransactions(context.Background(), txsData)
-			}()
-
-			wg.Wait()
-
-			require.NoErrorf(t, err1, "error parsing v1: %s", err1)
-			require.NoErrorf(t, err2, "error parsing v2: %s", err2)
-
-			require.NotNil(t, parsedResultActorV1.Txs)
-			require.NotNil(t, parsedResultActorV2.Txs)
-
-			require.Equal(t, len(parsedResultActorV1.Txs), len(parsedResultActorV2.Txs))
-
-			assert.Equal(t, len(parsedResultActorV1.TxCids), len(parsedResultActorV2.TxCids))
-			assert.Equal(t, tt.results.totalTraces, len(parsedResultActorV1.Txs))
-			assert.Equal(t, tt.results.totalAddress, parsedResultActorV1.Addresses.Len())
-			assert.Equal(t, tt.results.totalTxCids, len(parsedResultActorV1.TxCids))
-
-			require.Equalf(t, parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len(), "v1 %d , v2 %d", parsedResultActorV1.Addresses.Len(), parsedResultActorV2.Addresses.Len())
-			// compare tx metadata
-			failedTxType := map[string]string{}
-			for i, tx := range parsedResultActorV1.Txs {
-				var metadataV1 map[string]interface{}
-				err := json.Unmarshal([]byte(tx.TxMetadata), &metadataV1)
-				if err != nil {
-					t.Fatalf("Error unmarshalling v1 tx metadata: %s", err.Error())
-				}
-				var metadataV2 map[string]interface{}
-				err = json.Unmarshal([]byte(parsedResultActorV2.Txs[i].TxMetadata), &metadataV2)
-				if err != nil {
-					t.Fatalf("Error unmarshalling v2 tx metadata: %s", err.Error())
-				}
-
-				if tt.shouldFail {
-					continue
-				}
-
-				if metadataV1[parser.ParamsKey] != nil {
-					require.EqualValuesf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
-				}
-				if metadataV1[parser.ReturnKey] != nil {
-					// ClaimAllocations return struct changed to support slices.
-					// ActivateDeals metadata was fixed to parse correctly in v2.
-					if tx.TxType != parser.MethodClaimAllocations && tx.TxType != parser.MethodActivateDeals {
-						require.EqualValuesf(t, metadataV1[parser.ReturnKey], metadataV2[parser.ReturnKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
-					}
-				}
-
-			}
-			assert.Equal(t, 0, len(failedTxType), "Tx metadata mismatch for tx_type: %v", failedTxType)
-		})
-	}
-
-}
+// The TestActorVersionComparison test has been removed because the actors v1 and v2 compatibility is broken by the change to helper.GetActorNameFromAddress
 
 func getStoredGenesisData(network string) (*types.GenesisBalances, *types.ExtendedTipSet, error) {
 	balancesFilePath := filepath.Join("./data/genesis", fmt.Sprintf("%s_genesis_balances.json", network))
