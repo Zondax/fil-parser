@@ -186,8 +186,7 @@ func getCacheDataSource(networkName string, nodeURL string) common.DataSource {
 						Password: os.Getenv("REDIS_SECRET"),
 					},
 					IsRemoteBestEffort: false,
-					// TODO: remove this or "ci" and delete from redis after testing
-					GlobalPrefix:       "ci-v2",
+					GlobalPrefix:       "ci",
 					GlobalMetricServer: metrics.NewNoopMetrics(),
 				},
 				Ttl: time.Duration(cacheTTL) * time.Second,
