@@ -296,7 +296,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			continue
 		}
 
-		addressInfo, err := getAddressInfo(balance.Key, genesisTipset.Key(), p.Helper)
+		addressInfo, err := getGenesisAddressInfo(balance.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
 			p.logger.Errorf("genesis could not get address info: %s. err: %s", balance.Key, err)
 		} else {
@@ -338,7 +338,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	var multisigInfos []*types.MultisigInfo
 
 	for _, actor := range genesis.Actors.All {
-		addressInfo, err := getAddressInfo(actor.Key, genesisTipset.Key(), p.Helper)
+		addressInfo, err := getGenesisAddressInfo(actor.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
 			p.logger.Errorf("multisig genesis could not get address info: %s. err: %s", actor.Key, err)
 			continue
@@ -380,7 +380,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	return multisigInfos, nil
 }
 
-func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
+func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
 	filAdd, err := address.NewFromString(addrStr)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse address: %s. err: %s", addrStr, err)
@@ -404,9 +404,12 @@ func getAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.
 	}
 
 	return &types.AddressInfo{
-		Short:         shortAdd,
-		Robust:        robustAdd,
-		ActorCid:      actorCode,
+		Short:    shortAdd,
+		Robust:   robustAdd,
+		ActorCid: actorCode,
+		// genesis transactions do not have a creation_tx_cid ,
+		// we use the block_cid in this case to enable users to find the genesis block from this address info.
+		CreationTxCid: tipsetKey.String(), //
 		ActorType:     tools.ParseActorName(actorName),
 		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil
