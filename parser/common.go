@@ -62,7 +62,8 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 	for _, i := range info {
 		switch i.ActorType {
 		case manifest.EvmKey:
-			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != ""
+			// we store the address and later update it if it didn't have a creation_tx_cid or actor_cid
+			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short
 			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
@@ -79,7 +80,9 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 		case manifest.MultisigKey, manifest.MinerKey:
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
-			cond := i.Short != "" && i.CreationTxCid != "" && i.ActorCid != ""
+
+			// we store the address and later update it if it didn't have a creation_tx_cid
+			cond := i.Short != "" && i.Short != i.Robust && i.ActorCid != ""
 			if i.IsSystemActor {
 				cond = i.Short != "" && i.ActorCid != "" && i.ActorType != ""
 			}
