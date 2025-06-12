@@ -409,8 +409,8 @@ func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *h
 		Robust:   robustAdd,
 		ActorCid: actorCode,
 		// genesis transactions do not have a creation_tx_cid ,
-		// we use the block_cid in this case to enable users to find the genesis block from this address info.
-		CreationTxCid: tipsetKey.String(), //
+		// we use the tipset_cid in this case to enable users to find the genesis tipset from this address info.
+		CreationTxCid: tipsetKey.String(),
 		ActorType:     tools.ParseActorName(actorName),
 		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil
