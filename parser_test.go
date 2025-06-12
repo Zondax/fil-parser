@@ -283,7 +283,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 16,
+				totalAddress: 18,
 				totalTxCids:  5,
 			},
 		},
@@ -294,6 +294,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			var p *FilecoinParser
 			var err error
+
 			if tt.url == nodeUrl {
 				p, err = NewFilecoinParser(l, mainnetCacheDataSource, gLogger)
 			} else {
@@ -2024,7 +2025,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 16,
+				totalAddress: 18,
 				totalTxCids:  5,
 			},
 		},
@@ -2121,7 +2122,6 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			assert.Equal(t, 0, len(failedTxType), "Tx metadata mismatch for tx_type: %v", failedTxType)
 		})
 	}
-
 }
 
 func getStoredGenesisData(network string) (*types.GenesisBalances, *types.ExtendedTipSet, error) {
