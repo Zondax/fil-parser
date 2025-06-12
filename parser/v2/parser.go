@@ -241,10 +241,11 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 			p.logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}
 
-		if p.config.ConsolidateRobustAddress {
+		// we don't consolidate eth addresses
+		if p.config.ConsolidateRobustAddress && !strings.HasPrefix(event.Emitter, parser.EthPrefix) {
 			eventAddr, err := address.NewFromString(event.Emitter)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error parsing emitter address: %s: %w", event.Emitter, err)
 			}
 			if consolidatedAddr, err := actors.ConsolidateRobustAddress(eventAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort); err == nil {
 				event.Emitter = consolidatedAddr

@@ -35,7 +35,7 @@ func (p *VerifiedRegistry) Parse(_ context.Context, network string, height int64
 		resp, err := p.RestoreBytes(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodRemoveVerifiedClientDataCap:
-		resp, err := p.RemoveVerifiedClientDataCap(network, height, msg.Params)
+		resp, err := p.RemoveVerifiedClientDataCap(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodRemoveExpiredAllocations, parser.MethodRemoveExpiredAllocationsExported:
 		resp, err := p.RemoveExpiredAllocationsExported(network, height, msg.Params, msgRct.Return)
