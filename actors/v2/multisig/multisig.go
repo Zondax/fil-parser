@@ -71,17 +71,21 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 	if err != nil {
 		return nil, err
 	}
+	applied, innerReturnRaw, innerReturnParsed, err := getProposeReturn(network, height, rawReturn)
+	if err != nil {
+		return nil, err
+	}
 
-	method, innerParams, err := m.innerProposeParams(msg, to, network, height, methodNum, innerParamsRaw, key)
+	method, innerMsg, err := m.parseInnerProposeMsg(msg, to, network, height, methodNum, innerParamsRaw, innerReturnRaw, key)
 	if err != nil {
 		_ = m.metrics.UpdateMultisigProposeMetric(manifest.MultisigKey, proposeKind, fmt.Sprint(methodNum))
 		m.logger.Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 
-	params := innerParams
-	// get ParamsKey for innerParams if possible
-	if innerParams != nil && innerParams[parser.ParamsKey] != nil {
-		params, err = m.paramsToMap(innerParams[parser.ParamsKey])
+	parsedCBORMsg := innerMsg
+	// get ParamKey for innerMsg if possible
+	if innerMsg != nil && innerMsg[parser.ParamsKey] != nil {
+		parsedCBORMsg, err = m.paramsToMap(innerMsg[parser.ParamsKey])
 		if err != nil {
 			return nil, err
 		}
@@ -91,24 +95,20 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 		To:     to.String(),
 		Value:  value,
 		Method: method,
-		Params: params,
+		Params: parsedCBORMsg,
 	}
 
-	version := tools.VersionFromHeight(network, height)
-	r, ok := proposeReturn[version.String()]
-	if !ok {
-		return map[string]interface{}{}, fmt.Errorf("proposeReturn: %s not found", version.String())
+	// if applied, use the innerParams[parser.ReturnKey] to store the execution result.
+	if applied {
+		metadata[parser.ReturnKey] = innerMsg[parser.ReturnKey]
+	} else {
+		metadata[parser.ReturnKey] = innerReturnParsed
 	}
-	val := r()
-	err = val.UnmarshalCBOR(bytes.NewReader(rawReturn))
-	if err != nil {
-		return map[string]interface{}{}, err
-	}
-	metadata[parser.ReturnKey] = val
 
 	return metadata, nil
 }
 
+// paramsToMap converts the parameters to a map from a generic CBORUnmarshaler interface type.
 func (*Msig) paramsToMap(params any) (map[string]any, error) {
 	dataAsMap := make(map[string]any)
 
