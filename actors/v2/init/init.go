@@ -103,7 +103,7 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 	return initConstructor(raw, params())
 }
 
-func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec(network string, height int64, mainMsgCid cid.Cid, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := execParams[version.String()]
 	if !ok {
@@ -120,6 +120,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = tools.ParseActorName(createdActorName)
+			addressInfo.CreationTxCid = mainMsgCid.String()
 			// Store the address info in the actors cache
 			// if an actor is created and it's Constructor is called in the next execution,
 			// we will not be able to get the actor type without this.
@@ -131,7 +132,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 	return metadata, addressInfo, err
 }
 
-func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec4(network string, height int64, mainMsgCid cid.Cid, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := exec4Params[version.String()]
 	if !ok {
@@ -148,6 +149,7 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = tools.ParseActorName(createdActorName)
+			addressInfo.CreationTxCid = mainMsgCid.String()
 		}
 	}
 
