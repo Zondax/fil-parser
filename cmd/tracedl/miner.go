@@ -89,11 +89,12 @@ func miner(c *cli.CLI, cmd *cobra.Command, _ []string) {
 
 	ctx := cmd.Context()
 	results := map[string]any{}
-	actor, err := rpcClient.client.StateGetActor(ctx, addr, tipset.Key())
+	actor, err := rpcClient.client.StateGetActor(ctx, addr, lotusChainTypes.EmptyTSK)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	results["actor"] = actor
+
 	info, err := rpcClient.client.StateMinerInfo(ctx, addr, tipset.Key())
 	if err != nil {
 		logger.Error(err.Error())

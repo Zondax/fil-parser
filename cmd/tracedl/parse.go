@@ -10,10 +10,12 @@ import (
 
 	"github.com/Zondax/zindexer/components/connections/data_store"
 	"github.com/bytedance/sonic"
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	lotusChainTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/spf13/cobra"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	v2 "github.com/zondax/fil-parser/actors/v2"
@@ -208,10 +210,11 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 		if err != nil {
 			logger.Error(err.Error())
 		}
+		txFrom, txTo := getFromToRobustAddresses(trace.Msg.From, trace.Msg.To, helper, logger)
 		resp = append(resp, map[string]any{
 			"actorName":   foundActorName,
-			"addressTo":   trace.Msg.To.String(),
-			"addressFrom": trace.Msg.From.String(),
+			"addressTo":   txTo,
+			"addressFrom": txFrom,
 			"methodName":  methodName,
 			"methodNum":   trace.Msg.Method,
 			"traceId":     traceId,
@@ -308,10 +311,15 @@ func parseSubCall(level, height int64, network, actorName, actorMethod string, a
 		got["ParamsRaw"] = trace.Msg.Params
 		got["ReturnRaw"] = trace.MsgRct.Return
 	}
+	if trace.Msg.From.String() == "f00" {
+		fmt.Println("txFrom f00")
+	}
+
+	txFrom, txTo := getFromToRobustAddresses(trace.Msg.From, trace.Msg.To, helper, logger)
 	res = append(res, map[string]any{
 		"actorName":   foundActorName,
-		"addressTo":   trace.Msg.To.String(),
-		"addressFrom": trace.Msg.From.String(),
+		"addressTo":   txTo,
+		"addressFrom": txFrom,
 		"methodName":  methodName,
 		"methodNum":   trace.Msg.Method,
 		"traceId":     fmt.Sprintf("SUBCALL_%d", level),
@@ -378,4 +386,23 @@ func downloadTraceFromDataStore(height int64, outPath string, dataStore *data_st
 	}
 
 	return tipset, data, nil
+}
+
+func getFromToRobustAddresses(from, to address.Address, helper *helper.Helper, logger *logger.Logger) (string, string) {
+	var err error
+	txFrom := from.String()
+	txTo := to.String()
+
+	txFrom, err = actors.ConsolidateRobustAddress(from, helper, logger, false)
+	if err != nil {
+		txFrom = from.String()
+		logger.Warnf("Could not consolidate robust address: %v", err)
+	}
+	txTo, err = actors.ConsolidateRobustAddress(to, helper, logger, false)
+	if err != nil {
+		txTo = to.String()
+		logger.Warnf("Could not consolidate robust address: %v", err)
+	}
+
+	return txFrom, txTo
 }
