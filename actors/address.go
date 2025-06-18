@@ -4,13 +4,18 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
 )
 
-func ConsolidateRobustAddress(addr address.Address, actorCache cache.IActorsCache, logger *logger.Logger, bestEffort bool) (string, error) {
+func ConsolidateRobustAddress(addr address.Address, h *helper.Helper, logger *logger.Logger, bestEffort bool) (string, error) {
+	actorCache := h.GetActorsCache()
 	if isRobust, _ := common.IsRobustAddress(addr); isRobust {
+		if ok, _, _ := h.IsZeroAddressAccountActor(addr); ok {
+			return helper.ZeroAddressAccountActorShort, nil
+		}
+
 		// we need to handle cases where a f2 address for evm actors is used
 		// f2 -> f0 -> f4, as we want to consolidate the address to f4 style
 		shortAddressStr, err := actorCache.GetShortAddress(addr)
