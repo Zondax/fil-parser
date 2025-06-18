@@ -82,28 +82,35 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 		m.logger.Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)
 	}
 
-	parsedCBORMsg := innerMsg
-	// get ParamKey for innerMsg if possible
-	if innerMsg != nil && innerMsg[parser.ParamsKey] != nil {
-		parsedCBORMsg, err = m.paramsToMap(innerMsg[parser.ParamsKey])
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	metadata[parser.ParamsKey] = parser.MultisigPropose{
+	proposalData := parser.MultisigPropose{
 		To:     to.String(),
 		Value:  value,
 		Method: method,
-		Params: parsedCBORMsg,
+		Params: innerMsg,
 	}
 
-	// if applied, use the innerParams[parser.ReturnKey] to store the execution result.
-	if applied {
-		metadata[parser.ReturnKey] = innerMsg[parser.ReturnKey]
-	} else {
-		metadata[parser.ReturnKey] = innerReturnParsed
+	// this is the params of the multisig proposal execution (always present)
+	if innerMsg != nil && innerMsg[parser.ParamsKey] != nil {
+		parsedCBORParams, err := m.paramsToMap(innerMsg[parser.ParamsKey])
+		if err != nil {
+			return nil, err
+		}
+		proposalData.Params = parsedCBORParams
 	}
+
+	// this is the return data of the multisig proposal execution, only present if applied=true
+	if applied && innerMsg != nil && innerMsg[parser.ReturnKey] != nil {
+		parsedCBORReturn, err := m.paramsToMap(innerMsg[parser.ReturnKey])
+		if err != nil {
+			return nil, err
+		}
+		proposalData.Return = parsedCBORReturn
+	}
+
+	metadata[parser.ParamsKey] = proposalData
+
+	// this is the return status of the multisig proposal that indicates the TxnID and if the proposal was applied
+	metadata[parser.ReturnKey] = innerReturnParsed
 
 	return metadata, nil
 }
