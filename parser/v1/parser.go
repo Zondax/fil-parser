@@ -303,7 +303,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
-		Cid:    trace.Msg.Cid(),
+		Cid:    mainMsgCid,
 		Params: trace.Msg.Params,
 	}, mainMsgCid, &parser.LotusMessageReceipt{
 		ExitCode: trace.MsgRct.ExitCode,

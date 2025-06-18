@@ -21,9 +21,9 @@ func (i *Init) Parse(_ context.Context, network string, height int64, txType str
 		resp, err := i.Constructor(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodExec:
-		return i.Exec(network, height, mainMsgCid, msg, msgRct.Return)
+		return i.Exec(network, height, msg, msgRct.Return)
 	case parser.MethodExec4:
-		return i.Exec4(network, height, mainMsgCid, msg, msgRct.Return)
+		return i.Exec4(network, height, msg, msgRct.Return)
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
