@@ -57,6 +57,7 @@ type MultisigPropose struct {
 	Value  string
 	Method string
 	Params map[string]interface{}
+	Return map[string]interface{}
 }
 
 type Propose struct {
