@@ -179,6 +179,7 @@ func parse(c *cli.CLI, cmd *cobra.Command, _ []string) {
 			To:     trace.Msg.To,
 			Method: trace.Msg.Method,
 			Params: trace.Msg.Params,
+			Cid:    trace.MsgCid,
 		}
 		rct := parser.LotusMessageReceipt{
 			ExitCode: trace.MsgRct.ExitCode,
@@ -393,12 +394,12 @@ func getFromToRobustAddresses(from, to address.Address, helper *helper.Helper, l
 	txFrom := from.String()
 	txTo := to.String()
 
-	txFrom, err = actors.ConsolidateRobustAddress(from, helper, logger, false)
+	txFrom, err = actors.ConsolidateRobustAddress(from, helper.GetActorsCache(), logger, false)
 	if err != nil {
 		txFrom = from.String()
 		logger.Warnf("Could not consolidate robust address: %v", err)
 	}
-	txTo, err = actors.ConsolidateRobustAddress(to, helper, logger, false)
+	txTo, err = actors.ConsolidateRobustAddress(to, helper.GetActorsCache(), logger, false)
 	if err != nil {
 		txTo = to.String()
 		logger.Warnf("Could not consolidate robust address: %v", err)
