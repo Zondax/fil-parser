@@ -16,13 +16,13 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-// innerProposeParams processes the parameters for a multisig proposal by:
+// parseInnerProposeMsg processes the parameters for a multisig proposal by:
 // 1. Creating a new LotusMessage with the proposal details
 // 2. Getting the actor and method name for the proposal
 // 3. Parsing the proposal parameters using the actor's Parse method
-func (m *Msig) innerProposeParams(
+func (m *Msig) parseInnerProposeMsg(
 	msg *parser.LotusMessage, to address.Address, network string, height int64, method abi.MethodNum,
-	proposeParams []byte, key filTypes.TipSetKey,
+	proposeParams, proposeReturn []byte, key filTypes.TipSetKey,
 ) (string, map[string]interface{}, error) {
 	proposeMsg := &parser.LotusMessage{
 		To:     to,
@@ -32,12 +32,14 @@ func (m *Msig) innerProposeParams(
 		Params: proposeParams,
 	}
 
+	proposeMsgRct := &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: proposeReturn}
+
 	actor, proposedMethod, err := m.innerProposeMethod(proposeMsg, network, height, key)
 	if err != nil {
 		return "", nil, err
 	}
 
-	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: []byte{}}, msg.Cid, key)
+	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, proposeMsgRct, msg.Cid, key)
 	if err != nil {
 		return "", nil, err
 	}

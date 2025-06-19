@@ -2108,7 +2108,10 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				}
 
 				if metadataV1[parser.ParamsKey] != nil {
-					require.EqualValuesf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					// multisig propose correctly parses return params in v2
+					if tx.TxType != parser.MethodPropose {
+						require.EqualValuesf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					}
 				}
 				if metadataV1[parser.ReturnKey] != nil {
 					// ClaimAllocations return struct changed to support slices.
