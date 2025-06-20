@@ -353,6 +353,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			TxFrom:      parser.TxFromGenesis,
 			Amount:      amount.Int,
 			Status:      "Ok",
+			TxCid:       tipsetCid,
 			TxType:      txType,
 			TxMetadata:  "{}",
 		})
@@ -391,17 +392,15 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 			return nil, fmt.Errorf("json.Marshal(): %s", err)
 		}
 
+		tipsetCid := genesisTipset.GetCidString()
 		multisigInfo := &types.MultisigInfo{
 			ID:              tools.BuildId(genesisTipset.GetCidString(), actor.Key, fmt.Sprint(parser.GenesisHeight), "", parser.TxTypeGenesis),
 			MultisigAddress: actor.Key,
 			Height:          parser.GenesisHeight,
 			ActionType:      parser.MultisigConstructorMethod,
 			Value:           string(metadataJson),
-
-			// there is no signer as this is genesis
-			Signer: "",
-			// there are no transactions for the multisig addresses in the genesis block
-			TxCid: "",
+			Signer:          parser.TxFromGenesis,
+			TxCid:           tipsetCid,
 		}
 		multisigInfos = append(multisigInfos, multisigInfo)
 
