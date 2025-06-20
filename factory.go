@@ -2,6 +2,7 @@ package fil_parser
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -287,20 +288,46 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata,
 }
 
 func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.Transaction, *types.AddressInfoMap) {
+	postGenesisActors := parser.MainnetPostGenesisActors
+	if p.network == tools.CalibrationNetwork {
+		postGenesisActors = parser.CalibrationPostGenesisActors
+	}
+
 	genesisTxs := make([]*types.Transaction, 0)
 	addresses := types.NewAddressInfoMap()
 	genesisTimestamp := parser.GetTimestamp(genesisTipset.MinTimestamp())
 
-	for _, balance := range genesis.Actors.All {
-		if balance.Value.Balance == "0" {
+	for _, actorInfo := range postGenesisActors {
+		decKey, err := base64.StdEncoding.DecodeString(actorInfo[1])
+		if err != nil {
+			p.logger.Errorf("Error while decoding tipsetKey: %s. err: %s", actorInfo[1], err)
 			continue
 		}
 
+		tipsetKey, err := types2.TipSetKeyFromBytes(decKey)
+		if err != nil {
+			p.logger.Errorf("genesis could not get tipset key: %s. err: %s", actorInfo[1], err)
+			continue
+		}
+
+		addressInfo, err := getGenesisAddressInfo(actorInfo[0], tipsetKey, p.Helper)
+		if err != nil {
+			p.logger.Errorf("genesis could not get address info: %s. err: %s", actorInfo[0], err)
+		} else {
+			parser.AppendToAddressesMap(addresses, addressInfo)
+		}
+	}
+
+	for _, balance := range genesis.Actors.All {
 		addressInfo, err := getGenesisAddressInfo(balance.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
 			p.logger.Errorf("genesis could not get address info: %s. err: %s", balance.Key, err)
 		} else {
 			parser.AppendToAddressesMap(addresses, addressInfo)
+		}
+
+		if balance.Value.Balance == "0" {
+			continue
 		}
 
 		amount, _ := big.FromString(balance.Value.Balance)
