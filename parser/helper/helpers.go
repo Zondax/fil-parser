@@ -190,7 +190,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
-		if ok, _, _ := h.isZeroAddressAccountActor(add); ok {
+		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
 			addInfo.Short = ZeroAddressAccountActorShort
 		}
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
@@ -198,7 +198,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
-		if ok, _, _ := h.isZeroAddressAccountActor(add); ok {
+		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
 			addInfo.Robust = ZeroAddressAccountActorRobust
 		}
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
@@ -236,8 +236,9 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
+		actorName = tools.ParseActorName(actorName)
 
-		if actorName == manifest.PlaceholderKey && !onChainOnly {
+		if strings.Contains(actorName, manifest.PlaceholderKey) && !onChainOnly {
 			onChainOnly = true
 		} else {
 			return c, actorName, nil
@@ -247,7 +248,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 
 // isSpecialAccountActor handles actor addresses that will fail to resolve from the node for reasons documented in each case.
 func (h *Helper) isSpecialAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
-	if ok, cid, actorName := h.isZeroAddressAccountActor(add); ok {
+	if ok, cid, actorName := h.IsZeroAddressAccountActor(add); ok {
 		return true, cid, actorName
 	}
 	if ok, cid, actorName := h.isKeylessAccountActor(add, height); ok {
@@ -259,7 +260,7 @@ func (h *Helper) isSpecialAccountActor(add address.Address, height int64) (bool,
 // The f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a(f067253) is a zero address actor that existed until V10.
 // Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
 // Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
-func (h *Helper) isZeroAddressAccountActor(add address.Address) (bool, cid.Cid, string) {
+func (h *Helper) IsZeroAddressAccountActor(add address.Address) (bool, cid.Cid, string) {
 	if h.network != tools.MainnetNetwork || (add.String() != ZeroAddressAccountActorRobust && add.String() != ZeroAddressAccountActorShort) {
 		return false, cid.Undef, ""
 	}

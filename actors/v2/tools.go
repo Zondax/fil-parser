@@ -86,7 +86,7 @@ func ActorMethods(ctx context.Context, actorName string, height int64, network s
 	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()}
 	mActorName := actorName
 	actorParser := &ActorParser{network, helper, logger, metricsClient}
-	if actorName == manifest.EthAccountKey || actorName == manifest.PlaceholderKey {
+	if strings.Contains(actorName, manifest.EthAccountKey) || strings.Contains(actorName, manifest.PlaceholderKey) {
 		mActorName = manifest.EvmKey
 	}
 

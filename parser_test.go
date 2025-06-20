@@ -283,7 +283,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 16,
+				totalAddress: 18,
 				totalTxCids:  5,
 			},
 		},
@@ -294,6 +294,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 
 			var p *FilecoinParser
 			var err error
+
 			if tt.url == nodeUrl {
 				p, err = NewFilecoinParser(l, mainnetCacheDataSource, gLogger)
 			} else {
@@ -2024,7 +2025,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			height:  "1419335",
 			results: expectedResults{
 				totalTraces:  37,
-				totalAddress: 16,
+				totalAddress: 18,
 				totalTxCids:  5,
 			},
 		},
@@ -2107,7 +2108,10 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 				}
 
 				if metadataV1[parser.ParamsKey] != nil {
-					require.EqualValuesf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					// multisig propose correctly parses return params in v2
+					if tx.TxType != parser.MethodPropose {
+						require.EqualValuesf(t, metadataV1[parser.ParamsKey], metadataV2[parser.ParamsKey], fmt.Sprintf("tx_type: %s \n V1: %s \n V2: %s", tx.TxType, tx.TxMetadata, parsedResultActorV2.Txs[i].TxMetadata))
+					}
 				}
 				if metadataV1[parser.ReturnKey] != nil {
 					// ClaimAllocations return struct changed to support slices.
@@ -2121,7 +2125,6 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			assert.Equal(t, 0, len(failedTxType), "Tx metadata mismatch for tx_type: %v", failedTxType)
 		})
 	}
-
 }
 
 func getStoredGenesisData(network string) (*types.GenesisBalances, *types.ExtendedTipSet, error) {
