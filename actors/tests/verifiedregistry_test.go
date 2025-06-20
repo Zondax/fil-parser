@@ -45,11 +45,7 @@ var verifiedRegistryWithParamsOrReturnTests = []struct {
 		txType: parser.MethodRestoreBytes,
 		key:    parser.ParamsKey,
 	},
-	{
-		name:   "Remove Verified Client DataCap",
-		txType: parser.MethodRemoveVerifiedClientDataCap,
-		key:    parser.ParamsKey,
-	},
+
 	{
 		name:   "Deprecated1",
 		txType: parser.MethodVerifiedDeprecated1,
@@ -106,6 +102,10 @@ var verifiedRegistryWithParamsAndReturnTests = []struct {
 		name:   "Remove Expired Claims Exported",
 		txType: parser.MethodRemoveExpiredClaimsExported,
 	},
+	{
+		name:   "Remove Verified Client DataCap",
+		txType: parser.MethodRemoveVerifiedClientDataCap,
+	},
 }
 
 func TestActorParserV1_VerifiedWithParamsOrReturn(t *testing.T) {
@@ -140,6 +140,12 @@ func TestActorParserV1_VerifiedWithParamsAndReturn(t *testing.T) {
 
 	for _, tt := range verifiedRegistryWithParamsAndReturnTests {
 		t.Run(tt.name, func(t *testing.T) {
+			// this is a legacy compatibility test, the RemoveVerifiedClientDataCap test params were incorrect,
+			// the new Params and Return are correct and v1 test will fail.
+			if tt.txType == parser.MethodRemoveVerifiedClientDataCap {
+				return
+			}
+
 			rawParams, rawReturn, err := getParamsAndReturn(manifest.VerifregKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)

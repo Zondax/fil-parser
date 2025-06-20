@@ -3,7 +3,6 @@ package init
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	"github.com/filecoin-project/go-address"
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
@@ -162,12 +161,4 @@ func setReturnParams(msg *parser.LotusMessage, actorCID string, params typegen.C
 	}
 	return &types.AddressInfo{}
 
-}
-
-func parseExecActor(actor string) string {
-	s := strings.Split(actor, "/")
-	if len(s) < 1 {
-		return actor
-	}
-	return s[len(s)-1]
 }

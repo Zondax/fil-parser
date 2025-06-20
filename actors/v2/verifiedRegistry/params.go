@@ -220,38 +220,36 @@ var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RestoreBytesParams) },
 }
 
-var dataCap = map[string]func() cbg.CBORUnmarshaler{
-	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+var removeDataCapParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.RemoveDataCapParams) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.RemoveDataCapParams) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.RemoveDataCapParams) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.RemoveDataCapParams) },
 
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.RemoveDataCapParams) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.RemoveDataCapParams) },
 
-	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.DataCap) },
-	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.DataCap) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.RemoveDataCapParams) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.RemoveDataCapParams) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.RemoveDataCapParams) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.RemoveDataCapParams) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveDataCapParams) },
+}
 
-	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv4.DataCap) },
-	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.DataCap) },
-	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.DataCap) },
-	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.DataCap) },
-	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.DataCap) },
-	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.DataCap) },
-	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.DataCap) },
+var removeDataCapReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.RemoveDataCapReturn) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.RemoveDataCapReturn) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.RemoveDataCapReturn) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.RemoveDataCapReturn) },
 
-	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.DataCap) },
-	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.DataCap) },
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.RemoveDataCapReturn) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.RemoveDataCapReturn) },
 
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.DataCap) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.DataCap) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.DataCap) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.DataCap) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.DataCap) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.RemoveDataCapReturn) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.RemoveDataCapReturn) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.RemoveDataCapReturn) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.RemoveDataCapReturn) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveDataCapReturn) },
 }
 
 var removeExpiredAllocationsParams = map[string]func() cbg.CBORUnmarshaler{

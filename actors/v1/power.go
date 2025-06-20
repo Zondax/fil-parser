@@ -5,6 +5,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/power"
+	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/specs-actors/actors/runtime/proof"
 
 	"github.com/zondax/fil-parser/parser"
@@ -105,7 +106,7 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 	createdActor := &types.AddressInfo{
 		Short:         r.IDAddress.String(),
 		Robust:        r.RobustAddress.String(),
-		ActorType:     "miner",
+		ActorType:     manifest.MinerKey,
 		CreationTxCid: msg.Cid.String(),
 	}
 	metadata[parser.ReturnKey] = createdActor

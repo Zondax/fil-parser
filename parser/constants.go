@@ -13,6 +13,7 @@ const (
 	FilPrefix   = "f0"
 
 	// metadata keys
+	ValueKey     = "Value"
 	ParamsKey    = "Params"
 	ReturnKey    = "Return"
 	ParamsRawKey = "ParamsRaw"
@@ -27,6 +28,7 @@ const (
 
 	TxTypeGenesis = "Genesis"
 	GenesisHeight = 0
+	TxFromGenesis = "genesis"
 
 	// FirstExportedMethodNumber is the lowest FRC-42 method number.
 	// https://github.com/filecoin-project/builtin-actors/blob/8fdbdec5e3f46b60ba0132d90533783a44c5961f/runtime/src/builtin/shared.rs#L58
