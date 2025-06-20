@@ -11,6 +11,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/network"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -103,7 +104,7 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 	return initConstructor(raw, params())
 }
 
-func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := execParams[version.String()]
 	if !ok {
@@ -120,18 +121,16 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = tools.ParseActorName(createdActorName)
-			// Store the address info in the actors cache
-			// if an actor is created and it's Constructor is called in the next execution,
-			// we will not be able to get the actor type without this.
-			// NOT needed for Exec4(evm) as this is done in eam.Create
-			i.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
+			if ec.IsSuccess() {
+				i.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
+			}
 		}
 	}
 
 	return metadata, addressInfo, err
 }
 
-func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := exec4Params[version.String()]
 	if !ok {
@@ -148,6 +147,9 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = tools.ParseActorName(createdActorName)
+			if ec.IsSuccess() {
+				i.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
+			}
 		}
 	}
 

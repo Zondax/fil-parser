@@ -21,7 +21,7 @@ func (p *Power) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodConstructor:
 		metadata, err = p.Constructor(network, height, msg, msg.Params)
 	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
-		metadata, addressInfo, err = p.CreateMinerExported(network, msg, height, msg.Params, msgRct.Return)
+		metadata, addressInfo, err = p.CreateMinerExported(network, msg, height, msg.Params, msgRct.Return, msgRct.ExitCode)
 	case parser.MethodUpdateClaimedPower:
 		metadata, err = p.UpdateClaimedPower(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodEnrollCronEvent:

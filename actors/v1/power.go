@@ -22,7 +22,7 @@ func (p *ActorParser) ParseStoragepower(txType string, msg *parser.LotusMessage,
 	case parser.MethodConstructor:
 		metadata, err = p.powerConstructor(msg.Params)
 	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
-		return p.parseCreateMiner(msg, msgRct.Return)
+		return p.parseCreateMiner(msg, msgRct)
 	case parser.MethodUpdateClaimedPower:
 		metadata, err = p.updateClaimedPower(msg.Params)
 	case parser.MethodEnrollCronEvent:
@@ -87,7 +87,7 @@ func (p *ActorParser) powerConstructor(raw []byte) (map[string]interface{}, erro
 	return metadata, nil
 }
 
-func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params power.CreateMinerParams
@@ -97,7 +97,7 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 	}
 	metadata[parser.ParamsKey] = params
 
-	reader = bytes.NewReader(rawReturn)
+	reader = bytes.NewReader(msgRct.Return)
 	var r power.CreateMinerReturn
 	err = r.UnmarshalCBOR(reader)
 	if err != nil {
@@ -111,7 +111,9 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, rawReturn []byt
 	}
 	metadata[parser.ReturnKey] = createdActor
 
-	p.helper.GetActorsCache().StoreAddressInfo(*createdActor)
+	if msgRct.ExitCode.IsSuccess() {
+		p.helper.GetActorsCache().StoreAddressInfo(*createdActor)
+	}
 
 	return metadata, createdActor, nil
 }

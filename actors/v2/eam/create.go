@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
 
 	"github.com/zondax/fil-parser/actors"
@@ -11,17 +12,17 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params := abi.CborBytes{}
 	returnValue, ok := createExternalReturn[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseCreateExternal(e, rawParams, rawReturn, msgCid, params, returnValue(), e.helper)
+	return parseCreateExternal(e, rawParams, rawReturn, ec, msgCid, params, returnValue(), e.helper)
 }
 
-func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := createParams[version.String()]
 	if !ok {
@@ -31,10 +32,10 @@ func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, 
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseCreate(e, rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
+	return parseCreate(e, rawParams, rawReturn, ec, msgCid, params(), returnValue(), e.helper)
 }
 
-func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := create2Params[version.String()]
 	if !ok {
@@ -44,5 +45,5 @@ func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte,
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseCreate(e, rawParams, rawReturn, msgCid, params(), returnValue(), e.helper)
+	return parseCreate(e, rawParams, rawReturn, ec, msgCid, params(), returnValue(), e.helper)
 }

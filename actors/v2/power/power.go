@@ -8,6 +8,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/proof"
 
@@ -140,7 +141,7 @@ func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage
 	return parse(raw, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
-func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte, ec exitcode.ExitCode) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := createMinerParams[version.String()]
 	if !ok {
@@ -157,7 +158,7 @@ func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, he
 		return nil, nil, err
 	}
 
-	if addressInfo != nil {
+	if ec.IsSuccess() && addressInfo != nil {
 		p.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
 	}
 

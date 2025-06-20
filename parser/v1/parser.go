@@ -313,7 +313,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
-	if addressInfo != nil {
+	if trace.MsgRct.ExitCode.IsSuccess() && addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 
