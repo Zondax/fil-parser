@@ -252,15 +252,19 @@ func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int6
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
 
-func (*VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (v *VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := universalReceiverParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
 	returnValue, ok := allocationsResponse[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
+
+	return v.ParseFRC46UniversalReceiverHook(network, height, raw, rawReturn, returnValue())
+
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
