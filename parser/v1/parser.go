@@ -112,71 +112,49 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	tipsetCid := txsData.Tipset.GetCidString()
-
 	for _, trace := range computeState.Trace {
 		if !hasMessage(trace) {
+			p.logger.Errorf("Trace without message: %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateTraceWithoutMessageMetric()
 			continue
 		}
 
-		systemExecution := false
-		// TODO find a way to not having this special case handled outside func parseTrace
+		// This remains unclear why we could have a trace without an execution trace. For historical reasons, there were a special case to handle them.
+		// However, the ExecutionTrace and the top-level tx info matches (from observing traces files).
+		// So in cases where we have a trace without an execution trace, we set the ExecutionTrace to the top-level tx info.
 		if ok := hasExecutionTrace(trace); !ok {
-			if trace.Msg != nil {
-				systemExecution = p.helper.IsSystemActor(trace.Msg.From) && p.helper.IsSystemActor(trace.Msg.To)
-			}
-			// Create tx
-			actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, trace.MsgCid, txsData.Tipset)
-			if err != nil {
-				p.logger.Errorf("Error when trying to get tx type: %v", err)
-				_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-				continue
-			}
-			var blockCid string
-			if !systemExecution {
-				blockCid, err = actorsV2.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset, p.logger)
-				if err != nil {
-					_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
-					p.logger.Errorf("Error when trying to get block cid from message,txType '%s': cid '%s': %v", txType, trace.MsgCid.String(), err)
-				}
-			}
-			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
+			trace.ExecutionTrace.Msg = trace.Msg
+			trace.ExecutionTrace.MsgRct = trace.MsgRct
+			trace.ExecutionTrace.Error = trace.Error
+			trace.ExecutionTrace.Duration = trace.Duration
+			trace.ExecutionTrace.Subcalls = []typesV1.ExecutionTraceV1{}
+			p.logger.Warnf("Trace without execution trace for tx %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateTraceWithoutExecutionTraceMetric()
+		} else if trace.ExecutionTrace.MsgRct.ExitCode != trace.MsgRct.ExitCode {
+			// Observed in the wild, the main tx data is not the same as the execution trace data.
+			// For those cases, we want to observe it, and use the top-level tx info as fallback.
+			// Ex: Height 501104
+			// Ex: https://filfox.info/en/message/bafy2bzacecgh3w4qk3t53kg6skweh4isekscy22s4nfxdyc7zcbfb4ez6li5m?t=2
+			p.logger.Errorf("ExecutionTrace.MsgRct.ExitCode != MsgRct.ExitCode for tx %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateMismatchExitCodeMetric()
 
-			txFrom, txTo := p.getFromToRobustAddresses(trace.Msg.From, trace.Msg.To)
+			trace.ExecutionTrace.Msg = trace.Msg
+			trace.ExecutionTrace.MsgRct = trace.MsgRct
+			trace.ExecutionTrace.Error = trace.Error
+			trace.ExecutionTrace.Duration = trace.Duration
 
-			badTx := &types.Transaction{
-				TxBasicBlockData: types.TxBasicBlockData{
-					BasicBlockData: types.BasicBlockData{
-						// #nosec G115
-						Height:    uint64(txsData.Tipset.Height()),
-						TipsetCid: tipsetCid,
-					},
-					BlockCid: blockCid,
-				},
-				Id:       messageUuid,
-				ParentId: uuid.Nil.String(),
-				TxCid:    trace.MsgCid.String(),
-				TxFrom:   txFrom,
-				TxTo:     txTo,
-				TxType:   txType,
-				Amount:   trace.Msg.Value.Int,
-				// #nosec G115
-				GasUsed:     uint64(trace.MsgRct.GasUsed),
-				Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
-				TxMetadata:  trace.Error,
-				TxTimestamp: parser.GetTimestamp(txsData.Tipset.MinTimestamp()),
-			}
-
-			transactions = append(transactions, badTx)
-			continue
 		}
-		systemExecution = p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
+
+		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
 
 		// Main transaction
 		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
 		if err != nil {
+			p.logger.Errorf("Error parsing trace for tx %s: %v", trace.MsgCid.String(), err)
+			_ = p.metrics.UpdateParseTraceMetric()
 			continue
 		}
+
 		transaction.GasUsed = trace.GasCost.GasUsed.Uint64()
 		transactions = append(transactions, transaction)
 
