@@ -28,6 +28,7 @@ const (
 
 	TxTypeGenesis = "Genesis"
 	GenesisHeight = 0
+	TxFromGenesis = "genesis"
 
 	// FirstExportedMethodNumber is the lowest FRC-42 method number.
 	// https://github.com/filecoin-project/builtin-actors/blob/8fdbdec5e3f46b60ba0132d90533783a44c5961f/runtime/src/builtin/shared.rs#L58
@@ -280,4 +281,24 @@ func GetSupportedOps() []string {
 		}
 	}
 	return result
+}
+
+// These are actors that were not deployed in the genesis block, but created on following upgrades
+// https://github.com/filecoin-project/community/discussions/74#discussioncomment-4313888
+// EAM deploy tipset mainnet bafy2bzaceazaznpb47y6ljwmqrtkwcogpkuaslm2345w6khxdjq7r3cemurdw (height: 2683348)
+// EAM deploy tipset calibration bafy2bzacebnt7vyhpmgl45egwgmm7svpxmzapmtn4kb6x5sdenxd4lufkkazu (height: 322354)
+
+// https://github.com/filecoin-project/community/discussions/74#discussioncomment-3825422
+// DataCap deploy tipset mainnet bafy2bzaceanlssigz6edrspkrzlkovhgr2ywqfbhp4p3cxxelf4oixhu44q32 (height: 2383680)
+// DataCap deploy tipset calibration bafy2bzaceaezolcmjxugz7whrso62dwg3xyrybpsqkt6mrovtdnvjo622ed2g (height: 16800)
+
+// actors deployed after genesis, for reference
+var MainnetPostGenesisActors = [][]string{
+	{"f010", "bafy2bzaceazaznpb47y6ljwmqrtkwcogpkuaslm2345w6khxdjq7r3cemurdw"}, // EAM mainnet
+	{"f07", "bafy2bzaceanlssigz6edrspkrzlkovhgr2ywqfbhp4p3cxxelf4oixhu44q32"},  // DataCap mainnet
+}
+
+var CalibrationPostGenesisActors = [][]string{
+	{"f010", "bafy2bzacebnt7vyhpmgl45egwgmm7svpxmzapmtn4kb6x5sdenxd4lufkkazu"}, // EAM calibration
+	{"f07", "bafy2bzaceaezolcmjxugz7whrso62dwg3xyrybpsqkt6mrovtdnvjo622ed2g"},  // DataCap calibration
 }

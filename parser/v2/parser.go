@@ -210,7 +210,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsDat
 			if err != nil {
 				return nil, err
 			}
-			if consolidatedAddr, err := actors.ConsolidateRobustAddress(eventAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort); err == nil {
+			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort); err == nil {
 				event.Emitter = consolidatedAddr
 			}
 		}
@@ -247,7 +247,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 			if err != nil {
 				return nil, fmt.Errorf("error parsing emitter address: %s: %w", event.Emitter, err)
 			}
-			if consolidatedAddr, err := actors.ConsolidateRobustAddress(eventAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort); err == nil {
+			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort); err == nil {
 				event.Emitter = consolidatedAddr
 			}
 		}
@@ -339,7 +339,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 
-	if addressInfo != nil {
+	if trace.MsgRct.ExitCode.IsSuccess() && addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if metadata == nil {
@@ -465,7 +465,7 @@ func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.Extended
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)
 		}
 
-		minerAddress, err = actors.ConsolidateRobustAddress(minerAddr, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
+		minerAddress, err = actors.ConsolidateToRobustAddress(minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
 			minerAddress = minerAddr.String()
 			p.logger.Errorf("Error when trying to consolidate miner address to robust: %v", err)
@@ -506,12 +506,12 @@ func (p *Parser) getFromToRobustAddresses(from, to address.Address) (string, str
 	txFrom := from.String()
 	txTo := to.String()
 	if p.config.ConsolidateRobustAddress {
-		txFrom, err = actors.ConsolidateRobustAddress(from, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
+		txFrom, err = actors.ConsolidateToRobustAddress(from, p.helper, p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
 			txFrom = from.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
 		}
-		txTo, err = actors.ConsolidateRobustAddress(to, p.helper.GetActorsCache(), p.logger, p.config.RobustAddressBestEffort)
+		txTo, err = actors.ConsolidateToRobustAddress(to, p.helper, p.logger, p.config.RobustAddressBestEffort)
 		if err != nil {
 			txTo = to.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
