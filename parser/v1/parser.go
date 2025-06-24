@@ -131,15 +131,14 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			p.logger.Warnf("Trace without execution trace for tx %s", trace.MsgCid.String())
 			_ = p.metrics.UpdateTraceWithoutExecutionTraceMetric()
 		} else {
-			// https://filfox.info/en/message/bafy2bzacecgh3w4qk3t53kg6skweh4isekscy22s4nfxdyc7zcbfb4ez6li5m?t=2
-			// This is a special case where the ExecutionTrace.MsgRct.ExitCode is not the same as the MsgRct.ExitCode.
-			// It is not clear why this is the case, but it is observed in the wild.
+			// Observed in the wild, the main tx data is not the same as the execution trace data. 
+			// For those cases, we want to observe it, and use the top-level tx info as fallback.
+			// Ex: Height 501104
+			// Ex: https://filfox.info/en/message/bafy2bzacecgh3w4qk3t53kg6skweh4isekscy22s4nfxdyc7zcbfb4ez6li5m?t=2
 			if trace.ExecutionTrace.MsgRct.ExitCode != trace.MsgRct.ExitCode {
 				p.logger.Errorf("ExecutionTrace.MsgRct.ExitCode != MsgRct.ExitCode for tx %s", trace.MsgCid.String())
 				_ = p.metrics.UpdateMismatchExitCodeMetric()
 
-				// We set the ExecutionTrace to the top-level tx info as fallback, as we trust the top-level tx info more than the ExecutionTrace.
-				// Not that sure about this, but it is observed in the wild.
 				trace.ExecutionTrace.Msg = trace.Msg
 				trace.ExecutionTrace.MsgRct = trace.MsgRct
 				trace.ExecutionTrace.Error = trace.Error
