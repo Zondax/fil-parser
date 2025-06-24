@@ -92,6 +92,10 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 	}
 }
 
+func (p *Parser) GetConfig() parser.Config {
+	return p.config
+}
+
 func (p *Parser) Version() string {
 	return Version
 }

@@ -164,3 +164,9 @@ func ParseActorName(actor string) string {
 	}
 	return s[len(s)-1]
 }
+
+func GetBlocksCidByString(str string) []string {
+	str = strings.TrimPrefix(str, "{")
+	str = strings.TrimSuffix(str, "}")
+	return strings.Split(str, ",")
+}
