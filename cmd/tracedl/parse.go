@@ -394,12 +394,12 @@ func getFromToRobustAddresses(from, to address.Address, helper *helper.Helper, l
 	txFrom := from.String()
 	txTo := to.String()
 
-	txFrom, err = actors.ConsolidateRobustAddress(from, helper.GetActorsCache(), logger, false)
+	txFrom, err = actors.ConsolidateToRobustAddress(from, helper, logger, false)
 	if err != nil {
 		txFrom = from.String()
 		logger.Warnf("Could not consolidate robust address: %v", err)
 	}
-	txTo, err = actors.ConsolidateRobustAddress(to, helper.GetActorsCache(), logger, false)
+	txTo, err = actors.ConsolidateToRobustAddress(to, helper, logger, false)
 	if err != nil {
 		txTo = to.String()
 		logger.Warnf("Could not consolidate robust address: %v", err)
