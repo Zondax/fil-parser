@@ -17,6 +17,10 @@ const (
 	getBlockMiner          = "fil-parser_parser_get_block_miner_error"
 	jsonMarshal            = "fil-parser_parser_json_marshal_error"
 	translateTxCidToTxHash = "fil-parser_parser_translate_tx_cid_to_tx_hash_error"
+	mismatchExitCode       = "fil-parser_parser_mismatch_exit_code_error"
+	traceWithoutMessage    = "fil-parser_parser_trace_without_message_error"
+	traceWithoutExecutionTrace = "fil-parser_parser_trace_without_execution_trace_error"
+	parseTraceError = "fil-parser_parser_parse_trace_error"
 
 	// helper metrics
 	parseActorName    = "fil-parser_helper_actor_name_error"
@@ -100,6 +104,34 @@ var (
 	parsingTranslateTxCidToTxHashMetric = metrics.Metric{
 		Name:    translateTxCidToTxHash,
 		Help:    "error while translate tx cid to tx hash",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingMismatchExitCodeMetric = metrics.Metric{
+		Name:    mismatchExitCode,
+		Help:    "mismatch exit code",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingTraceWithoutMessageMetric = metrics.Metric{
+		Name:    traceWithoutMessage,
+		Help:    "trace without message",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingTraceWithoutExecutionTraceMetric = metrics.Metric{
+		Name:    traceWithoutExecutionTrace,
+		Help:    "trace without execution trace",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingParseTraceMetric = metrics.Metric{
+		Name:    parseTraceError,
+		Help:    "error parsing trace",
 		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
@@ -221,4 +253,22 @@ func (c *ParserMetricsClient) UpdateParseNativeEventsLogsMetric() error {
 
 func (c *ParserMetricsClient) UpdateParseEthLogMetric() error {
 	return c.IncrementMetric(parseEthLog)
+}
+
+
+func (c *ParserMetricsClient) UpdateTraceWithoutMessageMetric() error {
+	return c.IncrementMetric(traceWithoutMessage)
+}
+
+func (c *ParserMetricsClient) UpdateMismatchExitCodeMetric() error {
+	return c.IncrementMetric(mismatchExitCode)
+}
+
+
+func (c *ParserMetricsClient) UpdateTraceWithoutExecutionTraceMetric() error {
+	return c.IncrementMetric(traceWithoutExecutionTrace)
+}
+
+func (c *ParserMetricsClient) UpdateParseTraceMetric() error {
+	return c.IncrementMetric(parseTraceError)
 }
