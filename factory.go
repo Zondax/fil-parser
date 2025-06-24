@@ -409,7 +409,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	return multisigInfos, nil
 }
 
-func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet, nativeEventsQty, ethEventsQty uint64) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
 	addresses := types.NewAddressInfoMap()
 	nodeFullVersion := parser.UnknownStr
 	nodeMajorMinorVersion := parser.UnknownStr
@@ -442,8 +442,6 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 			Timestamp:       time.Unix(0, 0),
 			BaseFee:         0,
 			BlocksInfo:      "[]",
-			NativeEventsQty: 0,
-			EthEventsQty:    0,
 		}, addresses, nil
 	}
 
@@ -468,12 +466,9 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 			BlockCid: block.Cid().String(),
 			Miner:    block.Miner.String(),
 		})
-		addressInfo, err := getGenesisAddressInfo(block.Miner.String(), tipset.Key(), p.Helper)
-		if err != nil {
-			p.logger.Errorf("could not get address info: %s. err: %s", block.Miner.String(), err)
-		} else {
-			parser.AppendToAddressesMap(addresses, addressInfo)
-		}
+
+		addressInfo := p.Helper.GetActorAddressInfo(block.Miner, tipset.Key(), block.Height)
+		parser.AppendToAddressesMap(addresses, addressInfo)
 	}
 	blocksBlob, _ := json.Marshal(blocksInfo)
 
@@ -497,8 +492,6 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 		Timestamp:       time.Unix(blockTimeStamp/1000, blockTimeStamp%1000),
 		BaseFee:         baseFee,
 		BlocksInfo:      string(blocksBlob),
-		NativeEventsQty: nativeEventsQty,
-		EthEventsQty:    ethEventsQty,
 	}, addresses, nil
 
 }
