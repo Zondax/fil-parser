@@ -430,6 +430,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 		return &types.BlocksTimestamp{
 			TipsetBasicBlockData: types.TipsetBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
+					// #nosec G115
 					Height:    uint64(tipset.Height()),
 					TipsetCid: tipset.GetCidString(),
 				},
@@ -491,6 +492,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 	return &types.BlocksTimestamp{
 		TipsetBasicBlockData: types.TipsetBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
 				Height:    uint64(tipset.Height()),
 				TipsetCid: tipset.GetCidString(),
 			},
