@@ -118,9 +118,9 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			_ = p.metrics.UpdateTraceWithoutMessageMetric()
 			continue
 		}
-		
+
 		// This remains unclear why we could have a trace without an execution trace. For historical reasons, there were a special case to handle them.
-		// However, the ExecutionTrace and the top-level tx info matches (from observing traces files). 
+		// However, the ExecutionTrace and the top-level tx info matches (from observing traces files).
 		// So in cases where we have a trace without an execution trace, we set the ExecutionTrace to the top-level tx info.
 		if ok := hasExecutionTrace(trace); !ok {
 			trace.ExecutionTrace.Msg = trace.Msg
@@ -131,7 +131,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			p.logger.Warnf("Trace without execution trace for tx %s", trace.MsgCid.String())
 			_ = p.metrics.UpdateTraceWithoutExecutionTraceMetric()
 		} else {
-			// Observed in the wild, the main tx data is not the same as the execution trace data. 
+			// Observed in the wild, the main tx data is not the same as the execution trace data.
 			// For those cases, we want to observe it, and use the top-level tx info as fallback.
 			// Ex: Height 501104
 			// Ex: https://filfox.info/en/message/bafy2bzacecgh3w4qk3t53kg6skweh4isekscy22s4nfxdyc7zcbfb4ez6li5m?t=2
@@ -142,7 +142,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 				trace.ExecutionTrace.Msg = trace.Msg
 				trace.ExecutionTrace.MsgRct = trace.MsgRct
 				trace.ExecutionTrace.Error = trace.Error
-				trace.ExecutionTrace.Duration = trace.Duration	
+				trace.ExecutionTrace.Duration = trace.Duration
 			}
 		}
 

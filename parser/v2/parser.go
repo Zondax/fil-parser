@@ -129,7 +129,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			continue
 		}
 
-		// Observed in the wild, the main tx data is not the same as the execution trace data. 
+		// Observed in the wild, the main tx data is not the same as the execution trace data.
 		// For those cases, we want to observe it, and use the top-level tx info as fallback.
 		// Ex: Height 501104
 		// Ex: https://filfox.info/en/message/bafy2bzacecgh3w4qk3t53kg6skweh4isekscy22s4nfxdyc7zcbfb4ez6li5m?t=2
@@ -137,10 +137,10 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 			p.logger.Errorf("ExecutionTrace.MsgRct.ExitCode != MsgRct.ExitCode for tx %s", trace.MsgCid.String())
 			_ = p.metrics.UpdateMismatchExitCodeMetric()
 
-			trace.ExecutionTrace.Msg = trace.Msg
-			trace.ExecutionTrace.MsgRct = trace.MsgRct
+			trace.ExecutionTrace.Msg = *LotusMsgToExecutionTraceMsg(trace.Msg)
+			trace.ExecutionTrace.MsgRct = *LotusMsgRctToExecutionTraceMsgRct(trace.MsgRct)
 			trace.ExecutionTrace.Error = trace.Error
-			trace.ExecutionTrace.Duration = trace.Duration	
+			trace.ExecutionTrace.Duration = trace.Duration
 		}
 
 		// check the 1st execution
