@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
 
@@ -46,6 +47,7 @@ type FilecoinParser struct {
 type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
+	GetConfig() parser.Config
 	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error)
@@ -461,10 +463,21 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 	}
 
 	blocksInfo := make([]types.BlockInfo, 0, len(tipset.Blocks()))
+	consolidateAddrs := p.parserV2.GetConfig().ConsolidateRobustAddress
+	bestEffort := p.parserV2.GetConfig().RobustAddressBestEffort
+
 	for _, block := range tipset.Blocks() {
+		minerAddr := block.Miner.String()
+		if consolidateAddrs {
+			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort)
+			if err != nil {
+				p.logger.Errorf("error consolidating miner address: %s. err: %s", block.Miner.String(), err)
+			}
+			minerAddr = consolidatedMinerAddr
+		}
 		blocksInfo = append(blocksInfo, types.BlockInfo{
 			BlockCid: block.Cid().String(),
-			Miner:    block.Miner.String(),
+			Miner:    minerAddr,
 		})
 
 		addressInfo := p.Helper.GetActorAddressInfo(block.Miner, tipset.Key(), block.Height)
