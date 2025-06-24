@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
@@ -406,6 +407,100 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 
 	}
 	return multisigInfos, nil
+}
+
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet, nativeEventsQty, ethEventsQty uint64) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+	addresses := types.NewAddressInfoMap()
+	nodeFullVersion := parser.UnknownStr
+	nodeMajorMinorVersion := parser.UnknownStr
+	if metadata.NodeFullVersion != "" {
+		nodeFullVersion = metadata.NodeFullVersion
+	}
+	if metadata.NodeMajorMinorVersion != "" {
+		nodeMajorMinorVersion = metadata.NodeMajorMinorVersion
+	}
+
+	if len(tipset.Blocks()) == 0 {
+		p.logger.Debugf("found a tipset with no blocks at height '%d'", tipset.Height())
+
+		tipsetId := tools.BuildTipsetId(fmt.Sprintf("%d-%s", tipset.Height(), tipset.GetCidString()))
+
+		return &types.BlocksTimestamp{
+			TipsetBasicBlockData: types.TipsetBasicBlockData{
+				BasicBlockData: types.BasicBlockData{
+					Height:    uint64(tipset.Height()),
+					TipsetCid: tipset.GetCidString(),
+				},
+				BlocksCid: []string{},
+				NodeInfo: types.NodeInfo{
+					NodeFullVersion:       nodeFullVersion,
+					NodeMajorMinorVersion: nodeMajorMinorVersion,
+				},
+			},
+			Id:              tipsetId,
+			ParentTipsetCid: "",
+			Timestamp:       time.Unix(0, 0),
+			BaseFee:         0,
+			BlocksInfo:      "[]",
+			NativeEventsQty: 0,
+			EthEventsQty:    0,
+		}, addresses, nil
+	}
+
+	tipsetId := tools.BuildTipsetId(tipset.GetCidString())
+
+	baseFee, err := p.GetBaseFee(trace, metadata, tipset)
+	if err != nil {
+		// p.metrics.UpdateProcessedBlockTotalMetricFailure(parsermetrics.ErrorTypeGetBaseFee, false)
+		p.logger.Errorf("error getting base fee: %w", err)
+	}
+
+	minTs := tipset.Blocks()[0].Timestamp
+	for _, bh := range tipset.Blocks()[1:] {
+		if bh.Timestamp < minTs {
+			minTs = bh.Timestamp
+		}
+	}
+
+	blocksInfo := make([]types.BlockInfo, 0, len(tipset.Blocks()))
+	for _, block := range tipset.Blocks() {
+		blocksInfo = append(blocksInfo, types.BlockInfo{
+			BlockCid: block.Cid().String(),
+			Miner:    block.Miner.String(),
+		})
+		addressInfo, err := getGenesisAddressInfo(block.Miner.String(), tipset.Key(), p.Helper)
+		if err != nil {
+			p.logger.Errorf("could not get address info: %s. err: %s", block.Miner.String(), err)
+		} else {
+			parser.AppendToAddressesMap(addresses, addressInfo)
+		}
+	}
+	blocksBlob, _ := json.Marshal(blocksInfo)
+
+	blockTimeStamp := int64(minTs) * 1000 //nolint:gosec,G115 // Allowing integer overflow conversion
+
+	blocksCid := tools.GetBlocksCidByString(tipset.Key().String())
+	return &types.BlocksTimestamp{
+		TipsetBasicBlockData: types.TipsetBasicBlockData{
+			BasicBlockData: types.BasicBlockData{
+				Height:    uint64(tipset.Height()),
+				TipsetCid: tipset.GetCidString(),
+			},
+			BlocksCid: blocksCid,
+			NodeInfo: types.NodeInfo{
+				NodeFullVersion:       nodeFullVersion,
+				NodeMajorMinorVersion: nodeMajorMinorVersion,
+			},
+		},
+		Id:              tipsetId,
+		ParentTipsetCid: tipset.GetParentCidString(),
+		Timestamp:       time.Unix(blockTimeStamp/1000, blockTimeStamp%1000),
+		BaseFee:         baseFee,
+		BlocksInfo:      string(blocksBlob),
+		NativeEventsQty: nativeEventsQty,
+		EthEventsQty:    ethEventsQty,
+	}, addresses, nil
+
 }
 
 func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
