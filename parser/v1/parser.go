@@ -10,6 +10,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/exitcode"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -173,7 +174,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		systemExecution = p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
 
 		// Main transaction
-		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
+		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution, trace.MsgRct.ExitCode)
 		if err != nil {
 			continue
 		}
@@ -181,9 +182,9 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 		transactions = append(transactions, transaction)
 
 		// Only process sub-calls if the parent call was successfully executed
-		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
+		if trace.MsgRct.ExitCode.IsSuccess() {
 			subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
-				trace.Msg.Cid().String(), transaction.Id, 0, systemExecution)
+				trace.Msg.Cid().String(), transaction.Id, 0, systemExecution, trace.MsgRct.ExitCode)
 			if len(subTxs) > 0 {
 				transactions = append(transactions, subTxs...)
 			}
@@ -271,23 +272,23 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 }
 
 func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
-	parentId string, level uint16, systemExecution bool) (txs []*types.Transaction) {
+	parentId string, level uint16, systemExecution bool, topLevelExitCode exitcode.ExitCode) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution)
+		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution, topLevelExitCode)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution)...)
+		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, topLevelExitCode)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool) (*types.Transaction, error) {
-	failedTx := trace.MsgRct.ExitCode.IsError()
+func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, topLevelExitCode exitcode.ExitCode) (*types.Transaction, error) {
+	failedTx := topLevelExitCode.IsError()
 
 	actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, mainMsgCid, tipset)
 	if err != nil {
@@ -305,7 +306,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		Cid:    mainMsgCid,
 		Params: trace.Msg.Params,
 	}, mainMsgCid, &parser.LotusMessageReceipt{
-		ExitCode: trace.MsgRct.ExitCode,
+		ExitCode: topLevelExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
 
@@ -313,7 +314,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
-	if trace.MsgRct.ExitCode.IsSuccess() && addressInfo != nil {
+	if !failedTx && addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 
@@ -324,7 +325,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		}
 	}
 
-	if trace.MsgRct.ExitCode.IsError() {
+	if failedTx {
 		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
 
