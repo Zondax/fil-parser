@@ -10,17 +10,17 @@ import (
 // Metrics names
 const (
 	// parser metrics
-	parseMetadata          = "fil-parser_parser_parse_tx_metadata_error"
-	parseMethodName        = "fil-parser_parser_parse_tx_methodName_error"
-	blockCidFromMsgCid     = "fil-parser_parser_apptools_block_cid_from_msg_cid_error"
-	buildCidFromMsgTrace   = "fil-parser_parser_tools_build_cid_from_msg_trace_error"
-	getBlockMiner          = "fil-parser_parser_get_block_miner_error"
-	jsonMarshal            = "fil-parser_parser_json_marshal_error"
-	translateTxCidToTxHash = "fil-parser_parser_translate_tx_cid_to_tx_hash_error"
-	mismatchExitCode       = "fil-parser_parser_mismatch_exit_code_error"
-	traceWithoutMessage    = "fil-parser_parser_trace_without_message_error"
+	parseMetadata              = "fil-parser_parser_parse_tx_metadata_error"
+	parseMethodName            = "fil-parser_parser_parse_tx_methodName_error"
+	blockCidFromMsgCid         = "fil-parser_parser_apptools_block_cid_from_msg_cid_error"
+	buildCidFromMsgTrace       = "fil-parser_parser_tools_build_cid_from_msg_trace_error"
+	getBlockMiner              = "fil-parser_parser_get_block_miner_error"
+	jsonMarshal                = "fil-parser_parser_json_marshal_error"
+	translateTxCidToTxHash     = "fil-parser_parser_translate_tx_cid_to_tx_hash_error"
+	mismatchExitCode           = "fil-parser_parser_mismatch_exit_code_error"
+	traceWithoutMessage        = "fil-parser_parser_trace_without_message_error"
 	traceWithoutExecutionTrace = "fil-parser_parser_trace_without_execution_trace_error"
-	parseTraceError = "fil-parser_parser_parse_trace_error"
+	parseTraceError            = "fil-parser_parser_parse_trace_error"
 
 	// helper metrics
 	parseActorName    = "fil-parser_helper_actor_name_error"
@@ -255,7 +255,6 @@ func (c *ParserMetricsClient) UpdateParseEthLogMetric() error {
 	return c.IncrementMetric(parseEthLog)
 }
 
-
 func (c *ParserMetricsClient) UpdateTraceWithoutMessageMetric() error {
 	return c.IncrementMetric(traceWithoutMessage)
 }
@@ -263,7 +262,6 @@ func (c *ParserMetricsClient) UpdateTraceWithoutMessageMetric() error {
 func (c *ParserMetricsClient) UpdateMismatchExitCodeMetric() error {
 	return c.IncrementMetric(mismatchExitCode)
 }
-
 
 func (c *ParserMetricsClient) UpdateTraceWithoutExecutionTraceMetric() error {
 	return c.IncrementMetric(traceWithoutExecutionTrace)

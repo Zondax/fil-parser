@@ -8,11 +8,12 @@ import (
 // We lose: Version, Nonce, GasFeeCap, GasPremium
 func LotusMsgToExecutionTraceMsg(msg *filTypes.Message) *filTypes.MessageTrace {
 	return &filTypes.MessageTrace{
-		From:     msg.From,
-		To:       msg.To,
-		Value:    msg.Value,
-		Method:   msg.Method,
-		Params:   msg.Params,
+		From:   msg.From,
+		To:     msg.To,
+		Value:  msg.Value,
+		Method: msg.Method,
+		Params: msg.Params,
+		// #nosec G115
 		GasLimit: uint64(msg.GasLimit),
 	}
 }
