@@ -31,8 +31,10 @@ type Transaction struct {
 	Amount *big.Int `json:"amount" gorm:"type:numeric"`
 	// GasUsed is the total gas used amount in attoFil
 	GasUsed uint64 `json:"gas_used"`
-	// Status
+	// Status is the status of the tx
 	Status string `json:"status"`
+	// StatusSubcall is the status of the subcall
+	StatusSubcall string `json:"status_subcall"`
 	// TxType is the message type
 	TxType string `json:"tx_type" gorm:"index:idx_tx_type"`
 	// TxMetadata is the message metadata
