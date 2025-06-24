@@ -124,6 +124,8 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 	for _, trace := range computeState.Trace {
 		if trace.Msg == nil {
+			p.logger.Errorf("Trace without message: %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateTraceWithoutMessageMetric()
 			continue
 		}
 
@@ -134,6 +136,8 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
 		if err != nil {
+			p.logger.Errorf("Error parsing trace for tx %s: %v", trace.MsgCid.String(), err)
+			_ = p.metrics.UpdateParseTraceMetric()
 			continue
 		}
 
