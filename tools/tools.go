@@ -178,5 +178,5 @@ func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
 	if len(status) == 2 {
 		return status[0]
 	}
-	return CheckExitCodeCommonError(code)
+	return CheckExitCodeError(code)
 }
