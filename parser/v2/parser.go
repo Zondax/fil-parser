@@ -336,12 +336,15 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTrac
 }
 
 func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, topLevelExitCode exitcode.ExitCode) (*types.Transaction, error) {
-	failedTx := topLevelExitCode.IsError()
+	topLevelFailedTx := topLevelExitCode.IsError()
+	innerTxFailedTx := trace.MsgRct.ExitCode.IsError()
 	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset)
 	if err != nil {
 		txType = parser.UnknownStr
 	}
-	if !failedTx && (txType == parser.UnknownStr || err != nil) {
+
+	// The top level tx may be successful, but the inner tx is failed, so we don't need to update the method name error metric
+	if !innerTxFailedTx && (txType == parser.UnknownStr || err != nil) {
 		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
 	}
@@ -356,12 +359,14 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		ExitCode: topLevelExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
-	if mErr != nil && !failedTx {
+	// We update the error status of the current tx ( inner tx )
+	if mErr != nil && !innerTxFailedTx {
 		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 
-	if !failedTx && addressInfo != nil {
+	// Only append the address info if the top level tx is successful
+	if !topLevelFailedTx && addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if metadata == nil {
@@ -370,7 +375,9 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 			parser.ReturnRawKey: trace.MsgRct.Return,
 		}
 	}
-	if failedTx {
+
+	// We update the error status of the current tx ( inner tx )
+	if innerTxFailedTx {
 		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
 
