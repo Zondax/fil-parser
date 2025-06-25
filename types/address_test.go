@@ -1,14 +1,16 @@
-package types
+package types_test
 
 import (
-	"github.com/stretchr/testify/suite"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
+	"github.com/zondax/fil-parser/types"
 )
 
 type AddressInfoMapSuite struct {
 	suite.Suite
-	aim *AddressInfoMap
+	aim *types.AddressInfoMap
 }
 
 func TestAddressInfoMapSuite(t *testing.T) {
@@ -16,7 +18,7 @@ func TestAddressInfoMapSuite(t *testing.T) {
 }
 
 func (suite *AddressInfoMapSuite) SetupTest() {
-	suite.aim = NewAddressInfoMap()
+	suite.aim = types.NewAddressInfoMap()
 }
 
 func (suite *AddressInfoMapSuite) TestNewAddressInfoMap() {
@@ -24,7 +26,7 @@ func (suite *AddressInfoMapSuite) TestNewAddressInfoMap() {
 }
 
 func (suite *AddressInfoMapSuite) TestSetAndGet() {
-	address := &AddressInfo{
+	address := &types.AddressInfo{
 		Short:         "short",
 		Robust:        "robust",
 		EthAddress:    "ethAddress",
@@ -42,19 +44,19 @@ func (suite *AddressInfoMapSuite) TestSetAndGet() {
 
 func (suite *AddressInfoMapSuite) TestLen() {
 	suite.Equal(0, suite.aim.Len())
-	suite.aim.Set("key", &AddressInfo{})
+	suite.aim.Set("key", &types.AddressInfo{})
 	suite.Equal(1, suite.aim.Len())
 }
 
 func (suite *AddressInfoMapSuite) TestRange() {
-	address := &AddressInfo{
+	address := &types.AddressInfo{
 		Short:  "short",
 		Robust: "robust",
 	}
 	suite.aim.Set("key", address)
 
 	var once sync.Once
-	suite.aim.Range(func(key string, value *AddressInfo) bool {
+	suite.aim.Range(func(key string, value *types.AddressInfo) bool {
 		once.Do(func() {
 			suite.Equal("key", key)
 			suite.Equal(address, value)
@@ -64,11 +66,11 @@ func (suite *AddressInfoMapSuite) TestRange() {
 }
 
 func (suite *AddressInfoMapSuite) TestCopy() {
-	address1 := &AddressInfo{
+	address1 := &types.AddressInfo{
 		Short:  "short1",
 		Robust: "robust1",
 	}
-	address2 := &AddressInfo{
+	address2 := &types.AddressInfo{
 		Short:  "short2",
 		Robust: "robust2",
 	}

@@ -3,9 +3,9 @@
     "id": "f156d964-d613-5401-a33f-7b127258a35a",
     "multisig_address": "t080",
     "height": 0,
-    "tx_cid": "",
+    "tx_cid": "bafy2bzacebbqulnhstepn4hdbgaxf2grjqxgu6itf53ml7tvyps2z7f726s32",
     "action_type": "Constructor",
     "value": "{\"NumApprovalsThreshold\":1,\"Signers\":[\"f1zo7ub42i3s5cutljzjuqwnltt4xxm4y4f7l5s2i\"],\"StartEpoch\":0,\"UnlockDuration\":0}",
-    "signer": ""
+    "signer": "genesis"
   }
 ]

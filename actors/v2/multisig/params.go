@@ -27,6 +27,7 @@ import (
 	multisig16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
+	"github.com/filecoin-project/go-state-types/exitcode"
 )
 
 var removeSignerParams2 = map[string]func() cbg.CBORUnmarshaler{
@@ -420,21 +421,21 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 	}
 }
 
-func getProposeReturn(network string, height int64, rawReturn []byte) (applied bool, raw []byte, retValue cbg.CBORUnmarshaler, err error) {
+func getProposeReturn(network string, height int64, rawReturn []byte) (applied bool, exitCode exitcode.ExitCode, raw []byte, retValue cbg.CBORUnmarshaler, err error) {
 	version := tools.VersionFromHeight(network, height)
 	tmp, ok := proposeReturn[version.String()]
 	if !ok {
-		return false, rawReturn, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return false, 0, rawReturn, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 	val := tmp()
 	err = val.UnmarshalCBOR(bytes.NewReader(rawReturn))
 	if err != nil {
-		return false, rawReturn, nil, err
+		return false, 0, rawReturn, nil, err
 	}
 
 	switch parsedReturn := val.(type) {
 	case *legacyv1.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	// exact same type, commented out due to compiler error.
 	// case *legacyv2.ProposeParams:
 	// 	return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
@@ -449,24 +450,24 @@ func getProposeReturn(network string, height int64, rawReturn []byte) (applied b
 	// case *legacyv7.ProposeParams:
 	// 	return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
 	case *multisig8.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig9.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig10.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig11.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig12.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig13.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig14.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig15.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig16.ProposeReturn:
-		return parsedReturn.Applied, parsedReturn.Ret, parsedReturn, nil
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	default:
-		return false, rawReturn, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+		return false, 0, rawReturn, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 }

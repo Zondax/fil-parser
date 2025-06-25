@@ -38,6 +38,7 @@ func NewClient(metricsClient metrics.MetricsClient, name string) *ParserMetricsC
 		parsingMetadataErrorMetric, parsingMethodNameMetric, parsingActorNameMetric, parsingBlockCidFromMsgCidMetric,
 		parsingBuildCidFromMsgTraceMetric, parsingGetBlockMinerMetric, parsingJsonMarshalMetric, parsingAddressMetric,
 		getEvmSelectorSigMetric, parsingTranslateTxCidToTxHashMetric, parsingParseNativeEventsLogMetric, parsingParseEthLogMetric,
+		parsingMismatchExitCodeMetric, parsingTraceWithoutMessageMetric, parsingTraceWithoutExecutionTraceMetric, parsingParseTraceMetric,
 	)
 
 	return s
