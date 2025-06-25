@@ -15,6 +15,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	types2 "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
@@ -348,17 +349,18 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 				},
 				BlockCid: blockCid,
 			},
-			Id:          tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
-			ParentId:    uuid.Nil.String(),
-			Level:       0,
-			TxTimestamp: genesisTimestamp,
-			TxTo:        balance.Key,
-			TxFrom:      parser.TxFromGenesis,
-			Amount:      amount.Int,
-			Status:      "Ok",
-			TxCid:       tipsetCid,
-			TxType:      txType,
-			TxMetadata:  "{}",
+			Id:            tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
+			ParentId:      uuid.Nil.String(),
+			Level:         0,
+			TxTimestamp:   genesisTimestamp,
+			TxTo:          balance.Key,
+			TxFrom:        parser.TxFromGenesis,
+			Amount:        amount.Int,
+			Status:        tools.GetExitCodeStatus(exitcode.Ok),
+			SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+			TxCid:         tipsetCid,
+			TxType:        txType,
+			TxMetadata:    "{}",
 		})
 
 	}
