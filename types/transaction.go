@@ -33,8 +33,8 @@ type Transaction struct {
 	GasUsed uint64 `json:"gas_used"`
 	// Status
 	Status string `json:"status"`
-	// InnerTxStatus is the status of the inner transaction
-	InnerTxStatus string `json:"inner_tx_status"`
+	// SubcallStatus is the status of the inner transaction
+	SubcallStatus string `json:"subcall_status"`
 	// TxType is the message type
 	TxType string `json:"tx_type" gorm:"index:idx_tx_type"`
 	// TxMetadata is the message metadata

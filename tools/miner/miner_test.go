@@ -139,7 +139,7 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
 					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -212,7 +212,7 @@ func TestMinerSectors_PreCommitStage(t *testing.T) {
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
 					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -301,7 +301,7 @@ func TestMinerSectors_ProveCommitStage(t *testing.T) {
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
 					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -369,7 +369,7 @@ func TestMinerSectors_TerminationFaultAndRecoveries(t *testing.T) {
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
 					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -426,7 +426,7 @@ func TestMinerSectors_ExpiryExtension(t *testing.T) {
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
 					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)

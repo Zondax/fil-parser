@@ -74,7 +74,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 	}
 
 	for _, tx := range transactions {
-		if !strings.EqualFold(tx.Status, txStatusOk) || !strings.EqualFold(tx.InnerTxStatus, txStatusOk) {
+		if !strings.EqualFold(tx.Status, txStatusOk) || !strings.EqualFold(tx.SubcallStatus, txStatusOk) {
 			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}
