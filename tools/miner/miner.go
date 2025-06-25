@@ -46,7 +46,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 	}
 
 	for _, tx := range transactions {
-		if !strings.EqualFold(tx.Status, txStatusOk) {
+		if !strings.EqualFold(tx.Status, txStatusOk) || !strings.EqualFold(tx.InnerTxStatus, txStatusOk) {
 			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}
