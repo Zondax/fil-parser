@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filApiTypes "github.com/filecoin-project/lotus/api/types"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -15,6 +16,7 @@ import (
 	filMetrics "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/tools/miner"
 	"github.com/zondax/fil-parser/tools/mocks"
 	"github.com/zondax/fil-parser/types"
@@ -131,12 +133,13 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 		t.Run(test.txType, func(t *testing.T) {
 			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
 				{
-					TxCid:      txCid,
-					TxType:     test.txType,
-					TxFrom:     test.txFrom,
-					TxTo:       test.txTo,
-					TxMetadata: test.metadata,
-					Status:     "Ok",
+					TxCid:         txCid,
+					TxType:        test.txType,
+					TxFrom:        test.txFrom,
+					TxTo:          test.txTo,
+					TxMetadata:    test.metadata,
+					Status:        tools.GetExitCodeStatus(exitcode.Ok),
+					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -203,12 +206,13 @@ func TestMinerSectors_PreCommitStage(t *testing.T) {
 		t.Run(test.txType, func(t *testing.T) {
 			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
 				{
-					TxCid:      txCid,
-					TxType:     test.txType,
-					TxFrom:     test.txFrom,
-					TxTo:       test.txTo,
-					TxMetadata: test.metadata,
-					Status:     "Ok",
+					TxCid:         txCid,
+					TxType:        test.txType,
+					TxFrom:        test.txFrom,
+					TxTo:          test.txTo,
+					TxMetadata:    test.metadata,
+					Status:        tools.GetExitCodeStatus(exitcode.Ok),
+					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -291,12 +295,13 @@ func TestMinerSectors_ProveCommitStage(t *testing.T) {
 		t.Run(test.txType, func(t *testing.T) {
 			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
 				{
-					TxCid:      txCid,
-					TxType:     test.txType,
-					TxFrom:     test.txFrom,
-					TxTo:       test.txTo,
-					TxMetadata: test.metadata,
-					Status:     "Ok",
+					TxCid:         txCid,
+					TxType:        test.txType,
+					TxFrom:        test.txFrom,
+					TxTo:          test.txTo,
+					TxMetadata:    test.metadata,
+					Status:        tools.GetExitCodeStatus(exitcode.Ok),
+					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -358,12 +363,13 @@ func TestMinerSectors_TerminationFaultAndRecoveries(t *testing.T) {
 		t.Run(test.txType, func(t *testing.T) {
 			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
 				{
-					TxCid:      txCid,
-					TxType:     test.txType,
-					TxFrom:     test.txFrom,
-					TxTo:       test.txTo,
-					TxMetadata: test.metadata,
-					Status:     "Ok",
+					TxCid:         txCid,
+					TxType:        test.txType,
+					TxFrom:        test.txFrom,
+					TxTo:          test.txTo,
+					TxMetadata:    test.metadata,
+					Status:        tools.GetExitCodeStatus(exitcode.Ok),
+					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -414,12 +420,13 @@ func TestMinerSectors_ExpiryExtension(t *testing.T) {
 		t.Run(test.txType, func(t *testing.T) {
 			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
 				{
-					TxCid:      txCid,
-					TxType:     test.txType,
-					TxFrom:     test.txFrom,
-					TxTo:       test.txTo,
-					TxMetadata: test.metadata,
-					Status:     "Ok",
+					TxCid:         txCid,
+					TxType:        test.txType,
+					TxFrom:        test.txFrom,
+					TxTo:          test.txTo,
+					TxMetadata:    test.metadata,
+					Status:        tools.GetExitCodeStatus(exitcode.Ok),
+					InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
