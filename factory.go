@@ -357,7 +357,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			TxFrom:        parser.TxFromGenesis,
 			Amount:        amount.Int,
 			Status:        tools.GetExitCodeStatus(exitcode.Ok),
-			InnerTxStatus: tools.GetExitCodeStatus(exitcode.Ok),
+			SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
 			TxCid:         tipsetCid,
 			TxType:        txType,
 			TxMetadata:    "{}",
