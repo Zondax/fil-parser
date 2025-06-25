@@ -15,6 +15,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
@@ -169,4 +170,13 @@ func GetBlocksCidByString(str string) []string {
 	str = strings.TrimPrefix(str, "{")
 	str = strings.TrimSuffix(str, "}")
 	return strings.Split(str, ",")
+}
+
+func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
+	code := exitCode.String()
+	status := strings.Split(code, "(")
+	if len(status) == 2 {
+		return status[0]
+	}
+	return CheckExitCodeCommonError(code)
 }

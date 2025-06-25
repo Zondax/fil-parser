@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/zondax/golem/pkg/logger"
 
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
@@ -18,15 +16,6 @@ import (
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	"github.com/zondax/fil-parser/types"
 )
-
-func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
-	code := exitCode.String()
-	status := strings.Split(code, "(")
-	if len(status) == 2 {
-		return status[0]
-	}
-	return CheckExitCodeCommonError(code)
-}
 
 func parseMetadata(key string, metadata map[string]interface{}) string {
 	params, ok := metadata[key].(string)
