@@ -57,9 +57,9 @@ func WithBackoff(maxRetries int, maxWaitBeforeRetrySeconds int, retryStrategy st
 
 func DefaultBackoff() backoff.BackOff {
 	b := golemBackoff.New().
-		WithMaxAttempts(0).
-		WithMaxDuration(0).
-		WithInitialDuration(0)
+		WithMaxAttempts(1).
+		WithMaxDuration(1 * time.Second).
+		WithInitialDuration(1 * time.Second)
 
 	return b.Linear()
 }
