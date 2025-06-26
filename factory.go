@@ -338,9 +338,8 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 
 		tipsetCid := genesisTipset.GetCidString()
 		txType := "Genesis"
-		blockCid := genesisTipset.Key().String()
-		blockCid = strings.ReplaceAll(blockCid, "{", "")
-		blockCid = strings.ReplaceAll(blockCid, "}", "")
+		blockCid := tools.FormatTipsetKey(genesisTipset.Key())
+
 		genesisTxs = append(genesisTxs, &types.Transaction{
 			TxBasicBlockData: types.TxBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
@@ -475,8 +474,9 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort)
 			if err != nil {
 				p.logger.Errorf("error consolidating miner address: %s. err: %s", block.Miner.String(), err)
+			} else {
+				minerAddr = consolidatedMinerAddr
 			}
-			minerAddr = consolidatedMinerAddr
 		}
 		blocksInfo = append(blocksInfo, types.BlockInfo{
 			BlockCid: block.Cid().String(),
@@ -542,7 +542,7 @@ func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *h
 		ActorCid: actorCode,
 		// genesis transactions do not have a creation_tx_cid ,
 		// we use the tipset_cid in this case to enable users to find the genesis tipset from this address info.
-		CreationTxCid: tipsetKey.String(),
+		CreationTxCid: tools.FormatTipsetKey(tipsetKey),
 		ActorType:     tools.ParseActorName(actorName),
 		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil
