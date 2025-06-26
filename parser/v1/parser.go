@@ -10,6 +10,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/exitcode"
 
 	"github.com/bytedance/sonic"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -81,6 +82,10 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 	}
 }
 
+func (p *Parser) GetConfig() parser.Config {
+	return p.config
+}
+
 func (p *Parser) Version() string {
 	return Version
 }
@@ -112,81 +117,58 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	p.addresses = types.NewAddressInfoMap()
 	p.txCidEquivalents = make([]types.TxCidTranslation, 0)
 
-	tipsetCid := txsData.Tipset.GetCidString()
-
 	for _, trace := range computeState.Trace {
 		if !hasMessage(trace) {
+			p.logger.Errorf("Trace without message: %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateTraceWithoutMessageMetric()
 			continue
 		}
 
-		systemExecution := false
-		// TODO find a way to not having this special case handled outside func parseTrace
+		// This remains unclear why we could have a trace without an execution trace. For historical reasons, there were a special case to handle them.
+		// However, the ExecutionTrace and the top-level tx info matches (from observing traces files).
+		// So in cases where we have a trace without an execution trace, we set the ExecutionTrace to the top-level tx info.
 		if ok := hasExecutionTrace(trace); !ok {
-			if trace.Msg != nil {
-				systemExecution = p.helper.IsSystemActor(trace.Msg.From) && p.helper.IsSystemActor(trace.Msg.To)
-			}
-			// Create tx
-			actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, trace.MsgCid, txsData.Tipset)
-			if err != nil {
-				p.logger.Errorf("Error when trying to get tx type: %v", err)
-				_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
-				continue
-			}
-			var blockCid string
-			if !systemExecution {
-				blockCid, err = actorsV2.GetBlockCidFromMsgCid(trace.MsgCid.String(), txType, nil, txsData.Tipset, p.logger)
-				if err != nil {
-					_ = p.metrics.UpdateBlockCidFromMsgCidMetric(txType)
-					p.logger.Errorf("Error when trying to get block cid from message,txType '%s': cid '%s': %v", txType, trace.MsgCid.String(), err)
-				}
-			}
-			messageUuid := tools.BuildMessageId(tipsetCid, blockCid, trace.MsgCid.String(), trace.Msg.Cid().String(), uuid.Nil.String())
+			trace.ExecutionTrace.Msg = trace.Msg
+			trace.ExecutionTrace.MsgRct = trace.MsgRct
+			trace.ExecutionTrace.Error = trace.Error
+			trace.ExecutionTrace.Duration = trace.Duration
+			trace.ExecutionTrace.Subcalls = []typesV1.ExecutionTraceV1{}
+			p.logger.Warnf("Trace without execution trace for tx %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateTraceWithoutExecutionTraceMetric()
+		} else if trace.ExecutionTrace.MsgRct.ExitCode != trace.MsgRct.ExitCode {
+			// Observed in the wild, the main tx data is not the same as the execution trace data.
+			// For those cases, we want to observe it, and use the top-level tx info as fallback.
+			// Ex: Height 501104
+			// Ex: https://filfox.info/en/message/bafy2bzacecgh3w4qk3t53kg6skweh4isekscy22s4nfxdyc7zcbfb4ez6li5m?t=2
+			p.logger.Errorf("ExecutionTrace.MsgRct.ExitCode != MsgRct.ExitCode for tx %s", trace.MsgCid.String())
+			_ = p.metrics.UpdateMismatchExitCodeMetric()
 
-			txFrom, txTo := p.getFromToRobustAddresses(trace.Msg.From, trace.Msg.To)
+			trace.ExecutionTrace.Msg = trace.Msg
+			trace.ExecutionTrace.MsgRct = trace.MsgRct
+			trace.ExecutionTrace.Error = trace.Error
+			trace.ExecutionTrace.Duration = trace.Duration
 
-			badTx := &types.Transaction{
-				TxBasicBlockData: types.TxBasicBlockData{
-					BasicBlockData: types.BasicBlockData{
-						// #nosec G115
-						Height:    uint64(txsData.Tipset.Height()),
-						TipsetCid: tipsetCid,
-					},
-					BlockCid: blockCid,
-				},
-				Id:       messageUuid,
-				ParentId: uuid.Nil.String(),
-				TxCid:    trace.MsgCid.String(),
-				TxFrom:   txFrom,
-				TxTo:     txTo,
-				TxType:   txType,
-				Amount:   trace.Msg.Value.Int,
-				// #nosec G115
-				GasUsed:     uint64(trace.MsgRct.GasUsed),
-				Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
-				TxMetadata:  trace.Error,
-				TxTimestamp: parser.GetTimestamp(txsData.Tipset.MinTimestamp()),
-			}
-
-			transactions = append(transactions, badTx)
-			continue
 		}
-		systemExecution = p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
+
+		systemExecution := p.helper.IsSystemActor(trace.ExecutionTrace.Msg.From) && p.helper.IsSystemActor(trace.ExecutionTrace.Msg.To)
 
 		// Main transaction
-		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, trace.MsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution)
+		mainMsgCid := trace.MsgCid
+		mainExitCode := trace.MsgRct.ExitCode
+		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, mainMsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution, mainExitCode)
 		if err != nil {
+			p.logger.Errorf("Error parsing trace for tx %s: %v", mainMsgCid, err)
+			_ = p.metrics.UpdateParseTraceMetric()
 			continue
 		}
+
 		transaction.GasUsed = trace.GasCost.GasUsed.Uint64()
 		transactions = append(transactions, transaction)
 
-		// Only process sub-calls if the parent call was successfully executed
-		if trace.ExecutionTrace.MsgRct.ExitCode.IsSuccess() {
-			subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, trace.MsgCid, txsData.Tipset, txsData.EthLogs,
-				trace.Msg.Cid().String(), transaction.Id, 0, systemExecution)
-			if len(subTxs) > 0 {
-				transactions = append(transactions, subTxs...)
-			}
+		subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, mainMsgCid, txsData.Tipset, txsData.EthLogs,
+			trace.Msg.Cid().String(), transaction.Id, 0, systemExecution, mainExitCode)
+		if len(subTxs) > 0 {
+			transactions = append(transactions, subTxs...)
 		}
 
 		// Fees
@@ -271,30 +253,32 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 }
 
 func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
-	parentId string, level uint16, systemExecution bool) (txs []*types.Transaction) {
+	parentId string, level uint16, systemExecution bool, mainExitCode exitcode.ExitCode) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution)
+		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution, mainExitCode)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution)...)
+		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, mainExitCode)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool) (*types.Transaction, error) {
-	failedTx := trace.MsgRct.ExitCode.IsError()
+func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, mainExitCode exitcode.ExitCode) (*types.Transaction, error) {
+	mainFailedTx := mainExitCode.IsError()
+	subcallFailedTx := trace.MsgRct.ExitCode.IsError()
 
 	actorName, txType, err := p.getTxType(ctx, trace.Msg.To, trace.Msg.From, trace.Msg.Method, mainMsgCid, tipset)
 	if err != nil {
 		txType = parser.UnknownStr
 	}
 
-	if !failedTx && (txType == parser.UnknownStr || err != nil) {
+	// The main tx may be successful, but the subcall tx is failed, so we don't need to update the method name error metric
+	if !subcallFailedTx && (txType == parser.UnknownStr || err != nil) {
 		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
 		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d err: %s", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height(), err)
 	}
@@ -305,15 +289,20 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		Cid:    mainMsgCid,
 		Params: trace.Msg.Params,
 	}, mainMsgCid, &parser.LotusMessageReceipt{
-		ExitCode: trace.MsgRct.ExitCode,
+		ExitCode: mainExitCode,
 		Return:   trace.MsgRct.Return,
 	}, int64(tipset.Height()), tipset.Key())
 
-	if mErr != nil && !failedTx {
+	// Whenever a tx fails, it could be for multiple reasons.
+	// It can happen that the tx is unknown, the to address actor is not valid, or the params are wrong.
+	// If that it is the case, we will fail to parse it too... so we don't want to count it as a failed tx.
+	if mErr != nil && !subcallFailedTx {
 		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
-	if trace.MsgRct.ExitCode.IsSuccess() && addressInfo != nil {
+
+	// If the tx failed, we don't want to add the address info to the addresses map, as we could be adding bad relationships between short and robust..
+	if !mainFailedTx && addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 
@@ -324,7 +313,8 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		}
 	}
 
-	if trace.MsgRct.ExitCode.IsError() {
+	// If the mainExitCode is an error, we want to add the error to the metadata (for the the corresponding tx, main or subcall)
+	if subcallFailedTx {
 		metadata[parser.ErrorKey] = trace.MsgRct.ExitCode.Error()
 	}
 
@@ -360,16 +350,17 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 			},
 			BlockCid: blockCid,
 		},
-		ParentId:    parentId,
-		Id:          messageUuid,
-		TxTimestamp: parser.GetTimestamp(tipset.MinTimestamp()),
-		TxCid:       mainMsgCid.String(),
-		TxFrom:      txFrom,
-		TxTo:        txTo,
-		Amount:      trace.Msg.Value.Int,
-		Status:      parser.GetExitCodeStatus(trace.MsgRct.ExitCode),
-		TxType:      txType,
-		TxMetadata:  string(jsonMetadata),
+		ParentId:      parentId,
+		Id:            messageUuid,
+		TxTimestamp:   parser.GetTimestamp(tipset.MinTimestamp()),
+		TxCid:         mainMsgCid.String(),
+		TxFrom:        txFrom,
+		TxTo:          txTo,
+		Amount:        trace.Msg.Value.Int,
+		Status:        tools.GetExitCodeStatus(mainExitCode),
+		SubcallStatus: tools.GetExitCodeStatus(trace.MsgRct.ExitCode),
+		TxType:        txType,
+		TxMetadata:    string(jsonMetadata),
 	}, nil
 }
 
@@ -398,15 +389,16 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 			},
 			BlockCid: blockCid,
 		},
-		Id:          feeID,
-		ParentId:    parentTxId,
-		TxTimestamp: timestamp,
-		TxCid:       msg.MsgCid.String(),
-		TxFrom:      msg.Msg.From.String(),
-		Amount:      msg.GasCost.TotalCost.Int,
-		Status:      "Ok",
-		TxType:      parser.TotalFeeOp,
-		TxMetadata:  metadata,
+		Id:            feeID,
+		ParentId:      parentTxId,
+		TxTimestamp:   timestamp,
+		TxCid:         msg.MsgCid.String(),
+		TxFrom:        msg.Msg.From.String(),
+		Amount:        msg.GasCost.TotalCost.Int,
+		Status:        tools.GetExitCodeStatus(exitcode.Ok),
+		SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+		TxType:        parser.TotalFeeOp,
+		TxMetadata:    metadata,
 	}
 }
 

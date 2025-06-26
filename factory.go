@@ -7,12 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	types2 "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
@@ -45,6 +48,7 @@ type FilecoinParser struct {
 type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
+	GetConfig() parser.Config
 	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
 	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error)
@@ -345,17 +349,18 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 				},
 				BlockCid: blockCid,
 			},
-			Id:          tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
-			ParentId:    uuid.Nil.String(),
-			Level:       0,
-			TxTimestamp: genesisTimestamp,
-			TxTo:        balance.Key,
-			TxFrom:      parser.TxFromGenesis,
-			Amount:      amount.Int,
-			Status:      "Ok",
-			TxCid:       tipsetCid,
-			TxType:      txType,
-			TxMetadata:  "{}",
+			Id:            tools.BuildId(genesisTipset.Key().String(), balance.Key, balance.Value.Balance),
+			ParentId:      uuid.Nil.String(),
+			Level:         0,
+			TxTimestamp:   genesisTimestamp,
+			TxTo:          balance.Key,
+			TxFrom:        parser.TxFromGenesis,
+			Amount:        amount.Int,
+			Status:        tools.GetExitCodeStatus(exitcode.Ok),
+			SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+			TxCid:         tipsetCid,
+			TxType:        txType,
+			TxMetadata:    "{}",
 		})
 
 	}
@@ -406,6 +411,106 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 
 	}
 	return multisigInfos, nil
+}
+
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+	addresses := types.NewAddressInfoMap()
+	nodeFullVersion := parser.UnknownStr
+	nodeMajorMinorVersion := parser.UnknownStr
+	if metadata.NodeFullVersion != "" {
+		nodeFullVersion = metadata.NodeFullVersion
+	}
+	if metadata.NodeMajorMinorVersion != "" {
+		nodeMajorMinorVersion = metadata.NodeMajorMinorVersion
+	}
+
+	if len(tipset.Blocks()) == 0 {
+		p.logger.Debugf("found a tipset with no blocks at height '%d'", tipset.Height())
+
+		tipsetId := tools.BuildTipsetId(fmt.Sprintf("%d-%s", tipset.Height(), tipset.GetCidString()))
+
+		return &types.BlocksTimestamp{
+			TipsetBasicBlockData: types.TipsetBasicBlockData{
+				BasicBlockData: types.BasicBlockData{
+					// #nosec G115
+					Height:    uint64(tipset.Height()),
+					TipsetCid: tipset.GetCidString(),
+				},
+				BlocksCid: []string{},
+				NodeInfo: types.NodeInfo{
+					NodeFullVersion:       nodeFullVersion,
+					NodeMajorMinorVersion: nodeMajorMinorVersion,
+				},
+			},
+			Id:              tipsetId,
+			ParentTipsetCid: "",
+			Timestamp:       time.Unix(0, 0),
+			BaseFee:         0,
+			BlocksInfo:      "[]",
+		}, addresses, nil
+	}
+
+	tipsetId := tools.BuildTipsetId(tipset.GetCidString())
+
+	baseFee, err := p.GetBaseFee(trace, metadata, tipset)
+	if err != nil {
+		// p.metrics.UpdateProcessedBlockTotalMetricFailure(parsermetrics.ErrorTypeGetBaseFee, false)
+		p.logger.Errorf("error getting base fee: %w", err)
+	}
+
+	minTs := tipset.Blocks()[0].Timestamp
+	for _, bh := range tipset.Blocks()[1:] {
+		if bh.Timestamp < minTs {
+			minTs = bh.Timestamp
+		}
+	}
+
+	blocksInfo := make([]types.BlockInfo, 0, len(tipset.Blocks()))
+	consolidateAddrs := p.parserV2.GetConfig().ConsolidateRobustAddress
+	bestEffort := p.parserV2.GetConfig().RobustAddressBestEffort
+
+	for _, block := range tipset.Blocks() {
+		minerAddr := block.Miner.String()
+		if consolidateAddrs {
+			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort)
+			if err != nil {
+				p.logger.Errorf("error consolidating miner address: %s. err: %s", block.Miner.String(), err)
+			}
+			minerAddr = consolidatedMinerAddr
+		}
+		blocksInfo = append(blocksInfo, types.BlockInfo{
+			BlockCid: block.Cid().String(),
+			Miner:    minerAddr,
+		})
+
+		addressInfo := p.Helper.GetActorAddressInfo(block.Miner, tipset.Key(), block.Height)
+		parser.AppendToAddressesMap(addresses, addressInfo)
+	}
+	blocksBlob, _ := json.Marshal(blocksInfo)
+
+	blockTimeStamp := int64(minTs) * 1000 //nolint:gosec,G115 // Allowing integer overflow conversion
+
+	blocksCid := tools.GetBlocksCidByString(tipset.Key().String())
+	return &types.BlocksTimestamp{
+		TipsetBasicBlockData: types.TipsetBasicBlockData{
+			BasicBlockData: types.BasicBlockData{
+				// #nosec G115
+				Height:    uint64(tipset.Height()),
+				TipsetCid: tipset.GetCidString(),
+			},
+			BlocksCid: blocksCid,
+			NodeInfo: types.NodeInfo{
+				NodeFullVersion:       nodeFullVersion,
+				NodeMajorMinorVersion: nodeMajorMinorVersion,
+			},
+		},
+		Id:              tipsetId,
+		ParentTipsetCid: tipset.GetParentCidString(),
+		Timestamp:       time.Unix(blockTimeStamp/1000, blockTimeStamp%1000),
+		BaseFee:         baseFee,
+		BlocksInfo:      string(blocksBlob),
+	}, addresses, nil
+
 }
 
 func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {

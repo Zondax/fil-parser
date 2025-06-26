@@ -238,7 +238,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
-				totalTraces:  907,
+				totalTraces:  910,
 				totalAddress: 234,
 				totalTxCids:  151,
 			},
@@ -249,7 +249,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573062",
 			results: expectedResults{
-				totalTraces:  773,
+				totalTraces:  774,
 				totalAddress: 209,
 				totalTxCids:  121,
 			},
@@ -271,7 +271,7 @@ func TestParser_ParseTransactions(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573066",
 			results: expectedResults{
-				totalTraces:  1118,
+				totalTraces:  1121,
 				totalAddress: 274,
 				totalTxCids:  187,
 			},
@@ -1979,7 +1979,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			url:     nodeUrl,
 			height:  "2907520",
 			results: expectedResults{
-				totalTraces:  907,
+				totalTraces:  910,
 				totalAddress: 234,
 				totalTxCids:  151,
 			},
@@ -1990,7 +1990,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573062",
 			results: expectedResults{
-				totalTraces:  773,
+				totalTraces:  774,
 				totalAddress: 209,
 				totalTxCids:  121,
 			},
@@ -2013,7 +2013,7 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			url:     nodeUrl,
 			height:  "3573066",
 			results: expectedResults{
-				totalTraces:  1118,
+				totalTraces:  1121,
 				totalAddress: 274,
 				totalTxCids:  187,
 			},

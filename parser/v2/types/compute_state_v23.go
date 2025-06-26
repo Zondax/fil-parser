@@ -32,4 +32,6 @@ type ExecutionTraceV2 struct {
 	InvokedActor *types.ActorTrace
 	GasCharges   []*types.GasTrace  `cborgen:"maxlen=1000000000" json:"-"`
 	Subcalls     []ExecutionTraceV2 `cborgen:"maxlen=1000000000"`
+	Error        string
+	Duration     time.Duration
 }

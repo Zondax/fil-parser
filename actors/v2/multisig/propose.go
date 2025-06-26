@@ -22,7 +22,7 @@ import (
 // 3. Parsing the proposal parameters using the actor's Parse method
 func (m *Msig) parseInnerProposeMsg(
 	msg *parser.LotusMessage, to address.Address, network string, height int64, method abi.MethodNum,
-	proposeParams, proposeReturn []byte, key filTypes.TipSetKey,
+	proposeParams, proposeReturn []byte, key filTypes.TipSetKey, applied bool, exitCode exitcode.ExitCode,
 ) (string, map[string]interface{}, error) {
 	proposeMsg := &parser.LotusMessage{
 		To:     to,
@@ -40,7 +40,9 @@ func (m *Msig) parseInnerProposeMsg(
 	}
 
 	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, proposeMsgRct, msg.Cid, key)
-	if err != nil {
+	// If the proposal didn't execute successfully, we don't return a parsing error
+	//  https://github.com/filecoin-project/ref-fvm/blob/4eae3b6e8d1858abfdb82956dc8cbf082a0cac66/shared/src/error/mod.rs#L55
+	if err != nil && (applied && exitCode == exitcode.Ok) {
 		return "", nil, err
 	}
 
