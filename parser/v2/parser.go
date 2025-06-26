@@ -375,9 +375,6 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
 	if len(metadata) == 0 {
-		if metadata == nil {
-			metadata = map[string]interface{}{}
-		}
 		metadata = map[string]interface{}{
 			parser.ParamsRawKey: trace.Msg.Params,
 			parser.ReturnRawKey: trace.MsgRct.Return,

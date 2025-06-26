@@ -29,7 +29,6 @@ import (
 	"github.com/zondax/fil-parser/tools"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
-	"github.com/zondax/golem/pkg/zhttpclient/backoff"
 	rosettaFilecoinLib "github.com/zondax/rosetta-filecoin-lib"
 )
 
@@ -44,7 +43,6 @@ type FilecoinParser struct {
 	Helper   *helper2.Helper
 	logger   *logger.Logger
 	network  string
-	backoff  backoff.BackOff
 }
 
 type Parser interface {

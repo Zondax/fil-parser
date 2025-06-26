@@ -311,9 +311,6 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}
 
 	if len(metadata) == 0 {
-		if metadata == nil {
-			metadata = map[string]interface{}{}
-		}
 		metadata = map[string]interface{}{
 			parser.ParamsRawKey: trace.Msg.Params,
 			parser.ReturnRawKey: trace.MsgRct.Return,
