@@ -37,14 +37,14 @@ func WithConfig(config parser.Config) Option {
 	}
 }
 
-func WithBackoff(config parser.Config) Option {
+func WithBackoff(maxRetries int, maxWaitBeforeRetrySeconds int, retryStrategy string) Option {
 	return func(o *FilecoinParserOptions) {
 		b := golemBackoff.New().
-			WithMaxAttempts(config.NodeMaxRetries).
-			WithMaxDuration(time.Duration(config.NodeMaxWaitBeforeRetrySeconds) * time.Second).
-			WithInitialDuration(time.Duration(config.NodeMaxWaitBeforeRetrySeconds) * time.Second)
+			WithMaxAttempts(maxRetries).
+			WithMaxDuration(time.Duration(maxWaitBeforeRetrySeconds) * time.Second).
+			WithInitialDuration(time.Duration(maxWaitBeforeRetrySeconds) * time.Second)
 
-		switch config.NodeRetryStrategy {
+		switch retryStrategy {
 		case parser.BackOffStrategyLinear:
 			o.backoff = b.Linear()
 		case parser.BackOffStrategyExponential:
@@ -57,9 +57,9 @@ func WithBackoff(config parser.Config) Option {
 
 func DefaultBackoff() backoff.BackOff {
 	b := golemBackoff.New().
-		WithMaxAttempts(1).
-		WithMaxDuration(3 * time.Second).
-		WithInitialDuration(3 * time.Second)
+		WithMaxAttempts(0).
+		WithMaxDuration(0).
+		WithInitialDuration(0)
 
 	return b.Linear()
 }
