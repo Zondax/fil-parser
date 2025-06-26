@@ -267,6 +267,10 @@ func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transac
 	return p.minerEventGenerator.GenerateMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
 }
 
+func (p *Parser) ParseVerifregEvents(ctx context.Context, verifregTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.VerifregEvents, error) {
+	return nil, nil
+}
+
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
