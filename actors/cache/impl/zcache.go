@@ -19,6 +19,7 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 	metrics2 "github.com/zondax/golem/pkg/metrics"
 	"github.com/zondax/golem/pkg/zcache"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const (
@@ -43,7 +44,7 @@ type ZCache struct {
 	metrics            *cacheMetrics.ActorsCacheMetricsClient
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, _ *golemBackoff.BackOff) error {
 	var newImplMu sync.Mutex
 	newImplMu.Lock()
 	defer newImplMu.Unlock()

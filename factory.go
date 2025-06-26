@@ -62,13 +62,11 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:                  false,
-			ConsolidateRobustAddress:      false,
-			RobustAddressBestEffort:       false,
-			NodeMaxRetries:                3,
-			NodeMaxWaitBeforeRetrySeconds: 1,
-			NodeRetryStrategy:             "linear",
+			FeesAsColumn:             false,
+			ConsolidateRobustAddress: false,
+			RobustAddressBestEffort:  false,
 		},
+		backoff: DefaultBackoff(),
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -92,8 +90,8 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		return nil, err
 	}
 
-	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
-	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
+	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -108,13 +106,11 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:                  false,
-			ConsolidateRobustAddress:      false,
-			RobustAddressBestEffort:       false,
-			NodeMaxRetries:                3,
-			NodeMaxWaitBeforeRetrySeconds: 1,
-			NodeRetryStrategy:             "linear",
+			FeesAsColumn:             false,
+			ConsolidateRobustAddress: false,
+			RobustAddressBestEffort:  false,
 		},
+		backoff: DefaultBackoff(),
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -141,14 +137,14 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	var parserV1 Parser
 	var parserV2 Parser
 
-	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 	if networkName == tools.CalibrationNetwork {
 		// trace files already use executiontracev2 because of a resync and calibration resets
 		// so we need to use the new parser regardless of the height
-		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 	}
 
-	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -338,9 +334,8 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 
 		tipsetCid := genesisTipset.GetCidString()
 		txType := "Genesis"
-		blockCid := genesisTipset.Key().String()
-		blockCid = strings.ReplaceAll(blockCid, "{", "")
-		blockCid = strings.ReplaceAll(blockCid, "}", "")
+		blockCid := tools.FormatTipsetKey(genesisTipset.Key())
+
 		genesisTxs = append(genesisTxs, &types.Transaction{
 			TxBasicBlockData: types.TxBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
@@ -413,7 +408,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	return multisigInfos, nil
 }
 
-func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
 	addresses := types.NewAddressInfoMap()
 	nodeFullVersion := parser.UnknownStr
 	nodeMajorMinorVersion := parser.UnknownStr
@@ -432,8 +427,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 		return &types.BlocksTimestamp{
 			TipsetBasicBlockData: types.TipsetBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
-					// #nosec G115
-					Height:    uint64(tipset.Height()),
+					Height:    height,
 					TipsetCid: tipset.GetCidString(),
 				},
 				BlocksCid: []string{},
@@ -475,8 +469,9 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort)
 			if err != nil {
 				p.logger.Errorf("error consolidating miner address: %s. err: %s", block.Miner.String(), err)
+			} else {
+				minerAddr = consolidatedMinerAddr
 			}
-			minerAddr = consolidatedMinerAddr
 		}
 		blocksInfo = append(blocksInfo, types.BlockInfo{
 			BlockCid: block.Cid().String(),
@@ -494,8 +489,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 	return &types.BlocksTimestamp{
 		TipsetBasicBlockData: types.TipsetBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
-				// #nosec G115
-				Height:    uint64(tipset.Height()),
+				Height:    height,
 				TipsetCid: tipset.GetCidString(),
 			},
 			BlocksCid: blocksCid,
@@ -542,7 +536,7 @@ func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *h
 		ActorCid: actorCode,
 		// genesis transactions do not have a creation_tx_cid ,
 		// we use the tipset_cid in this case to enable users to find the genesis tipset from this address info.
-		CreationTxCid: tipsetKey.String(),
+		CreationTxCid: tools.FormatTipsetKey(tipsetKey),
 		ActorType:     tools.ParseActorName(actorName),
 		IsSystemActor: helper.IsSystemActor(filAdd) || helper.IsGenesisActor(filAdd),
 	}, nil

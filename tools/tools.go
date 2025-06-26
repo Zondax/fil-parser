@@ -180,3 +180,10 @@ func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
 	}
 	return CheckExitCodeError(code)
 }
+
+func FormatTipsetKey(tipsetKey filTypes.TipSetKey) string {
+	tipsetKeyStr := tipsetKey.String()
+	tipsetKeyStr = strings.ReplaceAll(tipsetKeyStr, "{", "")
+	tipsetKeyStr = strings.ReplaceAll(tipsetKeyStr, "}", "")
+	return tipsetKeyStr
+}
