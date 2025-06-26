@@ -1,6 +1,10 @@
 package parser
 
 const (
+	// Backoff
+	BackOffStrategyLinear      = "linear"
+	BackOffStrategyExponential = "exponential"
+
 	// Fees
 
 	TotalFeeOp           = "Fee"

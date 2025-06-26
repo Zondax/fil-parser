@@ -45,12 +45,21 @@ func WithBackoff(config parser.Config) Option {
 			WithInitialDuration(time.Duration(config.NodeMaxWaitBeforeRetrySeconds) * time.Second)
 
 		switch config.NodeRetryStrategy {
-		case "linear":
+		case parser.BackOffStrategyLinear:
 			o.backoff = b.Linear()
-		case "exponential":
+		case parser.BackOffStrategyExponential:
 			o.backoff = b.Exponential()
 		default:
 			o.backoff = b.Linear()
 		}
 	}
+}
+
+func DefaultBackoff() backoff.BackOff {
+	b := golemBackoff.New().
+		WithMaxAttempts(1).
+		WithMaxDuration(3 * time.Second).
+		WithInitialDuration(3 * time.Second)
+
+	return b.Linear()
 }

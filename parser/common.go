@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -117,13 +118,12 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 	return parentBaseFee.Uint64(), nil
 }
 
-func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient) (string, error) {
+func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff backoff.BackOff) (string, error) {
 	ctx := context.Background()
 
 	nodeApiCallOptions := &impl.NodeApiCallWithRetryOptions[*ethtypes.EthHash]{
-		RequestName:        "EthGetTransactionHashByCid",
-		MaxAttempts:        3,
-		MaxWaitBeforeRetry: 10 * time.Second,
+		RequestName: "EthGetTransactionHashByCid",
+		BackOff:     backoff,
 		Request: func() (*ethtypes.EthHash, error) {
 			ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
 			if err != nil || ethHash == nil {

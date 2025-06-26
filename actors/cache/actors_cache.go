@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/golem/pkg/logger"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/go-resty/resty/v2"
@@ -94,13 +94,13 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 	logger = logger2.GetSafeLogger(logger)
 	metrics := cacheMetrics.NewClient(metricsClient, "actorsCache")
 
-	err := onChainCache.NewImpl(dataSource, logger, metrics)
+	err := onChainCache.NewImpl(dataSource, logger, metrics, backoff)
 	if err != nil {
 		return nil, err
 	}
 
 	var combinedCache impl.ZCache
-	if err = combinedCache.NewImpl(dataSource, logger, metrics); err != nil {
+	if err = combinedCache.NewImpl(dataSource, logger, metrics, backoff); err != nil {
 		logger.Errorf("[ActorsCache] - Unable to initialize combined cache: %s", err.Error())
 		return nil, err
 	}
@@ -359,7 +359,7 @@ func (a *ActorsCache) ImplementationType() string {
 	return combinedCacheImpl
 }
 
-func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
+func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff backoff.BackOff) error {
 	return nil
 }
 

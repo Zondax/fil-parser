@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/go-resty/resty/v2"
@@ -16,7 +17,7 @@ import (
 const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
 
 type IActorsCache interface {
-	NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error
+	NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff backoff.BackOff) error
 	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error)
 	GetRobustAddress(add address.Address) (string, error)
 	GetShortAddress(add address.Address) (string, error)
