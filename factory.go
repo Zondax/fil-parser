@@ -62,13 +62,11 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:                  false,
-			ConsolidateRobustAddress:      false,
-			RobustAddressBestEffort:       false,
-			NodeMaxRetries:                3,
-			NodeMaxWaitBeforeRetrySeconds: 1,
-			NodeRetryStrategy:             "linear",
+			FeesAsColumn:             false,
+			ConsolidateRobustAddress: false,
+			RobustAddressBestEffort:  false,
 		},
+		backoff: DefaultBackoff(),
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -92,8 +90,8 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 		return nil, err
 	}
 
-	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
-	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV1 := v1.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
+	parserV2 := v2.NewParser(helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
@@ -108,13 +106,11 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	defaultOpts := FilecoinParserOptions{
 		metrics: metrics.NewNoopMetricsClient(),
 		config: parser.Config{
-			FeesAsColumn:                  false,
-			ConsolidateRobustAddress:      false,
-			RobustAddressBestEffort:       false,
-			NodeMaxRetries:                3,
-			NodeMaxWaitBeforeRetrySeconds: 1,
-			NodeRetryStrategy:             "linear",
+			FeesAsColumn:             false,
+			ConsolidateRobustAddress: false,
+			RobustAddressBestEffort:  false,
 		},
+		backoff: DefaultBackoff(),
 	}
 	for _, opt := range opts {
 		opt(&defaultOpts)
@@ -141,14 +137,14 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	var parserV1 Parser
 	var parserV2 Parser
 
-	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV1 = v1.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 	if networkName == tools.CalibrationNetwork {
 		// trace files already use executiontracev2 because of a resync and calibration resets
 		// so we need to use the new parser regardless of the height
-		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+		parserV1 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 	}
 
-	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.config)
+	parserV2 = v2.NewActorsV2Parser(networkName, helper, logger, defaultOpts.metrics, defaultOpts.backoff, defaultOpts.config)
 
 	return &FilecoinParser{
 		parserV1: parserV1,
