@@ -2,8 +2,12 @@ package verifreg
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
+	"fmt"
+	"strconv"
 	"strings"
+
+	"github.com/zondax/fil-parser/tools"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -91,12 +95,77 @@ func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid st
 		}
 		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
 		return events, nil
+	case parser.MethodAddVerifiedClient:
+		clientInfo, err := eg.parseAddVerifiedClient(tx, tipsetCid)
+		if err != nil {
+			return nil, err
+		}
+		events.ClientInfo = append(events.ClientInfo, clientInfo)
+		return events, nil
 	}
 
-	return nil, errors.New("unknown verifreg message")
+	return events, nil
 }
 
 func (eg *eventGenerator) parseAddVerifier(tx *types.Transaction, tipsetCid string) (*types.VerifierInfo, error) {
+	addr, intAllowance, err := eg.getAddressAllowance(tx.TxMetadata)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return &types.VerifierInfo{
+		ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
+		Address:     addr,
+		Allowance:   intAllowance,
+		TxCid:       tx.TxCid,
+		Height:      tx.Height,
+		TxTimestamp: tx.TxTimestamp,
+	}, nil
+}
+
+func (eg *eventGenerator) parseAddVerifiedClient(tx *types.Transaction, tipsetCid string) (*types.ClientInfo, error) {
+	addr, intAllowance, err := eg.getAddressAllowance(tx.TxMetadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ClientInfo{
+		ID:              tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
+		Verifier: tx.TxFrom,
+		Address:         addr,
+		Allowance:       intAllowance,
+		TxCid:           tx.TxCid,
+		Height:          tx.Height,
+		TxTimestamp:     tx.TxTimestamp,
+	}, nil
+}
+
+func (eg *eventGenerator) getAddressAllowance(metadata string) (string, uint64, error) {
+	var value map[string]interface{}
+	err := json.Unmarshal([]byte(metadata), &value)
+	if err != nil {
+		return "", 0, fmt.Errorf("error unmarshalling tx metadata: %w", err)
+	}
+
+	params, ok := value[parser.ParamsKey].(map[string]interface{})
+	if !ok {
+		return "", 0, fmt.Errorf("error parsing params: %w", err)
+	}
+
+	addr, ok := params["Address"].(string)
+	if !ok {
+		return "", 0, fmt.Errorf("error parsing address: %w", err)
+	}
+
+	allowance, ok := params["Allowance"].(string)
+	if !ok {
+		return "", 0, fmt.Errorf("error parsing allowance: %w", err)
+	}
+
+	intAllowance, err := strconv.ParseUint(allowance, 10, 64)
+	if err != nil {
+		return "", 0, fmt.Errorf("error parsing allowance string '%s': %w", allowance, err)
+	}
+
+	return addr, intAllowance, nil
 }

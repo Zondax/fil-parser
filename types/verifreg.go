@@ -9,6 +9,7 @@ type VerifregEvents struct {
 }
 
 type VerifierInfo struct {
+	ID          string    `json:"id"`
 	Address     string    `json:"address"`
 	Allowance   uint64    `json:"allowance"`
 	TxCid       string    `json:"tx_cid"`
@@ -17,9 +18,13 @@ type VerifierInfo struct {
 }
 
 type ClientInfo struct {
-	VerifierAddress string `json:"verifier_address"`
-	Address         string `json:"address"`
-	Allowance       uint64 `json:"allowance"`
+	ID          string    `json:"id"`
+	Verifier    string    `json:"verifier"`
+	Address     string    `json:"address"`
+	Allowance   uint64    `json:"allowance"`
+	TxCid       string    `json:"tx_cid"`
+	Height      uint64    `json:"height"`
+	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 
 type VerifregDeal struct {
