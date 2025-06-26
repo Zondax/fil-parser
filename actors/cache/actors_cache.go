@@ -12,8 +12,8 @@ import (
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/golem/pkg/logger"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/go-resty/resty/v2"
@@ -83,7 +83,7 @@ var CalibrationActorsId = map[string]bool{
 
 const combinedCacheImpl = "combined"
 
-func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metricsClient metrics.MetricsClient, backoff backoff.BackOff) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metricsClient metrics.MetricsClient, backoff *golemBackoff.BackOff) (*ActorsCache, error) {
 	var setupMu sync.Mutex
 	setupMu.Lock()
 	defer setupMu.Unlock()
@@ -359,7 +359,7 @@ func (a *ActorsCache) ImplementationType() string {
 	return combinedCacheImpl
 }
 
-func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff backoff.BackOff) error {
+func (a *ActorsCache) NewImpl(dataSource common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
 	return nil
 }
 

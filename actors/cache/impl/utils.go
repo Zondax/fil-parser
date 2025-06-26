@@ -4,12 +4,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
-	zbackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const (
@@ -33,7 +32,7 @@ type NodeApiResponse interface {
 }
 
 type NodeApiCallWithRetryOptions[T NodeApiResponse] struct {
-	BackOff         backoff.BackOff
+	BackOff         golemBackoff.BackOff
 	RequestName     string
 	Request         func() (T, error)
 	RetryErrStrings []string
@@ -82,7 +81,7 @@ func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOption
 
 	_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isNotSuccess, isNotRetry, isRetriable)
 
-	err = zbackoff.Do(func() error {
+	err = golemBackoff.Do(func() error {
 		result, err = request()
 		if err != nil {
 			// update failed retries
@@ -90,7 +89,7 @@ func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOption
 			return err
 		}
 		return nil
-	}, options.BackOff)
+	}, options.BackOff.Linear())
 
 	if err != nil {
 		// update failure after retry attempts

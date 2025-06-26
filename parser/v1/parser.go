@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/exitcode"
@@ -31,6 +30,7 @@ import (
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const Version = "v1"
@@ -48,10 +48,10 @@ type Parser struct {
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
 	config                 parser.Config
 	network                string
-	backoff                backoff.BackOff
+	backoff                *golemBackoff.BackOff
 }
 
-func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff, config parser.Config) *Parser {
+func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -72,7 +72,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 	}
 }
 
-func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff, config parser.Config) *Parser {
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
 	return &Parser{
 		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),

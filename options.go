@@ -3,7 +3,6 @@ package fil_parser
 import (
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	metrics2 "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/golem/pkg/metrics"
@@ -15,7 +14,7 @@ type FilecoinParserOptions struct {
 	// metrics is the metrics client used to track parser metrics and statistics.
 	metrics metrics2.MetricsClient
 	config  parser.Config
-	backoff backoff.BackOff
+	backoff *golemBackoff.BackOff
 }
 
 // Option is a function type that modifies FilecoinParserOptions.
@@ -37,29 +36,20 @@ func WithConfig(config parser.Config) Option {
 	}
 }
 
-func WithBackoff(maxRetries int, maxWaitBeforeRetrySeconds int, retryStrategy string) Option {
+func WithBackoff(maxRetries int, maxWaitBeforeRetrySeconds int) Option {
 	return func(o *FilecoinParserOptions) {
 		b := golemBackoff.New().
 			WithMaxAttempts(maxRetries).
 			WithMaxDuration(time.Duration(maxWaitBeforeRetrySeconds) * time.Second).
 			WithInitialDuration(time.Duration(maxWaitBeforeRetrySeconds) * time.Second)
 
-		switch retryStrategy {
-		case parser.BackOffStrategyLinear:
-			o.backoff = b.Linear()
-		case parser.BackOffStrategyExponential:
-			o.backoff = b.Exponential()
-		default:
-			o.backoff = b.Linear()
-		}
+		o.backoff = b
 	}
 }
 
-func DefaultBackoff() backoff.BackOff {
-	b := golemBackoff.New().
+func DefaultBackoff() *golemBackoff.BackOff {
+	return golemBackoff.New().
 		WithMaxAttempts(1).
 		WithMaxDuration(1 * time.Second).
 		WithInitialDuration(1 * time.Second)
-
-	return b.Linear()
 }

@@ -7,12 +7,12 @@ import (
 
 	"github.com/zondax/golem/pkg/logger"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
@@ -25,7 +25,7 @@ const OnChainImpl = "on-chain"
 type OnChain struct {
 	Node    api.FullNode
 	logger  *logger.Logger
-	backoff backoff.BackOff
+	backoff *golemBackoff.BackOff
 	metrics *cacheMetrics.ActorsCacheMetricsClient
 }
 
@@ -38,7 +38,7 @@ func (m *OnChain) BackFill() error {
 	return nil
 }
 
-func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff backoff.BackOff) error {
+func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
 	// Node datastore is required
 	m.logger = logger2.GetSafeLogger(logger)
 	if source.Node == nil {
@@ -47,6 +47,7 @@ func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metri
 
 	m.Node = source.Node
 	m.metrics = metrics
+	m.backoff = backoff
 
 	return nil
 }
@@ -120,7 +121,7 @@ func (m *OnChain) IsGenesisActor(_ string) bool {
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[*filTypes.Actor]{
 		RequestName: "StateGetActorWithTipSetKey",
-		BackOff:     m.backoff,
+		BackOff:     *m.backoff,
 		Request: func() (*filTypes.Actor, error) {
 			return m.Node.StateGetActor(context.Background(), add, key)
 		},
@@ -149,7 +150,7 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	var err error
 
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[address.Address]{
-		BackOff:         m.backoff,
+		BackOff:         *m.backoff,
 		RetryErrStrings: []string{"RPC client error"},
 	}
 

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -16,6 +15,7 @@ import (
 	"github.com/zondax/fil-parser/actors/cache/impl"
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	"github.com/zondax/fil-parser/types"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 func parseMetadata(key string, metadata map[string]interface{}) string {
@@ -118,12 +118,12 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 	return parentBaseFee.Uint64(), nil
 }
 
-func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff backoff.BackOff) (string, error) {
+func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) (string, error) {
 	ctx := context.Background()
 
 	nodeApiCallOptions := &impl.NodeApiCallWithRetryOptions[*ethtypes.EthHash]{
 		RequestName: "EthGetTransactionHashByCid",
-		BackOff:     backoff,
+		BackOff:     *backoff,
 		Request: func() (*ethtypes.EthHash, error) {
 			ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
 			if err != nil || ethHash == nil {

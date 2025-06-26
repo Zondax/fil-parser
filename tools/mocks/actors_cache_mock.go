@@ -3,8 +3,8 @@
 package mocks
 
 import (
-	backoff "github.com/cenkalti/backoff/v4"
 	address "github.com/filecoin-project/go-address"
+	backoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 
 	common "github.com/zondax/fil-parser/actors/cache/impl/common"
 
@@ -216,7 +216,7 @@ func (_m *IActorsCache) IsSystemActor(addr string) bool {
 }
 
 // NewImpl provides a mock function with given fields: source, _a1, _a2, _a3
-func (_m *IActorsCache) NewImpl(source common.DataSource, _a1 *logger.Logger, _a2 *metrics.ActorsCacheMetricsClient, _a3 backoff.BackOff) error {
+func (_m *IActorsCache) NewImpl(source common.DataSource, _a1 *logger.Logger, _a2 *metrics.ActorsCacheMetricsClient, _a3 *backoff.BackOff) error {
 	ret := _m.Called(source, _a1, _a2, _a3)
 
 	if len(ret) == 0 {
@@ -224,7 +224,7 @@ func (_m *IActorsCache) NewImpl(source common.DataSource, _a1 *logger.Logger, _a
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(common.DataSource, *logger.Logger, *metrics.ActorsCacheMetricsClient, backoff.BackOff) error); ok {
+	if rf, ok := ret.Get(0).(func(common.DataSource, *logger.Logger, *metrics.ActorsCacheMetricsClient, *backoff.BackOff) error); ok {
 		r0 = rf(source, _a1, _a2, _a3)
 	} else {
 		r0 = ret.Error(0)

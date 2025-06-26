@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	"github.com/cenkalti/backoff/v4"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/exitcode"
@@ -34,6 +33,7 @@ import (
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const Version = "v2"
@@ -51,11 +51,11 @@ type Parser struct {
 	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
-	backoff                backoff.BackOff
+	backoff                *golemBackoff.BackOff
 	config                 parser.Config
 }
 
-func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff, config parser.Config) *Parser {
+func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -79,7 +79,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 	return p
 }
 
-func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff backoff.BackOff, config parser.Config) *Parser {
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
 	return &Parser{
 		network:                network,
 		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
