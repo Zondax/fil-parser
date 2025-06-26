@@ -31,6 +31,7 @@ import (
 	eventTools "github.com/zondax/fil-parser/tools/events"
 	minerTools "github.com/zondax/fil-parser/tools/miner"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
+	verifregTools "github.com/zondax/fil-parser/tools/verifreg"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
 )
@@ -48,6 +49,7 @@ type Parser struct {
 	logger                 *logger.Logger
 	multisigEventGenerator multisigTools.EventGenerator
 	minerEventGenerator    minerTools.EventGenerator
+	verifregEventGenerator verifregTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
 
@@ -86,6 +88,7 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		verifregEventGenerator: verifregTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger)),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -287,6 +290,10 @@ func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.T
 
 func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
 	return p.minerEventGenerator.GenerateMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
+}
+
+func (p *Parser) ParseVerifregEvents(ctx context.Context, verifregTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.VerifregEvents, error) {
+	return p.verifregEventGenerator.GenerateVerifregEvents(ctx, verifregTxs, tipsetCid, tipsetKey)
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
