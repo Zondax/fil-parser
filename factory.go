@@ -412,7 +412,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	return multisigInfos, nil
 }
 
-func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
 	addresses := types.NewAddressInfoMap()
 	nodeFullVersion := parser.UnknownStr
 	nodeMajorMinorVersion := parser.UnknownStr
@@ -431,8 +431,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 		return &types.BlocksTimestamp{
 			TipsetBasicBlockData: types.TipsetBasicBlockData{
 				BasicBlockData: types.BasicBlockData{
-					// #nosec G115
-					Height:    uint64(tipset.Height()),
+					Height:    height,
 					TipsetCid: tipset.GetCidString(),
 				},
 				BlocksCid: []string{},
@@ -494,8 +493,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, trace []byte, meta
 	return &types.BlocksTimestamp{
 		TipsetBasicBlockData: types.TipsetBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
-				// #nosec G115
-				Height:    uint64(tipset.Height()),
+				Height:    height,
 				TipsetCid: tipset.GetCidString(),
 			},
 			BlocksCid: blocksCid,
