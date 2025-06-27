@@ -70,7 +70,7 @@ func methods(c *cli.CLI, cmd *cobra.Command, _ []string) {
 	}, logger, filMetrics.NewMetricsClient(metrics2.NewNoopMetrics()), golemBackoff.New().
 		WithMaxAttempts(3).
 		WithMaxDuration(1*time.Second).
-		WithInitialDuration(1*time.Second).Linear())
+		WithInitialDuration(1*time.Second))
 	if err != nil {
 		zap.S().Error(err)
 		return

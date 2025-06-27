@@ -5,6 +5,7 @@ go 1.23.7
 toolchain go1.24.1
 
 require (
+	github.com/Zondax/zindexer v1.5.3
 	github.com/bytedance/sonic v1.13.3
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
@@ -26,8 +27,8 @@ require (
 )
 
 require (
-	github.com/ClickHouse/ch-go v0.65.1 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.34.0 // indirect
+	github.com/ClickHouse/ch-go v0.66.0 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.35.0 // indirect
 	github.com/GeertJohan/go.incremental v1.0.0 // indirect
 	github.com/GeertJohan/go.rice v1.0.3 // indirect
 	github.com/akavel/rsrc v0.10.2 // indirect
@@ -91,6 +92,8 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/termie/go-shutil v0.0.0-20140729215957-bcacb06fecae // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.3.2 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelsql v0.3.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/whyrusleeping/bencher v0.0.0-20190829221104-bb6607aa8bba // indirect
@@ -102,9 +105,9 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/tools v0.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gorm.io/driver/clickhouse v0.6.1 // indirect
-	gorm.io/driver/postgres v1.5.11 // indirect
-	gorm.io/gorm v1.26.1 // indirect
+	gorm.io/driver/clickhouse v0.7.0 // indirect
+	gorm.io/driver/postgres v1.6.0 // indirect
+	gorm.io/gorm v1.30.0 // indirect
 )
 
 require (
