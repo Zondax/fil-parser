@@ -14,6 +14,7 @@ type VerifierInfo struct {
 	Allowance   uint64    `json:"allowance"`
 	TxCid       string    `json:"tx_cid"`
 	Height      uint64    `json:"height"`
+	Removed     uint8     `json:"removed"`
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 
@@ -24,6 +25,7 @@ type ClientInfo struct {
 	Allowance   uint64    `json:"allowance"`
 	TxCid       string    `json:"tx_cid"`
 	Height      uint64    `json:"height"`
+	Removed     uint8     `json:"removed"`
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 

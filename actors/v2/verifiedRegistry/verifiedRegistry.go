@@ -133,7 +133,7 @@ func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) 
 
 func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := dataCap[version.String()]
+	params, ok := removedVerifiedClient[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}

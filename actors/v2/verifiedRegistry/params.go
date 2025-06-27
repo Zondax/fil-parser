@@ -1,6 +1,7 @@
 package verifiedRegistry
 
 import (
+	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
@@ -220,38 +221,39 @@ var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RestoreBytesParams) },
 }
 
-var dataCap = map[string]func() cbg.CBORUnmarshaler{
-	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
-	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(legacyv1.DataCap) },
+// TODO: check addr is correct
+var removedVerifiedClient = map[string]func() cbg.CBORUnmarshaler{
+	tools.V0.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V1.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V2.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V3.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
 
-	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
-	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(legacyv2.DataCap) },
+	tools.V4.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V5.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V6.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V7.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V8.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V9.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
 
-	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.DataCap) },
-	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(legacyv3.DataCap) },
+	tools.V10.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V11.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
 
-	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(legacyv4.DataCap) },
-	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(legacyv5.DataCap) },
-	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(legacyv6.DataCap) },
-	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.DataCap) },
-	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.DataCap) },
-	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.DataCap) },
-	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.DataCap) },
+	tools.V12.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V13.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V14.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(addr.Address) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.RemoveDataCapParams) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.RemoveDataCapParams) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.RemoveDataCapParams) },
 
-	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.DataCap) },
-	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.DataCap) },
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.RemoveDataCapParams) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.RemoveDataCapParams) },
 
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.DataCap) },
-	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.DataCap) },
-	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.DataCap) },
-	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.DataCap) },
-	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.DataCap) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.RemoveDataCapParams) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.RemoveDataCapParams) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.RemoveDataCapParams) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.RemoveDataCapParams) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveDataCapParams) },
 }
 
 var removeExpiredAllocationsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -420,4 +422,26 @@ var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.AllocationsResponse) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.AllocationsResponse) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AllocationsResponse) },
+}
+
+var VerifregTypes = map[string]map[string]func() cbg.CBORUnmarshaler{
+	parser.MethodAddVerifiedClient:         addVerifiedClientParams,
+	parser.MethodAddVerifiedClientExported: addVerifiedClientParams,
+	parser.MethodAddVerifier:               addVerifierParams,
+	//parser.MethodRemoveVerifier:                   &address.Address{},
+	parser.MethodUseBytes:                         useBytesParams,
+	parser.MethodRestoreBytes:                     restoreBytesParams,
+	parser.MethodRemoveExpiredAllocations:         removeExpiredAllocationsParams,
+	parser.MethodRemoveExpiredAllocationsExported: removeExpiredAllocationsParams,
+	parser.MethodRemoveVerifiedClientDataCap:      removedVerifiedClient,
+	parser.MethodVerifiedDeprecated1:              removedVerifiedClient,
+	parser.MethodVerifiedDeprecated2:              removedVerifiedClient,
+	parser.MethodGetClaims:                        getClaimsParams,
+	parser.MethodGetClaimsExported:                getClaimsParams,
+	parser.MethodExtendClaimTerms:                 extendClaimTermsParams,
+	parser.MethodExtendClaimTermsExported:         extendClaimTermsParams,
+	parser.MethodRemoveExpiredClaims:              removeExpiredClaimsParams,
+	parser.MethodRemoveExpiredClaimsExported:      removeExpiredClaimsParams,
+	parser.MethodUniversalReceiverHook:            universalReceiverParams,
+	parser.MethodClaimAllocations:                 claimAllocationsParams,
 }
