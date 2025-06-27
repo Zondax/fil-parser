@@ -53,6 +53,7 @@ type Parser interface {
 	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error)
 	ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error)
+	ParseDealsEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error)
 	ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
@@ -240,6 +241,10 @@ func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.T
 }
 
 func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
+	return p.parserV2.ParseMinerEvents(ctx, txs, tipsetCid, tipsetKey)
+}
+
+func (p *FilecoinParser) ParseDealsEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
 	return p.parserV2.ParseMinerEvents(ctx, txs, tipsetCid, tipsetKey)
 }
 
