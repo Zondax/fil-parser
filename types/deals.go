@@ -3,11 +3,58 @@ package types
 import "time"
 
 type DealsEvents struct {
-	DealsInfo []*DealsInfo
+	DealsMessages []*DealsMessages
+	DealsInfo     []*DealsInfo
 }
+
 type DealsInfo struct {
+	ID     string `json:"id"`
+	Height uint64 `json:"height"`
+	DealID uint64 `json:"deal_id"`
+	TxCid  string `json:"tx_cid"`
+
+	// proposal details
+	ClientSignature string `json:"client_signature"`
+	ProviderAddress string `json:"provider_address"`
+	ClientAddress   string `json:"client_address"`
+	PieceCid        string `json:"piece_cid"`
+	PieceSize       uint64 `json:"piece_size"`
+	Verified        bool   `json:"verified"`
+
+	// Arbitrary client chosen label to apply to the deal
+	Label string `json:"label"`
+
+	// Nominal start epoch. Deal payment is linear between StartEpoch and EndEpoch,
+	// with total amount StoragePricePerEpoch * (EndEpoch - StartEpoch).
+	// Storage deal must appear in a sealed (proven) sector no later than StartEpoch,
+	// otherwise it is invalid.
+	StartEpoch    int64  `json:"start_epoch"`
+	EndEpoch      int64  `json:"end_epoch"`
+	PricePerEpoch uint64 `json:"price_per_epoch"`
+
+	ProviderCollateral uint64 `json:"provider_collateral"`
+	ClientCollateral   uint64 `json:"client_collateral"`
+
+	TxTimestamp time.Time `json:"tx_timestamp"`
+}
+
+// TODO: MAKE MV
+type DealsAllocation struct {
+	ID            string    `json:"id"`
+	Height        uint64    `json:"height"`
+	TxCid         string    `json:"tx_cid"`
+	DealID        uint64    `json:"deal_id"`
+	SectorNumber  uint64    `json:"sector_number"`
+	ClientAddress string    `json:"client_address"`
+	DataCid       string    `json:"data_cid"`
+	Size          uint64    `json:"size"`
+	ActionType    string    `json:"action_type"`
+	TxTimestamp   time.Time `json:"tx_timestamp"`
+}
+
+type DealsMessages struct {
 	ID           string    `json:"id"`
-	ActorAddress string    `json:"address"`
+	ActorAddress string    `json:"actor_address"`
 	Height       uint64    `json:"height"`
 	TxCid        string    `json:"tx_cid"`
 	ActionType   string    `json:"action_type"`

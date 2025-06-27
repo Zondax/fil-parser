@@ -29,6 +29,7 @@ type eventGenerator struct {
 	helper  *helper.Helper
 	logger  *logger.Logger
 	metrics *dealsMetricsClient
+	network string
 }
 
 func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) EventGenerator {
@@ -41,7 +42,8 @@ func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics met
 
 func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
 	events := &types.DealsEvents{
-		DealsInfo: []*types.DealsInfo{},
+		DealsMessages: []*types.DealsMessages{},
+		DealsInfo:     []*types.DealsInfo{},
 	}
 
 	for _, tx := range transactions {
@@ -73,21 +75,21 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			continue
 		}
 
-		minerInfo, err := eg.createMinerInfo(tx, tipsetCid, actorAddress)
+		dealMessage, err := eg.createDealMessage(tx, tipsetCid, actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not create miner info. Err: %s", err)
+			eg.logger.Errorf("could not create deal message. Err: %s", err)
 			continue
 		}
 
-		events.MinerInfo = append(events.MinerInfo, minerInfo)
+		events.DealsMessages = append(events.DealsMessages, dealMessage)
 
-		if eg.isMinerSectorMessage(actorName, tx.TxType) {
-			minerSectors, err := eg.createSectorEvents(ctx, tx, tipsetCid)
+		if eg.isPublishStorageDeals(actorName, tx.TxType) {
+			dealsInfo, err := eg.createDealsInfo(ctx, tx)
 			if err != nil {
-				eg.logger.Errorf("could not create miner sector. Err: %s", err)
+				eg.logger.Errorf("could not create deal allocation. Err: %s", err)
 				continue
 			}
-			events.MinerSectors = append(events.MinerSectors, minerSectors...)
+			events.DealsInfo = append(events.DealsInfo, dealsInfo...)
 		}
 	}
 
@@ -95,21 +97,31 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 }
 
 func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
+	if !strings.Contains(actorName, manifest.MarketKey) {
+		return false
+	}
+
 	switch {
-	case strings.Contains(actorName, manifest.MinerKey):
-		return !strings.EqualFold(txType, parser.MethodOnDeferredCronEvent)
-	case strings.EqualFold(txType, parser.MethodAwardBlockReward):
-		return true
-	case strings.EqualFold(txType, parser.MethodUpdateClaimedPower):
-		return true
-	case strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate),
-		strings.EqualFold(txType, parser.MethodPublishStorageDeals),
+	case strings.EqualFold(txType, parser.MethodPublishStorageDeals),
 		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported),
-		strings.EqualFold(txType, parser.MethodActivateDeals):
+		strings.EqualFold(txType, parser.MethodVerifyDealsForActivation),
+		strings.EqualFold(txType, parser.MethodActivateDeals),
+		strings.EqualFold(txType, parser.MethodSettleDealPaymentsExported),
+		strings.EqualFold(txType, parser.MethodSectorContentChanged):
 		return true
-	case strings.EqualFold(txType, parser.MethodCurrentTotalPower):
-		return true
-	case strings.EqualFold(txType, parser.MethodThisEpochReward):
+	}
+
+	return false
+}
+
+func (eg *eventGenerator) isPublishStorageDeals(actorName, txType string) bool {
+	if !strings.Contains(actorName, manifest.MarketKey) {
+		return false
+	}
+
+	switch {
+	case strings.EqualFold(txType, parser.MethodPublishStorageDeals),
+		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported):
 		return true
 	}
 

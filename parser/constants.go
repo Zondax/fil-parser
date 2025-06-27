@@ -152,6 +152,7 @@ const (
 	MethodAddBalanceExported                  = "AddBalanceExported"                  // MethodsMarket
 	MethodVerifyDealsForActivation            = "VerifyDealsForActivation"            // MethodsMarket
 	MethodActivateDeals                       = "ActivateDeals"                       // MethodsMarket
+	MethodBatchActivateDeals                  = "BatchActivateDeals"                  // MethodsMarket
 	MethodOnMinerSectorsTerminate             = "OnMinerSectorsTerminate"             // MethodsMarket
 	MethodComputeDataCommitment               = "ComputeDataCommitment"               // MethodsMarket
 	MethodGetBalance                          = "GetBalanceExported"                  // MethodsMarket
