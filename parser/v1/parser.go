@@ -219,6 +219,10 @@ func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transac
 	return nil, errors.New("unimplimented")
 }
 
+func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
+	return nil, errors.New("unimplimented")
+}
+
 func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
 	return nil, errors.New("unimplimented")
 }

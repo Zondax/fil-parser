@@ -28,6 +28,7 @@ import (
 	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
+	dealsTools "github.com/zondax/fil-parser/tools/deals"
 	eventTools "github.com/zondax/fil-parser/tools/events"
 	minerTools "github.com/zondax/fil-parser/tools/miner"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
@@ -49,6 +50,7 @@ type Parser struct {
 	logger                 *logger.Logger
 	multisigEventGenerator multisigTools.EventGenerator
 	minerEventGenerator    minerTools.EventGenerator
+	dealsEventGenerator    dealsTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
 	backoff                *golemBackoff.BackOff
@@ -70,6 +72,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -88,6 +91,7 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -290,6 +294,10 @@ func (p *Parser) ParseMultisigEvents(ctx context.Context, multisigTxs []*types.T
 
 func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
 	return p.minerEventGenerator.GenerateMinerEvents(ctx, minerTxs, tipsetCid, tipsetKey)
+}
+
+func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
+	return p.dealsEventGenerator.GenerateDealsEvents(ctx, dealsTxs, tipsetCid, tipsetKey)
 }
 
 func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error) {
