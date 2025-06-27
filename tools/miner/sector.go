@@ -18,6 +18,7 @@ const (
 	KeySectors           = "Sectors"
 	KeyExpiration        = "Expiration"
 	KeySectorSize        = "SectorSize"
+	KeyDealIDs           = "DealIDs"
 	KeyNewExpiration     = "NewExpiration"
 	KeyParams            = "Params"
 	KeyTerminations      = "Terminations"
@@ -120,6 +121,11 @@ func (eg *eventGenerator) parsePreCommitStage(_ context.Context, tx *types.Trans
 			return fmt.Errorf("error parsing sector number: %w", err)
 		}
 
+		dealIDs, err := getIntegerSlice[uint64](params, KeyDealIDs, true)
+		if err != nil {
+			return fmt.Errorf("error parsing deal ids: %w", err)
+		}
+
 		expiration, err := getInteger[int64](params, KeyExpiration, false)
 		if err != nil {
 			return fmt.Errorf("error parsing expiration: %w", err)
@@ -128,6 +134,7 @@ func (eg *eventGenerator) parsePreCommitStage(_ context.Context, tx *types.Trans
 			KeySectorNumber: sectorNumber,
 			KeyExpiration:   expiration,
 			KeySectorSize:   sectorProofToBigInt(sealProof).Uint64(),
+			KeyDealIDs:      dealIDs,
 		})
 		if err != nil {
 			return fmt.Errorf("error marshaling event: %w", err)
