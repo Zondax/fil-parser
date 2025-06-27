@@ -33,6 +33,7 @@ import (
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const Version = "v2"
@@ -50,11 +51,11 @@ type Parser struct {
 	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
-
-	config parser.Config
+	backoff                *golemBackoff.BackOff
+	config                 parser.Config
 }
 
-func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
+func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
 	network, err := helper.GetFilecoinNodeClient().StateNetworkName(context.Background())
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -72,12 +73,13 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
+		backoff:                backoff,
 	}
 
 	return p
 }
 
-func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) *Parser {
+func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
 	return &Parser{
 		network:                network,
 		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
@@ -89,6 +91,7 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
+		backoff:                backoff,
 	}
 }
 
@@ -185,7 +188,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		// TxCid <-> TxHash
 		if int64(txsData.Tipset.Height()) >= p.config.TxCidTranslationStart {
-			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics)
+			txHash, err := parser.TranslateTxCidToTxHash(p.helper.GetFilecoinNodeClient(), trace.MsgCid, p.actorsCacheMetrics, p.backoff)
 			if err == nil && txHash != "" {
 				p.txCidEquivalents = append(p.txCidEquivalents, types.TxCidTranslation{TxCid: trace.MsgCid.String(), TxHash: txHash})
 			}
@@ -362,7 +365,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	// Whenever a tx fails, it could be for multiple reasons.
 	// It can happen that the tx is unknown, the to address actor is not valid, or the params are wrong.
 	// If that it is the case, we will fail to parse it too... so we don't want to count it as a failed tx.
-	if mErr != nil && !subcallFailedTx {
+	if mErr != nil && (!subcallFailedTx || !mainFailedTx) {
 		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
 		p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
@@ -371,7 +374,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	if !mainFailedTx && addressInfo != nil {
 		parser.AppendToAddressesMap(p.addresses, addressInfo)
 	}
-	if metadata == nil {
+	if len(metadata) == 0 {
 		metadata = map[string]interface{}{
 			parser.ParamsRawKey: trace.Msg.Params,
 			parser.ReturnRawKey: trace.MsgRct.Return,
