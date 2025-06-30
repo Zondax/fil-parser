@@ -12,6 +12,8 @@ import (
 
 const (
 	KeyDeals                = "Deals"
+	KeyIDs                  = "IDs"
+	KeyValidDeals           = "ValidDeals"
 	KeyDealIDs              = "DealIDs"
 	KeyClientSignature      = "ClientSignature"
 	KeyProposal             = "Proposal"
@@ -47,7 +49,7 @@ func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transacti
 		return nil, fmt.Errorf("error parsing ret: %w", err)
 	}
 
-	dealsInfo, err := parsePublishStorageDeals(tx, params, ret)
+	dealsInfo, err := eg.parsePublishStorageDeals(tx, params, ret)
 	if err != nil {
 		return nil, fmt.Errorf("error creating events: %w", err)
 	}
@@ -55,16 +57,34 @@ func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transacti
 	return dealsInfo, nil
 }
 
-func parsePublishStorageDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsInfo, error) {
+func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsInfo, error) {
 	dealsInfo := make([]*types.DealsInfo, 0)
-	dealIDs, err := common.GetIntegerSlice[uint64](ret, KeyDealIDs, false)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing seal proof: %w", err)
+	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
+
+	var dealIDs []uint64
+	// use the return to get the deal ids because the actor may drop invalid deals and return less ids than the params
+	// From NV0 - NV13 the verified deals are in PublishStorageDealsReturn.IDs
+	if version.NodeVersion() < tools.V14.NodeVersion() {
+		var err error
+		dealIDs, err = common.GetIntegerSlice[uint64](ret, KeyIDs, false)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing deal ids: %w", err)
+		}
+	} else {
+		// From >= NV14 the verified deals are in PublishStorageDealsReturn.ValidDeals as a bitfield
+		validDeals, err := common.GetIntegerSlice[int](ret, KeyValidDeals, false)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing verified deal ids: %w", err)
+		}
+		dealIDs, err = common.JsonEncodedBitfieldToIDs(validDeals)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing verified deal ids: %w", err)
+		}
 	}
 
 	deals, err := common.GetSlice[map[string]interface{}](params, KeyDeals, false)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing seal proof: %w", err)
+		return nil, fmt.Errorf("error parsing deals: %w", err)
 	}
 
 	for idx, deal := range deals {

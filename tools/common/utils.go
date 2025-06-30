@@ -1,9 +1,11 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 
+	"github.com/filecoin-project/go-bitfield"
 	"golang.org/x/exp/constraints"
 )
 
@@ -92,4 +94,38 @@ func GetSlice[T any](value map[string]interface{}, key string, canBeNil bool) ([
 		return result, nil
 	}
 	return result, fmt.Errorf("key %s not of type %T , of type %T", key, result, value[key])
+}
+
+// a bit field is a range of bits representing the different ids (numbers).
+// example: ids: [ 0 1 2 3] -> bitfield: [1 1 1 1 ] -> JSON: [0,4]
+// example: ids: [0 1 3 4 5] -> bitfield: [1 1 0 1 1 1] -> JSON: [ 0,2,1,3 ]
+// the JSON format always starts with a 0 and proceeds with the 0/1 pattern
+// see here: https://pkg.go.dev/github.com/filecoin-project/go-bitfield@v0.2.4/rle#RLE.MarshalJSON
+func JsonEncodedBitfieldToIDs(bitField []int) ([]uint64, error) {
+	ids := []uint64{}
+
+	var parsedBitField bitfield.BitField
+	bitFieldJSON, err := json.Marshal(bitField)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling json encoded bitfield: %w", err)
+	}
+
+	err = parsedBitField.UnmarshalJSON(bitFieldJSON)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing json encoded bitfield: %w", err)
+	}
+
+	iter, err := parsedBitField.BitIterator()
+	if err != nil {
+		return nil, fmt.Errorf("error iterating over bitfield: %w", err)
+	}
+
+	for iter.HasNext() {
+		id, err := iter.Next()
+		if err != nil {
+			return nil, fmt.Errorf("error getting next id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }
