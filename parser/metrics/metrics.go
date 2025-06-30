@@ -36,13 +36,13 @@ const (
 // Metrics labels
 const (
 	// errorLabel   = "error"
-	actorLabel         = "actor"
-	txTypeLabel        = "txType"
-	codeLabel          = "code"
-	kindLabel          = "kind"
-	addressLabel       = "address"
-	subcallStatusLabel = "subcallStatus"
-	mainStatusLabel    = "mainStatus"
+	actorLabel          = "actor"
+	txTypeLabel         = "txType"
+	codeLabel           = "code"
+	kindLabel           = "kind"
+	addressLabel        = "address"
+	subcallSuccessLabel = "subcallSuccess"
+	mainSuccessLabel    = "mainSuccess"
 )
 
 // Patterns to normalize error messages
@@ -65,14 +65,14 @@ var (
 	parsingMetadataErrorMetric = metrics.Metric{
 		Name:    parseMetadata,
 		Help:    "parsing metadata error",
-		Labels:  []string{actorLabel, txTypeLabel, subcallStatusLabel, mainStatusLabel},
+		Labels:  []string{actorLabel, txTypeLabel, subcallSuccessLabel, mainSuccessLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingMethodNameMetric = metrics.Metric{
 		Name:    parseMethodName,
 		Help:    "parsing method name",
-		Labels:  []string{actorLabel, codeLabel, subcallStatusLabel, mainStatusLabel},
+		Labels:  []string{actorLabel, codeLabel, subcallSuccessLabel, mainSuccessLabel},
 		Handler: &collectors.Gauge{},
 	}
 
