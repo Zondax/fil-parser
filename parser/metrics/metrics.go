@@ -175,7 +175,7 @@ var (
 	}
 )
 
-func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, subcallStatus, mainStatus bool) error {
+func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, subcallSuccess, mainSuccess bool) error {
 	// TODO: remove once errors are normalize
 	// errMsg := err.Error()
 	// switch {
@@ -185,15 +185,15 @@ func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, su
 	// 	errMsg = "address is flagged as bad"
 	// }
 
-	subcallStatusStr := strconv.FormatBool(subcallStatus)
-	mainStatusStr := strconv.FormatBool(mainStatus)
+	subcallStatusStr := strconv.FormatBool(subcallSuccess)
+	mainStatusStr := strconv.FormatBool(mainSuccess)
 
 	return c.IncrementMetric(parseMetadata, actor, txType, subcallStatusStr, mainStatusStr)
 }
 
-func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string, subcallStatus, mainStatus bool) error {
-	subcallStatusStr := strconv.FormatBool(subcallStatus)
-	mainStatusStr := strconv.FormatBool(mainStatus)
+func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string, subcallSuccess, mainSuccess bool) error {
+	subcallStatusStr := strconv.FormatBool(subcallSuccess)
+	mainStatusStr := strconv.FormatBool(mainSuccess)
 
 	return c.IncrementMetric(parseMethodName, actorName, code, subcallStatusStr, mainStatusStr)
 }
