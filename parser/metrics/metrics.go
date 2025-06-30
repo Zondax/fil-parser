@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"regexp"
+	"strconv"
 
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/metrics/collectors"
@@ -35,11 +36,13 @@ const (
 // Metrics labels
 const (
 	// errorLabel   = "error"
-	actorLabel   = "actor"
-	txTypeLabel  = "txType"
-	codeLabel    = "code"
-	kindLabel    = "kind"
-	addressLabel = "address"
+	actorLabel          = "actor"
+	txTypeLabel         = "txType"
+	codeLabel           = "code"
+	kindLabel           = "kind"
+	addressLabel        = "address"
+	subcallSuccessLabel = "subcallSuccess"
+	mainSuccessLabel    = "mainSuccess"
 )
 
 // Patterns to normalize error messages
@@ -62,14 +65,14 @@ var (
 	parsingMetadataErrorMetric = metrics.Metric{
 		Name:    parseMetadata,
 		Help:    "parsing metadata error",
-		Labels:  []string{actorLabel, txTypeLabel},
+		Labels:  []string{actorLabel, txTypeLabel, subcallSuccessLabel, mainSuccessLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingMethodNameMetric = metrics.Metric{
 		Name:    parseMethodName,
 		Help:    "parsing method name",
-		Labels:  []string{actorLabel, codeLabel},
+		Labels:  []string{actorLabel, codeLabel, subcallSuccessLabel, mainSuccessLabel},
 		Handler: &collectors.Gauge{},
 	}
 
@@ -172,7 +175,7 @@ var (
 	}
 )
 
-func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) error {
+func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, subcallSuccess, mainSuccess bool) error {
 	// TODO: remove once errors are normalize
 	// errMsg := err.Error()
 	// switch {
@@ -182,11 +185,17 @@ func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) er
 	// 	errMsg = "address is flagged as bad"
 	// }
 
-	return c.IncrementMetric(parseMetadata, actor, txType)
+	subcallStatusStr := strconv.FormatBool(subcallSuccess)
+	mainStatusStr := strconv.FormatBool(mainSuccess)
+
+	return c.IncrementMetric(parseMetadata, actor, txType, subcallStatusStr, mainStatusStr)
 }
 
-func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string) error {
-	return c.IncrementMetric(parseMethodName, actorName, code)
+func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string, subcallSuccess, mainSuccess bool) error {
+	subcallStatusStr := strconv.FormatBool(subcallSuccess)
+	mainStatusStr := strconv.FormatBool(mainSuccess)
+
+	return c.IncrementMetric(parseMethodName, actorName, code, subcallStatusStr, mainStatusStr)
 }
 
 func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string) error {
