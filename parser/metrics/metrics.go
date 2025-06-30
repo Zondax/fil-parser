@@ -72,7 +72,7 @@ var (
 	parsingMethodNameMetric = metrics.Metric{
 		Name:    parseMethodName,
 		Help:    "parsing method name",
-		Labels:  []string{actorLabel, codeLabel},
+		Labels:  []string{actorLabel, codeLabel, subcallStatusLabel, mainStatusLabel},
 		Handler: &collectors.Gauge{},
 	}
 
@@ -191,8 +191,11 @@ func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, su
 	return c.IncrementMetric(parseMetadata, actor, txType, subcallStatusStr, mainStatusStr)
 }
 
-func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string) error {
-	return c.IncrementMetric(parseMethodName, actorName, code)
+func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string, subcallStatus, mainStatus bool) error {
+	subcallStatusStr := strconv.FormatBool(subcallStatus)
+	mainStatusStr := strconv.FormatBool(mainStatus)
+
+	return c.IncrementMetric(parseMethodName, actorName, code, subcallStatusStr, mainStatusStr)
 }
 
 func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string) error {
