@@ -366,7 +366,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	// It can happen that the tx is unknown, the to address actor is not valid, or the params are wrong.
 	// If that it is the case, we will fail to parse it too... so we don't want to count it as a failed tx.
 	if mErr != nil && (!subcallFailedTx || !mainFailedTx) {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType, subcallFailedTx, mainFailedTx)
 		p.logger.Errorf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 

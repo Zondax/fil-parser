@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"regexp"
+	"strconv"
 
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/metrics/collectors"
@@ -35,11 +36,13 @@ const (
 // Metrics labels
 const (
 	// errorLabel   = "error"
-	actorLabel   = "actor"
-	txTypeLabel  = "txType"
-	codeLabel    = "code"
-	kindLabel    = "kind"
-	addressLabel = "address"
+	actorLabel         = "actor"
+	txTypeLabel        = "txType"
+	codeLabel          = "code"
+	kindLabel          = "kind"
+	addressLabel       = "address"
+	subcallStatusLabel = "subcallStatus"
+	mainStatusLabel    = "mainStatus"
 )
 
 // Patterns to normalize error messages
@@ -62,7 +65,7 @@ var (
 	parsingMetadataErrorMetric = metrics.Metric{
 		Name:    parseMetadata,
 		Help:    "parsing metadata error",
-		Labels:  []string{actorLabel, txTypeLabel},
+		Labels:  []string{actorLabel, txTypeLabel, subcallStatusLabel, mainStatusLabel},
 		Handler: &collectors.Gauge{},
 	}
 
@@ -172,7 +175,7 @@ var (
 	}
 )
 
-func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) error {
+func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, subcallStatus, mainStatus bool) error {
 	// TODO: remove once errors are normalize
 	// errMsg := err.Error()
 	// switch {
@@ -182,7 +185,10 @@ func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) er
 	// 	errMsg = "address is flagged as bad"
 	// }
 
-	return c.IncrementMetric(parseMetadata, actor, txType)
+	subcallStatusStr := strconv.FormatBool(subcallStatus)
+	mainStatusStr := strconv.FormatBool(mainStatus)
+
+	return c.IncrementMetric(parseMetadata, actor, txType, subcallStatusStr, mainStatusStr)
 }
 
 func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string) error {
