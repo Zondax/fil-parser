@@ -8,6 +8,7 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/types"
@@ -31,7 +32,7 @@ func parseEamReturn[R typegen.CBORUnmarshaler](rawReturn []byte, r R) (R, error)
 	return r, nil
 }
 
-func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, msgCid cid.Cid, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -44,13 +45,13 @@ func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](e *Eam, r
 	}
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(e, rawReturn, metadata, msgCid, r, h)
+		return handleReturnValue(e, rawReturn, ec, metadata, msgCid, r, h)
 	}
 
 	return metadata, nil, nil
 }
 
-func parseCreateExternal[T typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreateExternal[T typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -66,12 +67,12 @@ func parseCreateExternal[T typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn
 	}
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(e, rawReturn, metadata, msgCid, r, h)
+		return handleReturnValue(e, rawReturn, ec, metadata, msgCid, r, h)
 	}
 	return metadata, nil, nil
 }
 
-func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, ec exitcode.ExitCode, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
 	createReturn, err := parseEamReturn(rawReturn, r)
 	if err != nil {
 		return nil, nil, err
@@ -84,7 +85,9 @@ func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, meta
 	}
 	metadata[parser.EthHashKey] = ethHash
 
-	h.GetActorsCache().StoreAddressInfo(*createdEvmActor)
+	if ec.IsSuccess() {
+		h.GetActorsCache().StoreAddressInfo(*createdEvmActor)
+	}
 
 	return metadata, createdEvmActor, nil
 }

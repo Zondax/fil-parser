@@ -102,7 +102,7 @@ func (e *Eam) newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *
 			Short:         parser.FilPrefix + strconv.FormatUint(actorID, 10),
 			Robust:        robustAddressStr,
 			EthAddress:    parser.EthPrefix + ethAddress,
-			ActorType:     "evm",
+			ActorType:     manifest.EvmKey,
 			CreationTxCid: msgCid.String(),
 		}, createReturn, nil
 

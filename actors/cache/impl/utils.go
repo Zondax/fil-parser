@@ -8,7 +8,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
-	"github.com/zondax/golem/pkg/zhttpclient/backoff"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const (
@@ -32,11 +32,10 @@ type NodeApiResponse interface {
 }
 
 type NodeApiCallWithRetryOptions[T NodeApiResponse] struct {
-	RequestName        string
-	MaxAttempts        int
-	MaxWaitBeforeRetry time.Duration
-	Request            func() (T, error)
-	RetryErrStrings    []string
+	BackOff         golemBackoff.BackOff
+	RequestName     string
+	Request         func() (T, error)
+	RetryErrStrings []string
 }
 
 // NodeApiCallWithRetry makes an API call with automatic retries for specific errors.
@@ -49,8 +48,6 @@ type NodeApiCallWithRetryOptions[T NodeApiResponse] struct {
 // Returns the result of the API call and any error encountered.
 func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOptions[T], metrics *cacheMetrics.ActorsCacheMetricsClient) (T, error) {
 	errStrings := options.RetryErrStrings
-	maxAttempts := options.MaxAttempts
-	maxWaitBeforeRetry := options.MaxWaitBeforeRetry
 
 	// time the request
 	request := func() (T, error) {
@@ -83,13 +80,8 @@ func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOption
 	}
 
 	_ = metrics.UpdateNodeApiCallMetric(options.RequestName, isNotSuccess, isNotRetry, isRetriable)
-	b := backoff.New().
-		WithMaxAttempts(maxAttempts).
-		WithInitialDuration(maxWaitBeforeRetry).
-		WithMaxDuration(maxWaitBeforeRetry).
-		Linear()
 
-	err = backoff.Do(func() error {
+	err = golemBackoff.Do(func() error {
 		result, err = request()
 		if err != nil {
 			// update failed retries
@@ -97,7 +89,7 @@ func NodeApiCallWithRetry[T NodeApiResponse](options *NodeApiCallWithRetryOption
 			return err
 		}
 		return nil
-	}, b)
+	}, options.BackOff.Linear())
 
 	if err != nil {
 		// update failure after retry attempts

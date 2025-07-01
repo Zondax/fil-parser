@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -13,6 +12,8 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
+
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	logger2 "github.com/zondax/fil-parser/logger"
 	"github.com/zondax/fil-parser/types"
@@ -22,11 +23,10 @@ const OnChainImpl = "on-chain"
 
 // OnChain implementation
 type OnChain struct {
-	Node               api.FullNode
-	logger             *logger.Logger
-	maxRetries         int
-	maxWaitBeforeRetry time.Duration
-	metrics            *cacheMetrics.ActorsCacheMetricsClient
+	Node    api.FullNode
+	logger  *logger.Logger
+	backoff *golemBackoff.BackOff
+	metrics *cacheMetrics.ActorsCacheMetricsClient
 }
 
 func (m *OnChain) StoreAddressInfo(info types.AddressInfo) {
@@ -38,7 +38,7 @@ func (m *OnChain) BackFill() error {
 	return nil
 }
 
-func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
+func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
 	// Node datastore is required
 	m.logger = logger2.GetSafeLogger(logger)
 	if source.Node == nil {
@@ -47,6 +47,8 @@ func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metri
 
 	m.Node = source.Node
 	m.metrics = metrics
+	m.backoff = backoff
+
 	return nil
 }
 
@@ -118,13 +120,12 @@ func (m *OnChain) IsGenesisActor(_ string) bool {
 
 func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[*filTypes.Actor]{
-		RequestName:        "StateGetActorWithTipSetKey",
-		MaxAttempts:        m.maxRetries,
-		MaxWaitBeforeRetry: m.maxWaitBeforeRetry,
+		RequestName: "StateGetActorWithTipSetKey",
+		BackOff:     *m.backoff,
 		Request: func() (*filTypes.Actor, error) {
 			return m.Node.StateGetActor(context.Background(), add, key)
 		},
-		RetryErrStrings: []string{"ipld: could not find", "RPC client error"},
+		RetryErrStrings: []string{"ipld: could not find", "RPC client error", "503"},
 	}
 
 	actor, err := NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
@@ -149,9 +150,8 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	var err error
 
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[address.Address]{
-		MaxAttempts:        m.maxRetries,
-		MaxWaitBeforeRetry: m.maxWaitBeforeRetry,
-		RetryErrStrings:    []string{"RPC client error"},
+		BackOff:         *m.backoff,
+		RetryErrStrings: []string{"RPC client error"},
 	}
 
 	if reverse {

@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/zondax/golem/pkg/logger"
 
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
@@ -17,16 +15,8 @@ import (
 	"github.com/zondax/fil-parser/actors/cache/impl"
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
 	"github.com/zondax/fil-parser/types"
+	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
-
-func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
-	code := exitCode.String()
-	status := strings.Split(code, "(")
-	if len(status) == 2 {
-		return status[0]
-	}
-	return CheckExitCodeCommonError(code)
-}
 
 func parseMetadata(key string, metadata map[string]interface{}) string {
 	params, ok := metadata[key].(string)
@@ -62,7 +52,8 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 	for _, i := range info {
 		switch i.ActorType {
 		case manifest.EvmKey:
-			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short && i.ActorCid != ""
+			// we store the address and later update it if it didn't have a creation_tx_cid or actor_cid
+			cond := i.Robust != "" && i.Short != "" && i.Robust != i.Short
 			if cond {
 				prev, ok := addressMap.Get(i.Short)
 				if ok {
@@ -79,7 +70,9 @@ func AppendToAddressesMap(addressMap *types.AddressInfoMap, info ...*types.Addre
 		case manifest.MultisigKey, manifest.MinerKey:
 			// with multisig accounts we can skip checking for robust addresses because some
 			// addresses do not have a robust address (genesis addresses)
-			cond := i.Short != "" && i.CreationTxCid != "" && i.ActorCid != ""
+
+			// we store the address and later update it if it didn't have a creation_tx_cid
+			cond := i.Short != "" && i.Short != i.Robust && i.ActorCid != ""
 			if i.IsSystemActor {
 				cond = i.Short != "" && i.ActorCid != "" && i.ActorType != ""
 			}
@@ -125,13 +118,12 @@ func GetParentBaseFeeByHeight(tipset *types.ExtendedTipSet, logger *logger.Logge
 	return parentBaseFee.Uint64(), nil
 }
 
-func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient) (string, error) {
+func TranslateTxCidToTxHash(nodeClient api.FullNode, mainMsgCid cid.Cid, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) (string, error) {
 	ctx := context.Background()
 
 	nodeApiCallOptions := &impl.NodeApiCallWithRetryOptions[*ethtypes.EthHash]{
-		RequestName:        "EthGetTransactionHashByCid",
-		MaxAttempts:        3,
-		MaxWaitBeforeRetry: 10 * time.Second,
+		RequestName: "EthGetTransactionHashByCid",
+		BackOff:     *backoff,
 		Request: func() (*ethtypes.EthHash, error) {
 			ethHash, err := nodeClient.EthGetTransactionHashByCid(ctx, mainMsgCid)
 			if err != nil || ethHash == nil {

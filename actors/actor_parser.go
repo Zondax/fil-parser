@@ -12,7 +12,9 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
+	"github.com/zondax/golem/pkg/logger"
 )
 
 type ActorParserInterface interface {
@@ -27,6 +29,10 @@ type Actor interface {
 	TransactionTypes() map[string]any
 	Methods(ctx context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error)
 }
+
+// MethodNameFn is a function type that resolves method names for actor methods based on their method number,
+// actor type, network parameters, and other contextual information. Allows actors to use GetMethodName without an import cycle.
+type MethodNameFn func(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error)
 
 func ParseSend(msg *parser.LotusMessage) map[string]interface{} {
 	metadata := make(map[string]interface{})

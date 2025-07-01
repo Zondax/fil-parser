@@ -5,11 +5,10 @@ go 1.23.8
 toolchain go1.24.1
 
 require (
-	github.com/bytedance/sonic v1.13.2
-	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/bytedance/sonic v1.13.3
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
-	github.com/filecoin-project/go-f3 v0.8.3
+	github.com/filecoin-project/go-f3 v0.8.4
 	github.com/filecoin-project/go-state-types v0.16.0
 	github.com/filecoin-project/lotus v1.32.2
 	github.com/filecoin-project/specs-actors v0.9.15
@@ -21,7 +20,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/whyrusleeping/cbor-gen v0.3.1
-	github.com/zondax/golem v0.22.0
+	github.com/zondax/golem v0.23.0
 	github.com/zondax/rosetta-filecoin-lib v1.3202.1
 )
 
@@ -32,6 +31,7 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/daaku/go.zipexe v1.0.2 // indirect
 	github.com/dgraph-io/ristretto v0.2.0 // indirect
@@ -99,7 +99,7 @@ require (
 	github.com/filecoin-project/specs-actors/v7 v7.0.1
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/gbrlsnchs/jwt/v3 v3.0.1 // indirect
-	github.com/go-chi/chi/v5 v5.2.1 // indirect
+	github.com/go-chi/chi/v5 v5.2.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
@@ -168,13 +168,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
-	golang.org/x/mod v0.24.0
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/mod v0.25.0
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

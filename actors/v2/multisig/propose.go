@@ -2,12 +2,11 @@ package multisig
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/filecoin-project/go-state-types/manifest"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/actors/v2/internal"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -17,13 +16,13 @@ import (
 	"github.com/zondax/fil-parser/parser"
 )
 
-// innerProposeParams processes the parameters for a multisig proposal by:
+// parseInnerProposeMsg processes the parameters for a multisig proposal by:
 // 1. Creating a new LotusMessage with the proposal details
 // 2. Getting the actor and method name for the proposal
 // 3. Parsing the proposal parameters using the actor's Parse method
-func (m *Msig) innerProposeParams(
+func (m *Msig) parseInnerProposeMsg(
 	msg *parser.LotusMessage, to address.Address, network string, height int64, method abi.MethodNum,
-	proposeParams []byte, key filTypes.TipSetKey,
+	proposeParams, proposeReturn []byte, key filTypes.TipSetKey, applied bool, exitCode exitcode.ExitCode,
 ) (string, map[string]interface{}, error) {
 	proposeMsg := &parser.LotusMessage{
 		To:     to,
@@ -33,13 +32,17 @@ func (m *Msig) innerProposeParams(
 		Params: proposeParams,
 	}
 
+	proposeMsgRct := &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: proposeReturn}
+
 	actor, proposedMethod, err := m.innerProposeMethod(proposeMsg, network, height, key)
 	if err != nil {
 		return "", nil, err
 	}
 
-	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: []byte{}}, msg.Cid, key)
-	if err != nil {
+	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, proposeMsgRct, msg.Cid, key)
+	// If the proposal didn't execute successfully, we don't return a parsing error
+	//  https://github.com/filecoin-project/ref-fvm/blob/4eae3b6e8d1858abfdb82956dc8cbf082a0cac66/shared/src/error/mod.rs#L55
+	if err != nil && (applied && exitCode == exitcode.Ok) {
 		return "", nil, err
 	}
 
@@ -48,9 +51,7 @@ func (m *Msig) innerProposeParams(
 
 // innerProposeMethod determines the actor and method name for a multisig proposal by:
 // 1. Getting the actor name from the target address
-// 2. Getting the appropriate actor implementation
-// 3. Checking for common methods
-// 4. Looking up the method name in the actor's method list
+// 2. Using the methodNameFn to get the methodName from the methodNum for the actor.
 func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 ) (actors.Actor, string, error) {
@@ -59,31 +60,18 @@ func (m *Msig) innerProposeMethod(
 		return nil, "", err
 	}
 	var actor actors.Actor
-	actor = m
-	if actorName != manifest.MultisigKey {
+	if strings.Contains(actorName, manifest.MultisigKey) {
+		actor = m
+	} else {
 		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
 		if err != nil {
 			return nil, "", err
 		}
 	}
 
-	method, err := m.helper.CheckCommonMethods(msg, height, key)
+	methodName, err := m.methodNameFn(context.Background(), msg.Method, actorName, height, network, m.helper, m.logger)
 	if err != nil {
 		return nil, "", err
 	}
-	if method != "" {
-		return actor, method, nil
-	}
-
-	actorMethods, err := actor.Methods(context.Background(), network, height)
-	if err != nil {
-		return nil, "", err
-	}
-
-	proposeMethod, ok := actorMethods[msg.Method]
-	if !ok {
-		return nil, "", fmt.Errorf("unrecognized propose method: %s for actor %s", method, actorName)
-	}
-
-	return actor, proposeMethod.Name, nil
+	return actor, methodName, nil
 }

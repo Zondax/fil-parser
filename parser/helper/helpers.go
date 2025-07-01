@@ -49,7 +49,26 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-// Deprecated: Use v2/tools.ActorMethods instead
+const (
+	// keylessAccountActor f090 was a multisig actor until V23 where it was converted to an account actor
+	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
+	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
+	keylessAccountActor = "f090"
+	// ZeroAddressAccountActorRobust f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a is a zero address actor that existed until V10.
+	// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+	// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+	ZeroAddressAccountActorRobust = "f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a"
+	// ZeroAddressAccountActorShort f067253 is a zero address actor that existed until V10.
+	// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+	// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+	ZeroAddressAccountActorShort = "f067253"
+	// multisig actorcode for nv22
+	msigCidStr = "bafk2bzacedef4sqdsfebspu7dqnk7naj27ac4lyho4zmvjrei5qnf2wn6v64u"
+	// account actorcode for nv23
+	accountCidStr = "bafk2bzacedbgei6jkx36fwdgvoohce4aghvpohqdhoco7p4thszgssms7olv2"
+)
+
+// Deprecated: Use v2/tools.GetMethodName instead
 var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.InitKey:     filInit.Methods,
 	manifest.CronKey:     cron.Methods,
@@ -71,6 +90,49 @@ var allMethods = map[string]map[abi.MethodNum]builtin.MethodMeta{
 	manifest.PlaceholderKey: evm.Methods,
 	manifest.EthAccountKey:  evm.Methods,
 }
+
+var (
+	msigCid    = cid.MustParse(msigCidStr)
+	accountCid = cid.MustParse(accountCidStr)
+
+	// specialLegacyActors is a list of actors not included in the lotus manifest but appear on the network.
+	// StateGetActor(f067253) returns "bafkqadlgnfwc6mrpmfrwg33vnz2a" which is not included in the Lotus Manifest along with the following actor cids.
+	// https://github.com/filecoin-project/statediff/blob/3e676285574e7bdb4ae0b9e28e6f23cfc86dd089/transform.go#L164
+	specialLegacyActors = map[string]string{
+		// v1
+		"bafkqaddgnfwc6mjpon4xg5dfnu":                 manifest.SystemKey,
+		"bafkqactgnfwc6mjpnfxgs5a":                    manifest.InitKey,
+		"bafkqaddgnfwc6mjpojsxoylsmq":                 manifest.RewardKey,
+		"bafkqactgnfwc6mjpmnzg63q":                    manifest.CronKey,
+		"bafkqaetgnfwc6mjpon2g64tbm5sxa33xmvza":       manifest.PowerKey,
+		"bafkqae3gnfwc6mjpon2g64tbm5sw2ylsnnsxi":      manifest.MarketKey,
+		"bafkqaftgnfwc6mjpozsxe2lgnfswi4tfm5uxg5dspe": manifest.VerifregKey,
+		"bafkqadlgnfwc6mjpmfrwg33vnz2a":               manifest.AccountKey,
+		"bafkqadtgnfwc6mjpnv2wy5djonuwo":              manifest.MultisigKey,
+		"bafkqafdgnfwc6mjpobqxs3lfnz2gg2dbnzxgk3a":    manifest.PaychKey,
+		"bafkqaetgnfwc6mjpon2g64tbm5sw22lomvza":       manifest.MinerKey,
+
+		// v2
+		"bafkqaddgnfwc6mrpon4xg5dfnu":                 manifest.SystemKey,
+		"bafkqactgnfwc6mrpnfxgs5a":                    manifest.InitKey,
+		"bafkqaddgnfwc6mrpojsxoylsmq":                 manifest.RewardKey,
+		"bafkqactgnfwc6mrpmnzg63q":                    manifest.CronKey,
+		"bafkqaetgnfwc6mrpon2g64tbm5sxa33xmvza":       manifest.PowerKey,
+		"bafkqae3gnfwc6mrpon2g64tbm5sw2ylsnnsxi":      manifest.MarketKey,
+		"bafkqaftgnfwc6mrpozsxe2lgnfswi4tfm5uxg5dspe": manifest.VerifregKey,
+		"bafkqadlgnfwc6mrpmfrwg33vnz2a":               manifest.AccountKey,
+		"bafkqadtgnfwc6mrpnv2wy5djonuwo":              manifest.MultisigKey,
+		"bafkqafdgnfwc6mrpobqxs3lfnz2gg2dbnzxgk3a":    manifest.PaychKey,
+		"bafkqaetgnfwc6mrpon2g64tbm5sw22lomvza":       manifest.MinerKey,
+	}
+
+	// https://github.com/filecoin-project/lotus/blob/58c1ed844b2424a66008728e4c135fa2f6097b60/build/builtin_actors.go#L59
+	calibrationBuggyActors = map[string]string{
+		"bafk2bzacecnh2ouohmonvebq7uughh4h3ppmg4cjsk74dzxlbbtlcij4xbzxq": manifest.MinerKey,
+		"bafk2bzaced7emkbbnrewv5uvrokxpf5tlm4jslu2jsv77ofw2yqdglg657uie": manifest.MinerKey,
+		"bafk2bzacednskl3bykz5qpo54z2j2p4q44t5of4ktd6vs6ymmg2zebsbxazkm": manifest.VerifregKey,
+	}
+)
 
 type Helper struct {
 	lib        *rosettaFilecoinLib.RosettaConstructionFilecoin
@@ -118,25 +180,27 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
-	version := tools.VersionFromHeight(h.network, int64(height))
-	addInfo.ActorCid, err = h.actorCache.GetActorCode(add, key, false)
+	actorCid, actorName, err := h.GetActorNameFromAddress(add, int64(height), key)
 	if err != nil {
-		h.logger.Errorf("could not get actor code from address. Err: %s", err)
+		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
 	} else {
-		c, err := cid.Parse(addInfo.ActorCid)
-		if err != nil {
-			h.logger.Errorf("Could not parse params. Cannot cid.parse actor code: %v", err)
-		}
-		addInfo.ActorType, _ = h.lib.BuiltinActors.GetActorNameFromCidByVersion(c, version.FilNetworkVersion())
+		addInfo.ActorCid = actorCid.String()
+		addInfo.ActorType = actorName
 	}
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
+		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
+			addInfo.Short = ZeroAddressAccountActorShort
+		}
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
+		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
+			addInfo.Robust = ZeroAddressAccountActorRobust
+		}
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
@@ -148,6 +212,10 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
 	if add == address.Undef {
 		return cid.Undef, "", errors.New("address is undefined")
+	}
+
+	if ok, cid, actorName := h.isSpecialAccountActor(add, height); ok {
+		return cid, actorName, nil
 	}
 
 	onChainOnly := false
@@ -168,8 +236,9 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
+		actorName = tools.ParseActorName(actorName)
 
-		if actorName == manifest.PlaceholderKey && !onChainOnly {
+		if strings.Contains(actorName, manifest.PlaceholderKey) && !onChainOnly {
 			onChainOnly = true
 		} else {
 			return c, actorName, nil
@@ -177,12 +246,58 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 	}
 }
 
+// isSpecialAccountActor handles actor addresses that will fail to resolve from the node for reasons documented in each case.
+func (h *Helper) isSpecialAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
+	if ok, cid, actorName := h.IsZeroAddressAccountActor(add); ok {
+		return true, cid, actorName
+	}
+	if ok, cid, actorName := h.isKeylessAccountActor(add, height); ok {
+		return true, cid, actorName
+	}
+	return false, cid.Undef, ""
+}
+
+// The f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a(f067253) is a zero address actor that existed until V10.
+// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+func (h *Helper) IsZeroAddressAccountActor(add address.Address) (bool, cid.Cid, string) {
+	if h.network != tools.MainnetNetwork || (add.String() != ZeroAddressAccountActorRobust && add.String() != ZeroAddressAccountActorShort) {
+		return false, cid.Undef, ""
+	}
+
+	return true, accountCid, manifest.AccountKey
+}
+
+// The f090 address was a multisig actor until V23 where it was converted to an account actor
+// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
+// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
+func (h *Helper) isKeylessAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
+	if h.network != tools.MainnetNetwork || add.String() != keylessAccountActor {
+		return false, cid.Undef, ""
+	}
+	version := tools.VersionFromHeight(h.network, int64(height))
+	if version.NodeVersion() < tools.V23.NodeVersion() {
+		return true, msigCid, manifest.MultisigKey
+	}
+	return true, accountCid, manifest.AccountKey
+}
+
+// GetActorNameFromCid returns the actor name for the given cid and height from rosetta and fallsback to specialLegacyActors.
 func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) {
 	version := tools.VersionFromHeight(h.network, height)
 	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
 	if err != nil {
+		// fallback to specialLegacyActors
+		if name, ok := specialLegacyActors[cid.String()]; ok && h.network == tools.MainnetNetwork {
+			return name, nil
+		}
+		// fallback to calibrationBuggyActors
+		if name, ok := calibrationBuggyActors[cid.String()]; ok && h.network == tools.CalibrationNetwork {
+			return name, nil
+		}
 		return "", err
 	}
+
 	return actorName, nil
 }
 
@@ -220,6 +335,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 	return method.Name, nil
 }
 
+// Deprecated: Use v2/tools.GetMethodName instead
 // CheckCommonMethods returns the method name for the given message if Send Or Constructor, otherwise returns an empty string
 func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
 	if msg == nil {
@@ -303,7 +419,7 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		if err != nil {
 			return false, err
 		}
-		if strings.EqualFold(actorName, actorType) {
+		if strings.Contains(actorName, actorType) {
 			return true, nil
 		}
 	}

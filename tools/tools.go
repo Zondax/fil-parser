@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -14,6 +15,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	blocks "github.com/ipfs/go-block-format"
@@ -154,4 +156,34 @@ func ParseTxMetadata(txMetadata string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to unmarshal TxMetadata: %v", err)
 	}
 	return metadata, nil
+}
+
+func ParseActorName(actor string) string {
+	s := strings.Split(actor, "/")
+	if len(s) < 1 {
+		return actor
+	}
+	return s[len(s)-1]
+}
+
+func GetBlocksCidByString(str string) []string {
+	str = strings.TrimPrefix(str, "{")
+	str = strings.TrimSuffix(str, "}")
+	return strings.Split(str, ",")
+}
+
+func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
+	code := exitCode.String()
+	status := strings.Split(code, "(")
+	if len(status) == 2 {
+		return status[0]
+	}
+	return CheckExitCodeError(code)
+}
+
+func FormatTipsetKey(tipsetKey filTypes.TipSetKey) string {
+	tipsetKeyStr := tipsetKey.String()
+	tipsetKeyStr = strings.ReplaceAll(tipsetKeyStr, "{", "")
+	tipsetKeyStr = strings.ReplaceAll(tipsetKeyStr, "}", "")
+	return tipsetKeyStr
 }

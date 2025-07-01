@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"regexp"
+	"strconv"
 
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/metrics/collectors"
@@ -10,13 +11,17 @@ import (
 // Metrics names
 const (
 	// parser metrics
-	parseMetadata          = "fil-parser_parser_parse_tx_metadata_error"
-	parseMethodName        = "fil-parser_parser_parse_tx_methodName_error"
-	blockCidFromMsgCid     = "fil-parser_parser_apptools_block_cid_from_msg_cid_error"
-	buildCidFromMsgTrace   = "fil-parser_parser_tools_build_cid_from_msg_trace_error"
-	getBlockMiner          = "fil-parser_parser_get_block_miner_error"
-	jsonMarshal            = "fil-parser_parser_json_marshal_error"
-	translateTxCidToTxHash = "fil-parser_parser_translate_tx_cid_to_tx_hash_error"
+	parseMetadata              = "fil-parser_parser_parse_tx_metadata_error"
+	parseMethodName            = "fil-parser_parser_parse_tx_methodName_error"
+	blockCidFromMsgCid         = "fil-parser_parser_apptools_block_cid_from_msg_cid_error"
+	buildCidFromMsgTrace       = "fil-parser_parser_tools_build_cid_from_msg_trace_error"
+	getBlockMiner              = "fil-parser_parser_get_block_miner_error"
+	jsonMarshal                = "fil-parser_parser_json_marshal_error"
+	translateTxCidToTxHash     = "fil-parser_parser_translate_tx_cid_to_tx_hash_error"
+	mismatchExitCode           = "fil-parser_parser_mismatch_exit_code_error"
+	traceWithoutMessage        = "fil-parser_parser_trace_without_message_error"
+	traceWithoutExecutionTrace = "fil-parser_parser_trace_without_execution_trace_error"
+	parseTraceError            = "fil-parser_parser_parse_trace_error"
 
 	// helper metrics
 	parseActorName    = "fil-parser_helper_actor_name_error"
@@ -31,11 +36,13 @@ const (
 // Metrics labels
 const (
 	// errorLabel   = "error"
-	actorLabel   = "actor"
-	txTypeLabel  = "txType"
-	codeLabel    = "code"
-	kindLabel    = "kind"
-	addressLabel = "address"
+	actorLabel          = "actor"
+	txTypeLabel         = "txType"
+	codeLabel           = "code"
+	kindLabel           = "kind"
+	addressLabel        = "address"
+	subcallSuccessLabel = "subcallSuccess"
+	mainSuccessLabel    = "mainSuccess"
 )
 
 // Patterns to normalize error messages
@@ -58,14 +65,14 @@ var (
 	parsingMetadataErrorMetric = metrics.Metric{
 		Name:    parseMetadata,
 		Help:    "parsing metadata error",
-		Labels:  []string{actorLabel, txTypeLabel},
+		Labels:  []string{actorLabel, txTypeLabel, subcallSuccessLabel, mainSuccessLabel},
 		Handler: &collectors.Gauge{},
 	}
 
 	parsingMethodNameMetric = metrics.Metric{
 		Name:    parseMethodName,
 		Help:    "parsing method name",
-		Labels:  []string{actorLabel, codeLabel},
+		Labels:  []string{actorLabel, codeLabel, subcallSuccessLabel, mainSuccessLabel},
 		Handler: &collectors.Gauge{},
 	}
 
@@ -100,6 +107,34 @@ var (
 	parsingTranslateTxCidToTxHashMetric = metrics.Metric{
 		Name:    translateTxCidToTxHash,
 		Help:    "error while translate tx cid to tx hash",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingMismatchExitCodeMetric = metrics.Metric{
+		Name:    mismatchExitCode,
+		Help:    "mismatch exit code",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingTraceWithoutMessageMetric = metrics.Metric{
+		Name:    traceWithoutMessage,
+		Help:    "trace without message",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingTraceWithoutExecutionTraceMetric = metrics.Metric{
+		Name:    traceWithoutExecutionTrace,
+		Help:    "trace without execution trace",
+		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+
+	parsingParseTraceMetric = metrics.Metric{
+		Name:    parseTraceError,
+		Help:    "error parsing trace",
 		Labels:  []string{},
 		Handler: &collectors.Gauge{},
 	}
@@ -140,7 +175,7 @@ var (
 	}
 )
 
-func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) error {
+func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string, subcallSuccess, mainSuccess bool) error {
 	// TODO: remove once errors are normalize
 	// errMsg := err.Error()
 	// switch {
@@ -150,11 +185,17 @@ func (c *ParserMetricsClient) UpdateMetadataErrorMetric(actor, txType string) er
 	// 	errMsg = "address is flagged as bad"
 	// }
 
-	return c.IncrementMetric(parseMetadata, actor, txType)
+	subcallStatusStr := strconv.FormatBool(subcallSuccess)
+	mainStatusStr := strconv.FormatBool(mainSuccess)
+
+	return c.IncrementMetric(parseMetadata, actor, txType, subcallStatusStr, mainStatusStr)
 }
 
-func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string) error {
-	return c.IncrementMetric(parseMethodName, actorName, code)
+func (c *ParserMetricsClient) UpdateMethodNameErrorMetric(actorName, code string, subcallSuccess, mainSuccess bool) error {
+	subcallStatusStr := strconv.FormatBool(subcallSuccess)
+	mainStatusStr := strconv.FormatBool(mainSuccess)
+
+	return c.IncrementMetric(parseMethodName, actorName, code, subcallStatusStr, mainStatusStr)
 }
 
 func (c *ParserMetricsClient) UpdateActorNameErrorMetric(code string) error {
@@ -221,4 +262,20 @@ func (c *ParserMetricsClient) UpdateParseNativeEventsLogsMetric() error {
 
 func (c *ParserMetricsClient) UpdateParseEthLogMetric() error {
 	return c.IncrementMetric(parseEthLog)
+}
+
+func (c *ParserMetricsClient) UpdateTraceWithoutMessageMetric() error {
+	return c.IncrementMetric(traceWithoutMessage)
+}
+
+func (c *ParserMetricsClient) UpdateMismatchExitCodeMetric() error {
+	return c.IncrementMetric(mismatchExitCode)
+}
+
+func (c *ParserMetricsClient) UpdateTraceWithoutExecutionTraceMetric() error {
+	return c.IncrementMetric(traceWithoutExecutionTrace)
+}
+
+func (c *ParserMetricsClient) UpdateParseTraceMetric() error {
+	return c.IncrementMetric(parseTraceError)
 }
