@@ -38,8 +38,8 @@ func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, network str
 
 func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.VerifregEvents, error) {
 	events := &types.VerifregEvents{
-		VerifierInfo: make([]*types.VerifierInfo, 0),
-		ClientInfo:   make([]*types.ClientInfo, 0),
+		VerifierInfo: make([]*types.VerifregEvent, 0),
+		ClientInfo:   make([]*types.VerifregEvent, 0),
 		Deals:        make([]*types.VerifregDeal, 0),
 	}
 
@@ -95,115 +95,125 @@ func (eg *eventGenerator) isVerifregMessage(actorName, txType string) bool {
 func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
 	switch tx.TxType {
 	case parser.MethodAddVerifier:
-		verifierInfo, err := eg.parseAddVerifier(tx, tipsetCid)
+		addVerifier, err := eg.parseAddVerifier(tx, tipsetCid)
 		if err != nil {
 			return nil, err
 		}
-		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
+		events.VerifierInfo = append(events.VerifierInfo, addVerifier)
 	case parser.MethodRemoveVerifier:
-		verifierInfo, err := eg.removeVerifier(tx, tipsetCid)
+		removeVerifier, err := eg.removeVerifier(tx, tipsetCid)
+		if err != nil {
+			return nil, err
+		}
+		events.VerifierInfo = append(events.VerifierInfo, removeVerifier)
+	case parser.MethodAddVerifiedClient:
+		verifierInfo, clientInfo, err := eg.addVerifiedClient(tx, tipsetCid)
 		if err != nil {
 			return nil, err
 		}
 		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
-	case parser.MethodAddVerifiedClient:
-		clientInfo, err := eg.addVerifiedClient(tx, tipsetCid)
-		if err != nil {
-			return nil, err
-		}
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
 	case parser.MethodRemoveVerifiedClientDataCap:
-		clientInfo, err := eg.removeVerifiedClient(tx, tipsetCid)
+		verifierInfo, clientInfo, err := eg.removeVerifiedClient(tx, tipsetCid)
 		if err != nil {
 			return nil, err
 		}
+		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
+		//case parser.MethodTransferExported:
+
 	}
 
 	return events, nil
 }
 
-func (eg *eventGenerator) parseAddVerifier(tx *types.Transaction, tipsetCid string) (*types.VerifierInfo, error) {
-	addr, intAllowance, err := getAddressAllowance(tx.TxMetadata)
+func (eg *eventGenerator) parseAddVerifier(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, error) {
+	addr, _, err := getAddressAllowance(tx.TxMetadata)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.VerifierInfo{
+	return &types.VerifregEvent{
 		ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
 		Address:     addr,
-		Removed:     0,
-		Allowance:   intAllowance,
 		TxCid:       tx.TxCid,
 		Height:      tx.Height,
+		ActionType:  tx.TxType,
+		Value:       tx.TxMetadata,
 		TxTimestamp: tx.TxTimestamp,
 	}, nil
 }
 
-func (eg *eventGenerator) removeVerifier(tx *types.Transaction, tipsetCid string) (*types.VerifierInfo, error) {
-	//var value map[string]interface{}
-	//err := json.Unmarshal([]byte(tx.TxMetadata), &value)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
-	//}
-	//
-	//params, ok := value[parser.ParamsKey].(map[string]interface{})
-	//if !ok {
-	//	return nil, fmt.Errorf("error parsing params: %w", err)
-	//}
-	//
-	//addr, ok := params["Address"].(string)
-	//if !ok {
-	//	return nil, fmt.Errorf("error parsing address: %w", err)
-	//}
-
+func (eg *eventGenerator) removeVerifier(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, error) {
 	addr, err := parseRemoveVerifier(tx.TxMetadata)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.VerifierInfo{
+	return &types.VerifregEvent{
 		ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
 		Address:     addr,
-		Removed:     1,
 		TxCid:       tx.TxCid,
 		Height:      tx.Height,
+		ActionType:  tx.TxType,
+		Value:       tx.TxMetadata,
 		TxTimestamp: tx.TxTimestamp,
 	}, nil
 }
 
-func (eg *eventGenerator) addVerifiedClient(tx *types.Transaction, tipsetCid string) (*types.ClientInfo, error) {
-	addr, intAllowance, err := getAddressAllowance(tx.TxMetadata)
+func (eg *eventGenerator) addVerifiedClient(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, *types.VerifregEvent, error) {
+	addr, _, err := getAddressAllowance(tx.TxMetadata)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &types.ClientInfo{
-		ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
-		Verifier:    tx.TxFrom,
-		Address:     addr,
-		Allowance:   intAllowance,
-		TxCid:       tx.TxCid,
-		Height:      tx.Height,
-		Removed:     0,
-		TxTimestamp: tx.TxTimestamp,
-	}, nil
+	return &types.VerifregEvent{
+			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
+			Address:     tx.TxFrom,
+			TxCid:       tx.TxCid,
+			Height:      tx.Height,
+			ActionType:  tx.TxType,
+			Value:       tx.TxMetadata,
+			TxTimestamp: tx.TxTimestamp,
+		},
+		&types.VerifregEvent{
+			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
+			Address:     addr,
+			TxCid:       tx.TxCid,
+			Height:      tx.Height,
+			ActionType:  tx.TxType,
+			Value:       tx.TxMetadata,
+			TxTimestamp: tx.TxTimestamp,
+		},
+		nil
 }
 
-func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, tipsetCid string) (*types.ClientInfo, error) {
-	verifiedClientToRemove, verifier, dataCapAmount, err := parseRemoveVerifiedClient(tx.TxMetadata, eg.network, int64(tx.Height))
+func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, *types.VerifregEvent, error) {
+	verifiedClientToRemove, verifier, _, err := parseRemoveVerifiedClient(tx.TxMetadata, eg.network, int64(tx.Height))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &types.ClientInfo{
-		ID:          tools.BuildId(tipsetCid, tx.TxCid, verifiedClientToRemove, verifier, fmt.Sprint(tx.Height)),
-		Verifier:    verifier,
-		Address:     verifiedClientToRemove,
-		Allowance:   dataCapAmount,
-		TxCid:       tx.TxCid,
-		Height:      tx.Height,
-		Removed:     1,
-		TxTimestamp: tx.TxTimestamp,
-	}, nil
+	return &types.VerifregEvent{
+			ID:          tools.BuildId(tipsetCid, tx.TxCid, verifiedClientToRemove, verifier, fmt.Sprint(tx.Height)),
+			Address:     tx.TxFrom,
+			TxCid:       tx.TxCid,
+			Height:      tx.Height,
+			ActionType:  tx.TxType,
+			Value:       tx.TxMetadata,
+			TxTimestamp: tx.TxTimestamp,
+		},
+		&types.VerifregEvent{
+			ID:          tools.BuildId(tipsetCid, tx.TxCid, verifiedClientToRemove, verifier, fmt.Sprint(tx.Height)),
+			Address:     verifiedClientToRemove,
+			TxCid:       tx.TxCid,
+			Height:      tx.Height,
+			ActionType:  tx.TxType,
+			Value:       tx.TxMetadata,
+			TxTimestamp: tx.TxTimestamp,
+		}, nil
 }
+
+//func (eg *eventGenerator) transferExported(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, error) {
+//
+//}

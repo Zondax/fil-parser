@@ -182,3 +182,7 @@ func parseRemoveVerifiedClient(metadata, network string, height int64) (string, 
 
 	return "", "", 0, fmt.Errorf("unsupported concrete type: %T", params)
 }
+
+//func parserTransferExported(metadata string) (string, error) {
+//
+//}

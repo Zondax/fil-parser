@@ -3,29 +3,18 @@ package types
 import "time"
 
 type VerifregEvents struct {
-	VerifierInfo []*VerifierInfo
-	ClientInfo   []*ClientInfo
+	VerifierInfo []*VerifregEvent
+	ClientInfo   []*VerifregEvent
 	Deals        []*VerifregDeal
 }
 
-type VerifierInfo struct {
+type VerifregEvent struct {
 	ID          string    `json:"id"`
 	Address     string    `json:"address"`
-	Allowance   uint64    `json:"allowance"`
 	TxCid       string    `json:"tx_cid"`
 	Height      uint64    `json:"height"`
-	Removed     uint8     `json:"removed"`
-	TxTimestamp time.Time `json:"tx_timestamp"`
-}
-
-type ClientInfo struct {
-	ID          string    `json:"id"`
-	Verifier    string    `json:"verifier"`
-	Address     string    `json:"address"`
-	Allowance   uint64    `json:"allowance"`
-	TxCid       string    `json:"tx_cid"`
-	Height      uint64    `json:"height"`
-	Removed     uint8     `json:"removed"`
+	ActionType  string    `json:"action_type"`
+	Value       string    `json:"value"`
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 
