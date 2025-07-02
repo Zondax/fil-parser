@@ -120,8 +120,12 @@ func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid st
 		}
 		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
-		//case parser.MethodTransferExported:
-
+	case parser.MethodUniversalReceiverHook:
+		clientInfo, err := eg.universalReceiverHook(tx, tipsetCid)
+		if err != nil {
+			return nil, err
+		}
+		events.ClientInfo = append(events.ClientInfo, clientInfo)
 	}
 
 	return events, nil
@@ -214,6 +218,18 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, tipsetCid 
 		}, nil
 }
 
-//func (eg *eventGenerator) transferExported(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, error) {
-//
-//}
+func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, error) {
+	m, err := parserUniversalReceiverHook(tx.TxMetadata)
+	if err != nil {
+		return nil, err
+	}
+	return &types.VerifregEvent{
+		ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, fmt.Sprint(tx.Height)),
+		Address:     tx.TxFrom,
+		TxCid:       tx.TxCid,
+		Height:      tx.Height,
+		ActionType:  tx.TxType,
+		Value:       m,
+		TxTimestamp: tx.TxTimestamp,
+	}, nil
+}
