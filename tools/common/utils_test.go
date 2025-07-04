@@ -1,10 +1,12 @@
 package common_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/tools/common"
 )
 
@@ -64,6 +66,25 @@ func TestGetIntegerSlice(t *testing.T) {
 			got, err := common.GetIntegerSlice[int](test.params, key, test.canBeNil)
 			assert.NoError(t, err)
 			assert.EqualValues(t, test.want, got)
+		})
+	}
+}
+
+func TestJsonEncodedBitfieldToSectorNumbers(t *testing.T) {
+	tests := []struct {
+		name     string
+		bitField []int
+		want     []uint64
+	}{
+		{name: "test 1", bitField: []int{0, 4}, want: []uint64{0, 1, 2, 3}},
+		{name: "test 2", bitField: []int{0, 2, 1, 3}, want: []uint64{0, 1, 3, 4, 5}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ids, err := common.JsonEncodedBitfieldToIDs(test.bitField)
+			fmt.Printf("want: %v, got: %v\n", test.want, ids)
+			require.NoError(t, err)
+			assert.EqualValues(t, test.want, ids)
 		})
 	}
 }

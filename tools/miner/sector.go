@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -217,7 +216,7 @@ func (eg *eventGenerator) parseSectorTerminationFaultAndRecoveries(_ context.Con
 			return nil, fmt.Errorf("error parsing integer slice: %w", err)
 		}
 
-		sectorNumbers, err := jsonEncodedBitfieldToSectorNumbers(sectorBitField)
+		sectorNumbers, err := common.JsonEncodedBitfieldToIDs(sectorBitField)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector bitfield: %w", err)
 		}
@@ -249,7 +248,7 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 			return nil, fmt.Errorf("error parsing new expiration: %w", err)
 		}
 
-		sectorNumbers, err := jsonEncodedBitfieldToSectorNumbers(sectorBitField)
+		sectorNumbers, err := common.JsonEncodedBitfieldToIDs(sectorBitField)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector bitfield: %w", err)
 		}
@@ -333,7 +332,7 @@ func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types
 		return nil, fmt.Errorf("error parsing integer slice: %w", err)
 	}
 	var sectorEvents []*types.MinerSectorEvent
-	sectorNumbers, err := jsonEncodedBitfieldToSectorNumbers(sectorBitField)
+	sectorNumbers, err := common.JsonEncodedBitfieldToIDs(sectorBitField)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing sector bitfield: %w", err)
 	}
@@ -355,35 +354,35 @@ func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types
 // example: sectors: [0 1 3 4 5] -> bitfield: [1 1 0 1 1 1] -> JSON: [ 0,2,1,3 ]
 // the JSON format always starts with a 0 and proceeds with the 0/1 pattern
 // see here: https://pkg.go.dev/github.com/filecoin-project/go-bitfield@v0.2.4/rle#RLE.MarshalJSON
-func jsonEncodedBitfieldToSectorNumbers(bitField []int) ([]uint64, error) {
-	// pre-allocate for worst-case
-	sectorNumbers := make([]uint64, 0, len(bitField))
+// func jsonEncodedBitfieldToSectorNumbers(bitField []int) ([]uint64, error) {
+// 	// pre-allocate for worst-case
+// 	sectorNumbers := make([]uint64, 0, len(bitField))
 
-	var parsedBitField bitfield.BitField
-	bitFieldJSON, err := json.Marshal(bitField)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling json encoded bitfield: %w", err)
-	}
+// 	var parsedBitField bitfield.BitField
+// 	bitFieldJSON, err := json.Marshal(bitField)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error marshaling json encoded bitfield: %w", err)
+// 	}
 
-	err = parsedBitField.UnmarshalJSON(bitFieldJSON)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing json encoded bitfield: %w", err)
-	}
+// 	err = parsedBitField.UnmarshalJSON(bitFieldJSON)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error parsing json encoded bitfield: %w", err)
+// 	}
 
-	iter, err := parsedBitField.BitIterator()
-	if err != nil {
-		return nil, fmt.Errorf("error iterating over bitfield: %w", err)
-	}
+// 	iter, err := parsedBitField.BitIterator()
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error iterating over bitfield: %w", err)
+// 	}
 
-	for iter.HasNext() {
-		sectorNumber, err := iter.Next()
-		if err != nil {
-			return nil, fmt.Errorf("error getting next sector number: %w", err)
-		}
-		sectorNumbers = append(sectorNumbers, sectorNumber)
-	}
-	return sectorNumbers, nil
-}
+// 	for iter.HasNext() {
+// 		sectorNumber, err := iter.Next()
+// 		if err != nil {
+// 			return nil, fmt.Errorf("error getting next sector number: %w", err)
+// 		}
+// 		sectorNumbers = append(sectorNumbers, sectorNumber)
+// 	}
+// 	return sectorNumbers, nil
+// }
 
 func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uint64, jsonData []byte) *types.MinerSectorEvent {
 	return &types.MinerSectorEvent{
