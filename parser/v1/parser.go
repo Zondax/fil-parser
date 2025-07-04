@@ -291,7 +291,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 
 	// The main tx may be successful, but the subcall tx is failed, so we don't need to update the method name error metric
 	if !subcallFailedTx && (txType == parser.UnknownStr || err != nil) {
-		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method))
+		_ = p.metrics.UpdateMethodNameErrorMetric(actorName, fmt.Sprint(trace.Msg.Method), !subcallFailedTx, !mainFailedTx)
 		p.logger.Errorf("Could not get method name in transaction '%s' : method: %d height: %d err: %s", trace.Msg.Cid().String(), trace.Msg.Method, tipset.Height(), err)
 	}
 	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, actorName, txType, &parser.LotusMessage{
@@ -309,7 +309,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	// It can happen that the tx is unknown, the to address actor is not valid, or the params are wrong.
 	// If that it is the case, we will fail to parse it too... so we don't want to count it as a failed tx.
 	if mErr != nil && (!subcallFailedTx || !mainFailedTx) {
-		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType)
+		_ = p.metrics.UpdateMetadataErrorMetric(actor, txType, !subcallFailedTx, !mainFailedTx)
 		p.logger.Warnf("Could not get metadata for transaction in height %s of type '%s': %s", tipset.Height().String(), txType, mErr.Error())
 	}
 

@@ -220,7 +220,9 @@ func (eg *eventGenerator) parseSectorTerminationFaultAndRecoveries(_ context.Con
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector bitfield: %w", err)
 		}
-		event[KeySectorNumbers] = sectorNumbers
+
+		// only keep the Deadline and Partition info
+		delete(event, KeySectors)
 		jsonData, err := json.Marshal(event)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
@@ -253,8 +255,6 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 			return nil, fmt.Errorf("error parsing sector bitfield: %w", err)
 		}
 		jsonData, err := json.Marshal(map[string]interface{}{
-			KeySectors:       sectorBitField,
-			KeySectorNumbers: sectorNumbers,
 			KeyNewExpiration: newExpiration,
 		})
 		if err != nil {
@@ -338,7 +338,6 @@ func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types
 	}
 	jsonData, err := json.Marshal(map[string]interface{}{
 		KeySectorNumbers: sectorNumbers,
-		KeySectors:       sectorBitField,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling event: %w", err)
