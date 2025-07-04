@@ -3,8 +3,20 @@ package types
 import "time"
 
 type DealsEvents struct {
-	DealsMessages []*DealsMessages
-	DealsInfo     []*DealsInfo
+	DealsMessages    []*DealsMessages
+	DealsInfo        []*DealsInfo
+	DealsActivations []*DealsActivation
+	DealsSpaceInfo   []*DealsSpaceInfo
+}
+
+type DealsMessages struct {
+	ID           string    `json:"id"`
+	ActorAddress string    `json:"actor_address"`
+	Height       uint64    `json:"height"`
+	TxCid        string    `json:"tx_cid"`
+	ActionType   string    `json:"action_type"`
+	Value        string    `json:"value"`
+	TxTimestamp  time.Time `json:"tx_timestamp"`
 }
 
 type DealsInfo struct {
@@ -38,26 +50,29 @@ type DealsInfo struct {
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 
-// TODO: MAKE MV
-type DealsAllocation struct {
-	ID            string    `json:"id"`
-	Height        uint64    `json:"height"`
-	TxCid         string    `json:"tx_cid"`
-	DealID        uint64    `json:"deal_id"`
-	SectorNumber  uint64    `json:"sector_number"`
-	ClientAddress string    `json:"client_address"`
-	DataCid       string    `json:"data_cid"`
-	Size          uint64    `json:"size"`
-	ActionType    string    `json:"action_type"`
-	TxTimestamp   time.Time `json:"tx_timestamp"`
-}
-
-type DealsMessages struct {
+type DealsActivation struct {
 	ID           string    `json:"id"`
-	ActorAddress string    `json:"actor_address"`
 	Height       uint64    `json:"height"`
 	TxCid        string    `json:"tx_cid"`
+	DealID       uint64    `json:"deal_id"`
+	SectorExpiry int64     `json:"sector_expiry"`
 	ActionType   string    `json:"action_type"`
-	Value        string    `json:"value"`
 	TxTimestamp  time.Time `json:"tx_timestamp"`
+}
+
+type DealsSpaceInfo struct {
+	ID      string   `json:"id"`
+	Height  uint64   `json:"height"`
+	TxCid   string   `json:"tx_cid"`
+	DealIDs []uint64 `json:"deal_ids"`
+	// NonVerifiedDealWeight is the sum(piece_size * deal_duration) of all the non-verified deals
+	// VerifiedDealWeight is the sum(piece_size * deal_duration) of all the verified deals
+	// NonVerifiedDealSpace is the sum(piece_size) of all the deals
+	// VerifiedDealSpace is the sum(piece_size) of all the verified deals
+	NonVerifiedDealSpace uint64 `json:"non_verified_deal_space"`
+	VerifiedDealSpace    uint64 `json:"verified_deal_space"`
+	// SpaceAsWeight is true if the deal space is expressed as a weight. Retrieve the deal space by dividing the VerifiedDealSpace/NonVerifiedDealSpace by the DealDuration for each dealId in the DealIDs slice.
+	SpaceAsWeight bool      `json:"space_as_weight"`
+	ActionType    string    `json:"action_type"`
+	TxTimestamp   time.Time `json:"tx_timestamp"`
 }

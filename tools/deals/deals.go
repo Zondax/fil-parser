@@ -42,8 +42,10 @@ func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics met
 
 func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
 	events := &types.DealsEvents{
-		DealsMessages: []*types.DealsMessages{},
-		DealsInfo:     []*types.DealsInfo{},
+		DealsMessages:    []*types.DealsMessages{},
+		DealsInfo:        []*types.DealsInfo{},
+		DealsActivations: []*types.DealsActivation{},
+		DealsSpaceInfo:   []*types.DealsSpaceInfo{},
 	}
 
 	for _, tx := range transactions {
@@ -86,10 +88,19 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		if eg.isPublishStorageDeals(actorName, tx.TxType) {
 			dealsInfo, err := eg.createDealsInfo(ctx, tx)
 			if err != nil {
-				eg.logger.Errorf("could not create deal allocation. Err: %s", err)
+				eg.logger.Errorf("could not create deal proposal. Err: %s", err)
 				continue
 			}
 			events.DealsInfo = append(events.DealsInfo, dealsInfo...)
+		}
+		if eg.isDealActivation(tx) {
+			dealActivations, dealSpaceInfo, err := eg.createDealActivations(ctx, tx)
+			if err != nil {
+				eg.logger.Errorf("could not create deal activations. Err: %s", err)
+				continue
+			}
+			events.DealsActivations = append(events.DealsActivations, dealActivations...)
+			events.DealsSpaceInfo = append(events.DealsSpaceInfo, dealSpaceInfo...)
 		}
 	}
 
