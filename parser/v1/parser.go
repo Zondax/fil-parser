@@ -27,6 +27,7 @@ import (
 	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	typesV1 "github.com/zondax/fil-parser/parser/v1/types"
 	"github.com/zondax/fil-parser/tools"
+	dealsTools "github.com/zondax/fil-parser/tools/deals"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
@@ -44,6 +45,7 @@ type Parser struct {
 	helper                 *helper.Helper
 	logger                 *logger.Logger
 	multisigEventGenerator multisigTools.EventGenerator
+	dealsEventGenerator    dealsTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
 	config                 parser.Config
@@ -65,6 +67,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -79,6 +82,7 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
 		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
 		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -219,8 +223,8 @@ func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transac
 	return nil, errors.New("unimplimented")
 }
 
-func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.MinerEvents, error) {
-	return nil, errors.New("unimplimented")
+func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
+	return p.dealsEventGenerator.GenerateDealsEvents(ctx, dealsTxs, tipsetCid, tipsetKey)
 }
 
 func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
