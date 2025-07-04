@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -68,7 +69,7 @@ func (eg *eventGenerator) createSectorEvents(ctx context.Context, tx *types.Tran
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
@@ -111,22 +112,22 @@ func (eg *eventGenerator) parsePreCommitStage(_ context.Context, tx *types.Trans
 	var sectorEvents []*types.MinerSectorEvent
 
 	addEvent := func(params map[string]interface{}) error {
-		sealProof, err := getInteger[int64](params, KeySealProof, false)
+		sealProof, err := common.GetInteger[int64](params, KeySealProof, false)
 		if err != nil {
 			return fmt.Errorf("error parsing seal proof: %w", err)
 		}
 
-		sectorNumber, err := getInteger[uint64](params, KeySectorNumber, false)
+		sectorNumber, err := common.GetInteger[uint64](params, KeySectorNumber, false)
 		if err != nil {
 			return fmt.Errorf("error parsing sector number: %w", err)
 		}
 
-		dealIDs, err := getIntegerSlice[uint64](params, KeyDealIDs, true)
+		dealIDs, err := common.GetIntegerSlice[uint64](params, KeyDealIDs, true)
 		if err != nil {
 			return fmt.Errorf("error parsing deal ids: %w", err)
 		}
 
-		expiration, err := getInteger[int64](params, KeyExpiration, false)
+		expiration, err := common.GetInteger[int64](params, KeyExpiration, false)
 		if err != nil {
 			return fmt.Errorf("error parsing expiration: %w", err)
 		}
@@ -150,7 +151,7 @@ func (eg *eventGenerator) parsePreCommitStage(_ context.Context, tx *types.Trans
 		}
 	} else {
 		// parser.MethodPreCommitSectorBatch, parser.MethodPreCommitSectorBatch2,
-		sectors, err := getSlice[map[string]interface{}](params, KeySectors, false)
+		sectors, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sectors: %w", err)
 		}
@@ -169,7 +170,7 @@ func (eg *eventGenerator) parseProveCommitStage(ctx context.Context, tx *types.T
 
 	switch tx.TxType {
 	case parser.MethodProveCommitSector:
-		sectorNumber, err := getInteger[uint64](params, KeySectorNumber, false)
+		sectorNumber, err := common.GetInteger[uint64](params, KeySectorNumber, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
@@ -206,12 +207,12 @@ func (eg *eventGenerator) parseSectorTerminationFaultAndRecoveries(_ context.Con
 	case parser.MethodDeclareFaultsRecovered:
 		parameterName = KeyRecoveries
 	}
-	events, err := getSlice[map[string]interface{}](params, parameterName, false)
+	events, err := common.GetSlice[map[string]interface{}](params, parameterName, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing events: %w", err)
 	}
 	for _, event := range events {
-		sectorBitField, err := getIntegerSlice[int](event, KeySectors, false)
+		sectorBitField, err := common.GetIntegerSlice[int](event, KeySectors, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing integer slice: %w", err)
 		}
@@ -234,16 +235,16 @@ func (eg *eventGenerator) parseSectorTerminationFaultAndRecoveries(_ context.Con
 
 func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
 	var sectorEvents []*types.MinerSectorEvent
-	extensions, err := getSlice[map[string]interface{}](params, KeyExtensions, false)
+	extensions, err := common.GetSlice[map[string]interface{}](params, KeyExtensions, false)
 	if err != nil {
 		return nil, err
 	}
 	for _, extension := range extensions {
-		sectorBitField, err := getIntegerSlice[int](extension, KeySectors, false)
+		sectorBitField, err := common.GetIntegerSlice[int](extension, KeySectors, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing integer slice: %w", err)
 		}
-		newExpiration, err := getInteger[int64](extension, KeyNewExpiration, false)
+		newExpiration, err := common.GetInteger[int64](extension, KeyNewExpiration, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing new expiration: %w", err)
 		}
@@ -268,13 +269,13 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 }
 
 func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
-	sectorActivations, err := getSlice[map[string]interface{}](params, KeySectors, false)
+	sectorActivations, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 	if err != nil {
 		return nil, err
 	}
 	var sectorEvents []*types.MinerSectorEvent
 	for _, sectorActivation := range sectorActivations {
-		sectorNumber, err := getInteger[uint64](sectorActivation, KeySectorNumber, false)
+		sectorNumber, err := common.GetInteger[uint64](sectorActivation, KeySectorNumber, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
@@ -288,13 +289,13 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 }
 
 func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
-	sectorActivations, err := getSlice[map[string]interface{}](params, KeySectorActivations, false)
+	sectorActivations, err := common.GetSlice[map[string]interface{}](params, KeySectorActivations, false)
 	if err != nil {
 		return nil, err
 	}
 	var sectorEvents []*types.MinerSectorEvent
 	for _, sectorActivation := range sectorActivations {
-		sectorNumber, err := getInteger[uint64](sectorActivation, KeySectorNumber, false)
+		sectorNumber, err := common.GetInteger[uint64](sectorActivation, KeySectorNumber, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
@@ -308,7 +309,7 @@ func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.
 }
 
 func (eg *eventGenerator) parseConfirmSectorProofsValid(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
-	sectors, err := getIntegerSlice[int64](params, KeySectors, false)
+	sectors, err := common.GetIntegerSlice[int64](params, KeySectors, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing integer slice: %w", err)
 	}
@@ -327,7 +328,7 @@ func (eg *eventGenerator) parseConfirmSectorProofsValid(_ context.Context, tx *t
 }
 
 func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
-	sectorBitField, err := getIntegerSlice[int](params, KeySectorNumbers, false)
+	sectorBitField, err := common.GetIntegerSlice[int](params, KeySectorNumbers, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing integer slice: %w", err)
 	}

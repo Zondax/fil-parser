@@ -6,6 +6,7 @@ import (
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -37,11 +38,11 @@ func (eg *eventGenerator) parseAwardBlockReward(tx *types.Transaction, tipsetCid
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
-	minerAddress, err := getItem[string](params, KeyMiner, false)
+	minerAddress, err := common.GetItem[string](params, KeyMiner, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing miner address: %w", err)
 	}
