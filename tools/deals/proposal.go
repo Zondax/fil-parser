@@ -59,6 +59,7 @@ func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transacti
 
 func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsInfo, error) {
 	dealsInfo := make([]*types.DealsInfo, 0)
+	//#nosec G115
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
 
 	var dealIDs []uint64
