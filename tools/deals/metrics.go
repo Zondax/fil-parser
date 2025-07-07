@@ -13,12 +13,6 @@ var (
 
 const parserModule = "parser_module"
 
-// Labels const
-const (
-// errorLabel  = "error"
-// txTypeLabel = "txType"
-)
-
 type dealsMetricsClient struct {
 	metrics.MetricsClient
 	name string
@@ -36,9 +30,7 @@ func newClient(metricsClient metrics.MetricsClient, name string) *dealsMetricsCl
 }
 
 const (
-	actorNameFromAddress       = "fil-parser_miner_actor_name_from_address"
-	processedMinerEventsTotal  = "fil-parser_miner_processed_events_total"
-	processedMinerSectorsTotal = "fil-parser_miner_processed_sectors_total"
+	actorNameFromAddress = "fil-parser_deals_actor_name_from_address"
 )
 
 var (
