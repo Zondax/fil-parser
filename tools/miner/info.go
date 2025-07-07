@@ -19,11 +19,11 @@ func (eg *eventGenerator) createMinerInfo(tx *types.Transaction, tipsetCid, acto
 	}
 	minerInfo := &types.MinerInfo{
 		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-		ActorAddress: actorAddress,
+		MinerAddress: actorAddress,
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   tx.TxType,
-		Value:        tx.TxMetadata,
+		Data:         tx.TxMetadata,
 		TxTimestamp:  tx.TxTimestamp,
 	}
 
@@ -47,11 +47,11 @@ func (eg *eventGenerator) parseAwardBlockReward(tx *types.Transaction, tipsetCid
 	}
 	return &types.MinerInfo{
 		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-		ActorAddress: minerAddress,
+		MinerAddress: minerAddress,
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   tx.TxType,
-		Value:        tx.TxMetadata,
+		Data:         tx.TxMetadata,
 		TxTimestamp:  tx.TxTimestamp,
 	}, nil
 }
