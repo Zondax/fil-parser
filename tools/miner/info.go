@@ -23,7 +23,7 @@ func (eg *eventGenerator) createMinerInfo(tx *types.Transaction, tipsetCid, acto
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   tx.TxType,
-		Value:        tx.TxMetadata,
+		Data:         tx.TxMetadata,
 		TxTimestamp:  tx.TxTimestamp,
 	}
 
@@ -51,7 +51,7 @@ func (eg *eventGenerator) parseAwardBlockReward(tx *types.Transaction, tipsetCid
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   tx.TxType,
-		Value:        tx.TxMetadata,
+		Data:         tx.TxMetadata,
 		TxTimestamp:  tx.TxTimestamp,
 	}, nil
 }
