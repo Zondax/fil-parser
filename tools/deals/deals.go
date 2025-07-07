@@ -43,8 +43,8 @@ func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics met
 func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
 	events := &types.DealsEvents{
 		DealsMessages:    []*types.DealsMessages{},
-		DealsInfo:        []*types.DealsInfo{},
-		DealsActivations: []*types.DealsActivation{},
+		DealsProposals:   []*types.DealsProposals{},
+		DealsActivations: []*types.DealsActivations{},
 		DealsSpaceInfo:   []*types.DealsSpaceInfo{},
 	}
 
@@ -91,7 +91,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 				eg.logger.Errorf("could not create deal proposal. Err: %s", err)
 				continue
 			}
-			events.DealsInfo = append(events.DealsInfo, dealsInfo...)
+			events.DealsProposals = append(events.DealsProposals, dealsInfo...)
 		}
 		if eg.isDealActivation(tx) {
 			dealActivations, dealSpaceInfo, err := eg.createDealActivations(ctx, tx)

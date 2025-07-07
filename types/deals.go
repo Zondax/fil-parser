@@ -4,8 +4,8 @@ import "time"
 
 type DealsEvents struct {
 	DealsMessages    []*DealsMessages
-	DealsInfo        []*DealsInfo
-	DealsActivations []*DealsActivation
+	DealsProposals   []*DealsProposals
+	DealsActivations []*DealsActivations
 	DealsSpaceInfo   []*DealsSpaceInfo
 }
 
@@ -19,7 +19,7 @@ type DealsMessages struct {
 	TxTimestamp  time.Time `json:"tx_timestamp"`
 }
 
-type DealsInfo struct {
+type DealsProposals struct {
 	ID     string `json:"id"`
 	Height uint64 `json:"height"`
 	DealID uint64 `json:"deal_id"`
@@ -50,7 +50,7 @@ type DealsInfo struct {
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 
-type DealsActivation struct {
+type DealsActivations struct {
 	ID           string    `json:"id"`
 	Height       uint64    `json:"height"`
 	TxCid        string    `json:"tx_cid"`

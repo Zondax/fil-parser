@@ -21,10 +21,10 @@ const (
 	KeySize                 = "Size"
 )
 
-func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Transaction) ([]*types.DealsActivation, []*types.DealsSpaceInfo, error) {
+func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Transaction) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
 	var (
 		err             error
-		dealActivations []*types.DealsActivation
+		dealActivations []*types.DealsActivations
 		dealSpaceInfo   []*types.DealsSpaceInfo
 		metadata        map[string]interface{}
 	)
@@ -117,9 +117,9 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 	return nil, nil
 }
 
-func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsActivation, []*types.DealsSpaceInfo, error) {
+func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
-	dealActivations := []*types.DealsActivation{}
+	dealActivations := []*types.DealsActivations{}
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
 
 	parseDeals := func(params, ret map[string]interface{}) error {
@@ -129,7 +129,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		}
 
 		for _, dealID := range dealIDs {
-			dealActivations = append(dealActivations, &types.DealsActivation{
+			dealActivations = append(dealActivations, &types.DealsActivations{
 				ID:           tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
 				Height:       tx.Height,
 				TxCid:        tx.TxCid,

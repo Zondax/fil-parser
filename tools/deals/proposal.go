@@ -33,7 +33,7 @@ const (
 	KeyClientCollateral     = "ClientCollateral"
 )
 
-func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transaction) ([]*types.DealsInfo, error) {
+func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transaction) ([]*types.DealsProposals, error) {
 	var value map[string]interface{}
 	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
 	if err != nil {
@@ -57,8 +57,8 @@ func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transacti
 	return dealsInfo, nil
 }
 
-func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsInfo, error) {
-	dealsInfo := make([]*types.DealsInfo, 0)
+func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsProposals, error) {
+	dealsInfo := make([]*types.DealsProposals, 0)
 	//#nosec G115
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
 
@@ -153,7 +153,7 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 			return nil, fmt.Errorf("error parsing client collateral: %w", err)
 		}
 
-		dealsInfo = append(dealsInfo, &types.DealsInfo{
+		dealsInfo = append(dealsInfo, &types.DealsProposals{
 			ID:                 tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs[idx])),
 			Height:             tx.Height,
 			DealID:             dealIDs[idx],
