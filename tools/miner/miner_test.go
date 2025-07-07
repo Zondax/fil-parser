@@ -120,7 +120,7 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 				MinerSectors: getSectorEvents(t, parser.MethodAwardBlockReward, txTo, txCid, 1389),
 				MinerInfo: []*types.MinerInfo{
 					{
-						ActorAddress: "f01000",
+						MinerAddress: "f01000",
 						TxCid:        txCid,
 						ActionType:   parser.MethodAwardBlockReward,
 					},
@@ -145,7 +145,7 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 			require.NoError(t, err)
 
 			for i, event := range events.MinerInfo {
-				assert.Equal(t, test.want.MinerInfo[i].ActorAddress, event.ActorAddress)
+				assert.Equal(t, test.want.MinerInfo[i].MinerAddress, event.MinerAddress)
 				assert.Equal(t, test.want.MinerInfo[i].TxCid, event.TxCid)
 				assert.Equal(t, test.want.MinerInfo[i].ActionType, event.ActionType)
 

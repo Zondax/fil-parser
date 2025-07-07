@@ -8,7 +8,7 @@ type MinerEvents struct {
 }
 type MinerInfo struct {
 	ID           string    `json:"id"`
-	ActorAddress string    `json:"address"`
+	MinerAddress string    `json:"miner_address"`
 	Height       uint64    `json:"height"`
 	TxCid        string    `json:"tx_cid"`
 	ActionType   string    `json:"action_type"`
