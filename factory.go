@@ -244,8 +244,8 @@ func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, txs []*types.Tran
 	return p.parserV2.ParseMinerEvents(ctx, txs, tipsetCid, tipsetKey)
 }
 
-func (p *FilecoinParser) ParseDealsEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
-	return p.parserV2.ParseMinerEvents(ctx, txs, tipsetCid, tipsetKey)
+func (p *FilecoinParser) ParseDealsEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DealsEvents, error) {
+	return p.parserV2.ParseDealsEvents(ctx, txs, tipsetCid, tipsetKey)
 }
 
 func (p *FilecoinParser) translateParserVersionFromMetadata(metadata types.BlockMetadata) (string, error) {
