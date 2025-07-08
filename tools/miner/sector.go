@@ -456,24 +456,26 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 		if err != nil {
 			return nil, fmt.Errorf("error parsing notify: %w", err)
 		}
-		parsedDataActivationNotifications := make([]map[string]interface{}, 0, len(dataActivationNotifications))
-		for _, notify := range dataActivationNotifications {
-			addrStr, err := getItem[string](notify, KeyAddress, false)
-			if err != nil {
-				return nil, fmt.Errorf("error parsing notify number: %w", err)
+		if len(dataActivationNotifications) > 0 {
+			parsedDataActivationNotifications := make([]map[string]interface{}, 0, len(dataActivationNotifications))
+			for _, notify := range dataActivationNotifications {
+				addrStr, err := getItem[string](notify, KeyAddress, false)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing notify number: %w", err)
+				}
+				addr, err := address.NewFromString(addrStr)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing address: %w", err)
+				}
+				consolidatedAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+				if err != nil {
+					return nil, fmt.Errorf("error consolidating address: %w", err)
+				}
+				notify[KeyAddress] = consolidatedAddr
+				parsedDataActivationNotifications = append(parsedDataActivationNotifications, notify)
 			}
-			addr, err := address.NewFromString(addrStr)
-			if err != nil {
-				return nil, fmt.Errorf("error parsing address: %w", err)
-			}
-			consolidatedAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-			if err != nil {
-				return nil, fmt.Errorf("error consolidating address: %w", err)
-			}
-			notify[KeyAddress] = consolidatedAddr
-			parsedDataActivationNotifications = append(parsedDataActivationNotifications, notify)
+			piece[KeyNotify] = parsedDataActivationNotifications
 		}
-		piece[KeyNotify] = parsedDataActivationNotifications
 		parsedPieces = append(parsedPieces, piece)
 	}
 	return parsedPieces, nil
