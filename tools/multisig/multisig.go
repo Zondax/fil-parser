@@ -34,6 +34,7 @@ const (
 	metadataIDField    = "ID"
 	metadataMethod     = "Method"
 	metadataValue      = "Value"
+	metadataSigner     = "Signer"
 
 	txStatusOk = "ok"
 )
@@ -128,22 +129,11 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 }
 
 func (eg *eventGenerator) createProposal(ctx context.Context, tx *types.Transaction, metadata map[string]interface{}, tipsetCid string) (*types.MultisigProposal, error) {
-	addrFromStr := tx.TxFrom
-	if eg.config.RobustAddressBestEffort {
-		addrFrom, err := address.NewFromString(tx.TxFrom)
-		if err != nil {
-			return nil, fmt.Errorf("address.NewFromString(): %s", err)
-		}
-		addrFromStr, err = actors.ConsolidateToRobustAddress(addrFrom, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-		if err != nil {
-			return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(tx.TxFrom): %s", err)
-		}
-	}
 	proposal := &types.MultisigProposal{
 		MultisigAddress: tx.TxTo,
 		Height:          tx.Height,
 		TxCid:           tx.TxCid,
-		Signer:          addrFromStr,
+		Signer:          tx.TxFrom,
 	}
 
 	eg.processProposalParams(ctx, metadata, tx.TxType, proposal)
@@ -224,6 +214,28 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 }
 
 func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, parsedMetadata any) (*types.MultisigInfo, error) {
+	if isAddOrRemoveSigner(tx.TxType) && eg.config.ConsolidateRobustAddress {
+		signerData, ok := parsedMetadata.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
+		}
+
+		signerAddrStr, ok := signerData[metadataSigner].(string)
+		if !ok {
+			return nil, fmt.Errorf("signer address not found in parsedMetadata")
+		}
+		signerAddr, err := address.NewFromString(signerAddrStr)
+		if err != nil {
+			return nil, fmt.Errorf("address.NewFromString(): %s", err)
+		}
+		signerAddrStr, err = actors.ConsolidateToRobustAddress(signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+		if err != nil {
+			return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
+		}
+		signerData[metadataSigner] = signerAddrStr
+		parsedMetadata = signerData
+	}
+
 	b, err := json.Marshal(parsedMetadata)
 	if err != nil {
 		_ = eg.metrics.UpdateMarshalMultisigMetadataMetric(tx.TxType)
@@ -231,24 +243,12 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 		return nil, err
 	}
 
-	addrFromStr := tx.TxFrom
-	if eg.config.RobustAddressBestEffort {
-		addrFrom, err := address.NewFromString(tx.TxFrom)
-		if err != nil {
-			return nil, fmt.Errorf("address.NewFromString(): %s", err)
-		}
-		addrFromStr, err = actors.ConsolidateToRobustAddress(addrFrom, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-		if err != nil {
-			return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(tx.TxFrom): %s", err)
-		}
-	}
-
 	return &types.MultisigInfo{
 		ID:              tools.BuildId(tipsetCid, tx.TxTo, fmt.Sprint(tx.Height), tx.TxCid, tx.TxType),
 		MultisigAddress: tx.TxTo,
 		Height:          tx.Height,
 		TxCid:           tx.TxCid,
-		Signer:          addrFromStr,
+		Signer:          tx.TxFrom,
 		ActionType:      tx.TxType,
 		Value:           string(b),
 	}, nil
@@ -277,6 +277,14 @@ func isProposalType(txType string) bool {
 
 func isCancelOrApprove(txType string) bool {
 	return cancelApproveTranslateMap[txType] != ""
+}
+
+func isAddOrRemoveSigner(txType string) bool {
+	switch txType {
+	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
+		return true
+	}
+	return false
 }
 
 /*
