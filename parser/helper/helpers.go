@@ -66,6 +66,9 @@ const (
 	msigCidStr = "bafk2bzacedef4sqdsfebspu7dqnk7naj27ac4lyho4zmvjrei5qnf2wn6v64u"
 	// account actorcode for nv23
 	accountCidStr = "bafk2bzacedbgei6jkx36fwdgvoohce4aghvpohqdhoco7p4thszgssms7olv2"
+	// EamSpaceAddressPrefix f410 is the prefix addresses managed by the eam actor
+	EamSpaceAddressPrefix = "f410"
+	ActorNotFoundErrStr   = "actor not found"
 )
 
 // Deprecated: Use v2/tools.GetMethodName instead
@@ -172,6 +175,12 @@ func (h *Helper) GetFilecoinNodeClient() api.FullNode {
 	return h.node
 }
 
+// GetActorAddressInfo returns detailed actor address information:
+// - ActorCid
+// - ActorType
+// - Short
+// - Robust
+// - IsSystemActor
 func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey, height abi.ChainEpoch) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
@@ -180,7 +189,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
-	actorCid, actorName, err := h.GetActorNameFromAddress(add, int64(height), key)
+	actorCid, actorName, err := h.GetActorInfoFromAddress(add, int64(height), key)
 	if err != nil {
 		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
 	} else {
@@ -209,7 +218,29 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	return addInfo
 }
 
-func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
+// GetActorNameFromAddress returns the actor name for the given address.
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+	_, actorName, err := h.GetActorInfoFromAddress(add, height, key)
+	if err != nil {
+		switch add.Protocol() {
+		// f1 or f3 is an account
+		case address.SECP256K1, address.BLS:
+			return manifest.AccountKey, err
+		case address.Delegated:
+			if strings.Contains(strings.ToLower(err.Error()), ActorNotFoundErrStr) {
+				if strings.HasPrefix(add.String(), EamSpaceAddressPrefix) {
+					// assume the actor is evm
+					return manifest.EvmKey, nil
+				}
+			}
+		}
+		return "", err
+	}
+	return actorName, nil
+}
+
+// GetActorInfoFromAddress returns the actor cid and name for the given address.
+func (h *Helper) GetActorInfoFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
 	if add == address.Undef {
 		return cid.Undef, "", errors.New("address is undefined")
 	}
@@ -317,7 +348,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	_, actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	_, actorName, err := h.GetActorInfoFromAddress(msg.To, height, key)
 	if err != nil {
 		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
 	}
@@ -403,7 +434,7 @@ func (h *Helper) IsGenesisActor(addr address.Address) bool {
 }
 
 func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey) bool {
-	_, actorName, err := h.GetActorNameFromAddress(addr, height, tipsetKey)
+	_, actorName, err := h.GetActorInfoFromAddress(addr, height, tipsetKey)
 	if err != nil {
 		return false
 	}
@@ -415,7 +446,7 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		if addr == address.Undef {
 			continue
 		}
-		_, actorName, err := h.GetActorNameFromAddress(addr, height, key)
+		_, actorName, err := h.GetActorInfoFromAddress(addr, height, key)
 		if err != nil {
 			return false, err
 		}

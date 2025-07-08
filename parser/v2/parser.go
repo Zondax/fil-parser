@@ -599,7 +599,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.ExecutionTraceV2, msg *parser.LotusMessage, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet) (actorName string, txType string, err error) {
 	actorAddress := msg.To
 
-	_, actorName, err = p.helper.GetActorNameFromAddress(actorAddress, int64(tipset.Height()), tipset.Key())
+	_, actorName, err = p.helper.GetActorInfoFromAddress(actorAddress, int64(tipset.Height()), tipset.Key())
 	if err != nil || actorName == "" {
 		p.logger.Warnf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		if trace.InvokedActor != nil {

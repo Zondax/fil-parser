@@ -55,7 +55,7 @@ func (m *Msig) parseInnerProposeMsg(
 func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 ) (actors.Actor, string, error) {
-	_, actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key)
+	actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key)
 	if err != nil {
 		return nil, "", err
 	}

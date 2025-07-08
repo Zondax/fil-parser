@@ -63,7 +63,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		}
 
 		// #nosec G115
-		_, actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
+		_, actorName, err := eg.helper.GetActorInfoFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
