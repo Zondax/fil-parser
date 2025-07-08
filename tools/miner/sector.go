@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
@@ -284,15 +282,12 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 		}
 
 		if eg.config.ConsolidateRobustAddress {
-			sealerIDAddr, err := address.NewIDAddress(sealerID)
+			consolidatedSealerID, err := eg.consolidateIDAddress(sealerID)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing sealer id: %w", err)
+				eg.logger.Errorf("error consolidating sealer id: %w", err)
+			} else {
+				sectorActivation[KeySealerID] = consolidatedSealerID
 			}
-			consolidatedSealerID, err := actors.ConsolidateToRobustAddress(sealerIDAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-			if err != nil {
-				return nil, fmt.Errorf("error consolidating sealer id: %w", err)
-			}
-			sectorActivation[KeySealerID] = consolidatedSealerID
 		}
 
 		jsonData, err := json.Marshal(sectorActivation)
@@ -438,18 +433,17 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 		if len(verifiedAllocationKey) > 0 {
 			clientIDAddrStr, err := getItem[uint64](verifiedAllocationKey, KeyAddress, false)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing client id address: %w", err)
+				eg.logger.Errorf("error parsing client id address: %w", err)
+				break
 			}
-			clientIDAddr, err := address.NewIDAddress(clientIDAddrStr)
+			consolidatedClientIDAddr, err := eg.consolidateIDAddress(clientIDAddrStr)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing client id address: %w", err)
+				eg.logger.Errorf("error consolidating client id address: %w", err)
+				break
 			}
-			consolidatedClientAddr, err := actors.ConsolidateToRobustAddress(clientIDAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-			if err != nil {
-				return nil, fmt.Errorf("error consolidating client id address: %w", err)
-			}
-			verifiedAllocationKey[KeyAddress] = consolidatedClientAddr
+			verifiedAllocationKey[KeyAddress] = consolidatedClientIDAddr
 			piece[KeyVerifiedAllocationKey] = verifiedAllocationKey
+
 		}
 
 		dataActivationNotifications, err := getSlice[map[string]interface{}](piece, KeyNotify, true)
@@ -461,22 +455,29 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 			for _, notify := range dataActivationNotifications {
 				addrStr, err := getItem[string](notify, KeyAddress, false)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing notify number: %w", err)
+					eg.logger.Errorf("error parsing notify number: %w", err)
+					break
 				}
-				addr, err := address.NewFromString(addrStr)
+				consolidatedAddr, err := eg.consolidateAddress(addrStr)
 				if err != nil {
-					return nil, fmt.Errorf("error parsing address: %w", err)
-				}
-				consolidatedAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-				if err != nil {
-					return nil, fmt.Errorf("error consolidating address: %w", err)
+					eg.logger.Errorf("error consolidating address: %w", err)
+					break
 				}
 				notify[KeyAddress] = consolidatedAddr
 				parsedDataActivationNotifications = append(parsedDataActivationNotifications, notify)
 			}
-			piece[KeyNotify] = parsedDataActivationNotifications
+			// only add the parsed data activation notifications if all the data activation notifications were parsed successfully
+			if len(parsedDataActivationNotifications) == len(dataActivationNotifications) {
+				piece[KeyNotify] = parsedDataActivationNotifications
+			}
+
 		}
 		parsedPieces = append(parsedPieces, piece)
 	}
-	return parsedPieces, nil
+	// only return the parsed pieces if all the pieces were parsed successfully
+	if len(parsedPieces) == len(pieces) {
+		return parsedPieces, nil
+	}
+
+	return pieces, nil
 }
