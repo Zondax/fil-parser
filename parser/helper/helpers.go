@@ -66,6 +66,9 @@ const (
 	msigCidStr = "bafk2bzacedef4sqdsfebspu7dqnk7naj27ac4lyho4zmvjrei5qnf2wn6v64u"
 	// account actorcode for nv23
 	accountCidStr = "bafk2bzacedbgei6jkx36fwdgvoohce4aghvpohqdhoco7p4thszgssms7olv2"
+	// EamSpaceAddressPrefix f410 is the prefix addresses managed by the eam actor
+	EamSpaceAddressPrefix = "f410"
+	ActorNotFoundErrStr   = "actor not found"
 )
 
 // Deprecated: Use v2/tools.GetMethodName instead
@@ -222,11 +225,13 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		switch add.Protocol() {
 		// f1 or f3 is an account
 		case address.SECP256K1, address.BLS:
-			return "account", err
+			return manifest.AccountKey, err
 		case address.Delegated:
-			if strings.Contains(err.Error(), "actor not found") {
-				// assume the actor is evm
-				return "evm", nil
+			if strings.Contains(strings.ToLower(err.Error()), ActorNotFoundErrStr) {
+				if strings.HasPrefix(add.String(), EamSpaceAddressPrefix) {
+					// assume the actor is evm
+					return manifest.EvmKey, nil
+				}
 			}
 		}
 		return "", err
