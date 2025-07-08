@@ -61,7 +61,7 @@ func setupTest(*testing.T) miner.EventGenerator {
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(node)
 	helper := helper.NewHelper(lib, cache, node, logger, metrics)
 
-	return miner.NewEventGenerator(helper, logger, metrics)
+	return miner.NewEventGenerator(helper, logger, metrics, parser.Config{})
 }
 
 func assertSectorEvents(t *testing.T, want []*types.MinerSectorEvent, got []*types.MinerSectorEvent) {
