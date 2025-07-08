@@ -121,11 +121,12 @@ func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid st
 		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
 	case parser.MethodUniversalReceiverHook:
-		clientInfo, err := eg.universalReceiverHook(tx, tipsetCid)
+		clientInfo, dealInfo, err := eg.universalReceiverHook(tx, tipsetCid)
 		if err != nil {
 			return nil, err
 		}
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
+		events.Deals = append(events.Deals, dealInfo...)
 	}
 
 	return events, nil
@@ -218,18 +219,19 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, tipsetCid 
 		}, nil
 }
 
-func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, error) {
-	m, err := parserUniversalReceiverHook(tx.TxMetadata)
+func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
+	clientValue, dealValue, err := parserUniversalReceiverHook(tx, tipsetCid)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
 	return &types.VerifregEvent{
 		ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, fmt.Sprint(tx.Height)),
-		Address:     tx.TxFrom,
+		Address:     tx.TxFrom, // This is the datacap actor. Should be the client.
 		TxCid:       tx.TxCid,
 		Height:      tx.Height,
 		ActionType:  tx.TxType,
-		Value:       m,
+		Value:       clientValue,
 		TxTimestamp: tx.TxTimestamp,
-	}, nil
+	}, dealValue, nil
 }

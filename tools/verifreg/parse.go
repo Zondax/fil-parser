@@ -2,6 +2,7 @@ package verifreg
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -18,77 +19,8 @@ import (
 	verifreg "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/types"
 )
-
-// Type-safe structs for RemoveVerifier metadata
-type VerifierSignature struct {
-	Type int    `json:"Type"`
-	Data string `json:"Data"`
-}
-
-type VerifierRequest struct {
-	Verifier          string            `json:"Verifier"`
-	VerifierSignature VerifierSignature `json:"VerifierSignature"`
-}
-
-type RemoveVerifierParams struct {
-	VerifiedClientToRemove string          `json:"VerifiedClientToRemove"`
-	DataCapAmountToRemove  string          `json:"DataCapAmountToRemove"`
-	VerifierRequest1       VerifierRequest `json:"VerifierRequest1"`
-	VerifierRequest2       VerifierRequest `json:"VerifierRequest2"`
-}
-
-type RemoveVerifierMetadata struct {
-	MethodNum string               `json:"MethodNum"`
-	Params    RemoveVerifierParams `json:"Params"`
-}
-
-// FRC46 Token transaction structures
-type AllocationData struct {
-	Provider   int64             `json:"Provider"`
-	Data       map[string]string `json:"Data"`
-	Size       int64             `json:"Size"`
-	TermMin    int64             `json:"TermMin"`
-	TermMax    int64             `json:"TermMax"`
-	Expiration int64             `json:"Expiration"`
-}
-
-type OperatorData struct {
-	Allocations []AllocationData `json:"Allocations"`
-	Extensions  interface{}      `json:"Extensions"`
-}
-
-type FRC46TransactionParams struct {
-	Amount       string       `json:"amount"`
-	From         string       `json:"from"`
-	Operator     string       `json:"operator"`
-	OperatorData OperatorData `json:"operator_data"`
-	To           string       `json:"to"`
-	TokenData    string       `json:"token_data"`
-	Type         string       `json:"type"`
-}
-
-type AllocationResults struct {
-	SuccessCount int         `json:"SuccessCount"`
-	FailCodes    interface{} `json:"FailCodes"`
-}
-
-type ExtensionResults struct {
-	SuccessCount int         `json:"SuccessCount"`
-	FailCodes    interface{} `json:"FailCodes"`
-}
-
-type FRC46TransactionReturn struct {
-	AllocationResults AllocationResults `json:"AllocationResults"`
-	ExtensionResults  ExtensionResults  `json:"ExtensionResults"`
-	NewAllocations    []int64           `json:"NewAllocations"`
-}
-
-type FRC46TransactionMetadata struct {
-	MethodNum string                 `json:"MethodNum"`
-	Params    FRC46TransactionParams `json:"Params"`
-	Return    FRC46TransactionReturn `json:"Return"`
-}
 
 func getMetadataByKey(metadata, key string) (string, error) {
 	var value map[string]interface{}
@@ -238,28 +170,47 @@ func parseRemoveVerifiedClient(metadata, network string, height int64) (string, 
 	return "", "", 0, fmt.Errorf("unsupported concrete type: %T", params)
 }
 
-func parserUniversalReceiverHook(metadata string) (string, error) {
+func parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
 	// Parse the FRC46 transaction metadata
-	params, returnData, err := ParseFRC46TransactionMetadata(metadata)
+	params, returnData, err := ParseFRC46TransactionMetadata(tx.TxMetadata)
 	if err != nil {
-		return "", fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
+		return "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
 	}
 
-	// You can now access the parsed data
-	// For example, accessing allocation information
-	if len(params.OperatorData.Allocations) > 0 {
-		allocation := params.OperatorData.Allocations[0]
-		fmt.Printf("Provider: %d, Size: %d, Expiration: %d\n",
-			allocation.Provider, allocation.Size, allocation.Expiration)
+	// TODO: what happens when fail deal
+	if len(params.OperatorData.Allocations) != len(returnData.NewAllocations) {
+		return "", nil, errors.New("invalid number of allocations")
 	}
 
-	// Access return data
-	if len(returnData.NewAllocations) > 0 {
-		fmt.Printf("New Allocations: %v\n", returnData.NewAllocations)
-		fmt.Printf("Success Count: %d\n", returnData.AllocationResults.SuccessCount)
+	allocations := make([]AllocationDataWithDealID, len(params.OperatorData.Allocations))
+	deals := make([]*types.VerifregDeal, len(returnData.NewAllocations))
+	for i := range params.OperatorData.Allocations {
+		dealId := fmt.Sprintf("%d", returnData.NewAllocations[i])
+
+		allocations[i].AllocationData = params.OperatorData.Allocations[i]
+		allocations[i].DealID = dealId
+
+		allocBytes, err := json.Marshal(allocations[i])
+		if err != nil {
+			return "", nil, fmt.Errorf("error marshalling allocation: %w", err)
+		}
+
+		deals[i] = &types.VerifregDeal{
+			ID:          tools.BuildId(dealId, tx.TxCid, fmt.Sprint(tx.Height)),
+			DeadID:      dealId,
+			TxCid:       tx.TxCid,
+			Height:      tx.Height,
+			Value:       string(allocBytes),
+			TxTimestamp: tx.TxTimestamp,
+		}
 	}
 
-	return "", nil
+	clientValue, err := json.Marshal(allocations)
+	if err != nil {
+		return "", nil, fmt.Errorf("error marshalling allocations: %w", err)
+	}
+
+	return string(clientValue), deals, nil
 }
 
 // ParseFRC46TransactionMetadata parses FRC46 token transaction metadata
@@ -271,41 +222,4 @@ func ParseFRC46TransactionMetadata(metadata string) (*FRC46TransactionParams, *F
 	}
 
 	return &txMetadata.Params, &txMetadata.Return, nil
-}
-
-// ExampleParseFRC46Transaction demonstrates how to parse the FRC46 transaction metadata
-func ExampleParseFRC46Transaction() {
-	jsonString := `{"MethodNum":"3726118371","Params":{"amount":"34359738368000000000000000000","from":"f03201686","operator":"f03201686","operator_data":{"Allocations":[{"Provider":3175111,"Data":{"/":"baga6ea4seaqmo4bi4luj3fdif3unw75zwpnek67ay4jafo4754kgypp4o7cf2fi"},"Size":34359738368,"TermMin":518400,"TermMax":5256000,"Expiration":4473813}],"Extensions":null},"to":"f06","token_data":"","type":"frc46_token"},"Return":{"AllocationResults":{"SuccessCount":1,"FailCodes":null},"ExtensionResults":{"SuccessCount":0,"FailCodes":null},"NewAllocations":[81930453]}}`
-
-	params, returnData, err := ParseFRC46TransactionMetadata(jsonString)
-	if err != nil {
-		fmt.Printf("Error parsing: %v\n", err)
-		return
-	}
-
-	// Access parameters
-	fmt.Printf("Method Number: %s\n", "3726118371") // You can extract this separately if needed
-	fmt.Printf("Amount: %s\n", params.Amount)
-	fmt.Printf("From: %s\n", params.From)
-	fmt.Printf("To: %s\n", params.To)
-	fmt.Printf("Operator: %s\n", params.Operator)
-	fmt.Printf("Type: %s\n", params.Type)
-
-	// Access allocation data
-	if len(params.OperatorData.Allocations) > 0 {
-		allocation := params.OperatorData.Allocations[0]
-		fmt.Printf("Allocation Provider: %d\n", allocation.Provider)
-		fmt.Printf("Allocation Size: %d\n", allocation.Size)
-		fmt.Printf("Term Min: %d\n", allocation.TermMin)
-		fmt.Printf("Term Max: %d\n", allocation.TermMax)
-		fmt.Printf("Expiration: %d\n", allocation.Expiration)
-		fmt.Printf("Data CID: %s\n", allocation.Data["/"])
-	}
-
-	// Access return data
-	fmt.Printf("Allocation Success Count: %d\n", returnData.AllocationResults.SuccessCount)
-	fmt.Printf("Extension Success Count: %d\n", returnData.ExtensionResults.SuccessCount)
-	if len(returnData.NewAllocations) > 0 {
-		fmt.Printf("New Allocations: %v\n", returnData.NewAllocations)
-	}
 }

@@ -30,15 +30,15 @@ func (v *VerifiedRegistry) ParseFRC46UniversalReceiverHook(network string, heigh
 		return nil, fmt.Errorf("failed to parse FRC46 token params: %w", err)
 	}
 
-	from, err := address.NewIDAddress(uint64(tokenParams.From))
+	from, err := address.NewIDAddress(tokenParams.From)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse from address: %w", err)
 	}
-	to, err := address.NewIDAddress(uint64(tokenParams.To))
+	to, err := address.NewIDAddress(tokenParams.To)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse to address: %w", err)
 	}
-	operator, err := address.NewIDAddress(uint64(tokenParams.Operator))
+	operator, err := address.NewIDAddress(tokenParams.Operator)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse operator address: %w", err)
 	}

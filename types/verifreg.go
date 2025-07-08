@@ -19,4 +19,10 @@ type VerifregEvent struct {
 }
 
 type VerifregDeal struct {
+	ID          string    `json:"id"`
+	DeadID      string    `json:"dead_id"`
+	TxCid       string    `json:"tx_cid"`
+	Height      uint64    `json:"height"`
+	Value       string    `json:"value"`
+	TxTimestamp time.Time `json:"tx_timestamp"`
 }
