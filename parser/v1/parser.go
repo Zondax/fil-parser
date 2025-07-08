@@ -507,7 +507,7 @@ func (p *Parser) getTxType(ctx context.Context, to, from address.Address, method
 		From:   from,
 		Method: method,
 	}
-	_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+	_, actorName, err = p.helper.GetActorInfoFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
 	if err != nil {
 		p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
