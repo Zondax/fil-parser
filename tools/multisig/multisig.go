@@ -35,6 +35,7 @@ const (
 	metadataMethod     = "Method"
 	metadataValue      = "Value"
 	metadataSigner     = "Signer"
+	metadataSigners    = "Signers"
 
 	txStatusOk = "ok"
 )
@@ -214,26 +215,53 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 }
 
 func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, parsedMetadata any) (*types.MultisigInfo, error) {
-	if isAddOrRemoveSigner(tx.TxType) && eg.config.ConsolidateRobustAddress {
-		signerData, ok := parsedMetadata.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
+	if eg.config.ConsolidateRobustAddress {
+		if isAddOrRemoveSigner(tx.TxType) {
+			signerData, ok := parsedMetadata.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
+			}
+
+			signerAddrStr, ok := signerData[metadataSigner].(string)
+			if !ok {
+				return nil, fmt.Errorf("signer address not found in parsedMetadata")
+			}
+			signerAddr, err := address.NewFromString(signerAddrStr)
+			if err != nil {
+				return nil, fmt.Errorf("address.NewFromString(): %s", err)
+			}
+			signerAddrStr, err = actors.ConsolidateToRobustAddress(signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+			if err != nil {
+				return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
+			}
+			signerData[metadataSigner] = signerAddrStr
+			parsedMetadata = signerData
 		}
 
-		signerAddrStr, ok := signerData[metadataSigner].(string)
-		if !ok {
-			return nil, fmt.Errorf("signer address not found in parsedMetadata")
+		if isConstructor(tx.TxType) {
+			constructorData, ok := parsedMetadata.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
+			}
+			signers, ok := constructorData[metadataSigners].([]string)
+			if !ok {
+				return nil, fmt.Errorf("signers is not a []string")
+			}
+			consolidatedSigners := make([]string, 0, len(signers))
+			for _, signer := range signers {
+				addr, err := address.NewFromString(signer)
+				if err != nil {
+					return nil, fmt.Errorf("address.NewFromString(%s): %s", signer, err)
+				}
+				robustAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+				if err != nil {
+					return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
+				}
+				consolidatedSigners = append(consolidatedSigners, robustAddr)
+			}
+			constructorData[metadataSigners] = consolidatedSigners
+			parsedMetadata = constructorData
 		}
-		signerAddr, err := address.NewFromString(signerAddrStr)
-		if err != nil {
-			return nil, fmt.Errorf("address.NewFromString(): %s", err)
-		}
-		signerAddrStr, err = actors.ConsolidateToRobustAddress(signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-		if err != nil {
-			return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
-		}
-		signerData[metadataSigner] = signerAddrStr
-		parsedMetadata = signerData
 	}
 
 	b, err := json.Marshal(parsedMetadata)
@@ -285,6 +313,10 @@ func isAddOrRemoveSigner(txType string) bool {
 		return true
 	}
 	return false
+}
+
+func isConstructor(txType string) bool {
+	return txType == parser.MethodConstructor
 }
 
 /*
