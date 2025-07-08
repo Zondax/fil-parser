@@ -27,6 +27,7 @@ import (
 	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	typesV1 "github.com/zondax/fil-parser/parser/v1/types"
 	"github.com/zondax/fil-parser/tools"
+	minerTools "github.com/zondax/fil-parser/tools/miner"
 	multisigTools "github.com/zondax/fil-parser/tools/multisig"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
@@ -44,6 +45,7 @@ type Parser struct {
 	helper                 *helper.Helper
 	logger                 *logger.Logger
 	multisigEventGenerator multisigTools.EventGenerator
+	minerEventGenerator    minerTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
 	config                 parser.Config
@@ -64,7 +66,8 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
 		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -78,7 +81,8 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
 		metrics:                parsermetrics.NewClient(metrics, "parserV1"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -507,7 +511,7 @@ func (p *Parser) getTxType(ctx context.Context, to, from address.Address, method
 		From:   from,
 		Method: method,
 	}
-	_, actorName, err = p.helper.GetActorNameFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
+	_, actorName, err = p.helper.GetActorInfoFromAddress(msg.To, int64(tipset.Height()), tipset.Key())
 	if err != nil {
 		p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 	}

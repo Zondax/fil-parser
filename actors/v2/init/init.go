@@ -173,7 +173,7 @@ func (i *Init) getActorDetailsFromAddress(height int64, version network.Version,
 	parsedActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCidByVersion(parsedActorCid, version)
 	if err != nil {
 		i.logger.Warnf("initActor: error getting actor details from rosetta: %s", err)
-		gotActorCid, gotActorName, err := i.helper.GetActorNameFromAddress(addr, height, filTypes.EmptyTSK)
+		gotActorCid, gotActorName, err := i.helper.GetActorInfoFromAddress(addr, height, filTypes.EmptyTSK)
 		if err != nil {
 			i.logger.Errorf("initActor: error getting actor details from node: %s", err)
 			return cid.Undef, parsedActorName, err

@@ -5,27 +5,34 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 )
 
 const (
-	KeySectorNumber      = "SectorNumber"
-	KeySectorNumbers     = "SectorNumbers"
-	KeySectors           = "Sectors"
-	KeyExpiration        = "Expiration"
-	KeySectorSize        = "SectorSize"
-	KeyNewExpiration     = "NewExpiration"
-	KeyParams            = "Params"
-	KeyTerminations      = "Terminations"
-	KeyFaults            = "Faults"
-	KeyRecoveries        = "Recoveries"
-	KeyExtensions        = "Extensions"
-	KeySealProof         = "SealProof"
-	KeySectorActivations = "SectorActivations"
+	KeySectorNumber          = "SectorNumber"
+	KeySectorNumbers         = "SectorNumbers"
+	KeySectors               = "Sectors"
+	KeyExpiration            = "Expiration"
+	KeySectorSize            = "SectorSize"
+	KeyNewExpiration         = "NewExpiration"
+	KeyParams                = "Params"
+	KeyTerminations          = "Terminations"
+	KeyFaults                = "Faults"
+	KeyRecoveries            = "Recoveries"
+	KeyExtensions            = "Extensions"
+	KeySealProof             = "SealProof"
+	KeySectorActivations     = "SectorActivations"
+	KeyPieces                = "Pieces"
+	KeyNotify                = "Notify"
+	KeyAddress               = "Address"
+	KeySealerID              = "SealerID"
+	KeyVerifiedAllocationKey = "VerifiedAllocationKey"
 )
 
 func (eg *eventGenerator) isMinerSectorMessage(actorName, txType string) bool {
@@ -271,6 +278,23 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
+		sealerID, err := getInteger[uint64](sectorActivation, KeySealerID, false)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing sealer id: %w", err)
+		}
+
+		if eg.config.ConsolidateRobustAddress {
+			sealerIDAddr, err := address.NewIDAddress(sealerID)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing sealer id: %w", err)
+			}
+			consolidatedSealerID, err := actors.ConsolidateToRobustAddress(sealerIDAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+			if err != nil {
+				return nil, fmt.Errorf("error consolidating sealer id: %w", err)
+			}
+			sectorActivation[KeySealerID] = consolidatedSealerID
+		}
+
 		jsonData, err := json.Marshal(sectorActivation)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
@@ -280,7 +304,7 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 	return sectorEvents, nil
 }
 
-func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
+func (eg *eventGenerator) parseProveCommitSectors3(ctx context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
 	sectorActivations, err := getSlice[map[string]interface{}](params, KeySectorActivations, false)
 	if err != nil {
 		return nil, err
@@ -291,6 +315,21 @@ func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
+
+		if eg.config.ConsolidateRobustAddress {
+			pieces, err := getSlice[map[string]interface{}](sectorActivation, KeyPieces, true)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing pieces: %w", err)
+			}
+			if len(pieces) > 0 {
+				parsedPieces, err := eg.consolidatePieceActivationManifests(ctx, pieces)
+				if err != nil {
+					return nil, fmt.Errorf("error consolidating piece activation manifests: %w", err)
+				}
+				sectorActivation[KeyPieces] = parsedPieces
+			}
+		}
+
 		jsonData, err := json.Marshal(sectorActivation)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
@@ -387,4 +426,57 @@ func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uin
 		Data:         string(jsonData),
 		TxTimestamp:  tx.TxTimestamp,
 	}
+}
+
+func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context, pieces []map[string]interface{}) ([]map[string]interface{}, error) {
+	parsedPieces := make([]map[string]interface{}, 0, len(pieces))
+	for _, piece := range pieces {
+		verifiedAllocationKey, err := getItem[map[string]interface{}](piece, KeyVerifiedAllocationKey, true)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing verified allocation key: %w", err)
+		}
+		if len(verifiedAllocationKey) > 0 {
+			clientIDAddrStr, err := getItem[uint64](verifiedAllocationKey, KeyAddress, false)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing client id address: %w", err)
+			}
+			clientIDAddr, err := address.NewIDAddress(clientIDAddrStr)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing client id address: %w", err)
+			}
+			consolidatedClientAddr, err := actors.ConsolidateToRobustAddress(clientIDAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+			if err != nil {
+				return nil, fmt.Errorf("error consolidating client id address: %w", err)
+			}
+			verifiedAllocationKey[KeyAddress] = consolidatedClientAddr
+			piece[KeyVerifiedAllocationKey] = verifiedAllocationKey
+		}
+
+		dataActivationNotifications, err := getSlice[map[string]interface{}](piece, KeyNotify, true)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing notify: %w", err)
+		}
+		if len(dataActivationNotifications) > 0 {
+			parsedDataActivationNotifications := make([]map[string]interface{}, 0, len(dataActivationNotifications))
+			for _, notify := range dataActivationNotifications {
+				addrStr, err := getItem[string](notify, KeyAddress, false)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing notify number: %w", err)
+				}
+				addr, err := address.NewFromString(addrStr)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing address: %w", err)
+				}
+				consolidatedAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+				if err != nil {
+					return nil, fmt.Errorf("error consolidating address: %w", err)
+				}
+				notify[KeyAddress] = consolidatedAddr
+				parsedDataActivationNotifications = append(parsedDataActivationNotifications, notify)
+			}
+			piece[KeyNotify] = parsedDataActivationNotifications
+		}
+		parsedPieces = append(parsedPieces, piece)
+	}
+	return parsedPieces, nil
 }
