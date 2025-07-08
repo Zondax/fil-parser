@@ -221,21 +221,19 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 			if !ok {
 				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
 			}
-
 			signerAddrStr, ok := signerData[metadataSigner].(string)
-			if !ok {
-				return nil, fmt.Errorf("signer address not found in parsedMetadata")
+			if ok {
+				signerAddr, err := address.NewFromString(signerAddrStr)
+				if err != nil {
+					return nil, fmt.Errorf("address.NewFromString(%s): %s", signerAddrStr, err)
+				}
+				signerAddrStr, err = actors.ConsolidateToRobustAddress(signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+				if err != nil {
+					return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
+				}
+				signerData[metadataSigner] = signerAddrStr
+				parsedMetadata = signerData
 			}
-			signerAddr, err := address.NewFromString(signerAddrStr)
-			if err != nil {
-				return nil, fmt.Errorf("address.NewFromString(): %s", err)
-			}
-			signerAddrStr, err = actors.ConsolidateToRobustAddress(signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-			if err != nil {
-				return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
-			}
-			signerData[metadataSigner] = signerAddrStr
-			parsedMetadata = signerData
 		}
 
 		if isConstructor(tx.TxType) {
@@ -244,23 +242,27 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
 			}
 			signers, ok := constructorData[metadataSigners].([]string)
-			if !ok {
-				return nil, fmt.Errorf("signers is not a []string")
-			}
-			consolidatedSigners := make([]string, 0, len(signers))
-			for _, signer := range signers {
-				addr, err := address.NewFromString(signer)
-				if err != nil {
-					return nil, fmt.Errorf("address.NewFromString(%s): %s", signer, err)
+			if ok {
+				consolidatedSigners := make([]string, 0, len(signers))
+				for _, signer := range signers {
+					addr, err := address.NewFromString(signer)
+					if err != nil {
+						eg.logger.Errorf("address.NewFromString(%s): %s", signer, err)
+						break
+					}
+					robustAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+					if err != nil {
+						eg.logger.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
+						break
+					}
+					consolidatedSigners = append(consolidatedSigners, robustAddr)
 				}
-				robustAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
-				if err != nil {
-					return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
+				// only add the consolidated signers if all the signers were consolidated successfully
+				if len(consolidatedSigners) == len(signers) {
+					constructorData[metadataSigners] = consolidatedSigners
+					parsedMetadata = constructorData
 				}
-				consolidatedSigners = append(consolidatedSigners, robustAddr)
 			}
-			constructorData[metadataSigners] = consolidatedSigners
-			parsedMetadata = constructorData
 		}
 	}
 
