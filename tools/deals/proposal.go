@@ -16,6 +16,7 @@ const (
 	KeyValidDeals           = "ValidDeals"
 	KeyDealIDs              = "DealIDs"
 	KeyClientSignature      = "ClientSignature"
+	KeyData                 = "Data"
 	KeyProposal             = "Proposal"
 	KeyProvider             = "Provider"
 	KeySectorExpiry         = "SectorExpiry"
@@ -28,7 +29,7 @@ const (
 	KeyEndEpoch             = "EndEpoch"
 	KeyParams               = "Params"
 	KeyReturn               = "Return"
-	KeyStoragePricePerEpoch = "PricePerEpoch"
+	KeyStoragePricePerEpoch = "StoragePricePerEpoch"
 	KeyProviderCollateral   = "ProviderCollateral"
 	KeyClientCollateral     = "ClientCollateral"
 )
@@ -62,14 +63,18 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 	//#nosec G115
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
 
-	var dealIDs []uint64
+	validDealIndexToDealID := make(map[uint64]uint64)
+
+	dealIDs, err := common.GetIntegerSlice[uint64](ret, KeyIDs, false)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing deal ids: %w", err)
+	}
+
 	// use the return to get the deal ids because the actor may drop invalid deals and return less ids than the params
 	// From NV0 - NV13 the verified deals are in PublishStorageDealsReturn.IDs
 	if version.NodeVersion() < tools.V14.NodeVersion() {
-		var err error
-		dealIDs, err = common.GetIntegerSlice[uint64](ret, KeyIDs, false)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing deal ids: %w", err)
+		for i, id := range dealIDs {
+			validDealIndexToDealID[uint64(i)] = id
 		}
 	} else {
 		// From >= NV14 the verified deals are in PublishStorageDealsReturn.ValidDeals as a bitfield
@@ -77,9 +82,13 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 		if err != nil {
 			return nil, fmt.Errorf("error parsing verified deal ids: %w", err)
 		}
-		dealIDs, err = common.JsonEncodedBitfieldToIDs(validDeals)
+		validDealIndices, err := common.JsonEncodedBitfieldToIDs(validDeals)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing verified deal ids: %w", err)
+		}
+
+		for i, idx := range validDealIndices {
+			validDealIndexToDealID[idx] = uint64(dealIDs[i])
 		}
 	}
 
@@ -88,22 +97,29 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 		return nil, fmt.Errorf("error parsing deals: %w", err)
 	}
 
-	for idx, deal := range deals {
-		clientSignature, err := common.GetItem[string](ret, KeyClientSignature, false)
+	for idx, dealID := range validDealIndexToDealID {
+		deal := deals[idx]
+
+		clientSignature, err := common.GetItem[map[string]interface{}](deal, KeyClientSignature, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing client signature: %w", err)
 		}
+		clientSignatureData, err := common.GetItem[string](clientSignature, KeyData, false)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing client signature data: %w", err)
+		}
+
 		proposal, err := common.GetItem[map[string]interface{}](deal, KeyProposal, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing proposal: %w", err)
 		}
 
-		pieceCID, err := common.GetItem[string](proposal, KeyPieceCID, false)
+		pieceCID, err := common.GetCID(proposal, KeyPieceCID, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing piece cid: %w", err)
 		}
 
-		pieceSize, err := common.GetItem[uint64](proposal, KeyPieceSize, false)
+		pieceSize, err := common.GetInteger[uint64](proposal, KeyPieceSize, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing piece size: %w", err)
 		}
@@ -128,46 +144,49 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 			return nil, fmt.Errorf("error parsing label: %w", err)
 		}
 
-		startEpoch, err := common.GetItem[int64](proposal, KeyStartEpoch, false)
+		startEpoch, err := common.GetInteger[int64](proposal, KeyStartEpoch, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing start epoch: %w", err)
 		}
 
-		endEpoch, err := common.GetItem[int64](proposal, KeyEndEpoch, false)
+		endEpoch, err := common.GetInteger[int64](proposal, KeyEndEpoch, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing end epoch: %w", err)
 		}
 
-		storagePricePerEpoch, err := common.GetItem[uint64](proposal, KeyStoragePricePerEpoch, false)
+		// encoded as a bigint string
+		storagePricePerEpoch, err := common.GetBigInt(proposal, KeyStoragePricePerEpoch, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing storage price per epoch: %w", err)
 		}
 
-		providerCollateral, err := common.GetItem[uint64](proposal, KeyProviderCollateral, false)
+		// encoded as a bigint string
+		providerCollateral, err := common.GetBigInt(proposal, KeyProviderCollateral, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing provider collateral: %w", err)
 		}
 
-		clientCollateral, err := common.GetItem[uint64](proposal, KeyClientCollateral, false)
+		// encoded as a bigint string
+		clientCollateral, err := common.GetBigInt(proposal, KeyClientCollateral, false)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing client collateral: %w", err)
 		}
 
 		dealsInfo = append(dealsInfo, &types.DealsProposals{
-			ID:                 tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs[idx])),
+			ID:                 tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
 			Height:             tx.Height,
-			DealID:             dealIDs[idx],
+			DealID:             dealID,
 			TxCid:              tx.TxCid,
-			ClientSignature:    clientSignature,
+			ClientSignature:    clientSignatureData,
 			ProviderAddress:    providerAddress,
 			ClientAddress:      clientAddress,
-			PieceCid:           pieceCID,
+			PieceCid:           pieceCID.String(),
 			PieceSize:          pieceSize,
 			Verified:           verifiedDeal,
 			Label:              label,
 			StartEpoch:         startEpoch,
 			EndEpoch:           endEpoch,
-			PricePerEpoch:      storagePricePerEpoch,
+			PricePerEpoch:      storagePricePerEpoch.Uint64(),
 			ProviderCollateral: providerCollateral,
 			ClientCollateral:   clientCollateral,
 			TxTimestamp:        tx.TxTimestamp,
