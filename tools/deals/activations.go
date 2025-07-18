@@ -50,6 +50,7 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 			return nil, nil, err
 		}
 	case parser.MethodActivateDeals, parser.MethodBatchActivateDeals:
+		// return is empty for earlier network versions
 		ret, err := common.GetItem[map[string]interface{}](metadata, KeyReturn, true)
 		if err != nil {
 			return nil, nil, err
@@ -185,7 +186,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 			return nil, nil, err
 		}
 		if len(sectorDeals) != len(activations) {
-			return nil, nil, fmt.Errorf("sectorDeals and activations have different lengths: %d != %d", len(sectorDeals), len(activations))
+			return nil, nil, fmt.Errorf("sectorDeals and activations have different lengths: sectorDeals(%d) != activations(%d)", len(sectorDeals), len(activations))
 		}
 
 		for i := range sectorDeals {
@@ -237,19 +238,20 @@ func (eg *eventGenerator) getDealSpaceFields(ret map[string]interface{}) (nonVer
 		return
 	}
 
-	verifiedInfos, err := common.GetSlice[map[string]interface{}](ret, KeyVerifiedInfos, false)
+	verifiedInfos, err := common.GetSlice[map[string]interface{}](ret, KeyVerifiedInfos, true)
 	if err != nil {
 		return
 	}
 
+	verifiedDealSpace = big.NewInt(0)
 	for _, verifiedInfo := range verifiedInfos {
-		var pieceSize *big.Int
-		pieceSize, err = common.GetBigInt(verifiedInfo, KeySize, false)
+		var pieceSize uint64
+		pieceSize, err = common.GetInteger[uint64](verifiedInfo, KeySize, false)
 		if err != nil {
 			return
 		}
 
-		verifiedDealSpace.Add(verifiedDealSpace, pieceSize)
+		verifiedDealSpace.Add(verifiedDealSpace, big.NewInt(int64(pieceSize)))
 	}
 
 	return nonVerifiedDealSpace, verifiedDealSpace, nil
