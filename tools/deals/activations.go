@@ -65,6 +65,7 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 }
 
 func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsSpaceInfo, error) {
+	//#nosec G115
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
 
@@ -128,6 +129,7 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 }
 
 func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
+	//#nosec G115
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
 	dealActivations := []*types.DealsActivations{}
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
@@ -251,7 +253,7 @@ func (eg *eventGenerator) getDealSpaceFields(ret map[string]interface{}) (nonVer
 			return
 		}
 
-		verifiedDealSpace.Add(verifiedDealSpace, big.NewInt(int64(pieceSize)))
+		verifiedDealSpace.Add(verifiedDealSpace, big.NewInt(0).SetUint64(pieceSize))
 	}
 
 	return nonVerifiedDealSpace, verifiedDealSpace, nil

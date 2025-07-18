@@ -74,6 +74,7 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 	// From NV0 - NV13 the verified deals are in PublishStorageDealsReturn.IDs
 	if version.NodeVersion() < tools.V14.NodeVersion() {
 		for i, id := range dealIDs {
+			// #nosec G115
 			validDealIndexToDealID[uint64(i)] = id
 		}
 	} else {
@@ -88,7 +89,7 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 		}
 
 		for i, idx := range validDealIndices {
-			validDealIndexToDealID[idx] = uint64(dealIDs[i])
+			validDealIndexToDealID[idx] = dealIDs[i]
 		}
 	}
 
