@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -37,18 +38,22 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 	if err != nil {
 		return nil, nil, err
 	}
-	ret, err := common.GetItem[map[string]interface{}](metadata, KeyReturn, false)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	switch tx.TxType {
 	case parser.MethodVerifyDealsForActivation:
+		ret, err := common.GetItem[map[string]interface{}](metadata, KeyReturn, false)
+		if err != nil {
+			return nil, nil, err
+		}
 		dealSpaceInfo, err = eg.parseVerifyDealsForActivation(tx, params, ret)
 		if err != nil {
 			return nil, nil, err
 		}
 	case parser.MethodActivateDeals, parser.MethodBatchActivateDeals:
+		ret, err := common.GetItem[map[string]interface{}](metadata, KeyReturn, true)
+		if err != nil {
+			return nil, nil, err
+		}
 		dealActivations, dealSpaceInfo, err = eg.parseActivateDeals(tx, params, ret)
 		if err != nil {
 			return nil, nil, err
@@ -82,7 +87,11 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 		return dealSpaceInfo, nil
 	}
 
-	if version.NodeVersion() > tools.V3.NodeVersion() && version.NodeVersion() <= tools.V8.NodeVersion() {
+	maxVersion := tools.V8.NodeVersion()
+	if eg.network == tools.CalibrationNetwork {
+		maxVersion = tools.V16.NodeVersion()
+	}
+	if version.NodeVersion() > tools.V3.NodeVersion() && version.NodeVersion() <= maxVersion {
 		// number of SectorDeals and SectorWeights will always be the same are they are processed in an all or nothing manner
 		sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 		if err != nil {
@@ -139,6 +148,9 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 				TxTimestamp:  tx.TxTimestamp,
 			})
 		}
+		if ret == nil {
+			return nil
+		}
 		nonVerifiedDealSpace, verifiedDealSpace, err := eg.getDealSpaceFields(ret)
 		if err != nil {
 			return err
@@ -187,18 +199,18 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 	return nil, nil, nil
 }
 
-func (eg *eventGenerator) getCommonVerifyDealForActivationFields(params, ret map[string]interface{}) (dealIDs []uint64, nonVerifiedDealWeight uint64, verifiedDealWeight uint64, err error) {
+func (eg *eventGenerator) getCommonVerifyDealForActivationFields(params, ret map[string]interface{}) (dealIDs []uint64, nonVerifiedDealWeight *big.Int, verifiedDealWeight *big.Int, err error) {
 	dealIDs, err = common.GetIntegerSlice[uint64](params, KeyDealIDs, false)
 	if err != nil {
 		return
 	}
 
-	nonVerifiedDealWeight, err = common.GetInteger[uint64](ret, KeyDealWeight, false)
+	nonVerifiedDealWeight, err = common.GetBigInt(ret, KeyDealWeight, false)
 	if err != nil {
 		return
 	}
 
-	verifiedDealWeight, err = common.GetInteger[uint64](ret, KeyVerifiedDealWeight, false)
+	verifiedDealWeight, err = common.GetBigInt(ret, KeyVerifiedDealWeight, false)
 	if err != nil {
 		return
 	}
@@ -219,8 +231,8 @@ func (eg *eventGenerator) getActivationFields(params map[string]interface{}) (de
 	return dealIDs, sectorExpiry, nil
 }
 
-func (eg *eventGenerator) getDealSpaceFields(ret map[string]interface{}) (nonVerifiedDealSpace uint64, verifiedDealSpace uint64, err error) {
-	nonVerifiedDealSpace, err = common.GetInteger[uint64](ret, KeyNonVerifiedDealSpace, false)
+func (eg *eventGenerator) getDealSpaceFields(ret map[string]interface{}) (nonVerifiedDealSpace *big.Int, verifiedDealSpace *big.Int, err error) {
+	nonVerifiedDealSpace, err = common.GetBigInt(ret, KeyNonVerifiedDealSpace, false)
 	if err != nil {
 		return
 	}
@@ -231,13 +243,13 @@ func (eg *eventGenerator) getDealSpaceFields(ret map[string]interface{}) (nonVer
 	}
 
 	for _, verifiedInfo := range verifiedInfos {
-		var pieceSize uint64
-		pieceSize, err = common.GetInteger[uint64](verifiedInfo, KeySize, false)
+		var pieceSize *big.Int
+		pieceSize, err = common.GetBigInt(verifiedInfo, KeySize, false)
 		if err != nil {
 			return
 		}
 
-		verifiedDealSpace += pieceSize
+		verifiedDealSpace.Add(verifiedDealSpace, pieceSize)
 	}
 
 	return nonVerifiedDealSpace, verifiedDealSpace, nil

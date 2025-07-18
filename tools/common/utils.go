@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/filecoin-project/go-bitfield"
+	"github.com/ipfs/go-cid"
 	"golang.org/x/exp/constraints"
 )
 
@@ -45,6 +46,21 @@ func GetIntegerSlice[T constraints.Integer](value map[string]interface{}, key st
 	}
 
 	return result, nil
+}
+
+func GetCID(value map[string]interface{}, key string, canBeNil bool) (cid.Cid, error) {
+	cidMap, err := GetItem[map[string]interface{}](value, key, canBeNil)
+	if err != nil {
+		return cid.Cid{}, err
+	}
+	if canBeNil && cidMap == nil {
+		return cid.Cid{}, nil
+	}
+	cidString, err := GetItem[string](cidMap, "/", false)
+	if err != nil {
+		return cid.Cid{}, err
+	}
+	return cid.Decode(cidString)
 }
 
 func GetItem[T any](value map[string]interface{}, key string, canBeNil bool) (T, error) {

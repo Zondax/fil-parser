@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zondax/fil-parser/tools/common"
+	"golang.org/x/exp/constraints"
 )
 
 var key = "key"
@@ -78,13 +79,24 @@ func TestJsonEncodedBitfieldToSectorNumbers(t *testing.T) {
 	}{
 		{name: "test 1", bitField: []int{0, 4}, want: []uint64{0, 1, 2, 3}},
 		{name: "test 2", bitField: []int{0, 2, 1, 3}, want: []uint64{0, 1, 3, 4, 5}},
+		{name: "test 2", bitField: []int{0, 2}, want: []uint64{1, 3}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ids, err := common.JsonEncodedBitfieldToIDs(test.bitField)
 			fmt.Printf("want: %v, got: %v\n", test.want, ids)
+			printInts(test.bitField)
+			printInts(ids)
 			require.NoError(t, err)
 			assert.EqualValues(t, test.want, ids)
 		})
 	}
+}
+
+func printInts[T constraints.Integer](ints []T) {
+	for _, i := range ints {
+		fmt.Print(i)
+		fmt.Print(" ")
+	}
+	fmt.Println()
 }
