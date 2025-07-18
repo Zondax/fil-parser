@@ -13,20 +13,25 @@ import (
 )
 
 const (
-	KeySectorNumber      = "SectorNumber"
-	KeySectorNumbers     = "SectorNumbers"
-	KeySectors           = "Sectors"
-	KeyExpiration        = "Expiration"
-	KeySectorSize        = "SectorSize"
-	KeyDealIDs           = "DealIDs"
-	KeyNewExpiration     = "NewExpiration"
-	KeyParams            = "Params"
-	KeyTerminations      = "Terminations"
-	KeyFaults            = "Faults"
-	KeyRecoveries        = "Recoveries"
-	KeyExtensions        = "Extensions"
-	KeySealProof         = "SealProof"
-	KeySectorActivations = "SectorActivations"
+	KeySectorNumber          = "SectorNumber"
+	KeySectorNumbers         = "SectorNumbers"
+	KeySectors               = "Sectors"
+	KeyExpiration            = "Expiration"
+	KeySectorSize            = "SectorSize"
+	KeyDealIDs               = "DealIDs"
+	KeyNewExpiration         = "NewExpiration"
+	KeyParams                = "Params"
+	KeyTerminations          = "Terminations"
+	KeyFaults                = "Faults"
+	KeyRecoveries            = "Recoveries"
+	KeyExtensions            = "Extensions"
+	KeySealProof             = "SealProof"
+	KeySectorActivations     = "SectorActivations"
+	KeyPieces                = "Pieces"
+	KeyNotify                = "Notify"
+	KeyAddress               = "Address"
+	KeySealerID              = "SealerID"
+	KeyVerifiedAllocationKey = "VerifiedAllocationKey"
 )
 
 func (eg *eventGenerator) isMinerSectorMessage(actorName, txType string) bool {
@@ -278,6 +283,20 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
+		sealerID, err := common.GetInteger[uint64](sectorActivation, KeySealerID, false)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing sealer id: %w", err)
+		}
+
+		if eg.config.ConsolidateRobustAddress {
+			consolidatedSealerID, err := eg.consolidateIDAddress(sealerID)
+			if err != nil {
+				eg.logger.Errorf("error consolidating sealer id: %w", err)
+			} else {
+				sectorActivation[KeySealerID] = consolidatedSealerID
+			}
+		}
+
 		jsonData, err := json.Marshal(sectorActivation)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
@@ -287,7 +306,7 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 	return sectorEvents, nil
 }
 
-func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
+func (eg *eventGenerator) parseProveCommitSectors3(ctx context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
 	sectorActivations, err := common.GetSlice[map[string]interface{}](params, KeySectorActivations, false)
 	if err != nil {
 		return nil, err
@@ -298,6 +317,21 @@ func (eg *eventGenerator) parseProveCommitSectors3(_ context.Context, tx *types.
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector number: %w", err)
 		}
+
+		if eg.config.ConsolidateRobustAddress {
+			pieces, err := common.GetSlice[map[string]interface{}](sectorActivation, KeyPieces, true)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing pieces: %w", err)
+			}
+			if len(pieces) > 0 {
+				parsedPieces, err := eg.consolidatePieceActivationManifests(ctx, pieces)
+				if err != nil {
+					return nil, fmt.Errorf("error consolidating piece activation manifests: %w", err)
+				}
+				sectorActivation[KeyPieces] = parsedPieces
+			}
+		}
+
 		jsonData, err := json.Marshal(sectorActivation)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
@@ -348,41 +382,6 @@ func (eg *eventGenerator) parseProveCommitAggregate(_ context.Context, tx *types
 	return sectorEvents, nil
 }
 
-// the sector bit field is a range of bits representing the different sector numbers.
-// example: sectors: [ 0 1 2 3] -> bitfield: [1 1 1 1 ] -> JSON: [0,4]
-// example: sectors: [0 1 3 4 5] -> bitfield: [1 1 0 1 1 1] -> JSON: [ 0,2,1,3 ]
-// the JSON format always starts with a 0 and proceeds with the 0/1 pattern
-// see here: https://pkg.go.dev/github.com/filecoin-project/go-bitfield@v0.2.4/rle#RLE.MarshalJSON
-// func jsonEncodedBitfieldToSectorNumbers(bitField []int) ([]uint64, error) {
-// 	// pre-allocate for worst-case
-// 	sectorNumbers := make([]uint64, 0, len(bitField))
-
-// 	var parsedBitField bitfield.BitField
-// 	bitFieldJSON, err := json.Marshal(bitField)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error marshaling json encoded bitfield: %w", err)
-// 	}
-
-// 	err = parsedBitField.UnmarshalJSON(bitFieldJSON)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error parsing json encoded bitfield: %w", err)
-// 	}
-
-// 	iter, err := parsedBitField.BitIterator()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error iterating over bitfield: %w", err)
-// 	}
-
-// 	for iter.HasNext() {
-// 		sectorNumber, err := iter.Next()
-// 		if err != nil {
-// 			return nil, fmt.Errorf("error getting next sector number: %w", err)
-// 		}
-// 		sectorNumbers = append(sectorNumbers, sectorNumber)
-// 	}
-// 	return sectorNumbers, nil
-// }
-
 func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uint64, jsonData []byte) *types.MinerSectorEvent {
 	return &types.MinerSectorEvent{
 		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
@@ -394,4 +393,63 @@ func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uin
 		Data:         string(jsonData),
 		TxTimestamp:  tx.TxTimestamp,
 	}
+}
+
+func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context, pieces []map[string]interface{}) ([]map[string]interface{}, error) {
+	parsedPieces := make([]map[string]interface{}, 0, len(pieces))
+	for _, piece := range pieces {
+		verifiedAllocationKey, err := common.GetItem[map[string]interface{}](piece, KeyVerifiedAllocationKey, true)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing verified allocation key: %w", err)
+		}
+		if len(verifiedAllocationKey) > 0 {
+			clientIDAddrStr, err := common.GetItem[uint64](verifiedAllocationKey, KeyAddress, false)
+			if err != nil {
+				eg.logger.Errorf("error parsing client id address: %w", err)
+				break
+			}
+			consolidatedClientIDAddr, err := eg.consolidateIDAddress(clientIDAddrStr)
+			if err != nil {
+				eg.logger.Errorf("error consolidating client id address: %w", err)
+				break
+			}
+			verifiedAllocationKey[KeyAddress] = consolidatedClientIDAddr
+			piece[KeyVerifiedAllocationKey] = verifiedAllocationKey
+
+		}
+
+		dataActivationNotifications, err := common.GetSlice[map[string]interface{}](piece, KeyNotify, true)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing notify: %w", err)
+		}
+		if len(dataActivationNotifications) > 0 {
+			parsedDataActivationNotifications := make([]map[string]interface{}, 0, len(dataActivationNotifications))
+			for _, notify := range dataActivationNotifications {
+				addrStr, err := common.GetItem[string](notify, KeyAddress, false)
+				if err != nil {
+					eg.logger.Errorf("error parsing notify number: %w", err)
+					break
+				}
+				consolidatedAddr, err := eg.consolidateAddress(addrStr)
+				if err != nil {
+					eg.logger.Errorf("error consolidating address: %w", err)
+					break
+				}
+				notify[KeyAddress] = consolidatedAddr
+				parsedDataActivationNotifications = append(parsedDataActivationNotifications, notify)
+			}
+			// only add the parsed data activation notifications if all the data activation notifications were parsed successfully
+			if len(parsedDataActivationNotifications) == len(dataActivationNotifications) {
+				piece[KeyNotify] = parsedDataActivationNotifications
+			}
+
+		}
+		parsedPieces = append(parsedPieces, piece)
+	}
+	// only return the parsed pieces if all the pieces were parsed successfully
+	if len(parsedPieces) == len(pieces) {
+		return parsedPieces, nil
+	}
+
+	return pieces, nil
 }

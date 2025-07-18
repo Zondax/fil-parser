@@ -530,7 +530,7 @@ func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *h
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor code: %s. err: %s", addrStr, err)
 	}
-	_, actorName, err := helper.GetActorNameFromAddress(filAdd, 0, tipsetKey)
+	_, actorName, err := helper.GetActorInfoFromAddress(filAdd, 0, tipsetKey)
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor name: %s. err: %s", addrStr, err)
 	}
