@@ -25,38 +25,6 @@ const (
 	KeyData              = "Data"
 )
 
-func getMetadataByKey(metadata, key string) (string, error) {
-	var value map[string]interface{}
-	err := json.Unmarshal([]byte(metadata), &value)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshalling tx metadata: %w", err)
-	}
-
-	params, ok := value[key].(string)
-	if ok {
-		return params, nil
-	}
-
-	// If params is a map[string]interface{}, marshal it back to JSON string
-	if paramsMap, ok := value[key].(map[string]interface{}); ok {
-		paramsBytes, err := json.Marshal(paramsMap)
-		if err != nil {
-			return "", fmt.Errorf("error marshalling params map: %w", err)
-		}
-		return string(paramsBytes), nil
-	}
-
-	return "", fmt.Errorf("params is neither string nor map[string]interface{}")
-}
-
-func getMetadataParams(metadata string) (string, error) {
-	return getMetadataByKey(metadata, parser.ParamsKey)
-}
-
-func getMetadataReturn(metadata string) (string, error) {
-	return getMetadataByKey(metadata, parser.ReturnKey)
-}
-
 func getAddressAllowance(value map[string]interface{}) (string, *big.Int, error) {
 	params, err := common.GetItem[map[string]interface{}](value, parser.ParamsKey, false)
 	if err != nil {
