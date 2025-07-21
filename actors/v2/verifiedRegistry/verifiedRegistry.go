@@ -133,7 +133,11 @@ func (*VerifiedRegistry) RestoreBytes(network string, height int64, raw []byte) 
 
 func (*VerifiedRegistry) RemoveVerifiedClientDataCap(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := removedVerifiedClient[version.String()]
+	params, ok := removedVerifiedClientDataCapParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := removedVerifiedClientDataCapReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
@@ -254,17 +258,19 @@ func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int6
 
 func (v *VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
-	params, ok := universalReceiverParams[version.String()]
-	if !ok {
-		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
-	}
+	// TODO: TEST THIS
+	// params, ok := universalReceiverParams[version.String()]
+	// if !ok {
+	// 	return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	// }
 
 	returnValue, ok := allocationsResponse[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
 
+	// TODO: test this
 	return v.ParseFRC46UniversalReceiverHook(network, height, raw, rawReturn, returnValue())
 
-	return parse(raw, rawReturn, true, params(), returnValue())
+	// return parse(raw, rawReturn, true, params(), returnValue())
 }
