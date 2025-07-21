@@ -28,6 +28,18 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
+func buggyMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
+	a := Account{}
+	// method 3 was changed in nv18(actors v10) to use the MustGenerateFRCMethodNum("") style
+	// but in mainnet height 2683348, the method is still using the old style
+	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
+		3: {
+			Name:   "AuthenticateMessage",
+			Method: a.AuthenticateMessage,
+		},
+	}
+}
+
 var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V0.String(): v1Methods(),
 	tools.V1.String(): v1Methods(),
@@ -49,14 +61,14 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V15.String(): v7Methods(),
 	tools.V16.String(): actors.CopyMethods(accountv8.Methods),
 	tools.V17.String(): actors.CopyMethods(accountv9.Methods),
-	tools.V18.String(): actors.CopyMethods(accountv10.Methods),
-	tools.V19.String(): actors.CopyMethods(accountv11.Methods),
-	tools.V20.String(): actors.CopyMethods(accountv11.Methods),
-	tools.V21.String(): actors.CopyMethods(accountv12.Methods),
-	tools.V22.String(): actors.CopyMethods(accountv13.Methods),
-	tools.V23.String(): actors.CopyMethods(accountv14.Methods),
-	tools.V24.String(): actors.CopyMethods(accountv15.Methods),
-	tools.V25.String(): actors.CopyMethods(accountv16.Methods),
+	tools.V18.String(): actors.CopyMethods(accountv10.Methods, buggyMethods()),
+	tools.V19.String(): actors.CopyMethods(accountv11.Methods, buggyMethods()),
+	tools.V20.String(): actors.CopyMethods(accountv11.Methods, buggyMethods()),
+	tools.V21.String(): actors.CopyMethods(accountv12.Methods, buggyMethods()),
+	tools.V22.String(): actors.CopyMethods(accountv13.Methods, buggyMethods()),
+	tools.V23.String(): actors.CopyMethods(accountv14.Methods, buggyMethods()),
+	tools.V24.String(): actors.CopyMethods(accountv15.Methods, buggyMethods()),
+	tools.V25.String(): actors.CopyMethods(accountv16.Methods, buggyMethods()),
 }
 
 func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

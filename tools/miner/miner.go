@@ -29,13 +29,15 @@ type eventGenerator struct {
 	helper  *helper.Helper
 	logger  *logger.Logger
 	metrics *minerMetricsClient
+	config  parser.Config
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
 		metrics: newClient(metrics, "miner"),
+		config:  config,
 	}
 }
 
@@ -63,7 +65,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		}
 
 		// #nosec G115
-		_, actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
+		_, actorName, err := eg.helper.GetActorInfoFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
@@ -97,7 +99,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 func (eg *eventGenerator) isMinerStateMessage(actorName, txType string) bool {
 	switch {
-	case strings.EqualFold(actorName, manifest.MinerKey):
+	case strings.Contains(actorName, manifest.MinerKey):
 		return !strings.EqualFold(txType, parser.MethodOnDeferredCronEvent)
 	case strings.EqualFold(txType, parser.MethodAwardBlockReward):
 		return true

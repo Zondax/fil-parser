@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/golem/pkg/logger"
 
@@ -33,6 +34,8 @@ const (
 	metadataIDField    = "ID"
 	metadataMethod     = "Method"
 	metadataValue      = "Value"
+	metadataSigner     = "Signer"
+	metadataSigners    = "Signers"
 
 	txStatusOk = "ok"
 )
@@ -57,13 +60,15 @@ type eventGenerator struct {
 	helper  *helper.Helper
 	logger  *logger.Logger
 	metrics *multisigMetricsClient
+	config  parser.Config
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
 		metrics: newClient(metrics, "multisigEventGenerator"),
+		config:  config,
 	}
 }
 
@@ -87,7 +92,10 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 		isProposalType := isProposalType(tx.TxType)
 		if isProposalType {
-			proposal := eg.createProposal(ctx, tx, metadata, tipsetCid)
+			proposal, err := eg.createProposal(ctx, tx, metadata, tipsetCid)
+			if err != nil {
+				return nil, fmt.Errorf("could not create proposal. Err: %s", err)
+			}
 			events.Proposals = append(events.Proposals, proposal)
 		} else {
 			// Only consider transactions where tx.TxTo is a multisig address
@@ -100,7 +108,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 			}
 
 			// #nosec G115
-			_, actorName, err := eg.helper.GetActorNameFromAddress(addrTo, int64(tx.Height), tipsetKey)
+			_, actorName, err := eg.helper.GetActorInfoFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
 				_ = eg.metrics.UpdateActorNameFromAddressMetric()
 				eg.logger.Errorf("could not get actor name from address. Err: %s", err)
@@ -121,7 +129,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 	return events, nil
 }
 
-func (eg *eventGenerator) createProposal(ctx context.Context, tx *types.Transaction, metadata map[string]interface{}, tipsetCid string) *types.MultisigProposal {
+func (eg *eventGenerator) createProposal(ctx context.Context, tx *types.Transaction, metadata map[string]interface{}, tipsetCid string) (*types.MultisigProposal, error) {
 	proposal := &types.MultisigProposal{
 		MultisigAddress: tx.TxTo,
 		Height:          tx.Height,
@@ -137,7 +145,7 @@ func (eg *eventGenerator) createProposal(ctx context.Context, tx *types.Transact
 	}
 
 	proposal.ID = tools.BuildId(tipsetCid, tx.TxCid, proposal.Signer, proposal.MultisigAddress, fmt.Sprint(proposal.ProposalID), fmt.Sprint(tx.Height), tx.TxType)
-	return proposal
+	return proposal, nil
 }
 
 func (eg *eventGenerator) processProposalParams(ctx context.Context, metadata map[string]interface{}, txType string, proposal *types.MultisigProposal) {
@@ -194,8 +202,8 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 	if valueStr, ok := params[metadataValue].(string); ok {
 		params = map[string]interface{}{"Value": valueStr}
 	}
-
 	jsonParams, err := json.Marshal(params)
+
 	if err != nil {
 		eg.logger.Errorf("Error marshaling params: %v", err)
 		return
@@ -207,6 +215,57 @@ func (eg *eventGenerator) processNestedParams(ctx context.Context, params map[st
 }
 
 func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, parsedMetadata any) (*types.MultisigInfo, error) {
+	if eg.config.ConsolidateRobustAddress {
+		if isAddOrRemoveSigner(tx.TxType) {
+			signerData, ok := parsedMetadata.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
+			}
+			signerAddrStr, ok := signerData[metadataSigner].(string)
+			if ok {
+				signerAddr, err := address.NewFromString(signerAddrStr)
+				if err != nil {
+					return nil, fmt.Errorf("address.NewFromString(%s): %s", signerAddrStr, err)
+				}
+				signerAddrStr, err = actors.ConsolidateToRobustAddress(signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+				if err != nil {
+					return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
+				}
+				signerData[metadataSigner] = signerAddrStr
+				parsedMetadata = signerData
+			}
+		}
+
+		if isConstructor(tx.TxType) {
+			constructorData, ok := parsedMetadata.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
+			}
+			signers, ok := constructorData[metadataSigners].([]string)
+			if ok {
+				consolidatedSigners := make([]string, 0, len(signers))
+				for _, signer := range signers {
+					addr, err := address.NewFromString(signer)
+					if err != nil {
+						eg.logger.Errorf("address.NewFromString(%s): %s", signer, err)
+						break
+					}
+					robustAddr, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+					if err != nil {
+						eg.logger.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
+						break
+					}
+					consolidatedSigners = append(consolidatedSigners, robustAddr)
+				}
+				// only add the consolidated signers if all the signers were consolidated successfully
+				if len(consolidatedSigners) == len(signers) {
+					constructorData[metadataSigners] = consolidatedSigners
+					parsedMetadata = constructorData
+				}
+			}
+		}
+	}
+
 	b, err := json.Marshal(parsedMetadata)
 	if err != nil {
 		_ = eg.metrics.UpdateMarshalMultisigMetadataMetric(tx.TxType)
@@ -250,6 +309,18 @@ func isCancelOrApprove(txType string) bool {
 	return cancelApproveTranslateMap[txType] != ""
 }
 
+func isAddOrRemoveSigner(txType string) bool {
+	switch txType {
+	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
+		return true
+	}
+	return false
+}
+
+func isConstructor(txType string) bool {
+	return txType == parser.MethodConstructor
+}
+
 /*
 GenerateGenesisMultisigData generates the multisig data for an  address in the genesis.
 Ref: https://github.com/filecoin-project/lotus/blob/2714a84248095f877f52ce20e737d9c8843a352a/cli/multisig.go#L188
@@ -281,6 +352,7 @@ func GenerateGenesisMultisigData(ctx context.Context, api api.FullNode, addr add
 
 	var signerActors []string
 	for _, s := range signers {
+		// the address is already a robust address
 		signerActor, err := api.StateAccountKey(ctx, s, filTypes.EmptyTSK)
 		if err != nil {
 			return nil, fmt.Errorf("api.StateAccountKey(): %s", err)

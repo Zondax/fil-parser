@@ -54,10 +54,21 @@ const (
 	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
 	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
 	keylessAccountActor = "f090"
+	// ZeroAddressAccountActorRobust f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a is a zero address actor that existed until V10.
+	// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+	// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+	ZeroAddressAccountActorRobust = "f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a"
+	// ZeroAddressAccountActorShort f067253 is a zero address actor that existed until V10.
+	// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+	// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+	ZeroAddressAccountActorShort = "f067253"
 	// multisig actorcode for nv22
 	msigCidStr = "bafk2bzacedef4sqdsfebspu7dqnk7naj27ac4lyho4zmvjrei5qnf2wn6v64u"
 	// account actorcode for nv23
 	accountCidStr = "bafk2bzacedbgei6jkx36fwdgvoohce4aghvpohqdhoco7p4thszgssms7olv2"
+	// EamSpaceAddressPrefix f410 is the prefix addresses managed by the eam actor
+	EamSpaceAddressPrefix = "f410"
+	ActorNotFoundErrStr   = "actor not found"
 )
 
 // Deprecated: Use v2/tools.GetMethodName instead
@@ -164,6 +175,12 @@ func (h *Helper) GetFilecoinNodeClient() api.FullNode {
 	return h.node
 }
 
+// GetActorAddressInfo returns detailed actor address information:
+// - ActorCid
+// - ActorType
+// - Short
+// - Robust
+// - IsSystemActor
 func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey, height abi.ChainEpoch) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
@@ -172,7 +189,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
-	actorCid, actorName, err := h.GetActorNameFromAddress(add, int64(height), key)
+	actorCid, actorName, err := h.GetActorInfoFromAddress(add, int64(height), key)
 	if err != nil {
 		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
 	} else {
@@ -182,11 +199,17 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 
 	addInfo.Short, err = h.actorCache.GetShortAddress(add)
 	if err != nil {
+		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
+			addInfo.Short = ZeroAddressAccountActorShort
+		}
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
 	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
 	if err != nil {
+		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
+			addInfo.Robust = ZeroAddressAccountActorRobust
+		}
 		h.logger.Errorf("could not get robust address for %s. Err: %v", add.String(), err)
 	}
 
@@ -195,14 +218,34 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 	return addInfo
 }
 
-func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
+// GetActorNameFromAddress returns the actor name for the given address.
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
+	_, actorName, err := h.GetActorInfoFromAddress(add, height, key)
+	if err != nil {
+		switch add.Protocol() {
+		// f1 or f3 is an account
+		case address.SECP256K1, address.BLS:
+			return manifest.AccountKey, err
+		case address.Delegated:
+			if strings.Contains(strings.ToLower(err.Error()), ActorNotFoundErrStr) {
+				if strings.HasPrefix(add.String(), EamSpaceAddressPrefix) {
+					// assume the actor is evm
+					return manifest.EvmKey, nil
+				}
+			}
+		}
+		return "", err
+	}
+	return actorName, nil
+}
+
+// GetActorInfoFromAddress returns the actor cid and name for the given address.
+func (h *Helper) GetActorInfoFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
 	if add == address.Undef {
 		return cid.Undef, "", errors.New("address is undefined")
 	}
-	// The f090 address was a multisig actor until V23 where it was converted to an account actor
-	// https://github.com/filecoin-project/lotus/releases/tag/v1.28.1
-	// https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0085.md
-	if ok, cid, actorName := h.isKeylessAccountActor(add, height); ok {
+
+	if ok, cid, actorName := h.isSpecialAccountActor(add, height); ok {
 		return cid, actorName, nil
 	}
 
@@ -224,13 +267,36 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
+		actorName = tools.ParseActorName(actorName)
 
-		if actorName == manifest.PlaceholderKey && !onChainOnly {
+		if strings.Contains(actorName, manifest.PlaceholderKey) && !onChainOnly {
 			onChainOnly = true
 		} else {
 			return c, actorName, nil
 		}
 	}
+}
+
+// isSpecialAccountActor handles actor addresses that will fail to resolve from the node for reasons documented in each case.
+func (h *Helper) isSpecialAccountActor(add address.Address, height int64) (bool, cid.Cid, string) {
+	if ok, cid, actorName := h.IsZeroAddressAccountActor(add); ok {
+		return true, cid, actorName
+	}
+	if ok, cid, actorName := h.isKeylessAccountActor(add, height); ok {
+		return true, cid, actorName
+	}
+	return false, cid.Undef, ""
+}
+
+// The f3yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaby2smx7a(f067253) is a zero address actor that existed until V10.
+// Created: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/build/buildconstants/params_shared_vals.go#L56
+// Terminated: https://github.com/filecoin-project/lotus/blob/5750f49834deee9dfce752ff840630ae402a8b51/chain/consensus/filcns/upgrades.go#L1054
+func (h *Helper) IsZeroAddressAccountActor(add address.Address) (bool, cid.Cid, string) {
+	if h.network != tools.MainnetNetwork || (add.String() != ZeroAddressAccountActorRobust && add.String() != ZeroAddressAccountActorShort) {
+		return false, cid.Undef, ""
+	}
+
+	return true, accountCid, manifest.AccountKey
 }
 
 // The f090 address was a multisig actor until V23 where it was converted to an account actor
@@ -282,7 +348,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	_, actorName, err := h.GetActorNameFromAddress(msg.To, height, key)
+	_, actorName, err := h.GetActorInfoFromAddress(msg.To, height, key)
 	if err != nil {
 		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
 	}
@@ -368,7 +434,7 @@ func (h *Helper) IsGenesisActor(addr address.Address) bool {
 }
 
 func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey) bool {
-	_, actorName, err := h.GetActorNameFromAddress(addr, height, tipsetKey)
+	_, actorName, err := h.GetActorInfoFromAddress(addr, height, tipsetKey)
 	if err != nil {
 		return false
 	}
@@ -380,7 +446,7 @@ func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Addre
 		if addr == address.Undef {
 			continue
 		}
-		_, actorName, err := h.GetActorNameFromAddress(addr, height, key)
+		_, actorName, err := h.GetActorInfoFromAddress(addr, height, key)
 		if err != nil {
 			return false, err
 		}
