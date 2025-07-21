@@ -4,22 +4,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
+	"math/big"
 
-	addr "github.com/filecoin-project/go-address"
-	verifregv10 "github.com/filecoin-project/go-state-types/builtin/v10/verifreg"
-	verifregv11 "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
-	verifregv12 "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
-	verifregv13 "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
-	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
-	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
-	verifregv16 "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
-	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
-	verifreg "github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/fil-parser/types"
+)
+
+const (
+	KeyAddress           = "Address"
+	KeyAllowance         = "Allowance"
+	KeyParams            = "Params"
+	KeyVerifiedClient    = "VerifiedClient"
+	KeyDataCapRemoved    = "DataCapRemoved"
+	KeyVerifierRequest1  = "VerifierRequest1"
+	KeyVerifierRequest2  = "VerifierRequest2"
+	KeyVerifier          = "Verifier"
+	KeyVerifierSignature = "VerifierSignature"
+	KeyData              = "Data"
 )
 
 func getMetadataByKey(metadata, key string) (string, error) {
@@ -54,40 +57,27 @@ func getMetadataReturn(metadata string) (string, error) {
 	return getMetadataByKey(metadata, parser.ReturnKey)
 }
 
-// TODO: this parsing funcs doesn't make much sense. It should be done through
-func getAddressAllowance(metadata string) (string, uint64, error) {
-	var value map[string]interface{}
-	err := json.Unmarshal([]byte(metadata), &value)
+func getAddressAllowance(value map[string]interface{}) (string, *big.Int, error) {
+	params, err := common.GetItem[map[string]interface{}](value, parser.ParamsKey, false)
 	if err != nil {
-		return "", 0, fmt.Errorf("error unmarshalling tx metadata: %w", err)
+		return "", nil, fmt.Errorf("error parsing params: %w", err)
 	}
 
-	params, ok := value[parser.ParamsKey].(map[string]interface{})
-	if !ok {
-		return "", 0, fmt.Errorf("error parsing params: %w", err)
-	}
-
-	addr, ok := params["Address"].(string)
-	if !ok {
-		return "", 0, fmt.Errorf("error parsing address: %w", err)
-	}
-
-	allowance, ok := params["Allowance"].(string)
-	if !ok {
-		return "", 0, fmt.Errorf("error parsing allowance: %w", err)
-	}
-
-	intAllowance, err := strconv.ParseUint(allowance, 10, 64)
+	addr, err := common.GetItem[string](params, KeyAddress, false)
 	if err != nil {
-		return "", 0, fmt.Errorf("error parsing allowance string '%s': %w", allowance, err)
+		return "", nil, fmt.Errorf("error parsing address: %w", err)
 	}
 
-	return addr, intAllowance, nil
+	allowance, err := common.GetBigInt(params, KeyAllowance, false)
+	if err != nil {
+		return "", nil, fmt.Errorf("error parsing allowance: %w", err)
+	}
+
+	return addr, allowance, nil
 }
 
-func parseRemoveVerifier(metadata string) (string, error) {
-	// Parse the JSON metadata to extract the params, in the case of removeVerifier is just the address
-	addr, err := getMetadataParams(metadata)
+func parseRemoveVerifier(metadata map[string]interface{}) (string, error) {
+	addr, err := common.GetItem[string](metadata, KeyParams, false)
 	if err != nil {
 		return "", fmt.Errorf("error getting params from metadata: %w", err)
 	}
@@ -95,79 +85,64 @@ func parseRemoveVerifier(metadata string) (string, error) {
 	return addr, nil
 }
 
-func parseRemoveVerifiedClient(metadata, network string, height int64) (string, string, uint64, error) {
-	// Parse the JSON metadata to extract the params
-	paramsStr, err := getMetadataParams(metadata)
+// returns clientToRemove, verifiers, dataCapAmountToRemove, error
+func parseRemoveVerifiedClient(metadata map[string]interface{}, network string, height int64) (string, []string, *big.Int, error) {
+	params, err := common.GetItem[map[string]interface{}](metadata, parser.ParamsKey, false)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("error getting params from metadata: %w", err)
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
 	}
 
-	// Get the concrete type constructor based on network version
-	fn, ok := verifreg.VerifregTypes[parser.MethodRemoveVerifiedClientDataCap][tools.VersionFromHeight(network, height).String()]
-	if !ok {
-		return "", "", 0, fmt.Errorf("could not get verified client data")
-	}
-
-	// Create an instance of the CBORUnmarshaler interface
-	params := fn()
-
-	err = json.Unmarshal([]byte(paramsStr), params)
+	returnValue, err := common.GetItem[map[string]interface{}](metadata, parser.ReturnKey, false)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("error unmarshalling into RemoveDataCapParams: %w", err)
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
 	}
 
-	// Get the concrete type through type assertion, then unmarshal JSON into it
-	switch v := params.(type) {
-	case *addr.Address:
-		return v.String(), "", 0, nil
-	case *verifregv16.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv15.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv14.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv13.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			fmt.Sprintf(`{"VerifierRequest1": %s, "VerifierRequest2": %s}`, v.VerifierRequest1.Verifier, v.VerifierRequest2.Verifier),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv12.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv11.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv10.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv9.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
-	case *verifregv8.RemoveDataCapParams:
-		return v.VerifiedClientToRemove.String(),
-			v.VerifierRequest1.Verifier.String(),
-			v.DataCapAmountToRemove.Int.Uint64(),
-			nil
+	clientToRemove, err := common.GetItem[string](returnValue, KeyVerifiedClient, false)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
 	}
 
-	return "", "", 0, fmt.Errorf("unsupported concrete type: %T", params)
+	dataCapAmountToRemove, err := common.GetBigInt(returnValue, KeyDataCapRemoved, false)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifiers := []string{}
+	verifierRequests := []string{KeyVerifierRequest1, KeyVerifierRequest2}
+	for _, verifierRequest := range verifierRequests {
+		verifierAddress, _, err := getVerifierFromVerifierRequest(params, verifierRequest)
+		if err != nil {
+			return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+		}
+		verifiers = append(verifiers, verifierAddress)
+	}
+
+	return clientToRemove, verifiers, dataCapAmountToRemove, nil
+}
+
+// returns the verifierAddress, verifierSignature, error
+func getVerifierFromVerifierRequest(value map[string]interface{}, key string) (string, string, error) {
+	verifierRequest, err := common.GetItem[map[string]interface{}](value, key, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifierAddress, err := common.GetItem[string](verifierRequest, KeyVerifier, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifierSignature, err := common.GetItem[map[string]interface{}](verifierRequest, KeyVerifierSignature, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifierSignatureData, err := common.GetItem[string](verifierSignature, KeyData, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	return verifierAddress, verifierSignatureData, nil
 }
 
 func parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
