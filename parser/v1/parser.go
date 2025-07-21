@@ -227,6 +227,10 @@ func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transac
 	return nil, errors.New("unimplimented")
 }
 
+func (p *Parser) ParseVerifregEvents(ctx context.Context, verifregTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.VerifregEvents, error) {
+	return nil, errors.New("unimplimented")
+}
+
 func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
 	return p.dealsEventGenerator.GenerateDealsEvents(ctx, dealsTxs, tipsetCid, tipsetKey)
 }
