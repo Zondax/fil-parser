@@ -234,6 +234,9 @@ func (p *Parser) ParseVerifregEvents(ctx context.Context, verifregTxs []*types.T
 func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
 	return p.dealsEventGenerator.GenerateDealsEvents(ctx, dealsTxs, tipsetCid, tipsetKey)
 }
+func (p *Parser) ParseDataCapEvents(ctx context.Context, dataCapTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DataCapEvents, error) {
+	return nil, errors.New("unimplimented")
+}
 
 func (p *Parser) ParseNativeEvents(_ context.Context, _ types.EventsData) (*types.EventsParsedResult, error) {
 	return nil, errors.New("unimplimented")

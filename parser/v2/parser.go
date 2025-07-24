@@ -28,6 +28,7 @@ import (
 	parsermetrics "github.com/zondax/fil-parser/parser/metrics"
 	typesV2 "github.com/zondax/fil-parser/parser/v2/types"
 	"github.com/zondax/fil-parser/tools"
+	dataCapTools "github.com/zondax/fil-parser/tools/datacap"
 	dealsTools "github.com/zondax/fil-parser/tools/deals"
 	eventTools "github.com/zondax/fil-parser/tools/events"
 	minerTools "github.com/zondax/fil-parser/tools/miner"
@@ -52,6 +53,7 @@ type Parser struct {
 	multisigEventGenerator multisigTools.EventGenerator
 	minerEventGenerator    minerTools.EventGenerator
 	verifregEventGenerator verifregTools.EventGenerator
+	dataCapEventGenerator  dataCapTools.EventGenerator
 	dealsEventGenerator    dealsTools.EventGenerator
 	metrics                *parsermetrics.ParserMetricsClient
 	actorsCacheMetrics     *cacheMetrics.ActorsCacheMetricsClient
@@ -95,6 +97,7 @@ func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Log
 		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
 		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, network),
 		verifregEventGenerator: verifregTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), network),
+		dataCapEventGenerator:  dataCapTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -301,6 +304,10 @@ func (p *Parser) ParseMinerEvents(ctx context.Context, minerTxs []*types.Transac
 
 func (p *Parser) ParseVerifregEvents(ctx context.Context, verifregTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.VerifregEvents, error) {
 	return p.verifregEventGenerator.GenerateVerifregEvents(ctx, verifregTxs, tipsetCid, tipsetKey)
+}
+
+func (p *Parser) ParseDataCapEvents(ctx context.Context, dataCapTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DataCapEvents, error) {
+	return p.dataCapEventGenerator.GenerateDataCapEvents(ctx, dataCapTxs, tipsetCid, tipsetKey)
 }
 
 func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
