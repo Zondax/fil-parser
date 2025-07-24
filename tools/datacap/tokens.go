@@ -207,7 +207,7 @@ func (eg *eventGenerator) parseTransfer(ctx context.Context, tx *types.Transacti
 
 	return []*types.DataCapTokenEvent{
 			{
-				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, "from"),
 				Address:     tx.TxFrom,
 				Height:      tx.Height,
 				TxCid:       tx.TxCid,
@@ -217,7 +217,7 @@ func (eg *eventGenerator) parseTransfer(ctx context.Context, tx *types.Transacti
 				TxTimestamp: tx.TxTimestamp,
 			},
 			{
-				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, "to"),
 				Address:     to,
 				Height:      tx.Height,
 				TxCid:       tx.TxCid,
@@ -233,28 +233,28 @@ func (eg *eventGenerator) parseTransfer(ctx context.Context, tx *types.Transacti
 func (eg *eventGenerator) parseTransferFrom(ctx context.Context, tx *types.Transaction, tipsetCid string, params, ret map[string]interface{}) ([]*types.DataCapTokenEvent, *types.DataCapAllowanceEvent, error) {
 	from, err := common.GetItem[string](params, KeyFrom, false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing owner: %w", err)
+		return nil, nil, fmt.Errorf("error parsing from: %w", err)
 	}
 	to, err := common.GetItem[string](params, KeyTo, false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing owner: %w", err)
+		return nil, nil, fmt.Errorf("error parsing to: %w", err)
 	}
 	fromBalance, err := common.GetBigInt(ret, KeyFromBalance, false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing balance: %w", err)
+		return nil, nil, fmt.Errorf("error parsing fromBalance: %w", err)
 	}
 	toBalance, err := common.GetBigInt(ret, KeyToBalance, false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing balance: %w", err)
+		return nil, nil, fmt.Errorf("error parsing toBalance: %w", err)
 	}
 	allowance, err := common.GetBigInt(ret, KeyAllowance, false)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing balance: %w", err)
+		return nil, nil, fmt.Errorf("error parsing allowance: %w", err)
 	}
 
 	return []*types.DataCapTokenEvent{
 			{
-				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, "from"),
 				Address:     from,
 				Height:      tx.Height,
 				TxCid:       tx.TxCid,
@@ -264,7 +264,7 @@ func (eg *eventGenerator) parseTransferFrom(ctx context.Context, tx *types.Trans
 				TxTimestamp: tx.TxTimestamp,
 			},
 			{
-				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+				ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, "to"),
 				Address:     to,
 				Height:      tx.Height,
 				TxCid:       tx.TxCid,

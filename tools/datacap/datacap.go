@@ -59,6 +59,7 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 		addr, err := address.NewFromString(actorAddress)
 		if err != nil {
 			eg.logger.Errorf("could not parse address. Err: %s", err)
+			continue
 		}
 
 		// #nosec G115
