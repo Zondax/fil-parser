@@ -6,6 +6,7 @@ import (
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -58,12 +59,11 @@ func (eg *eventGenerator) parseAwardBlockReward(tx *types.Transaction, tipsetCid
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
-
-	minerAddress, err := getItem[string](params, KeyMiner, false)
+	minerAddress, err := common.GetItem[string](params, KeyMiner, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing miner address: %w", err)
 	}
@@ -97,7 +97,7 @@ func (eg *eventGenerator) parseConstructor(tx *types.Transaction, tipsetCid, act
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
@@ -132,13 +132,13 @@ func (eg *eventGenerator) parseChangeWorkerAddress(tx *types.Transaction, tipset
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
 
 	if eg.config.ConsolidateRobustAddress {
-		workerAddress, _ := getItem[string](params, KeyNewWorker, true)
+		workerAddress, _ := common.GetItem[string](params, KeyNewWorker, true)
 		if workerAddress != "" {
 			parsedWorkerAddress, err := eg.consolidateAddress(workerAddress)
 			if err != nil {
@@ -147,7 +147,7 @@ func (eg *eventGenerator) parseChangeWorkerAddress(tx *types.Transaction, tipset
 				params[KeyNewWorker] = parsedWorkerAddress
 			}
 		}
-		controlAddresses, _ := getSlice[string](params, KeyNewControlAddrs, true)
+		controlAddresses, _ := common.GetSlice[string](params, KeyNewControlAddrs, true)
 		if len(controlAddresses) > 0 {
 			consolidatedControlAddresses := make([]string, 0, len(controlAddresses))
 			for _, addrStr := range controlAddresses {
@@ -187,13 +187,13 @@ func (eg *eventGenerator) parseChangeMultiaddrs(tx *types.Transaction, tipsetCid
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
 
 	if eg.config.ConsolidateRobustAddress {
-		multiaddrs, _ := getSlice[string](params, KeyNewMultiAddrs, true)
+		multiaddrs, _ := common.GetSlice[string](params, KeyNewMultiAddrs, true)
 		if len(multiaddrs) > 0 {
 			consolidatedMultiAddrs := make([]string, 0, len(multiaddrs))
 			for _, addrStr := range multiaddrs {
@@ -233,13 +233,13 @@ func (eg *eventGenerator) parseChangeBeneficiary(tx *types.Transaction, tipsetCi
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
 
-	params, err := getItem[map[string]interface{}](value, KeyParams, false)
+	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing params: %w", err)
 	}
 
 	if eg.config.ConsolidateRobustAddress {
-		beneficiary, _ := getItem[string](params, KeyNewBeneficiary, true)
+		beneficiary, _ := common.GetItem[string](params, KeyNewBeneficiary, true)
 		if beneficiary != "" {
 			parsedBeneficiary, err := eg.consolidateAddress(beneficiary)
 			if err != nil {
@@ -274,7 +274,7 @@ func (eg *eventGenerator) parseChangeOwnerAddress(tx *types.Transaction, tipsetC
 	}
 
 	if eg.config.ConsolidateRobustAddress {
-		ownerAddress, _ := getItem[string](value, KeyParams, true)
+		ownerAddress, _ := common.GetItem[string](value, KeyParams, true)
 		if ownerAddress != "" {
 			parsedOwnerAddress, err := eg.consolidateAddress(ownerAddress)
 			if err != nil {
@@ -301,7 +301,7 @@ func (eg *eventGenerator) parseChangeOwnerAddress(tx *types.Transaction, tipsetC
 }
 
 func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]interface{}) error {
-	ownerAddress, _ := getItem[string](params, KeyOwnerAddr, true)
+	ownerAddress, _ := common.GetItem[string](params, KeyOwnerAddr, true)
 	if ownerAddress != "" {
 		parsedOwnerAddress, err := eg.consolidateAddress(ownerAddress)
 		if err != nil {
@@ -311,7 +311,7 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 		}
 	}
 
-	workerAddress, _ := getItem[string](params, KeyWorkerAddr, true)
+	workerAddress, _ := common.GetItem[string](params, KeyWorkerAddr, true)
 	if workerAddress != "" {
 		parsedWorkerAddress, err := eg.consolidateAddress(workerAddress)
 		if err != nil {
@@ -320,7 +320,7 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 			params[KeyWorkerAddr] = parsedWorkerAddress
 		}
 	}
-	controlAddresses, _ := getSlice[string](params, KeyControlAddrs, true)
+	controlAddresses, _ := common.GetSlice[string](params, KeyControlAddrs, true)
 	if len(controlAddresses) > 0 {
 		consolidatedControlAddresses := make([]string, 0, len(controlAddresses))
 		for _, addrStr := range controlAddresses {
@@ -335,7 +335,7 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 			params[KeyControlAddrs] = consolidatedControlAddresses
 		}
 	}
-	multiaddrs, _ := getSlice[string](params, KeyMultiaddrs, true)
+	multiaddrs, _ := common.GetSlice[string](params, KeyMultiaddrs, true)
 	if len(multiaddrs) > 0 {
 		consolidatedMultiAddrs := make([]string, 0, len(multiaddrs))
 		for _, addrStr := range multiaddrs {
