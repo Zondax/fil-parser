@@ -69,6 +69,19 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
 
+	// Before V3, VerifyDealsForActivation has flat parameters
+	/*
+		type VerifyDealsForActivationParams struct {
+			DealIDs      []abi.DealID
+			SectorExpiry abi.ChainEpoch
+			SectorStart  abi.ChainEpoch
+		}
+
+		type VerifyDealsForActivationReturn struct {
+			DealWeight         abi.DealWeight
+			VerifiedDealWeight abi.DealWeight
+		}
+	*/
 	if version.NodeVersion() < tools.V3.NodeVersion() {
 		dealIDs, nonVerifiedDealWeight, verifiedDealWeight, err := eg.getCommonVerifyDealForActivationFields(params, ret)
 		if err != nil {
@@ -93,6 +106,30 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 	if eg.network == tools.CalibrationNetwork {
 		maxVersion = tools.V16.NodeVersion()
 	}
+	/*
+		From NV3(mainnet and calibration), to NV8(mainnet) and NV16(calibration) VerifyDealsForActivation params and return changed
+		// - Array of sectors rather than just one
+		// - Removed SectorStart (which is unknown at call time)
+		type VerifyDealsForActivationParams struct {
+			Sectors []SectorDeals
+		}
+		type SectorDeals struct {
+			SectorExpiry abi.ChainEpoch
+			DealIDs      []abi.DealID
+		}
+		type VerifyDealsForActivationReturn struct {
+			Sectors []SectorWeights
+		}
+
+		type SectorWeights struct {
+			DealSpace          uint64         // Total space in bytes of submitted deals.
+			DealWeight         abi.DealWeight // Total space*time of submitted deals.
+			VerifiedDealWeight abi.DealWeight // Total space*time of submitted verified deals.
+		}
+
+		After NV8(mainnet) and NV16(calibration) VerifyDealsForActivation return changed to remove deal space and weight information,
+		we get the info from the ActivateDeals method
+	*/
 	if version.NodeVersion() > tools.V3.NodeVersion() && version.NodeVersion() <= maxVersion {
 		// number of SectorDeals and SectorWeights will always be the same are they are processed in an all or nothing manner
 		sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
@@ -151,6 +188,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 				TxTimestamp:  tx.TxTimestamp,
 			})
 		}
+		// Before NV17(<=NV16), ActivateDeals return is empty and we get the deal space info from VerifyDealsForActivation
 		if ret == nil {
 			return nil
 		}
@@ -171,13 +209,15 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		return nil
 	}
 
-	if version.NodeVersion() < tools.V20.NodeVersion() {
+	// Before NV20, ActivateDeals activates multiple deals in 1 sector
+	if version.NodeVersion() <= tools.V20.NodeVersion() {
 		if err := parseDeals(params, ret); err != nil {
 			return nil, nil, err
 		}
 		return dealActivations, dealSpaceInfo, nil
 	}
 
+	// After NV20, ActivateDeals activates multiple deals in multiple sectors
 	if version.NodeVersion() > tools.V20.NodeVersion() {
 		sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 		if err != nil {
