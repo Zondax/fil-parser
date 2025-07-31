@@ -71,7 +71,7 @@ func (eg *eventGenerator) parseAwardBlockReward(tx *types.Transaction, tipsetCid
 		if minerAddress != "" {
 			parsedMinerAddress, err := eg.consolidateAddress(minerAddress)
 			if err != nil {
-				eg.logger.Errorf("error consolidating miner address: %w", err)
+				eg.logger.Errorf("error consolidating miner address: %s", err.Error())
 			} else {
 				minerAddress = parsedMinerAddress
 				params[KeyMiner] = minerAddress
@@ -104,7 +104,7 @@ func (eg *eventGenerator) parseConstructor(tx *types.Transaction, tipsetCid, act
 
 	if eg.config.ConsolidateRobustAddress {
 		if err := eg.consolidateConstructorAddresses(params); err != nil {
-			eg.logger.Errorf("error consolidating constructor addresses: %w", err)
+			eg.logger.Errorf("error consolidating constructor addresses: %s", err.Error())
 		} else {
 			value[KeyParams] = params
 		}
@@ -142,7 +142,7 @@ func (eg *eventGenerator) parseChangeWorkerAddress(tx *types.Transaction, tipset
 		if workerAddress != "" {
 			parsedWorkerAddress, err := eg.consolidateAddress(workerAddress)
 			if err != nil {
-				eg.logger.Errorf("error consolidating worker address: %w", err)
+				eg.logger.Errorf("error consolidating worker address: %s", err.Error())
 			} else {
 				params[KeyNewWorker] = parsedWorkerAddress
 			}
@@ -153,7 +153,7 @@ func (eg *eventGenerator) parseChangeWorkerAddress(tx *types.Transaction, tipset
 			for _, addrStr := range controlAddresses {
 				parsedControlAddress, err := eg.consolidateAddress(addrStr)
 				if err != nil {
-					eg.logger.Errorf("error consolidating control address: %w", err)
+					eg.logger.Errorf("error consolidating control address: %s", err.Error())
 				} else {
 					consolidatedControlAddresses = append(consolidatedControlAddresses, parsedControlAddress)
 				}
@@ -181,47 +181,13 @@ func (eg *eventGenerator) parseChangeWorkerAddress(tx *types.Transaction, tipset
 }
 
 func (eg *eventGenerator) parseChangeMultiaddrs(tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {
-	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
-	}
-
-	params, err := common.GetItem[map[string]interface{}](value, KeyParams, false)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing params: %w", err)
-	}
-
-	if eg.config.ConsolidateRobustAddress {
-		multiaddrs, _ := common.GetSlice[string](params, KeyNewMultiAddrs, true)
-		if len(multiaddrs) > 0 {
-			consolidatedMultiAddrs := make([]string, 0, len(multiaddrs))
-			for _, addrStr := range multiaddrs {
-				parsedMultiaddr, err := eg.consolidateAddress(addrStr)
-				if err != nil {
-					eg.logger.Errorf("error consolidating multiaddr: %w", err)
-				} else {
-					consolidatedMultiAddrs = append(consolidatedMultiAddrs, parsedMultiaddr)
-				}
-			}
-			if len(consolidatedMultiAddrs) == len(multiaddrs) {
-				params[KeyNewMultiAddrs] = consolidatedMultiAddrs
-			}
-		}
-		value[KeyParams] = params
-	}
-
-	jsonData, err := json.Marshal(value)
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling tx metadata: %w", err)
-	}
 	return &types.MinerInfo{
 		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
 		MinerAddress: actorAddress,
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   tx.TxType,
-		Data:         string(jsonData),
+		Data:         tx.TxMetadata,
 		TxTimestamp:  tx.TxTimestamp,
 	}, nil
 }
@@ -243,7 +209,7 @@ func (eg *eventGenerator) parseChangeBeneficiary(tx *types.Transaction, tipsetCi
 		if beneficiary != "" {
 			parsedBeneficiary, err := eg.consolidateAddress(beneficiary)
 			if err != nil {
-				eg.logger.Errorf("error consolidating beneficiary address: %w", err)
+				eg.logger.Errorf("error consolidating beneficiary address: %s", err.Error())
 			} else {
 				params[KeyNewBeneficiary] = parsedBeneficiary
 			}
@@ -278,7 +244,7 @@ func (eg *eventGenerator) parseChangeOwnerAddress(tx *types.Transaction, tipsetC
 		if ownerAddress != "" {
 			parsedOwnerAddress, err := eg.consolidateAddress(ownerAddress)
 			if err != nil {
-				eg.logger.Errorf("error consolidating owner address: %w", err)
+				eg.logger.Errorf("error consolidating owner address: %s", err.Error())
 			} else {
 				value[KeyParams] = parsedOwnerAddress
 			}
@@ -305,7 +271,7 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 	if ownerAddress != "" {
 		parsedOwnerAddress, err := eg.consolidateAddress(ownerAddress)
 		if err != nil {
-			eg.logger.Errorf("error consolidating owner address: %w", err)
+			eg.logger.Errorf("error consolidating owner address: %s", err.Error())
 		} else {
 			params[KeyOwnerAddr] = parsedOwnerAddress
 		}
@@ -315,7 +281,7 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 	if workerAddress != "" {
 		parsedWorkerAddress, err := eg.consolidateAddress(workerAddress)
 		if err != nil {
-			eg.logger.Errorf("error consolidating worker address: %w", err)
+			eg.logger.Errorf("error consolidating worker address: %s", err.Error())
 		} else {
 			params[KeyWorkerAddr] = parsedWorkerAddress
 		}
@@ -326,7 +292,7 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 		for _, addrStr := range controlAddresses {
 			parsedControlAddress, err := eg.consolidateAddress(addrStr)
 			if err != nil {
-				eg.logger.Errorf("error consolidating control address: %w", err)
+				eg.logger.Errorf("error consolidating control address: %s", err.Error())
 			} else {
 				consolidatedControlAddresses = append(consolidatedControlAddresses, parsedControlAddress)
 			}
@@ -335,21 +301,9 @@ func (eg *eventGenerator) consolidateConstructorAddresses(params map[string]inte
 			params[KeyControlAddrs] = consolidatedControlAddresses
 		}
 	}
+	// multiaddrs is a base32 encoded binary representation of the multiaddrs, so we don't need to consolidate it
 	multiaddrs, _ := common.GetSlice[string](params, KeyMultiaddrs, true)
-	if len(multiaddrs) > 0 {
-		consolidatedMultiAddrs := make([]string, 0, len(multiaddrs))
-		for _, addrStr := range multiaddrs {
-			parsedMultiaddr, err := eg.consolidateAddress(addrStr)
-			if err != nil {
-				eg.logger.Errorf("error consolidating multiaddr: %w", err)
-			} else {
-				consolidatedMultiAddrs = append(consolidatedMultiAddrs, parsedMultiaddr)
-			}
-		}
-		if len(consolidatedMultiAddrs) == len(multiaddrs) {
-			params[KeyMultiaddrs] = consolidatedMultiAddrs
-		}
-	}
+	params[KeyMultiaddrs] = multiaddrs
 
 	return nil
 }
