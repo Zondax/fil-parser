@@ -403,7 +403,7 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 			return nil, fmt.Errorf("error parsing verified allocation key: %w", err)
 		}
 		if len(verifiedAllocationKey) > 0 {
-			clientIDAddrStr, err := common.GetItem[uint64](verifiedAllocationKey, KeyAddress, false)
+			clientIDAddrStr, err := common.GetInteger[uint64](verifiedAllocationKey, KeyAddress, false)
 			if err != nil {
 				eg.logger.Errorf("error parsing client id address: %w", err)
 				break
