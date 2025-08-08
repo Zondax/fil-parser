@@ -148,7 +148,7 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 			}
 
 			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs[i])),
+				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs)),
 				Height:               tx.Height,
 				TxCid:                tx.TxCid,
 				DealIDs:              dealIDs,
