@@ -30,14 +30,16 @@ type eventGenerator struct {
 	logger  *logger.Logger
 	metrics *dealsMetricsClient
 	network string
+	config  parser.Config
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
 		metrics: newClient(metrics, "deals"),
 		network: network,
+		config:  config,
 	}
 }
 
