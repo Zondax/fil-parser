@@ -91,6 +91,7 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 		dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
 			ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs)),
 			Height:               tx.Height,
+			ActorAddress:         tx.TxFrom,
 			TxCid:                tx.TxCid,
 			DealIDs:              dealIDs,
 			NonVerifiedDealSpace: nonVerifiedDealWeight,
@@ -148,8 +149,9 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 			}
 
 			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs[i])),
+				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs), fmt.Sprint(i)),
 				Height:               tx.Height,
+				ActorAddress:         tx.TxFrom,
 				TxCid:                tx.TxCid,
 				DealIDs:              dealIDs,
 				NonVerifiedDealSpace: nonVerifiedDealWeight,
@@ -180,6 +182,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		for _, dealID := range dealIDs {
 			dealActivations = append(dealActivations, &types.DealsActivations{
 				ID:           tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+				ActorAddress: tx.TxFrom,
 				Height:       tx.Height,
 				TxCid:        tx.TxCid,
 				DealID:       dealID,
@@ -199,6 +202,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
 			ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs)),
 			Height:               tx.Height,
+			ActorAddress:         tx.TxFrom,
 			TxCid:                tx.TxCid,
 			DealIDs:              dealIDs,
 			NonVerifiedDealSpace: nonVerifiedDealSpace,

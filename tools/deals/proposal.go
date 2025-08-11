@@ -175,6 +175,7 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 
 		dealsInfo = append(dealsInfo, &types.DealsProposals{
 			ID:                 tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+			ActorAddress:       tx.TxFrom,
 			Height:             tx.Height,
 			DealID:             dealID,
 			TxCid:              tx.TxCid,

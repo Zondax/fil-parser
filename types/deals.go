@@ -23,10 +23,11 @@ type DealsMessages struct {
 }
 
 type DealsProposals struct {
-	ID     string `json:"id"`
-	Height uint64 `json:"height"`
-	DealID uint64 `json:"deal_id"`
-	TxCid  string `json:"tx_cid"`
+	ID           string `json:"id"`
+	Height       uint64 `json:"height"`
+	ActorAddress string `json:"actor_address"`
+	DealID       uint64 `json:"deal_id"`
+	TxCid        string `json:"tx_cid"`
 
 	// proposal details
 	ClientSignature string `json:"client_signature"`
@@ -56,6 +57,7 @@ type DealsProposals struct {
 type DealsActivations struct {
 	ID           string    `json:"id"`
 	Height       uint64    `json:"height"`
+	ActorAddress string    `json:"actor_address"`
 	TxCid        string    `json:"tx_cid"`
 	DealID       uint64    `json:"deal_id"`
 	SectorExpiry int64     `json:"sector_expiry"`
@@ -64,10 +66,11 @@ type DealsActivations struct {
 }
 
 type DealsSpaceInfo struct {
-	ID      string   `json:"id"`
-	Height  uint64   `json:"height"`
-	TxCid   string   `json:"tx_cid"`
-	DealIDs []uint64 `json:"deal_ids"`
+	ID           string   `json:"id"`
+	Height       uint64   `json:"height"`
+	ActorAddress string   `json:"actor_address"`
+	TxCid        string   `json:"tx_cid"`
+	DealIDs      []uint64 `json:"deal_ids"`
 	// NonVerifiedDealWeight is the sum(piece_size * deal_duration) of all the non-verified deals
 	// VerifiedDealWeight is the sum(piece_size * deal_duration) of all the verified deals
 	// NonVerifiedDealSpace is the sum(piece_size) of all the deals
