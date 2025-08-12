@@ -57,13 +57,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			continue
 		}
 
-		actorAddress := tx.TxTo
-		// this is executed by(from) the miner actor
-		if tx.TxType == parser.MethodUpdateClaimedPower || tx.TxType == parser.TotalFeeOp {
-			actorAddress = tx.TxFrom
-		}
-
-		addr, err := address.NewFromString(actorAddress)
+		addr, err := address.NewFromString(tx.TxTo)
 		if err != nil {
 			eg.logger.Errorf("could not parse address. Err: %s", err)
 		}
@@ -80,6 +74,8 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			continue
 		}
 
+		// the address that calls the market actor
+		actorAddress := tx.TxFrom
 		dealMessage, err := eg.createDealMessage(tx, tipsetCid, actorAddress)
 		if err != nil {
 			eg.logger.Errorf("could not create deal message. Err: %s", err)
