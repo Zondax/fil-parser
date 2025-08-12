@@ -84,7 +84,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 
 		events.DealsMessages = append(events.DealsMessages, dealMessage)
 
-		if eg.isPublishStorageDeals(actorName, tx.TxType) {
+		if eg.isPublishStorageDeals(tx.TxType) {
 			dealsInfo, err := eg.createDealsInfo(ctx, tx)
 			if err != nil {
 				eg.logger.Errorf("could not create deal proposal. Err: %s", err)
@@ -124,11 +124,7 @@ func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
 	return false
 }
 
-func (eg *eventGenerator) isPublishStorageDeals(actorName, txType string) bool {
-	if !strings.Contains(actorName, manifest.MarketKey) {
-		return false
-	}
-
+func (eg *eventGenerator) isPublishStorageDeals(txType string) bool {
 	switch {
 	case strings.EqualFold(txType, parser.MethodPublishStorageDeals),
 		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported):
