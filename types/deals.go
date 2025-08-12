@@ -18,7 +18,7 @@ type DealsMessages struct {
 	Height       uint64    `json:"height"`
 	TxCid        string    `json:"tx_cid"`
 	ActionType   string    `json:"action_type"`
-	Value        string    `json:"value"`
+	Data         string    `json:"data"`
 	TxTimestamp  time.Time `json:"tx_timestamp"`
 }
 
@@ -70,7 +70,8 @@ type DealsSpaceInfo struct {
 	Height       uint64   `json:"height"`
 	ActorAddress string   `json:"actor_address"`
 	TxCid        string   `json:"tx_cid"`
-	DealIDs      []uint64 `json:"deal_ids"`
+	DealID       uint64   `json:"deal_id"`
+	GroupDealIDs []uint64 `json:"group_deal_ids"`
 	// NonVerifiedDealWeight is the sum(piece_size * deal_duration) of all the non-verified deals
 	// VerifiedDealWeight is the sum(piece_size * deal_duration) of all the verified deals
 	// NonVerifiedDealSpace is the sum(piece_size) of all the deals

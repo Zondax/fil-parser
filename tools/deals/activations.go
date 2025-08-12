@@ -88,17 +88,20 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 			return nil, err
 		}
 
-		dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-			ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs)),
-			Height:               tx.Height,
-			ActorAddress:         tx.TxFrom,
-			TxCid:                tx.TxCid,
-			DealIDs:              dealIDs,
-			NonVerifiedDealSpace: nonVerifiedDealWeight,
-			VerifiedDealSpace:    verifiedDealWeight,
-			ActionType:           tx.TxType,
-			TxTimestamp:          tx.TxTimestamp,
-		})
+		for _, dealID := range dealIDs {
+			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
+				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+				Height:               tx.Height,
+				ActorAddress:         tx.TxFrom,
+				TxCid:                tx.TxCid,
+				DealID:               dealID,
+				GroupDealIDs:         dealIDs,
+				NonVerifiedDealSpace: nonVerifiedDealWeight,
+				VerifiedDealSpace:    verifiedDealWeight,
+				ActionType:           tx.TxType,
+				TxTimestamp:          tx.TxTimestamp,
+			})
+		}
 
 		return dealSpaceInfo, nil
 	}
@@ -148,18 +151,21 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 				return nil, err
 			}
 
-			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs), fmt.Sprint(i)),
-				Height:               tx.Height,
-				ActorAddress:         tx.TxFrom,
-				TxCid:                tx.TxCid,
-				DealIDs:              dealIDs,
-				NonVerifiedDealSpace: nonVerifiedDealWeight,
-				VerifiedDealSpace:    verifiedDealWeight,
-				SpaceAsWeight:        true,
-				ActionType:           tx.TxType,
-				TxTimestamp:          tx.TxTimestamp,
-			})
+			for _, dealID := range dealIDs {
+				dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
+					ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+					Height:               tx.Height,
+					ActorAddress:         tx.TxFrom,
+					TxCid:                tx.TxCid,
+					DealID:               dealID,
+					GroupDealIDs:         dealIDs,
+					NonVerifiedDealSpace: nonVerifiedDealWeight,
+					VerifiedDealSpace:    verifiedDealWeight,
+					SpaceAsWeight:        true,
+					ActionType:           tx.TxType,
+					TxTimestamp:          tx.TxTimestamp,
+				})
+			}
 		}
 		return dealSpaceInfo, nil
 	}
@@ -199,17 +205,20 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		if err != nil {
 			return err
 		}
-		dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-			ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealIDs)),
-			Height:               tx.Height,
-			ActorAddress:         tx.TxFrom,
-			TxCid:                tx.TxCid,
-			DealIDs:              dealIDs,
-			NonVerifiedDealSpace: nonVerifiedDealSpace,
-			VerifiedDealSpace:    verifiedDealSpace,
-			ActionType:           tx.TxType,
-			TxTimestamp:          tx.TxTimestamp,
-		})
+		for _, dealID := range dealIDs {
+			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
+				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+				DealID:               dealID,
+				Height:               tx.Height,
+				ActorAddress:         tx.TxFrom,
+				TxCid:                tx.TxCid,
+				GroupDealIDs:         dealIDs,
+				NonVerifiedDealSpace: nonVerifiedDealSpace,
+				VerifiedDealSpace:    verifiedDealSpace,
+				ActionType:           tx.TxType,
+				TxTimestamp:          tx.TxTimestamp,
+			})
+		}
 		return nil
 	}
 
