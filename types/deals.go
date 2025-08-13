@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math/big"
 	"time"
 )
 
@@ -43,12 +44,12 @@ type DealsProposals struct {
 	// with total amount StoragePricePerEpoch * (EndEpoch - StartEpoch).
 	// Storage deal must appear in a sealed (proven) sector no later than StartEpoch,
 	// otherwise it is invalid.
-	StartEpoch    int64  `json:"start_epoch"`
-	EndEpoch      int64  `json:"end_epoch"`
-	PricePerEpoch uint64 `json:"price_per_epoch"`
+	StartEpoch    int64    `json:"start_epoch"`
+	EndEpoch      int64    `json:"end_epoch"`
+	PricePerEpoch *big.Int `json:"price_per_epoch" gorm:"column:price_per_epoch;type:UInt256"`
 
-	ProviderCollateral uint64 `json:"provider_collateral"`
-	ClientCollateral   uint64 `json:"client_collateral"`
+	ProviderCollateral *big.Int `json:"provider_collateral" gorm:"column:provider_collateral;type:UInt256"`
+	ClientCollateral   *big.Int `json:"client_collateral" gorm:"column:client_collateral;type:UInt256"`
 
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
@@ -75,8 +76,8 @@ type DealsSpaceInfo struct {
 	// VerifiedDealWeight is the sum(piece_size * deal_duration) of all the verified deals
 	// NonVerifiedDealSpace is the sum(piece_size) of all the deals
 	// VerifiedDealSpace is the sum(piece_size) of all the verified deals
-	NonVerifiedDealSpace uint64 `json:"non_verified_deal_space"`
-	VerifiedDealSpace    uint64 `json:"verified_deal_space"`
+	NonVerifiedDealSpace *big.Int `json:"non_verified_deal_space" gorm:"column:non_verified_deal_space;type:UInt256"`
+	VerifiedDealSpace    *big.Int `json:"verified_deal_space" gorm:"column:verified_deal_space;type:UInt256"`
 	// SpaceAsWeight is true if the deal space is expressed as a weight. Retrieve the deal space by dividing the VerifiedDealSpace/NonVerifiedDealSpace by the DealDuration for each dealId in the DealIDs slice.
 	SpaceAsWeight bool      `json:"space_as_weight"`
 	ActionType    string    `json:"action_type"`

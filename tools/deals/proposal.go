@@ -205,9 +205,9 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 			Label:              label,
 			StartEpoch:         startEpoch,
 			EndEpoch:           endEpoch,
-			PricePerEpoch:      storagePricePerEpoch.Uint64(),
-			ProviderCollateral: providerCollateral.Uint64(),
-			ClientCollateral:   clientCollateral.Uint64(),
+			PricePerEpoch:      storagePricePerEpoch,
+			ProviderCollateral: providerCollateral,
+			ClientCollateral:   clientCollateral,
 			TxTimestamp:        tx.TxTimestamp,
 		})
 
