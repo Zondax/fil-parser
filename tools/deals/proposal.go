@@ -74,7 +74,8 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 
 	// use the return to get the deal ids because the actor may drop invalid deals and return less ids than the params
 	// From NV0 - NV13 the verified deals are in PublishStorageDealsReturn.IDs
-	if version.NodeVersion() < tools.V14.NodeVersion() {
+	// This only applies to mainnet. In calibration the verified deals are in PublishStorageDealsReturn.ValidDeals as a bitfield in all versions.
+	if version.NodeVersion() < tools.V14.NodeVersion() && eg.network == tools.MainnetNetwork {
 		for i, id := range dealIDs {
 			// #nosec G115
 			validDealIndexToDealID[uint64(i)] = id
@@ -205,8 +206,8 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 			StartEpoch:         startEpoch,
 			EndEpoch:           endEpoch,
 			PricePerEpoch:      storagePricePerEpoch.Uint64(),
-			ProviderCollateral: providerCollateral,
-			ClientCollateral:   clientCollateral,
+			ProviderCollateral: providerCollateral.Uint64(),
+			ClientCollateral:   clientCollateral.Uint64(),
 			TxTimestamp:        tx.TxTimestamp,
 		})
 
