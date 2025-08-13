@@ -1,7 +1,6 @@
 package types
 
 import (
-	"math/big"
 	"time"
 )
 
@@ -48,8 +47,8 @@ type DealsProposals struct {
 	EndEpoch      int64  `json:"end_epoch"`
 	PricePerEpoch uint64 `json:"price_per_epoch"`
 
-	ProviderCollateral *big.Int `json:"provider_collateral"`
-	ClientCollateral   *big.Int `json:"client_collateral"`
+	ProviderCollateral uint64 `json:"provider_collateral"`
+	ClientCollateral   uint64 `json:"client_collateral"`
 
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
@@ -76,8 +75,8 @@ type DealsSpaceInfo struct {
 	// VerifiedDealWeight is the sum(piece_size * deal_duration) of all the verified deals
 	// NonVerifiedDealSpace is the sum(piece_size) of all the deals
 	// VerifiedDealSpace is the sum(piece_size) of all the verified deals
-	NonVerifiedDealSpace *big.Int `json:"non_verified_deal_space"`
-	VerifiedDealSpace    *big.Int `json:"verified_deal_space"`
+	NonVerifiedDealSpace uint64 `json:"non_verified_deal_space"`
+	VerifiedDealSpace    uint64 `json:"verified_deal_space"`
 	// SpaceAsWeight is true if the deal space is expressed as a weight. Retrieve the deal space by dividing the VerifiedDealSpace/NonVerifiedDealSpace by the DealDuration for each dealId in the DealIDs slice.
 	SpaceAsWeight bool      `json:"space_as_weight"`
 	ActionType    string    `json:"action_type"`
