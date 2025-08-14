@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/filecoin-project/go-address"
+	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/fil-parser/types"
@@ -72,7 +74,8 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 
 	// use the return to get the deal ids because the actor may drop invalid deals and return less ids than the params
 	// From NV0 - NV13 the verified deals are in PublishStorageDealsReturn.IDs
-	if version.NodeVersion() < tools.V14.NodeVersion() {
+	// This only applies to mainnet. In calibration the verified deals are in PublishStorageDealsReturn.ValidDeals as a bitfield in all versions.
+	if version.NodeVersion() < tools.V14.NodeVersion() && eg.network == tools.MainnetNetwork {
 		for i, id := range dealIDs {
 			// #nosec G115
 			validDealIndexToDealID[uint64(i)] = id
@@ -172,9 +175,24 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 		if err != nil {
 			return nil, fmt.Errorf("error parsing client collateral: %w", err)
 		}
+		if eg.config.ConsolidateRobustAddress {
+			consolidatedProviderAddress, err := eg.consolidateAddress(providerAddress)
+			if err != nil {
+				eg.logger.Errorf("error consolidating provider address: %s", err.Error())
+			} else {
+				providerAddress = consolidatedProviderAddress
+			}
+			consolidatedClientAddress, err := eg.consolidateAddress(clientAddress)
+			if err != nil {
+				eg.logger.Errorf("error consolidating client address: %s", err.Error())
+			} else {
+				clientAddress = consolidatedClientAddress
+			}
+		}
 
 		dealsInfo = append(dealsInfo, &types.DealsProposals{
 			ID:                 tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+			ActorAddress:       tx.TxFrom,
 			Height:             tx.Height,
 			DealID:             dealID,
 			TxCid:              tx.TxCid,
@@ -187,7 +205,7 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 			Label:              label,
 			StartEpoch:         startEpoch,
 			EndEpoch:           endEpoch,
-			PricePerEpoch:      storagePricePerEpoch.Uint64(),
+			PricePerEpoch:      storagePricePerEpoch,
 			ProviderCollateral: providerCollateral,
 			ClientCollateral:   clientCollateral,
 			TxTimestamp:        tx.TxTimestamp,
@@ -196,4 +214,16 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 	}
 
 	return dealsInfo, nil
+}
+
+func (eg *eventGenerator) consolidateAddress(addrStr string) (string, error) {
+	addr, err := address.NewFromString(addrStr)
+	if err != nil {
+		return "", fmt.Errorf("error parsing address: %w", err)
+	}
+	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+	if err != nil {
+		return "", fmt.Errorf("error consolidating address: %w", err)
+	}
+	return consolidatedAddress, nil
 }

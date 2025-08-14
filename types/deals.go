@@ -18,15 +18,16 @@ type DealsMessages struct {
 	Height       uint64    `json:"height"`
 	TxCid        string    `json:"tx_cid"`
 	ActionType   string    `json:"action_type"`
-	Value        string    `json:"value"`
+	Data         string    `json:"data"`
 	TxTimestamp  time.Time `json:"tx_timestamp"`
 }
 
 type DealsProposals struct {
-	ID     string `json:"id"`
-	Height uint64 `json:"height"`
-	DealID uint64 `json:"deal_id"`
-	TxCid  string `json:"tx_cid"`
+	ID           string `json:"id"`
+	Height       uint64 `json:"height"`
+	ActorAddress string `json:"actor_address"`
+	DealID       uint64 `json:"deal_id"`
+	TxCid        string `json:"tx_cid"`
 
 	// proposal details
 	ClientSignature string `json:"client_signature"`
@@ -43,12 +44,12 @@ type DealsProposals struct {
 	// with total amount StoragePricePerEpoch * (EndEpoch - StartEpoch).
 	// Storage deal must appear in a sealed (proven) sector no later than StartEpoch,
 	// otherwise it is invalid.
-	StartEpoch    int64  `json:"start_epoch"`
-	EndEpoch      int64  `json:"end_epoch"`
-	PricePerEpoch uint64 `json:"price_per_epoch"`
+	StartEpoch    int64    `json:"start_epoch"`
+	EndEpoch      int64    `json:"end_epoch"`
+	PricePerEpoch *big.Int `json:"price_per_epoch" gorm:"column:price_per_epoch;type:UInt256"`
 
-	ProviderCollateral *big.Int `json:"provider_collateral"`
-	ClientCollateral   *big.Int `json:"client_collateral"`
+	ProviderCollateral *big.Int `json:"provider_collateral" gorm:"column:provider_collateral;type:UInt256"`
+	ClientCollateral   *big.Int `json:"client_collateral" gorm:"column:client_collateral;type:UInt256"`
 
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
@@ -56,6 +57,7 @@ type DealsProposals struct {
 type DealsActivations struct {
 	ID           string    `json:"id"`
 	Height       uint64    `json:"height"`
+	ActorAddress string    `json:"actor_address"`
 	TxCid        string    `json:"tx_cid"`
 	DealID       uint64    `json:"deal_id"`
 	SectorExpiry int64     `json:"sector_expiry"`
@@ -64,16 +66,18 @@ type DealsActivations struct {
 }
 
 type DealsSpaceInfo struct {
-	ID      string   `json:"id"`
-	Height  uint64   `json:"height"`
-	TxCid   string   `json:"tx_cid"`
-	DealIDs []uint64 `json:"deal_ids"`
+	ID           string   `json:"id"`
+	Height       uint64   `json:"height"`
+	ActorAddress string   `json:"actor_address"`
+	TxCid        string   `json:"tx_cid"`
+	DealID       uint64   `json:"deal_id"`
+	GroupDealIDs []uint64 `json:"group_deal_ids"`
 	// NonVerifiedDealWeight is the sum(piece_size * deal_duration) of all the non-verified deals
 	// VerifiedDealWeight is the sum(piece_size * deal_duration) of all the verified deals
 	// NonVerifiedDealSpace is the sum(piece_size) of all the deals
 	// VerifiedDealSpace is the sum(piece_size) of all the verified deals
-	NonVerifiedDealSpace *big.Int `json:"non_verified_deal_space"`
-	VerifiedDealSpace    *big.Int `json:"verified_deal_space"`
+	NonVerifiedDealSpace *big.Int `json:"non_verified_deal_space" gorm:"column:non_verified_deal_space;type:UInt256"`
+	VerifiedDealSpace    *big.Int `json:"verified_deal_space" gorm:"column:verified_deal_space;type:UInt256"`
 	// SpaceAsWeight is true if the deal space is expressed as a weight. Retrieve the deal space by dividing the VerifiedDealSpace/NonVerifiedDealSpace by the DealDuration for each dealId in the DealIDs slice.
 	SpaceAsWeight bool      `json:"space_as_weight"`
 	ActionType    string    `json:"action_type"`

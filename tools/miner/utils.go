@@ -35,7 +35,7 @@ func (eg *eventGenerator) consolidateIDAddress(idAddress uint64) (string, error)
 func (eg *eventGenerator) consolidateAddress(addrStr string) (string, error) {
 	addr, err := address.NewFromString(addrStr)
 	if err != nil {
-		return "", fmt.Errorf("error parsing id address: %w", err)
+		return "", fmt.Errorf("error parsing address: %w", err)
 	}
 	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
 	if err != nil {

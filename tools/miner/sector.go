@@ -400,17 +400,17 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 	for _, piece := range pieces {
 		verifiedAllocationKey, err := common.GetItem[map[string]interface{}](piece, KeyVerifiedAllocationKey, true)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing verified allocation key: %w", err)
+			return nil, fmt.Errorf("error parsing verified allocation key: %s", err)
 		}
 		if len(verifiedAllocationKey) > 0 {
-			clientIDAddrStr, err := common.GetItem[uint64](verifiedAllocationKey, KeyAddress, false)
+			clientIDAddrStr, err := common.GetItem[string](verifiedAllocationKey, KeyAddress, false)
 			if err != nil {
-				eg.logger.Errorf("error parsing client id address: %w", err)
+				eg.logger.Errorf("error parsing client id address: %s", err)
 				break
 			}
-			consolidatedClientIDAddr, err := eg.consolidateIDAddress(clientIDAddrStr)
+			consolidatedClientIDAddr, err := eg.consolidateAddress(clientIDAddrStr)
 			if err != nil {
-				eg.logger.Errorf("error consolidating client id address: %w", err)
+				eg.logger.Errorf("error consolidating client id address: %s", err)
 				break
 			}
 			verifiedAllocationKey[KeyAddress] = consolidatedClientIDAddr
@@ -427,12 +427,12 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 			for _, notify := range dataActivationNotifications {
 				addrStr, err := common.GetItem[string](notify, KeyAddress, false)
 				if err != nil {
-					eg.logger.Errorf("error parsing notify number: %w", err)
+					eg.logger.Errorf("error parsing notify number: %s", err)
 					break
 				}
 				consolidatedAddr, err := eg.consolidateAddress(addrStr)
 				if err != nil {
-					eg.logger.Errorf("error consolidating address: %w", err)
+					eg.logger.Errorf("error consolidating address: %s", err)
 					break
 				}
 				notify[KeyAddress] = consolidatedAddr

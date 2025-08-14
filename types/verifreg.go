@@ -17,7 +17,7 @@ type VerifregEvent struct {
 	TxCid       string    `json:"tx_cid"`
 	Height      uint64    `json:"height"`
 	ActionType  string    `json:"action_type"`
-	Value       string    `json:"value"`
+	Value       string    `json:"data"`
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 type VerifregClientInfo struct {
@@ -27,9 +27,9 @@ type VerifregClientInfo struct {
 	TxCid       string    `json:"tx_cid"`
 	Height      uint64    `json:"height"`
 	ActionType  string    `json:"action_type"`
-	Value       string    `json:"value"`
+	Value       string    `json:"data"`
 	Verifiers   []string  `json:"verifiers"`
-	DataCap     *big.Int  `json:"data_cap"`
+	DataCap     *big.Int  `json:"data_cap" `
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
 
@@ -38,6 +38,6 @@ type VerifregDeal struct {
 	DeadID      string    `json:"dead_id"`
 	TxCid       string    `json:"tx_cid"`
 	Height      uint64    `json:"height"`
-	Value       string    `json:"value"`
+	Value       string    `json:"data"`
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }

@@ -28,7 +28,7 @@ const (
 )
 
 type NodeApiResponse interface {
-	address.Address | *filTypes.Actor | *ethtypes.EthHash
+	address.Address | *filTypes.Actor | *ethtypes.EthHash | *filTypes.TipSet
 }
 
 type NodeApiCallWithRetryOptions[T NodeApiResponse] struct {

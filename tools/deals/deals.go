@@ -30,14 +30,16 @@ type eventGenerator struct {
 	logger  *logger.Logger
 	metrics *dealsMetricsClient
 	network string
+	config  parser.Config
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
 		metrics: newClient(metrics, "deals"),
 		network: network,
+		config:  config,
 	}
 }
 
@@ -55,13 +57,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			continue
 		}
 
-		actorAddress := tx.TxTo
-		// this is executed by(from) the miner actor
-		if tx.TxType == parser.MethodUpdateClaimedPower || tx.TxType == parser.TotalFeeOp {
-			actorAddress = tx.TxFrom
-		}
-
-		addr, err := address.NewFromString(actorAddress)
+		addr, err := address.NewFromString(tx.TxTo)
 		if err != nil {
 			eg.logger.Errorf("could not parse address. Err: %s", err)
 		}
@@ -78,6 +74,8 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			continue
 		}
 
+		// the address that calls the market actor
+		actorAddress := tx.TxFrom
 		dealMessage, err := eg.createDealMessage(tx, tipsetCid, actorAddress)
 		if err != nil {
 			eg.logger.Errorf("could not create deal message. Err: %s", err)
@@ -86,7 +84,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 
 		events.DealsMessages = append(events.DealsMessages, dealMessage)
 
-		if eg.isPublishStorageDeals(actorName, tx.TxType) {
+		if eg.isPublishStorageDeals(tx.TxType) {
 			dealsInfo, err := eg.createDealsInfo(ctx, tx)
 			if err != nil {
 				eg.logger.Errorf("could not create deal proposal. Err: %s", err)
@@ -126,11 +124,7 @@ func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
 	return false
 }
 
-func (eg *eventGenerator) isPublishStorageDeals(actorName, txType string) bool {
-	if !strings.Contains(actorName, manifest.MarketKey) {
-		return false
-	}
-
+func (eg *eventGenerator) isPublishStorageDeals(txType string) bool {
 	switch {
 	case strings.EqualFold(txType, parser.MethodPublishStorageDeals),
 		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported):

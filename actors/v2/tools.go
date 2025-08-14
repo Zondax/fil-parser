@@ -108,8 +108,7 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 	blockCid := ""
 
 	// Process the special cases first were this kind of txs are not explicitly included in a block
-	switch txType {
-	case parser.MethodAwardBlockReward:
+	if txType == parser.MethodAwardBlockReward {
 		if txMetadata == nil {
 			return blockCid, fmt.Errorf("received tx of type '%s' with nil metadata", txType)
 		}
@@ -128,12 +127,14 @@ func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interfac
 			return blockCid, fmt.Errorf("could not find block mined by miner for height: %d, tx '%s', miner: '%s': %w", tipset.Height(), txType, miner, err)
 		}
 		return c, nil
-	case parser.MethodApplyRewards, parser.MethodUpdatePledgeTotal, parser.MethodCronTick,
-		parser.MethodEpochTick, parser.MethodThisEpochReward, parser.MethodConfirmSectorProofsValid,
-		parser.MethodActivateDeals, parser.MethodClaimAllocations, parser.MethodBurnExported,
-		parser.MethodEnrollCronEvent, parser.MethodOnDeferredCronEvent, parser.MethodUpdateNetworkKPI:
-		// These txs are not included in a block
-		return blockCid, nil
+
+		// Skip this check andd try to get the blockcid from the tipset
+		// case parser.MethodApplyRewards, parser.MethodUpdatePledgeTotal, parser.MethodCronTick,
+		// 	parser.MethodEpochTick, parser.MethodThisEpochReward, parser.MethodConfirmSectorProofsValid,
+		// 	parser.MethodActivateDeals, parser.MethodClaimAllocations, parser.MethodBurnExported,
+		// 	parser.MethodEnrollCronEvent, parser.MethodOnDeferredCronEvent, parser.MethodUpdateNetworkKPI:
+		// 	// These txs are not included in a block
+		// 	return blockCid, nil
 	}
 
 	blockCids, ok := tipset.BlockMessages[msgCid]

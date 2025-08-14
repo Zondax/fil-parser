@@ -27,8 +27,8 @@ type DataCapTokenEvent struct {
 	Height      uint64    `json:"height"`
 	TxCid       string    `json:"tx_cid"`
 	ActionType  string    `json:"action_type"`
-	Balance     *big.Int  `json:"balance"`
-	Supply      *big.Int  `json:"supply"`
+	Balance     *big.Int  `json:"balance" gorm:"column:balance;type:Int256"`
+	Supply      *big.Int  `json:"supply" gorm:"column:supply;type:Int256"`
 	Data        string    `json:"data"`
 	TxTimestamp time.Time `json:"tx_timestamp"`
 }
@@ -40,7 +40,7 @@ type DataCapAllowanceEvent struct {
 	Height           uint64    `json:"height"`
 	TxCid            string    `json:"tx_cid"`
 	ActionType       string    `json:"action_type"`
-	AllowanceBalance *big.Int  `json:"allowance_balance"`
+	AllowanceBalance *big.Int  `json:"allowance_balance" gorm:"column:allowance_balance;type:Int256"`
 	Data             string    `json:"data"`
 	TxTimestamp      time.Time `json:"tx_timestamp"`
 }
