@@ -158,11 +158,13 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	var extraI int64
 	switch maj {
 	case cbg.MajUnsignedInt:
+		//nolint:gosec,G115 // Allowing integer overflow conversion
 		extraI = int64(extra)
 		if extraI < 0 {
 			return fmt.Errorf("int64 positive overflow")
 		}
 	case cbg.MajNegativeInt:
+		//nolint:gosec,G115 // Allowing integer overflow conversion
 		extraI = int64(extra)
 		if extraI < 0 {
 			return fmt.Errorf("int64 negative overflow")
@@ -182,11 +184,13 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 	switch maj {
 	case cbg.MajUnsignedInt:
+		//nolint:gosec,G115 // Allowing integer overflow conversion
 		extraI = int64(extra)
 		if extraI < 0 {
 			return fmt.Errorf("int64 positive overflow")
 		}
 	case cbg.MajNegativeInt:
+		//nolint:gosec,G115 // Allowing integer overflow conversion
 		extraI = int64(extra)
 		if extraI < 0 {
 			return fmt.Errorf("int64 negative overflow")
@@ -206,11 +210,13 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 	switch maj {
 	case cbg.MajUnsignedInt:
+		//nolint:gosec,G115 // Allowing integer overflow conversion
 		extraI = int64(extra)
 		if extraI < 0 {
 			return fmt.Errorf("int64 positive overflow")
 		}
 	case cbg.MajNegativeInt:
+		//nolint:gosec,G115 // Allowing integer overflow conversion
 		extraI = int64(extra)
 		if extraI < 0 {
 			return fmt.Errorf("int64 negative overflow")

@@ -77,12 +77,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 }
 
 func (eg *eventGenerator) isVerifregMessage(actorName, txType string) bool {
-	switch {
-	case strings.EqualFold(actorName, manifest.VerifregKey):
-		return true
-	}
-
-	return false
+	return strings.EqualFold(actorName, manifest.VerifregKey)
 }
 
 func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
