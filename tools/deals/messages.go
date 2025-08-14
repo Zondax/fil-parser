@@ -25,7 +25,7 @@ func (eg *eventGenerator) createDealMessage(tx *types.Transaction, tipsetCid, ac
 		Height:       tx.Height,
 		TxCid:        tx.TxCid,
 		ActionType:   txType,
-		Value:        tx.TxMetadata,
+		Data:         tx.TxMetadata,
 		TxTimestamp:  tx.TxTimestamp,
 	}
 
