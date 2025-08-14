@@ -1,11 +1,13 @@
 package verifreg
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
 
+	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/tools/common"
@@ -113,9 +115,9 @@ func getVerifierFromVerifierRequest(value map[string]interface{}, key string) (s
 	return verifierAddress, verifierSignatureData, nil
 }
 
-func parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
+func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
 	// Parse the FRC46 transaction metadata
-	params, returnData, err := ParseFRC46TransactionMetadata(tx.TxMetadata)
+	params, returnData, err := eg.ParseFRC46TransactionMetadata(tx.TxMetadata, int64(tx.Height))
 	if err != nil {
 		return "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
 	}
@@ -157,12 +159,28 @@ func parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (strin
 }
 
 // ParseFRC46TransactionMetadata parses FRC46 token transaction metadata
-func ParseFRC46TransactionMetadata(metadata string) (*FRC46TransactionParams, *FRC46TransactionReturn, error) {
+func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height int64) (*FRC46TransactionParams, *FRC46TransactionReturn, error) {
 	var txMetadata FRC46TransactionMetadata
 	err := json.Unmarshal([]byte(metadata), &txMetadata)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error unmarshalling FRC46 transaction metadata: %w", err)
 	}
 
+	// parse operator data
+	rawOperatorData, err := base64.StdEncoding.DecodeString(txMetadata.Params.OperatorDataStr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error decoding operator data: %w", err)
+	}
+	v := verifiedRegistry.New(eg.logger)
+	parsedOperatorData, err := v.ParseAllocationRequestsParamsToJSON(eg.network, height, rawOperatorData)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing operator data: %w", err)
+	}
+	tmp := OperatorData{}
+
+	if err := json.Unmarshal([]byte(parsedOperatorData), &tmp); err != nil {
+		return nil, nil, fmt.Errorf("error unmarshalling operator data: %w", err)
+	}
+	txMetadata.Params.OperatorData = tmp
 	return &txMetadata.Params, &txMetadata.Return, nil
 }

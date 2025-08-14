@@ -2,6 +2,7 @@ package verifiedRegistry
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -273,4 +274,22 @@ func (v *VerifiedRegistry) UniversalReceiverHook(network string, height int64, r
 	return v.ParseFRC46UniversalReceiverHook(network, height, raw, rawReturn, returnValue())
 
 	// return parse(raw, rawReturn, true, params(), returnValue())
+}
+
+func (v *VerifiedRegistry) ParseAllocationRequestsParamsToJSON(network string, height int64, raw []byte) (string, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := allocationRequests[version.String()]
+	if !ok {
+		return "", fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+
+	data, err := parse(raw, nil, true, params(), &abi.EmptyValue{})
+	if err != nil {
+		return "", err
+	}
+	ret, err := json.Marshal(data[parser.ParamsKey])
+	if err != nil {
+		return "", err
+	}
+	return string(ret), nil
 }

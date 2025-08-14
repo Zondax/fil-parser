@@ -251,7 +251,7 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata m
 }
 
 func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
-	clientValue, dealValue, err := parserUniversalReceiverHook(tx, tipsetCid)
+	clientValue, dealValue, err := eg.parserUniversalReceiverHook(tx, tipsetCid)
 	if err != nil {
 		return nil, nil, err
 	}
