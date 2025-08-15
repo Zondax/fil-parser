@@ -222,6 +222,7 @@ func (eg *eventGenerator) addVerifiedClient(tx *types.Transaction, metadata map[
 }
 
 func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata map[string]interface{}, tipsetCid string) (*types.VerifregEvent, *types.VerifregClientInfo, error) {
+	// #nosec G115
 	verifiedClientToRemove, _, removedDatacap, err := parseRemoveVerifiedClient(metadata, eg.network, int64(tx.Height))
 	if err != nil {
 		return nil, nil, err
