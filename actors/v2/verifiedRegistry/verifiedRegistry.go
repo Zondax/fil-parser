@@ -287,3 +287,40 @@ func (*VerifiedRegistry) ParseAllocationRequestsParamsToJSON(network string, hei
 	}
 	return string(ret), nil
 }
+
+func (*VerifiedRegistry) ParseFRC46ParamsToJSON(network string, height int64, raw []byte) (string, error) {
+	params := &types.FRC46TokenParams{}
+	data, err := parse(raw, nil, true, params, &abi.EmptyValue{})
+	if err != nil {
+		return "", err
+	}
+	parsed := data[parser.ParamsKey].(*types.FRC46TokenParams)
+
+	from, err := address.NewIDAddress(uint64(parsed.From))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse from address: %w", err)
+	}
+	to, err := address.NewIDAddress(uint64(parsed.To))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse to address: %w", err)
+	}
+	operator, err := address.NewIDAddress(uint64(parsed.Operator))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse operator address: %w", err)
+	}
+
+	metadata := map[string]interface{}{
+		"from":          from.String(),
+		"to":            to.String(),
+		"operator":      operator.String(),
+		"amount":        parsed.Amount.String(),
+		"operator_data": parsed.OperatorData,
+		"token_data":    parsed.TokenData,
+	}
+
+	ret, err := json.Marshal(metadata)
+	if err != nil {
+		return "", err
+	}
+	return string(ret), nil
+}

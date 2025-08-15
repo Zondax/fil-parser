@@ -215,7 +215,6 @@ func (eg *eventGenerator) addVerifiedClient(tx *types.Transaction, metadata map[
 			Height:        tx.Height,
 			ActionType:    tx.TxType,
 			DataCap:       dataCapAmount,
-			Verifiers:     []string{tx.TxFrom},
 			Data:          tx.TxMetadata,
 			TxTimestamp:   tx.TxTimestamp,
 		},
@@ -223,7 +222,7 @@ func (eg *eventGenerator) addVerifiedClient(tx *types.Transaction, metadata map[
 }
 
 func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata map[string]interface{}, tipsetCid string) (*types.VerifregEvent, *types.VerifregClientInfo, error) {
-	verifiedClientToRemove, verifiers, removedDatacap, err := parseRemoveVerifiedClient(metadata, eg.network, int64(tx.Height))
+	verifiedClientToRemove, _, removedDatacap, err := parseRemoveVerifiedClient(metadata, eg.network, int64(tx.Height))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -245,7 +244,6 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata m
 			Height:        tx.Height,
 			ActionType:    tx.TxType,
 			DataCap:       removedDatacap,
-			Verifiers:     verifiers,
 			Data:          tx.TxMetadata,
 			TxTimestamp:   tx.TxTimestamp,
 		}, nil

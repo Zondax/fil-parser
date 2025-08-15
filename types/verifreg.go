@@ -28,7 +28,6 @@ type VerifregClientInfo struct {
 	Height        uint64    `json:"height"`
 	ActionType    string    `json:"action_type"`
 	Data          string    `json:"data"`
-	Verifiers     []string  `json:"verifiers"`
 	DataCap       *big.Int  `json:"datacap" gorm:"column:datacap;type:Int256"`
 	TxTimestamp   time.Time `json:"tx_timestamp"`
 }
