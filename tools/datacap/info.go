@@ -9,12 +9,12 @@ import (
 
 func (eg *eventGenerator) createDataCapInfo(tx *types.Transaction, tipsetCid string, actorAddress string) (*types.DataCapInfo, error) {
 	return &types.DataCapInfo{
-		ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
-		Address:     actorAddress,
-		Height:      tx.Height,
-		TxCid:       tipsetCid,
-		ActionType:  tx.TxType,
-		Data:        tx.TxMetadata,
-		TxTimestamp: tx.TxTimestamp,
+		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
+		ActorAddress: actorAddress,
+		Height:       tx.Height,
+		TxCid:        tipsetCid,
+		ActionType:   tx.TxType,
+		Data:         tx.TxMetadata,
+		TxTimestamp:  tx.TxTimestamp,
 	}, nil
 }

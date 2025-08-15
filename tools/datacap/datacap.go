@@ -76,7 +76,7 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 
 		dataCapInfo, err := eg.createDataCapInfo(tx, tipsetCid, actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not create miner info. Err: %s", err)
+			eg.logger.Errorf("could not create datacap info. Err: %s", err)
 			continue
 		}
 
@@ -84,7 +84,7 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 		if isDatacapTokenMessage(tx.TxType) {
 			tokenEvents, allowanceEvents, err := eg.createDataCapTokenEvents(ctx, tx, tipsetCid)
 			if err != nil {
-				eg.logger.Errorf("could not create miner info. Err: %s", err)
+				eg.logger.Errorf("could not create datacap token events. Err: %s", err)
 				continue
 			}
 			events.DataCapTokenEvent = append(events.DataCapTokenEvent, tokenEvents...)
