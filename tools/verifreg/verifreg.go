@@ -14,6 +14,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -26,16 +27,20 @@ type EventGenerator interface {
 var _ EventGenerator = &eventGenerator{}
 
 type eventGenerator struct {
-	helper  *helper.Helper
-	logger  *logger.Logger
-	network string
+	helper           *helper.Helper
+	logger           *logger.Logger
+	verifiedRegistry *verifiedRegistry.VerifiedRegistry
+	config           parser.Config
+	network          string
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, network string) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
-		helper:  helper,
-		logger:  logger,
-		network: network,
+		helper:           helper,
+		logger:           logger,
+		network:          network,
+		verifiedRegistry: verifiedRegistry.New(logger),
+		config:           config,
 	}
 }
 
@@ -140,13 +145,13 @@ func (eg *eventGenerator) parseAddVerifier(tx *types.Transaction, metadata map[s
 	}
 
 	return &types.VerifregEvent{
-			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
-			Address:     addr,
-			TxCid:       tx.TxCid,
-			Height:      tx.Height,
-			ActionType:  tx.TxType,
-			Value:       tx.TxMetadata,
-			TxTimestamp: tx.TxTimestamp,
+			ID:           tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
+			ActorAddress: addr,
+			TxCid:        tx.TxCid,
+			Height:       tx.Height,
+			ActionType:   tx.TxType,
+			Value:        tx.TxMetadata,
+			TxTimestamp:  tx.TxTimestamp,
 		}, &types.VerifregClientInfo{
 			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
 			Address:     addr,
@@ -167,13 +172,13 @@ func (eg *eventGenerator) removeVerifier(tx *types.Transaction, metadata map[str
 	}
 
 	return &types.VerifregEvent{
-			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
-			Address:     addr,
-			TxCid:       tx.TxCid,
-			Height:      tx.Height,
-			ActionType:  tx.TxType,
-			Value:       tx.TxMetadata,
-			TxTimestamp: tx.TxTimestamp,
+			ID:           tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
+			ActorAddress: addr,
+			TxCid:        tx.TxCid,
+			Height:       tx.Height,
+			ActionType:   tx.TxType,
+			Value:        tx.TxMetadata,
+			TxTimestamp:  tx.TxTimestamp,
 		}, &types.VerifregClientInfo{
 			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, fmt.Sprint(tx.Height)),
 			Address:     addr,
@@ -194,13 +199,13 @@ func (eg *eventGenerator) addVerifiedClient(tx *types.Transaction, metadata map[
 	}
 
 	return &types.VerifregEvent{
-			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
-			Address:     tx.TxTo,
-			TxCid:       tx.TxCid,
-			Height:      tx.Height,
-			ActionType:  tx.TxType,
-			Value:       tx.TxMetadata,
-			TxTimestamp: tx.TxTimestamp,
+			ID:           tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
+			ActorAddress: tx.TxTo,
+			TxCid:        tx.TxCid,
+			Height:       tx.Height,
+			ActionType:   tx.TxType,
+			Value:        tx.TxMetadata,
+			TxTimestamp:  tx.TxTimestamp,
 		},
 		&types.VerifregClientInfo{
 			ID:          tools.BuildId(tipsetCid, tx.TxCid, addr, tx.TxFrom, fmt.Sprint(tx.Height)),
@@ -224,13 +229,13 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata m
 	}
 
 	return &types.VerifregEvent{
-			ID:          tools.BuildId(tipsetCid, tx.TxCid, verifiedClientToRemove, fmt.Sprint(tx.Height)),
-			Address:     tx.TxTo,
-			TxCid:       tx.TxCid,
-			Height:      tx.Height,
-			ActionType:  tx.TxType,
-			Value:       tx.TxMetadata,
-			TxTimestamp: tx.TxTimestamp,
+			ID:           tools.BuildId(tipsetCid, tx.TxCid, verifiedClientToRemove, fmt.Sprint(tx.Height)),
+			ActorAddress: tx.TxTo,
+			TxCid:        tx.TxCid,
+			Height:       tx.Height,
+			ActionType:   tx.TxType,
+			Value:        tx.TxMetadata,
+			TxTimestamp:  tx.TxTimestamp,
 		},
 		&types.VerifregClientInfo{
 			ID:          tools.BuildId(tipsetCid, tx.TxCid, verifiedClientToRemove, fmt.Sprint(tx.Height)),
@@ -253,12 +258,12 @@ func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid
 	}
 
 	return &types.VerifregEvent{
-		ID:          tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, fmt.Sprint(tx.Height)),
-		Address:     tx.TxFrom, // This is the datacap actor. Should be the client.
-		TxCid:       tx.TxCid,
-		Height:      tx.Height,
-		ActionType:  tx.TxType,
-		Value:       clientValue,
-		TxTimestamp: tx.TxTimestamp,
+		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, fmt.Sprint(tx.Height)),
+		ActorAddress: tx.TxFrom, // This is the datacap actor. Should be the client.
+		TxCid:        tx.TxCid,
+		Height:       tx.Height,
+		ActionType:   tx.TxType,
+		Value:        clientValue,
+		TxTimestamp:  tx.TxTimestamp,
 	}, dealValue, nil
 }

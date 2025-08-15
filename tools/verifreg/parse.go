@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/tools/common"
@@ -123,7 +122,6 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 		return "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
 	}
 
-	// TODO: what happens when fail deal
 	if len(params.OperatorData.Allocations) != len(returnData.NewAllocations) {
 		return "", nil, errors.New("invalid number of allocations")
 	}
@@ -143,12 +141,25 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 
 		deals[i] = &types.VerifregDeal{
 			ID:          tools.BuildId(dealId, tx.TxCid, fmt.Sprint(tx.Height)),
-			DeadID:      dealId,
+			DealID:      dealId,
 			TxCid:       tx.TxCid,
 			Height:      tx.Height,
 			Value:       string(allocBytes),
 			TxTimestamp: tx.TxTimestamp,
 		}
+		addr := ""
+		switch provider := allocations[i].AllocationData.Provider.(type) {
+		case uint64:
+			addr, err = common.ConsolidateIDAddress(provider, eg.helper, eg.logger, eg.config)
+		case string:
+			addr, err = common.ConsolidateAddress(provider, eg.helper, eg.logger, eg.config)
+		default:
+			return "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
+		}
+		if err != nil {
+			return "", nil, fmt.Errorf("error consolidating address: %w", err)
+		}
+		deals[i].ProviderAddress = addr
 	}
 
 	clientValue, err := json.Marshal(allocations)
@@ -172,8 +183,8 @@ func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height 
 	if err != nil {
 		return nil, nil, fmt.Errorf("error decoding operator data: %w", err)
 	}
-	v := verifiedRegistry.New(eg.logger)
-	parsedOperatorData, err := v.ParseAllocationRequestsParamsToJSON(eg.network, height, rawOperatorData)
+
+	parsedOperatorData, err := eg.verifiedRegistry.ParseAllocationRequestsParamsToJSON(eg.network, height, rawOperatorData)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error parsing operator data: %w", err)
 	}

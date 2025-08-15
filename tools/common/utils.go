@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
+	"github.com/go-openapi/runtime/logger"
 	"github.com/ipfs/go-cid"
+	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/parser/helper"
 	"golang.org/x/exp/constraints"
 )
 
@@ -144,4 +149,28 @@ func JsonEncodedBitfieldToIDs(bitField []int) ([]uint64, error) {
 		ids = append(ids, id)
 	}
 	return ids, nil
+}
+
+func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logger.Logger, config parser.Config) (string, error) {
+	addr, err := address.NewIDAddress(idAddress)
+	if err != nil {
+		return "", fmt.Errorf("error parsing id address: %w", err)
+	}
+	consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
+	if err != nil {
+		return "", fmt.Errorf("error consolidating id address: %w", err)
+	}
+	return consolidatedIDAddress, nil
+}
+
+func ConsolidateAddress(addrStr string, helper *helper.Helper, logger *logger.Logger, config parser.Config) (string, error) {
+	addr, err := address.NewFromString(addrStr)
+	if err != nil {
+		return "", fmt.Errorf("error parsing address: %w", err)
+	}
+	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
+	if err != nil {
+		return "", fmt.Errorf("error consolidating address: %w", err)
+	}
+	return consolidatedAddress, nil
 }
