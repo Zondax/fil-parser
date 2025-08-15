@@ -7,11 +7,11 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
-	"github.com/go-openapi/runtime/logger"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/golem/pkg/logger"
 	"golang.org/x/exp/constraints"
 )
 
