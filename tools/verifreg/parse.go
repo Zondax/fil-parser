@@ -117,6 +117,7 @@ func getVerifierFromVerifierRequest(value map[string]interface{}, key string) (s
 
 func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
 	// Parse the FRC46 transaction metadata
+	// #nosec G115
 	params, returnData, err := eg.ParseFRC46TransactionMetadata(tx.TxMetadata, int64(tx.Height))
 	if err != nil {
 		return "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)

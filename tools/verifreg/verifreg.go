@@ -57,6 +57,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 			return nil, fmt.Errorf("could not parse address. Err: %s", err)
 		}
 
+		// #nosec G115
 		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			return nil, fmt.Errorf("could not get actor name from address. Err: %s", err)
