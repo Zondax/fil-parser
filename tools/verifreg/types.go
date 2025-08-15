@@ -86,6 +86,6 @@ type FRC46TransactionReturn struct {
 
 type FRC46TransactionMetadata struct {
 	MethodNum string                 `json:"MethodNum"`
-	Params    FRC46TransactionParams `json:"Params"`
+	Params    FRC46TransactionParams `json:"-"`
 	Return    FRC46TransactionReturn `json:"Return"`
 }

@@ -24,6 +24,9 @@ const (
 	KeyVerifier          = "Verifier"
 	KeyVerifierSignature = "VerifierSignature"
 	KeyData              = "Data"
+	KeyType              = "Type_"
+	KeyPayload           = "Payload"
+	FRC46MethodNum       = 2233613279
 )
 
 func getAddressAllowance(value map[string]interface{}) (string, *big.Int, error) {
@@ -144,7 +147,7 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 			DealID:      dealId,
 			TxCid:       tx.TxCid,
 			Height:      tx.Height,
-			Value:       string(allocBytes),
+			Data:        string(allocBytes),
 			TxTimestamp: tx.TxTimestamp,
 		}
 		addr := ""
@@ -172,11 +175,20 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 
 // ParseFRC46TransactionMetadata parses FRC46 token transaction metadata
 func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height int64) (*FRC46TransactionParams, *FRC46TransactionReturn, error) {
+	parsedFRC46Data, err := eg.parseFRC46Data(metadata, height)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing frc46 data: %w", err)
+	}
+	if parsedFRC46Data == nil {
+		return nil, nil, fmt.Errorf("token transaction is not frc46")
+	}
+
 	var txMetadata FRC46TransactionMetadata
-	err := json.Unmarshal([]byte(metadata), &txMetadata)
+	err = json.Unmarshal([]byte(metadata), &txMetadata)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error unmarshalling FRC46 transaction metadata: %w", err)
 	}
+	txMetadata.Params = *parsedFRC46Data
 
 	// parse operator data
 	rawOperatorData, err := base64.StdEncoding.DecodeString(txMetadata.Params.OperatorDataStr)
@@ -195,4 +207,47 @@ func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height 
 	}
 	txMetadata.Params.OperatorData = tmp
 	return &txMetadata.Params, &txMetadata.Return, nil
+}
+
+/*
+"{\"from\":1255,\"to\":6,\"operator\":5,\"amount\":\"34359738368000000000000000000\",\"operator_data\":\"goGGQwCGCdgqWCgAAYHiA5IgIArqjswZAIjTmlo5/bIVlomNoxVa6US/tVY9a4fftJ44GwAAAAgAAAAAGgAXgsAaABt3QBmBxIA=\",\"token_data\":\"\"}"
+*/
+func (eg *eventGenerator) parseFRC46Data(metadata string, height int64) (*FRC46TransactionParams, error) {
+	parsedMetadata := map[string]interface{}{}
+	err := json.Unmarshal([]byte(metadata), &parsedMetadata)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling metadata: %w", err)
+	}
+
+	params, err := common.GetItem[map[string]interface{}](parsedMetadata, parser.ParamsKey, false)
+	if err != nil {
+		return nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	type_, err := common.GetInteger[uint32](params, KeyType, false)
+	if err != nil {
+		return nil, fmt.Errorf("error getting Type_ from metadata: %w", err)
+	}
+	payload, err := common.GetItem[string](params, KeyPayload, false)
+	if err != nil {
+		return nil, fmt.Errorf("error getting Payload from metadata: %w", err)
+	}
+
+	if type_ != FRC46MethodNum {
+		return nil, nil
+	}
+
+	rawPayload, err := base64.StdEncoding.DecodeString(payload)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding frc46 data: %w", err)
+	}
+	parsedPayload, err := eg.verifiedRegistry.ParseFRC46ParamsToJSON(eg.network, height, rawPayload)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing frc46 data: %w", err)
+	}
+	tmp := FRC46TransactionParams{}
+	if err := json.Unmarshal([]byte(parsedPayload), &tmp); err != nil {
+		return nil, fmt.Errorf("error unmarshalling frc46 data: %w", err)
+	}
+	return &tmp, nil
 }

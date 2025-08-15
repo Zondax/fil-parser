@@ -17,20 +17,20 @@ type VerifregEvent struct {
 	TxCid        string    `json:"tx_cid"`
 	Height       uint64    `json:"height"`
 	ActionType   string    `json:"action_type"`
-	Value        string    `json:"value"`
+	Data         string    `json:"data"`
 	TxTimestamp  time.Time `json:"tx_timestamp"`
 }
 type VerifregClientInfo struct {
-	ID          string    `json:"id"`
-	Address     string    `json:"address"`
-	Client      string    `json:"client"`
-	TxCid       string    `json:"tx_cid"`
-	Height      uint64    `json:"height"`
-	ActionType  string    `json:"action_type"`
-	Value       string    `json:"value"`
-	Verifiers   []string  `json:"verifiers"`
-	DataCap     *big.Int  `json:"datacap" gorm:"column:datacap;type:Int256"`
-	TxTimestamp time.Time `json:"tx_timestamp"`
+	ID            string    `json:"id"`
+	ActorAddress  string    `json:"actor_address"`
+	ClientAddress string    `json:"client_address"`
+	TxCid         string    `json:"tx_cid"`
+	Height        uint64    `json:"height"`
+	ActionType    string    `json:"action_type"`
+	Data          string    `json:"data"`
+	Verifiers     []string  `json:"verifiers"`
+	DataCap       *big.Int  `json:"datacap" gorm:"column:datacap;type:Int256"`
+	TxTimestamp   time.Time `json:"tx_timestamp"`
 }
 
 type VerifregDeal struct {
@@ -39,6 +39,6 @@ type VerifregDeal struct {
 	DealID          string    `json:"deal_id"`
 	TxCid           string    `json:"tx_cid"`
 	Height          uint64    `json:"height"`
-	Value           string    `json:"value"`
+	Data            string    `json:"data"`
 	TxTimestamp     time.Time `json:"tx_timestamp"`
 }
