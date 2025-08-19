@@ -257,7 +257,7 @@ func (*VerifiedRegistry) RemoveExpiredClaimsExported(network string, height int6
 	return parse(raw, rawReturn, true, params(), returnValue())
 }
 
-func (v *VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
+func (*VerifiedRegistry) UniversalReceiverHook(network string, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := universalReceiverParams[version.String()]
 	if !ok {
