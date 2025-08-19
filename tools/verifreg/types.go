@@ -1,5 +1,10 @@
 package verifreg
 
+import (
+	"github.com/filecoin-project/go-state-types/abi"
+	cid "github.com/ipfs/go-cid"
+)
+
 // Type-safe structs for RemoveVerifier metadata
 type VerifierSignature struct {
 	Type int    `json:"Type"`
@@ -25,12 +30,12 @@ type RemoveVerifierMetadata struct {
 
 // FRC46 Token transaction structures
 type AllocationData struct {
-	Provider   int64             `json:"Provider"`
-	Data       map[string]string `json:"Data"`
-	Size       int64             `json:"Size"`
-	TermMin    int64             `json:"TermMin"`
-	TermMax    int64             `json:"TermMax"`
-	Expiration int64             `json:"Expiration"`
+	Provider   interface{} `json:"Provider"`
+	Data       cid.Cid     `json:"Data"`
+	Size       int64       `json:"Size"`
+	TermMin    int64       `json:"TermMin"`
+	TermMax    int64       `json:"TermMax"`
+	Expiration int64       `json:"Expiration"`
 }
 
 type AllocationDataWithDealID struct {
@@ -38,20 +43,29 @@ type AllocationDataWithDealID struct {
 	DealID string `json:"DealID"`
 }
 
-
 type OperatorData struct {
-	Allocations []AllocationData `json:"Allocations"`
-	Extensions  interface{}      `json:"Extensions"`
+	Allocations []AllocationData        `json:"Allocations"`
+	Extensions  []ClaimExtensionRequest `json:"Extensions"`
+}
+type ClaimExtensionRequest struct {
+	// The provider (miner actor) which may claim the allocation.
+	Provider abi.ActorID `json:"Provider"`
+	// Identifier of the claim to be extended.
+	Claim uint64 `json:"Claim"`
+	// The new maximum period for which a provider can earn quality-adjusted power
+	// for the piece (epochs).
+	TermMax abi.ChainEpoch `json:"TermMax"`
 }
 
 type FRC46TransactionParams struct {
-	Amount       string       `json:"amount"`
-	From         string       `json:"from"`
-	Operator     string       `json:"operator"`
-	OperatorData OperatorData `json:"operator_data"`
-	To           string       `json:"to"`
-	TokenData    string       `json:"token_data"`
-	Type         string       `json:"type"`
+	Amount          string       `json:"amount"`
+	From            string       `json:"from"`
+	Operator        string       `json:"operator"`
+	OperatorData    OperatorData `json:"operator_data_parsed"`
+	OperatorDataStr string       `json:"operator_data"`
+	To              string       `json:"to"`
+	TokenData       string       `json:"token_data"`
+	Type            string       `json:"type"`
 }
 
 type AllocationResults struct {
@@ -72,6 +86,6 @@ type FRC46TransactionReturn struct {
 
 type FRC46TransactionMetadata struct {
 	MethodNum string                 `json:"MethodNum"`
-	Params    FRC46TransactionParams `json:"Params"`
+	Params    FRC46TransactionParams `json:"-"`
 	Return    FRC46TransactionReturn `json:"Return"`
 }

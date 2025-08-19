@@ -237,7 +237,8 @@ var removedVerifiedClientDataCapParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var removedVerifiedClientDataCapReturn = map[string]func() cbg.CBORUnmarshaler{
-	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.RemoveDataCapReturn) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.RemoveDataCapParams) },
+	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.RemoveDataCapReturn) },
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.RemoveDataCapReturn) },
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.RemoveDataCapReturn) },
 
@@ -403,6 +404,20 @@ var universalReceiverParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.UniversalReceiverParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.UniversalReceiverParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.UniversalReceiverParams) },
+}
+
+var allocationRequests = map[string]func() cbg.CBORUnmarshaler{
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationRequests) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.AllocationRequests) },
+
+	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.AllocationRequests) },
+	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.AllocationRequests) },
+
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(verifregv12.AllocationRequests) },
+	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(verifregv13.AllocationRequests) },
+	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(verifregv14.AllocationRequests) },
+	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.AllocationRequests) },
+	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AllocationRequests) },
 }
 
 var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
