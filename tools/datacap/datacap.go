@@ -96,10 +96,5 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 }
 
 func (eg *eventGenerator) isDataCapStateMessage(actorName string) bool {
-	switch {
-	case strings.Contains(actorName, manifest.DatacapKey):
-		return true
-	}
-
-	return false
+	return strings.Contains(actorName, manifest.DatacapKey)
 }
