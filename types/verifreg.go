@@ -34,8 +34,13 @@ type VerifregClientInfo struct {
 
 type VerifregDeal struct {
 	ID              string    `json:"id"`
+	ActorAddress    string    `json:"actor_address"`
 	ProviderAddress string    `json:"provider_address"`
 	DealID          string    `json:"deal_id"`
+	Size            int64     `json:"size"`
+	TermMin         int64     `json:"term_min"`
+	TermMax         int64     `json:"term_max"`
+	Expiration      int64     `json:"expiration"`
 	TxCid           string    `json:"tx_cid"`
 	Height          uint64    `json:"height"`
 	Data            string    `json:"data"`

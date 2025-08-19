@@ -117,16 +117,16 @@ func getVerifierFromVerifierRequest(value map[string]interface{}, key string) (s
 	return verifierAddress, verifierSignatureData, nil
 }
 
-func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
+func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, string, []*types.VerifregDeal, error) {
 	// Parse the FRC46 transaction metadata
 	// #nosec G115
 	params, returnData, err := eg.ParseFRC46TransactionMetadata(tx.TxMetadata, int64(tx.Height))
 	if err != nil {
-		return "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
+		return "", "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
 	}
 
 	if len(params.OperatorData.Allocations) != len(returnData.NewAllocations) {
-		return "", nil, errors.New("invalid number of allocations")
+		return "", "", nil, errors.New("invalid number of allocations")
 	}
 
 	allocations := make([]AllocationDataWithDealID, len(params.OperatorData.Allocations))
@@ -139,16 +139,26 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 
 		allocBytes, err := json.Marshal(allocations[i])
 		if err != nil {
-			return "", nil, fmt.Errorf("error marshalling allocation: %w", err)
+			return "", "", nil, fmt.Errorf("error marshalling allocation: %w", err)
+		}
+
+		params.From, err = common.ConsolidateAddress(params.From, eg.helper, eg.logger, eg.config)
+		if err != nil {
+			eg.logger.Errorf("error consolidating from: %s", err)
 		}
 
 		deals[i] = &types.VerifregDeal{
-			ID:          tools.BuildId(dealId, tx.TxCid, fmt.Sprint(tx.Height)),
-			DealID:      dealId,
-			TxCid:       tx.TxCid,
-			Height:      tx.Height,
-			Data:        string(allocBytes),
-			TxTimestamp: tx.TxTimestamp,
+			ID:           tools.BuildId(dealId, tx.TxCid, fmt.Sprint(tx.Height)),
+			ActorAddress: params.From,
+			DealID:       dealId,
+			Size:         allocations[i].AllocationData.Size,
+			TermMin:      allocations[i].AllocationData.TermMin,
+			TermMax:      allocations[i].AllocationData.TermMax,
+			Expiration:   allocations[i].AllocationData.Expiration,
+			TxCid:        tx.TxCid,
+			Height:       tx.Height,
+			Data:         string(allocBytes),
+			TxTimestamp:  tx.TxTimestamp,
 		}
 		addr := ""
 		switch provider := allocations[i].AllocationData.Provider.(type) {
@@ -157,20 +167,20 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 		case string:
 			addr, err = common.ConsolidateAddress(provider, eg.helper, eg.logger, eg.config)
 		default:
-			return "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
+			return "", "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
 		}
 		if err != nil {
-			return "", nil, fmt.Errorf("error consolidating address: %w", err)
+			return "", "", nil, fmt.Errorf("error consolidating address: %w", err)
 		}
 		deals[i].ProviderAddress = addr
 	}
 
 	clientValue, err := json.Marshal(allocations)
 	if err != nil {
-		return "", nil, fmt.Errorf("error marshalling allocations: %w", err)
+		return "", "", nil, fmt.Errorf("error marshalling allocations: %w", err)
 	}
 
-	return string(clientValue), deals, nil
+	return params.From, string(clientValue), deals, nil
 }
 
 // ParseFRC46TransactionMetadata parses FRC46 token transaction metadata
