@@ -145,6 +145,11 @@ func (eg *eventGenerator) parseMint(ctx context.Context, tx *types.Transaction, 
 		return nil, fmt.Errorf("error parsing to: %w", err)
 	}
 
+	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating to: %s", err)
+	}
+
 	balance, err := common.GetBigInt(ret, KeyBalance, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing balance: %w", err)
@@ -173,6 +178,11 @@ func (eg *eventGenerator) parseDestroy(ctx context.Context, tx *types.Transactio
 		return nil, fmt.Errorf("error parsing owner: %w", err)
 	}
 
+	owner, err = common.ConsolidateAddress(owner, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating owner: %s", err)
+	}
+
 	balance, err := common.GetBigInt(ret, KeyBalance, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing balance: %w", err)
@@ -194,6 +204,10 @@ func (eg *eventGenerator) parseTransfer(ctx context.Context, tx *types.Transacti
 	to, err := common.GetItem[string](params, KeyTo, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing to: %w", err)
+	}
+	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating to: %s", err)
 	}
 
 	fromBalance, err := common.GetBigInt(ret, KeyFromBalance, false)
@@ -235,9 +249,17 @@ func (eg *eventGenerator) parseTransferFrom(ctx context.Context, tx *types.Trans
 	if err != nil {
 		return nil, nil, fmt.Errorf("error parsing from: %w", err)
 	}
+	from, err = common.ConsolidateAddress(from, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating from: %s", err)
+	}
 	to, err := common.GetItem[string](params, KeyTo, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error parsing to: %w", err)
+	}
+	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating to: %s", err)
 	}
 	fromBalance, err := common.GetBigInt(ret, KeyFromBalance, false)
 	if err != nil {
@@ -311,6 +333,11 @@ func (eg *eventGenerator) parseBurnFrom(ctx context.Context, tx *types.Transacti
 		return nil, nil, fmt.Errorf("error parsing owner: %w", err)
 	}
 
+	owner, err = common.ConsolidateAddress(owner, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating owner: %s", err)
+	}
+
 	balance, err := common.GetBigInt(ret, KeyBalance, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error parsing balance: %w", err)
@@ -348,6 +375,11 @@ func (eg *eventGenerator) parseIncreaseAndDecreaseAllowance(ctx context.Context,
 		return nil, fmt.Errorf("error parsing operator: %w", err)
 	}
 
+	operator, err = common.ConsolidateAddress(operator, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating operator: %s", err)
+	}
+
 	return &types.DataCapAllowanceEvent{
 		ID:               tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType),
 		OwnerAddress:     tx.TxFrom,
@@ -364,6 +396,11 @@ func (eg *eventGenerator) parseRevokeAllowance(ctx context.Context, tx *types.Tr
 	operator, err := common.GetItem[string](params, KeyOperator, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing operator: %w", err)
+	}
+
+	operator, err = common.ConsolidateAddress(operator, eg.helper, eg.logger, eg.config)
+	if err != nil {
+		eg.logger.Errorf("error consolidating operator: %s", err)
 	}
 
 	return &types.DataCapAllowanceEvent{

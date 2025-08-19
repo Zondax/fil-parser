@@ -156,21 +156,27 @@ func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logge
 	if err != nil {
 		return "", fmt.Errorf("error parsing id address: %w", err)
 	}
-	consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
-	if err != nil {
-		return "", fmt.Errorf("error consolidating id address: %w", err)
+	if config.ConsolidateRobustAddress {
+		consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
+		if err != nil {
+			return addr.String(), fmt.Errorf("error consolidating id address: %w", err)
+		}
+		return consolidatedIDAddress, nil
 	}
-	return consolidatedIDAddress, nil
+	return addr.String(), nil
 }
 
 func ConsolidateAddress(addrStr string, helper *helper.Helper, logger *logger.Logger, config parser.Config) (string, error) {
-	addr, err := address.NewFromString(addrStr)
-	if err != nil {
-		return "", fmt.Errorf("error parsing address: %w", err)
+	if config.ConsolidateRobustAddress {
+		addr, err := address.NewFromString(addrStr)
+		if err != nil {
+			return addrStr, fmt.Errorf("error parsing address: %w", err)
+		}
+		consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
+		if err != nil {
+			return addrStr, fmt.Errorf("error consolidating address: %w", err)
+		}
+		return consolidatedAddress, nil
 	}
-	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
-	if err != nil {
-		return "", fmt.Errorf("error consolidating address: %w", err)
-	}
-	return consolidatedAddress, nil
+	return addrStr, nil
 }

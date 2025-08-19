@@ -251,14 +251,14 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata m
 }
 
 func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
-	clientValue, dealValue, err := eg.parserUniversalReceiverHook(tx, tipsetCid)
+	clientAddress, clientValue, dealValue, err := eg.parserUniversalReceiverHook(tx, tipsetCid)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return &types.VerifregEvent{
-		ID:           tools.BuildId(tipsetCid, tx.TxCid, tx.TxFrom, fmt.Sprint(tx.Height)),
-		ActorAddress: tx.TxFrom, // This is the datacap actor. Should be the client.
+		ID:           tools.BuildId(tipsetCid, tx.TxCid, clientAddress, fmt.Sprint(tx.Height)),
+		ActorAddress: clientAddress,
 		TxCid:        tx.TxCid,
 		Height:       tx.Height,
 		ActionType:   tx.TxType,
