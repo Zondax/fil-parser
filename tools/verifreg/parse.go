@@ -1,0 +1,253 @@
+package verifreg
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"math/big"
+
+	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/common"
+	"github.com/zondax/fil-parser/types"
+)
+
+const (
+	KeyAddress           = "Address"
+	KeyAllowance         = "Allowance"
+	KeyParams            = "Params"
+	KeyVerifiedClient    = "VerifiedClient"
+	KeyDataCapRemoved    = "DataCapRemoved"
+	KeyVerifierRequest1  = "VerifierRequest1"
+	KeyVerifierRequest2  = "VerifierRequest2"
+	KeyVerifier          = "Verifier"
+	KeyVerifierSignature = "VerifierSignature"
+	KeyData              = "Data"
+	KeyType              = "Type_"
+	KeyPayload           = "Payload"
+	FRC46MethodNum       = 2233613279
+)
+
+func getAddressAllowance(value map[string]interface{}) (string, *big.Int, error) {
+	params, err := common.GetItem[map[string]interface{}](value, parser.ParamsKey, false)
+	if err != nil {
+		return "", nil, fmt.Errorf("error parsing params: %w", err)
+	}
+
+	addr, err := common.GetItem[string](params, KeyAddress, false)
+	if err != nil {
+		return "", nil, fmt.Errorf("error parsing address: %w", err)
+	}
+
+	allowance, err := common.GetBigInt(params, KeyAllowance, false)
+	if err != nil {
+		return "", nil, fmt.Errorf("error parsing allowance: %w", err)
+	}
+
+	return addr, allowance, nil
+}
+
+func parseRemoveVerifier(metadata map[string]interface{}) (string, error) {
+	addr, err := common.GetItem[string](metadata, KeyParams, false)
+	if err != nil {
+		return "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	return addr, nil
+}
+
+// returns clientToRemove, verifiers, dataCapAmountToRemove, error
+func parseRemoveVerifiedClient(metadata map[string]interface{}, network string, height int64) (string, []string, *big.Int, error) {
+	params, err := common.GetItem[map[string]interface{}](metadata, parser.ParamsKey, false)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	returnValue, err := common.GetItem[map[string]interface{}](metadata, parser.ReturnKey, false)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	clientToRemove, err := common.GetItem[string](returnValue, KeyVerifiedClient, false)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	dataCapAmountToRemove, err := common.GetBigInt(returnValue, KeyDataCapRemoved, false)
+	if err != nil {
+		return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifiers := []string{}
+	verifierRequests := []string{KeyVerifierRequest1, KeyVerifierRequest2}
+	for _, verifierRequest := range verifierRequests {
+		verifierAddress, _, err := getVerifierFromVerifierRequest(params, verifierRequest)
+		if err != nil {
+			return "", nil, nil, fmt.Errorf("error getting params from metadata: %w", err)
+		}
+		verifiers = append(verifiers, verifierAddress)
+	}
+
+	return clientToRemove, verifiers, dataCapAmountToRemove, nil
+}
+
+// returns the verifierAddress, verifierSignature, error
+func getVerifierFromVerifierRequest(value map[string]interface{}, key string) (string, string, error) {
+	verifierRequest, err := common.GetItem[map[string]interface{}](value, key, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifierAddress, err := common.GetItem[string](verifierRequest, KeyVerifier, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifierSignature, err := common.GetItem[map[string]interface{}](verifierRequest, KeyVerifierSignature, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	verifierSignatureData, err := common.GetItem[string](verifierSignature, KeyData, false)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	return verifierAddress, verifierSignatureData, nil
+}
+
+func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, []*types.VerifregDeal, error) {
+	// Parse the FRC46 transaction metadata
+	// #nosec G115
+	params, returnData, err := eg.ParseFRC46TransactionMetadata(tx.TxMetadata, int64(tx.Height))
+	if err != nil {
+		return "", nil, fmt.Errorf("error parsing FRC46 transaction metadata: %w", err)
+	}
+
+	if len(params.OperatorData.Allocations) != len(returnData.NewAllocations) {
+		return "", nil, errors.New("invalid number of allocations")
+	}
+
+	allocations := make([]AllocationDataWithDealID, len(params.OperatorData.Allocations))
+	deals := make([]*types.VerifregDeal, len(returnData.NewAllocations))
+	for i := range params.OperatorData.Allocations {
+		dealId := fmt.Sprintf("%d", returnData.NewAllocations[i])
+
+		allocations[i].AllocationData = params.OperatorData.Allocations[i]
+		allocations[i].DealID = dealId
+
+		allocBytes, err := json.Marshal(allocations[i])
+		if err != nil {
+			return "", nil, fmt.Errorf("error marshalling allocation: %w", err)
+		}
+
+		deals[i] = &types.VerifregDeal{
+			ID:          tools.BuildId(dealId, tx.TxCid, fmt.Sprint(tx.Height)),
+			DealID:      dealId,
+			TxCid:       tx.TxCid,
+			Height:      tx.Height,
+			Data:        string(allocBytes),
+			TxTimestamp: tx.TxTimestamp,
+		}
+		addr := ""
+		switch provider := allocations[i].AllocationData.Provider.(type) {
+		case uint64:
+			addr, err = common.ConsolidateIDAddress(provider, eg.helper, eg.logger, eg.config)
+		case string:
+			addr, err = common.ConsolidateAddress(provider, eg.helper, eg.logger, eg.config)
+		default:
+			return "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
+		}
+		if err != nil {
+			return "", nil, fmt.Errorf("error consolidating address: %w", err)
+		}
+		deals[i].ProviderAddress = addr
+	}
+
+	clientValue, err := json.Marshal(allocations)
+	if err != nil {
+		return "", nil, fmt.Errorf("error marshalling allocations: %w", err)
+	}
+
+	return string(clientValue), deals, nil
+}
+
+// ParseFRC46TransactionMetadata parses FRC46 token transaction metadata
+func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height int64) (*FRC46TransactionParams, *FRC46TransactionReturn, error) {
+	parsedFRC46Data, err := eg.parseFRC46Data(metadata, height)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing frc46 data: %w", err)
+	}
+	if parsedFRC46Data == nil {
+		return nil, nil, fmt.Errorf("token transaction is not frc46")
+	}
+
+	var txMetadata FRC46TransactionMetadata
+	err = json.Unmarshal([]byte(metadata), &txMetadata)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error unmarshalling FRC46 transaction metadata: %w", err)
+	}
+	txMetadata.Params = *parsedFRC46Data
+
+	// parse operator data
+	rawOperatorData, err := base64.StdEncoding.DecodeString(txMetadata.Params.OperatorDataStr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error decoding operator data: %w", err)
+	}
+
+	parsedOperatorData, err := eg.verifiedRegistry.ParseAllocationRequestsParamsToJSON(eg.network, height, rawOperatorData)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing operator data: %w", err)
+	}
+	tmp := OperatorData{}
+
+	if err := json.Unmarshal([]byte(parsedOperatorData), &tmp); err != nil {
+		return nil, nil, fmt.Errorf("error unmarshalling operator data: %w", err)
+	}
+	txMetadata.Params.OperatorData = tmp
+	return &txMetadata.Params, &txMetadata.Return, nil
+}
+
+/*
+"{\"from\":1255,\"to\":6,\"operator\":5,\"amount\":\"34359738368000000000000000000\",\"operator_data\":\"goGGQwCGCdgqWCgAAYHiA5IgIArqjswZAIjTmlo5/bIVlomNoxVa6US/tVY9a4fftJ44GwAAAAgAAAAAGgAXgsAaABt3QBmBxIA=\",\"token_data\":\"\"}"
+*/
+func (eg *eventGenerator) parseFRC46Data(metadata string, height int64) (*FRC46TransactionParams, error) {
+	parsedMetadata := map[string]interface{}{}
+	err := json.Unmarshal([]byte(metadata), &parsedMetadata)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling metadata: %w", err)
+	}
+
+	params, err := common.GetItem[map[string]interface{}](parsedMetadata, parser.ParamsKey, false)
+	if err != nil {
+		return nil, fmt.Errorf("error getting params from metadata: %w", err)
+	}
+
+	type_, err := common.GetInteger[uint32](params, KeyType, false)
+	if err != nil {
+		return nil, fmt.Errorf("error getting Type_ from metadata: %w", err)
+	}
+	payload, err := common.GetItem[string](params, KeyPayload, false)
+	if err != nil {
+		return nil, fmt.Errorf("error getting Payload from metadata: %w", err)
+	}
+
+	if type_ != FRC46MethodNum {
+		return nil, nil
+	}
+
+	rawPayload, err := base64.StdEncoding.DecodeString(payload)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding frc46 data: %w", err)
+	}
+	parsedPayload, err := eg.verifiedRegistry.ParseFRC46ParamsToJSON(eg.network, height, rawPayload)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing frc46 data: %w", err)
+	}
+	tmp := FRC46TransactionParams{}
+	if err := json.Unmarshal([]byte(parsedPayload), &tmp); err != nil {
+		return nil, fmt.Errorf("error unmarshalling frc46 data: %w", err)
+	}
+	return &tmp, nil
+}
