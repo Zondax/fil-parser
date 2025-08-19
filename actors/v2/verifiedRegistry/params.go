@@ -433,25 +433,3 @@ var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(verifregv15.AllocationsResponse) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AllocationsResponse) },
 }
-
-var VerifregTypes = map[string]map[string]func() cbg.CBORUnmarshaler{
-	parser.MethodAddVerifiedClient:         addVerifiedClientParams,
-	parser.MethodAddVerifiedClientExported: addVerifiedClientParams,
-	parser.MethodAddVerifier:               addVerifierParams,
-	//parser.MethodRemoveVerifier:                   &address.Address{},
-	parser.MethodUseBytes:                         useBytesParams,
-	parser.MethodRestoreBytes:                     restoreBytesParams,
-	parser.MethodRemoveExpiredAllocations:         removeExpiredAllocationsParams,
-	parser.MethodRemoveExpiredAllocationsExported: removeExpiredAllocationsParams,
-	parser.MethodRemoveVerifiedClientDataCap:      removedVerifiedClientDataCapParams,
-	parser.MethodVerifiedDeprecated1:              removedVerifiedClientDataCapParams,
-	parser.MethodVerifiedDeprecated2:              removedVerifiedClientDataCapParams,
-	parser.MethodGetClaims:                        getClaimsParams,
-	parser.MethodGetClaimsExported:                getClaimsParams,
-	parser.MethodExtendClaimTerms:                 extendClaimTermsParams,
-	parser.MethodExtendClaimTermsExported:         extendClaimTermsParams,
-	parser.MethodRemoveExpiredClaims:              removeExpiredClaimsParams,
-	parser.MethodRemoveExpiredClaimsExported:      removeExpiredClaimsParams,
-	parser.MethodUniversalReceiverHook:            universalReceiverParams,
-	parser.MethodClaimAllocations:                 claimAllocationsParams,
-}
