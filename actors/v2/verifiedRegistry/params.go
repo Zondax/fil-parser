@@ -237,7 +237,7 @@ var removedVerifiedClientDataCapParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var removedVerifiedClientDataCapReturn = map[string]func() cbg.CBORUnmarshaler{
-	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.RemoveDataCapParams) },
+	tools.V15.String(): func() cbg.CBORUnmarshaler { return new(legacyv7.RemoveDataCapReturn) },
 	tools.V16.String(): func() cbg.CBORUnmarshaler { return new(verifregv8.RemoveDataCapReturn) },
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(verifregv9.RemoveDataCapReturn) },
 	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.RemoveDataCapReturn) },
