@@ -161,11 +161,13 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 			TxTimestamp:  tx.TxTimestamp,
 		}
 		addr := ""
+		// some messages use string or integer id addresses for the provider field
 		switch provider := allocations[i].AllocationData.Provider.(type) {
-		case uint64:
-			addr, err = common.ConsolidateIDAddress(provider, eg.helper, eg.logger, eg.config)
 		case string:
 			addr, err = common.ConsolidateAddress(provider, eg.helper, eg.logger, eg.config)
+		// any number parsed from json to the interface{} field will be a float64
+		case float64:
+			addr, err = common.ConsolidateIDAddress(uint64(provider), eg.helper, eg.logger, eg.config)
 		default:
 			return "", "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
 		}
