@@ -134,6 +134,24 @@ var (
 		"bafk2bzacecnh2ouohmonvebq7uughh4h3ppmg4cjsk74dzxlbbtlcij4xbzxq": manifest.MinerKey,
 		"bafk2bzaced7emkbbnrewv5uvrokxpf5tlm4jslu2jsv77ofw2yqdglg657uie": manifest.MinerKey,
 		"bafk2bzacednskl3bykz5qpo54z2j2p4q44t5of4ktd6vs6ymmg2zebsbxazkm": manifest.VerifregKey,
+
+		// https://github.com/filecoin-project/lotus/blob/38bc8b396c28446f1b0ddd7c39cb5247675552c2/build/builtin_actors.go#L349
+		"bafk2bzaced4jhgt6peqc3m2lrclj347kjhwt3wjsdxrbt336m5kxcrkyyfg4o": manifest.AccountKey,
+		"bafk2bzacecuvdunhtjo52tpxt4ge3ue7mpejmv3c3loqf6iafu5e2jlybvy5a": manifest.CronKey,
+		"bafk2bzacebs5hd67p3x2ohf357xaebz57o3ffeuexndaptn5g3usgatd32icq": manifest.DatacapKey,
+		"bafk2bzacedbazvsncva5hfb72jyipsebzlo6sgjbfnf6m4p4xhagzoekzgy34": manifest.EamKey,
+		"bafk2bzacedepzmyi2sbw7fgblhzhz75oovy6trbsfnxsbsqdh6te5cchgptiq": manifest.EthAccountKey,
+		"bafk2bzacedomvviwbdddcfm73uaedqeyuiyswdt3plq3v74uvbo2xvrzyphio": manifest.EvmKey,
+		"bafk2bzacednq5wfauimq4shz2xynzshatk54odj45gp6fkw77gy25fpmhu5oc": manifest.InitKey,
+		"bafk2bzaceb4bfxfccm5v6qnecp7ayalitk2fvu6ezavcrd7lcb4uohrsaeo32": manifest.MultisigKey,
+		"bafk2bzaceaia5ufr2wyzbasrx6vcfeqjsnaqajmlrnp763cesa7pqvddaubyu": manifest.PaychKey,
+		"bafk2bzacedfvut2myeleyq67fljcrw4kkmn5pb5dpyozovj7jpoez5irnc3ro": manifest.PlaceholderKey,
+		"bafk2bzacecgorusdavjd42ktijbjh4veu2y6isnlfyys2f5jylnc2c6yll3ju": manifest.RewardKey,
+		"bafk2bzacea63rezmai4qwvzlc3hmcjn4eurkcec7cjqoih6vztnkwjvvlx2we": manifest.MarketKey,
+		"bafk2bzaceax4mv3wzp7jfjpsp2lklujzpjtskpn6lsn743a6ljpgzo2qjdncq": manifest.MinerKey,
+		"bafk2bzaceddedx24uzsyx6yh63aoabx66caaariopsa5gzn2x6yme7dv5s7cg": manifest.PowerKey,
+		"bafk2bzacecfol5vcebbl7dqkat7kt65bgqwqvn7fxnakg7qvpokce6ulemo3k": manifest.SystemKey,
+		"bafk2bzacedqpwyprkgwdbcqahgrzuoul42gd3hvgn54fxyqjgtwmmlquycuok": manifest.VerifregKey,
 	}
 )
 
