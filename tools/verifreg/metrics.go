@@ -36,7 +36,7 @@ func newClient(metricsClient metrics.MetricsClient, name string) *verifregMetric
 }
 
 const (
-	actorNameFromAddress = "fil-parser_datacap_actor_name_from_address"
+	actorNameFromAddress = "fil-parser_verifreg_actor_name_from_address"
 )
 
 var (
