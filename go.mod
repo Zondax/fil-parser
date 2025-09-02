@@ -8,7 +8,7 @@ require (
 	github.com/bytedance/sonic v1.13.3
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
-	github.com/filecoin-project/go-f3 v0.8.4
+	github.com/filecoin-project/go-f3 v0.8.10
 	github.com/filecoin-project/go-state-types v0.16.0
 	github.com/filecoin-project/lotus v1.32.2
 	github.com/filecoin-project/specs-actors v0.9.15
@@ -36,7 +36,6 @@ require (
 	github.com/daaku/go.zipexe v1.0.2 // indirect
 	github.com/dgraph-io/ristretto v0.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/filecoin-project/go-clock v0.1.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
