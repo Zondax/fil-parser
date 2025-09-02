@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/common"
 
 	"github.com/zondax/golem/pkg/logger"
 
@@ -52,20 +53,20 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 	}
 
 	for _, tx := range transactions {
-		if !strings.EqualFold(tx.Status, "ok") {
+		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}
 
 		addr, err := address.NewFromString(tx.TxTo)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse address. Err: %s", err)
+			return nil, fmt.Errorf("could not parse address. err: %w", err)
 		}
 
 		// #nosec G115
 		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
-			return nil, fmt.Errorf("could not get actor name from address. Err: %s", err)
+			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 
 		if !eg.isVerifregMessage(actorName, tx.TxType) {
@@ -74,7 +75,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 
 		events, err = eg.createVerifregInfo(tx, tipsetCid, events)
 		if err != nil {
-			return nil, fmt.Errorf("could not create verifreg info. Err: %s", err)
+			return nil, fmt.Errorf("could not create verifreg info. err: %w", err)
 		}
 
 	}
