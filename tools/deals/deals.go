@@ -12,6 +12,7 @@ import (
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/fil-parser/types"
 )
 
@@ -52,7 +53,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 	}
 
 	for _, tx := range transactions {
-		if !strings.EqualFold(tx.Status, txStatusOk) {
+		if !strings.EqualFold(tx.SubcallStatus, common.TxStatusOk) {
 			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}

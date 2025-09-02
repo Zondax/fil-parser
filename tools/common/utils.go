@@ -15,6 +15,10 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+const (
+	TxStatusOk = "ok"
+)
+
 func GetBigInt(value map[string]interface{}, key string, canBeNil bool) (*big.Int, error) {
 	bigIntString, err := GetItem[string](value, key, canBeNil)
 	if err != nil {
