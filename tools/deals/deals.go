@@ -16,10 +16,6 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-const (
-	txStatusOk = "ok"
-)
-
 type EventGenerator interface {
 	GenerateDealsEvents(ctx context.Context, transactions []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error)
 }
