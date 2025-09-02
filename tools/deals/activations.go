@@ -198,7 +198,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 			})
 		}
 		// Before NV17(<=NV16), ActivateDeals return is empty and we get the deal space info from VerifyDealsForActivation
-		if ret == nil {
+		if len(ret) == 0 {
 			return nil
 		}
 		nonVerifiedDealSpace, verifiedDealSpace, err := eg.getDealSpaceFields(ret)
