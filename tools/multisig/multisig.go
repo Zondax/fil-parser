@@ -102,16 +102,15 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			addrTo, err := address.NewFromString(tx.TxTo)
 			if err != nil {
-				eg.logger.Errorf("could not parse address. Err: %s", err)
-				continue
+				return nil, fmt.Errorf("could not parse address. err: %w", err)
 			}
 
 			// #nosec G115
 			_, actorName, err := eg.helper.GetActorInfoFromAddress(addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
 				_ = eg.metrics.UpdateActorNameFromAddressMetric()
-				eg.logger.Errorf("could not get actor name from address. Err: %s", err)
-				continue
+				return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
+
 			}
 			if !strings.EqualFold(actorName, manifest.MultisigKey) {
 				continue
@@ -119,7 +118,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 
 			multisigInfo, err := eg.createMultisigInfo(ctx, tx, tipsetCid, metadata[parser.ParamsKey])
 			if err != nil {
-				continue
+				return nil, fmt.Errorf("could not create multisig info. err: %w", err)
 			}
 			events.MultisigInfo = append(events.MultisigInfo, multisigInfo)
 		}
