@@ -2,6 +2,7 @@ package miner
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -58,15 +59,14 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 		addr, err := address.NewFromString(actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not parse address. Err: %s", err)
+			return nil, fmt.Errorf("could not parse address. err: %w", err)
 		}
 
 		// #nosec G115
 		_, actorName, err := eg.helper.GetActorInfoFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
-			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 
 		if !eg.isMinerStateMessage(actorName, tx.TxType) {
@@ -75,8 +75,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 
 		minerInfo, err := eg.createMinerInfo(tx, tipsetCid, actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not create miner info. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not create miner info. err: %w", err)
 		}
 
 		events.MinerInfo = append(events.MinerInfo, minerInfo)
@@ -84,8 +83,7 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		if eg.isMinerSectorMessage(actorName, tx.TxType) {
 			minerSectors, err := eg.createSectorEvents(ctx, tx, tipsetCid)
 			if err != nil {
-				eg.logger.Errorf("could not create miner sector. Err: %s", err)
-				continue
+				return nil, fmt.Errorf("could not create miner sector. err: %w", err)
 			}
 			events.MinerSectors = append(events.MinerSectors, minerSectors...)
 		}

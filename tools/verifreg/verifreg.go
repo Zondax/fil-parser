@@ -60,15 +60,13 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 
 		addr, err := address.NewFromString(tx.TxTo)
 		if err != nil {
-			eg.logger.Errorf("could not parse address. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not parse address. err: %w", err)
 		}
 
 		// #nosec G115
 		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
-			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 
 		if !eg.isVerifregMessage(actorName, tx.TxType) {
@@ -77,8 +75,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 
 		events, err = eg.createVerifregInfo(tx, tipsetCid, events)
 		if err != nil {
-			eg.logger.Errorf("could not create verifreg info. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not create verifreg info. err: %w", err)
 		}
 
 	}

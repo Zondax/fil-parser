@@ -2,6 +2,7 @@ package deals
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -56,15 +57,14 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 
 		addr, err := address.NewFromString(tx.TxTo)
 		if err != nil {
-			eg.logger.Errorf("could not parse address. Err: %s", err)
+			return nil, fmt.Errorf("could not parse address. err: %w", err)
 		}
 
 		// #nosec G115
 		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
-			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 
 		if !eg.isDealsStateMessage(actorName, tx.TxType) {
@@ -75,8 +75,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		actorAddress := tx.TxFrom
 		dealMessage, err := eg.createDealMessage(tx, tipsetCid, actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not create deal message. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not create deal message. err: %w", err)
 		}
 
 		events.DealsMessages = append(events.DealsMessages, dealMessage)
@@ -84,16 +83,14 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		if eg.isPublishStorageDeals(tx.TxType) {
 			dealsInfo, err := eg.createDealsInfo(ctx, tx)
 			if err != nil {
-				eg.logger.Errorf("could not create deal proposal. Err: %s", err)
-				continue
+				return nil, fmt.Errorf("could not create deal proposal. err: %w", err)
 			}
 			events.DealsProposals = append(events.DealsProposals, dealsInfo...)
 		}
 		if eg.isDealActivation(tx) {
 			dealActivations, dealSpaceInfo, err := eg.createDealActivations(ctx, tx)
 			if err != nil {
-				eg.logger.Errorf("could not create deal activations. Err: %s", err)
-				continue
+				return nil, fmt.Errorf("could not create deal activations. err: %w", err)
 			}
 			events.DealsActivations = append(events.DealsActivations, dealActivations...)
 			events.DealsSpaceInfo = append(events.DealsSpaceInfo, dealSpaceInfo...)

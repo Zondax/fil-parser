@@ -2,6 +2,7 @@ package datacap
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -55,16 +56,13 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 
 		addr, err := address.NewFromString(actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not parse address. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not parse address. err: %w", err)
 		}
 
 		// #nosec G115
 		_, actorName, err := eg.helper.GetActorInfoFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
-			_ = eg.metrics.UpdateActorNameFromAddressMetric()
-			eg.logger.Errorf("could not get actor name from address. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 
 		if !eg.isDataCapStateMessage(actorName) {
@@ -73,16 +71,14 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 
 		dataCapInfo, err := eg.createDataCapInfo(tx, tipsetCid, actorAddress)
 		if err != nil {
-			eg.logger.Errorf("could not create datacap info. Err: %s", err)
-			continue
+			return nil, fmt.Errorf("could not create datacap info. err: %w", err)
 		}
 
 		events.DataCapInfo = append(events.DataCapInfo, dataCapInfo)
 		if isDatacapTokenMessage(tx.TxType) {
 			tokenEvents, allowanceEvents, err := eg.createDataCapTokenEvents(ctx, tx, tipsetCid)
 			if err != nil {
-				eg.logger.Errorf("could not create datacap token events. Err: %s", err)
-				continue
+				return nil, fmt.Errorf("could not create datacap token events. err: %w", err)
 			}
 			events.DataCapTokenEvent = append(events.DataCapTokenEvent, tokenEvents...)
 			events.DataCapAllowanceEvent = append(events.DataCapAllowanceEvent, allowanceEvents...)
