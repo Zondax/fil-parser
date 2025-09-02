@@ -8,6 +8,7 @@ import (
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/metrics"
+	"github.com/zondax/fil-parser/tools/common"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
@@ -36,8 +37,6 @@ const (
 	metadataValue      = "Value"
 	metadataSigner     = "Signer"
 	metadataSigners    = "Signers"
-
-	txStatusOk = "ok"
 )
 
 var proposeTranslateMap = map[string]string{
@@ -79,7 +78,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 	}
 
 	for _, tx := range transactions {
-		if !strings.EqualFold(tx.Status, txStatusOk) {
+		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
@@ -11,9 +12,18 @@ import (
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
 	"golang.org/x/exp/constraints"
 )
+
+const (
+	TxStatusOk = "ok"
+)
+
+func IsTxSuccess(tx *types.Transaction) bool {
+	return strings.EqualFold(tx.Status, TxStatusOk) && strings.EqualFold(tx.SubcallStatus, TxStatusOk)
+}
 
 func GetBigInt(value map[string]interface{}, key string, canBeNil bool) (*big.Int, error) {
 	bigIntString, err := GetItem[string](value, key, canBeNil)
