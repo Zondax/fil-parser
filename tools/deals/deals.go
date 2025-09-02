@@ -49,7 +49,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 	}
 
 	for _, tx := range transactions {
-		if !strings.EqualFold(tx.SubcallStatus, common.TxStatusOk) {
+		if !(strings.EqualFold(tx.Status, common.TxStatusOk) && strings.EqualFold(tx.SubcallStatus, common.TxStatusOk)) {
 			eg.logger.Debug("failed tx found, skipping it")
 			continue
 		}
