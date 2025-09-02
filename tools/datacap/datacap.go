@@ -62,6 +62,7 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 		// #nosec G115
 		_, actorName, err := eg.helper.GetActorInfoFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
+			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 

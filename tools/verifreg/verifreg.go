@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/tools/common"
 
@@ -33,15 +34,17 @@ type eventGenerator struct {
 	verifiedRegistry *verifiedRegistry.VerifiedRegistry
 	config           parser.Config
 	network          string
+	metrics          *verifregMetricsClient
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, network string, config parser.Config) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:           helper,
 		logger:           logger,
 		network:          network,
 		verifiedRegistry: verifiedRegistry.New(logger),
 		config:           config,
+		metrics:          newClient(metrics, manifest.VerifregKey),
 	}
 }
 
@@ -66,6 +69,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 		// #nosec G115
 		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
 		if err != nil {
+			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
 		}
 
