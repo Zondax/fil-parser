@@ -106,12 +106,12 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 			}
 
 			// #nosec G115
-			_, actorName, err := eg.helper.GetActorInfoFromAddress(addrTo, int64(tx.Height), tipsetKey)
+			actorName, err := common.GetActorNameFromAddress(eg.helper, addrTo, int64(tx.Height), tipsetKey)
 			if err != nil {
 				_ = eg.metrics.UpdateActorNameFromAddressMetric()
-				return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
-
+				return nil, err
 			}
+
 			if !strings.EqualFold(actorName, manifest.MultisigKey) {
 				continue
 			}

@@ -2,14 +2,17 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
+	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
+	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
@@ -20,6 +23,22 @@ import (
 const (
 	TxStatusOk = "ok"
 )
+
+func GetActorNameFromAddress(helper *helper.Helper, addr address.Address, height int64, tipsetKey filTypes.TipSetKey) (string, error) {
+	// #nosec G115
+	actorName, err := helper.GetActorNameFromAddress(addr, height, tipsetKey)
+	if err != nil {
+		if errors.Is(err, cache.ErrBadAddress) {
+			// the bad address may have been set due to a previous failed request to the node
+			// clear the cache to allow trying again when reprocessed
+			helper.GetActorsCache().ClearBadAddressCache()
+		}
+
+		return "", fmt.Errorf("could not get actor name from address. err: %w", err)
+	}
+
+	return actorName, nil
+}
 
 func IsTxSuccess(tx *types.Transaction) bool {
 	return strings.EqualFold(tx.Status, TxStatusOk) && strings.EqualFold(tx.SubcallStatus, TxStatusOk)
