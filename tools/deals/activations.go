@@ -201,23 +201,26 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		if len(ret) == 0 {
 			return nil
 		}
-		nonVerifiedDealSpace, verifiedDealSpace, err := eg.getDealSpaceFields(ret)
-		if err != nil {
-			return err
-		}
-		for _, dealID := range dealIDs {
-			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-				ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
-				DealID:               dealID,
-				Height:               tx.Height,
-				ActorAddress:         tx.TxFrom,
-				TxCid:                tx.TxCid,
-				GroupDealIDs:         dealIDs,
-				NonVerifiedDealSpace: nonVerifiedDealSpace,
-				VerifiedDealSpace:    verifiedDealSpace,
-				ActionType:           tx.TxType,
-				TxTimestamp:          tx.TxTimestamp,
-			})
+		// the dealIDs can be nil for a single activation
+		if len(dealIDs) > 0 {
+			nonVerifiedDealSpace, verifiedDealSpace, err := eg.getDealSpaceFields(ret)
+			if err != nil {
+				return err
+			}
+			for _, dealID := range dealIDs {
+				dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
+					ID:                   tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
+					DealID:               dealID,
+					Height:               tx.Height,
+					ActorAddress:         tx.TxFrom,
+					TxCid:                tx.TxCid,
+					GroupDealIDs:         dealIDs,
+					NonVerifiedDealSpace: nonVerifiedDealSpace,
+					VerifiedDealSpace:    verifiedDealSpace,
+					ActionType:           tx.TxType,
+					TxTimestamp:          tx.TxTimestamp,
+				})
+			}
 		}
 		return nil
 	}
@@ -275,7 +278,9 @@ func (eg *eventGenerator) getCommonVerifyDealForActivationFields(params, ret map
 }
 
 func (eg *eventGenerator) getActivationFields(params map[string]interface{}) (dealIDs []uint64, sectorExpiry int64, err error) {
-	dealIDs, err = common.GetIntegerSlice[uint64](params, KeyDealIDs, false)
+	// the DealIDs in the activation can be nil
+	// see txcid: bafy2bzacear4nqxca2qpt4p5sh3ic3qfnm4mnsutoj25kw2g3u3xkpbqdvpfe on calibration
+	dealIDs, err = common.GetIntegerSlice[uint64](params, KeyDealIDs, true)
 	if err != nil {
 		return
 	}
