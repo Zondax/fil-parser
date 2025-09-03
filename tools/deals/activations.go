@@ -197,7 +197,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 				TxTimestamp:  tx.TxTimestamp,
 			})
 		}
-		// Before NV17(<=NV16), ActivateDeals return is empty and we get the deal space info from VerifyDealsForActivation
+		// Before NV21(mainnet) and NV20(calibration), ActivateDeals return is empty and we get the deal space info from VerifyDealsForActivation
 		if len(ret) == 0 {
 			return nil
 		}
@@ -225,37 +225,33 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		return nil
 	}
 
-	// Before NV20, ActivateDeals activates multiple deals in 1 sector
-	if version.NodeVersion() <= tools.V20.NodeVersion() {
+	// Before NV21 (mainnet) and NV20(calibration), ActivateDeals activates multiple deals in 1 sector
+	if (eg.network == tools.CalibrationNetwork && version.NodeVersion() <= tools.V19.NodeVersion()) ||
+		(eg.network == tools.MainnetNetwork && version.NodeVersion() <= tools.V20.NodeVersion()) {
 		if err := parseDeals(params, ret); err != nil {
 			return nil, nil, err
 		}
 		return dealActivations, dealSpaceInfo, nil
 	}
 
-	// After NV20, ActivateDeals activates multiple deals in multiple sectors
-	if version.NodeVersion() > tools.V20.NodeVersion() {
-		sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
-		if err != nil {
-			return nil, nil, err
-		}
-		activations, err := common.GetSlice[map[string]interface{}](ret, KeyActivations, false)
-		if err != nil {
-			return nil, nil, err
-		}
-		if len(sectorDeals) != len(activations) {
-			return nil, nil, fmt.Errorf("sectorDeals and activations have different lengths: sectorDeals(%d) != activations(%d)", len(sectorDeals), len(activations))
-		}
-
-		for i := range sectorDeals {
-			if err := parseDeals(sectorDeals[i], activations[i]); err != nil {
-				return nil, nil, err
-			}
-		}
-		return dealActivations, dealSpaceInfo, nil
+	sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	activations, err := common.GetSlice[map[string]interface{}](ret, KeyActivations, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(sectorDeals) != len(activations) {
+		return nil, nil, fmt.Errorf("sectorDeals and activations have different lengths: sectorDeals(%d) != activations(%d)", len(sectorDeals), len(activations))
 	}
 
-	return nil, nil, nil
+	for i := range sectorDeals {
+		if err := parseDeals(sectorDeals[i], activations[i]); err != nil {
+			return nil, nil, err
+		}
+	}
+	return dealActivations, dealSpaceInfo, nil
 }
 
 func (eg *eventGenerator) getCommonVerifyDealForActivationFields(params, ret map[string]interface{}) (dealIDs []uint64, nonVerifiedDealWeight *big.Int, verifiedDealWeight *big.Int, err error) {
