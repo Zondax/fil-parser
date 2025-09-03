@@ -280,7 +280,7 @@ func (eg *eventGenerator) getActivationFields(params map[string]interface{}) (de
 	if err != nil {
 		return
 	}
-	sectorExpiry, err = common.GetInteger[int64](params, KeySectorExpiry, false)
+	sectorExpiry, err = common.GetInteger[int64](params, KeySectorExpiry, true)
 	if err != nil {
 		return
 	}
