@@ -81,6 +81,8 @@ var CalibrationActorsId = map[string]bool{
 	"f080": true,
 }
 
+var ErrBadAddress = errors.New("ErrBadAddress")
+
 const combinedCacheImpl = "combined"
 
 func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metricsClient metrics.MetricsClient, backoff *golemBackoff.BackOff) (*ActorsCache, error) {
@@ -128,7 +130,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	addStr := add.String()
 	// Check if this address is flagged as bad
 	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", addStr)
+		return "", fmt.Errorf(" %w : %s is flagged as bad", ErrBadAddress, addStr)
 	}
 
 	if !onChainOnly {
@@ -142,7 +144,7 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	// Try on-chain cache
 	actorCode, err := a.onChainCache.GetActorCode(add, key, onChainOnly)
 	if err != nil {
-		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
+		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
 			a.badAddress.Set(addStr, true)
 		}
@@ -188,7 +190,7 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 
 	// Check if this is a flagged address
 	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", addStr)
+		return "", fmt.Errorf("%w: address %s is flagged as bad", ErrBadAddress, addStr)
 	}
 
 	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying on-chain cache", addStr)

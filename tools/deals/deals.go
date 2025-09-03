@@ -61,10 +61,10 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		}
 
 		// #nosec G115
-		actorName, err := eg.helper.GetActorNameFromAddress(addr, int64(tx.Height), tipsetKey)
+		actorName, err := common.GetActorNameFromAddress(eg.helper, addr, int64(tx.Height), tipsetKey)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
-			return nil, fmt.Errorf("could not get actor name from address. err: %w", err)
+			return nil, err
 		}
 
 		if !eg.isDealsStateMessage(actorName, tx.TxType) {
