@@ -82,7 +82,9 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 			VerifiedDealWeight abi.DealWeight
 		}
 	*/
-	if version.NodeVersion() < tools.V3.NodeVersion() {
+	minVersion := tools.V9.NodeVersion()
+	// calibration network min version is always V16 and this format is not used on the network
+	if eg.network == tools.MainnetNetwork && version.NodeVersion() <= minVersion {
 		dealIDs, nonVerifiedDealWeight, verifiedDealWeight, err := eg.getCommonVerifyDealForActivationFields(params, ret)
 		if err != nil {
 			return nil, err
@@ -106,7 +108,9 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 		return dealSpaceInfo, nil
 	}
 
-	maxVersion := tools.V8.NodeVersion()
+	// After NV17(mainnet) and NV16(calibration) VerifyDealsForActivation return changed to remove deal space and weight information,
+	// we get the info from the ActivateDeals method
+	maxVersion := tools.V17.NodeVersion()
 	if eg.network == tools.CalibrationNetwork {
 		maxVersion = tools.V16.NodeVersion()
 	}
@@ -130,11 +134,8 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 			DealWeight         abi.DealWeight // Total space*time of submitted deals.
 			VerifiedDealWeight abi.DealWeight // Total space*time of submitted verified deals.
 		}
-
-		After NV8(mainnet) and NV16(calibration) VerifyDealsForActivation return changed to remove deal space and weight information,
-		we get the info from the ActivateDeals method
 	*/
-	if version.NodeVersion() > tools.V3.NodeVersion() && version.NodeVersion() <= maxVersion {
+	if version.NodeVersion() > minVersion && version.NodeVersion() <= maxVersion {
 		// number of SectorDeals and SectorWeights will always be the same are they are processed in an all or nothing manner
 		sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 		if err != nil {
@@ -197,7 +198,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 				TxTimestamp:  tx.TxTimestamp,
 			})
 		}
-		// Before NV21(mainnet) and NV20(calibration), ActivateDeals return is empty and we get the deal space info from VerifyDealsForActivation
+		// Before NV18(mainnet) and NV17(calibration), ActivateDeals return is empty and we get the deal space info from VerifyDealsForActivation
 		if len(ret) == 0 {
 			return nil
 		}
@@ -222,9 +223,9 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		return nil
 	}
 
-	// Before NV21 (mainnet) and NV20(calibration), ActivateDeals activates multiple deals in 1 sector
-	if (eg.network == tools.CalibrationNetwork && version.NodeVersion() <= tools.V19.NodeVersion()) ||
-		(eg.network == tools.MainnetNetwork && version.NodeVersion() <= tools.V20.NodeVersion()) {
+	// Before NV21 (mainnet) and NV20(calibration), ActivateDeals uses a flat parameter structure
+	if (eg.network == tools.CalibrationNetwork && version.NodeVersion() <= tools.V20.NodeVersion()) ||
+		(eg.network == tools.MainnetNetwork && version.NodeVersion() <= tools.V21.NodeVersion()) {
 		if err := parseDeals(params, ret); err != nil {
 			return nil, nil, err
 		}
@@ -252,7 +253,9 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 }
 
 func (eg *eventGenerator) getCommonVerifyDealForActivationFields(params, ret map[string]interface{}) (dealIDs []uint64, nonVerifiedDealWeight *big.Int, verifiedDealWeight *big.Int, err error) {
-	dealIDs, err = common.GetIntegerSlice[uint64](params, KeyDealIDs, false)
+	// the DealIDs in the activation can be nil
+	// see txcid: bafy2bzacecahrkpit4hgkudjhzhqu2tzvnatlsh5uh42hlzetyjbi45iclp3g on mainnet
+	dealIDs, err = common.GetIntegerSlice[uint64](params, KeyDealIDs, true)
 	if err != nil {
 		return
 	}
