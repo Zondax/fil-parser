@@ -407,8 +407,8 @@ var universalReceiverParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 var allocationRequests = map[string]func() cbg.CBORUnmarshaler{
-	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationRequests) },
-	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.AllocationRequests) },
+	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationRequests[*verifregv9.ClaimExtensionRequest]) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationRequests[*verifregv10.ClaimExtensionRequest]) },
 
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.AllocationRequests) },
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.AllocationRequests) },
