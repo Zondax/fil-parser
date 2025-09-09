@@ -46,7 +46,7 @@ func setupTest(_ *testing.T, network string) deals.EventGenerator {
 	metrics := filMetrics.NewMetricsClient(metrics2.NewNoopMetrics())
 
 	node := &mocks.FullNode{}
-	node.On("StateNetworkName", mock.Anything).Return(dtypes.NetworkName("calibrationnet"), nil)
+	node.On("StateNetworkName", mock.Anything).Return(dtypes.NetworkName(network), nil)
 	node.On("StateNetworkVersion", mock.Anything, mock.Anything).Return(filApiTypes.NetworkVersion(16), nil)
 	node.On("StateActorCodeCIDs", mock.Anything, mock.Anything).Return(map[string]cid.Cid{
 		manifest.MarketKey: actorCid,
@@ -67,73 +67,66 @@ func TestParseVerifyDealsForActivation(t *testing.T) {
 	eg := setupTest(t, "mainnet")
 
 	tests := []struct {
-		name      string
-		txType    string
-		actorName string
-		txFrom    string
-		txTo      string
-		metadata  string
-		height    uint64
+		name     string
+		txType   string
+		txFrom   string
+		txTo     string
+		metadata string
+		height   uint64
 	}{
 
 		{
-			name:      "NV3",
-			txType:    parser.MethodVerifyDealsForActivation,
-			actorName: manifest.VerifregKey,
-			txFrom:    txFrom,
-			txTo:      txTo,
-			metadata:  `{"MethodNum":"5","Params":{"DealIDs":null,"SectorExpiry":1644975,"SectorStart":94001},"Return":{"DealWeight":"0","VerifiedDealWeight":"0"}}`,
-			height:    94000,
+			name:     "NV3",
+			txType:   parser.MethodVerifyDealsForActivation,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"5","Params":{"DealIDs":null,"SectorExpiry":1644975,"SectorStart":94001},"Return":{"DealWeight":"0","VerifiedDealWeight":"0"}}`,
+			height:   94000,
 		},
 		{
-			name:      "NV10",
-			txType:    parser.MethodVerifyDealsForActivation,
-			actorName: manifest.VerifregKey,
-			txFrom:    txFrom,
-			txTo:      txTo,
-			metadata:  `{"MethodNum":"5","Params":{"Sectors":[{"SectorExpiry":2097712,"DealIDs":[1596539]}]},"Return":{"Sectors":[{"DealSpace":34359738368,"DealWeight":"0","VerifiedDealWeight":"52446704644915200"}]}}`,
-			height:    550350,
+			name:     "NV10",
+			txType:   parser.MethodVerifyDealsForActivation,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"5","Params":{"Sectors":[{"SectorExpiry":2097712,"DealIDs":[1596539]}]},"Return":{"Sectors":[{"DealSpace":34359738368,"DealWeight":"0","VerifiedDealWeight":"52446704644915200"}]}}`,
+			height:   550350,
 		},
 		{
-			name:      "NV15",
-			txType:    parser.MethodVerifyDealsForActivation,
-			actorName: manifest.VerifregKey,
-			txFrom:    txFrom,
-			txTo:      txTo,
-			metadata:  `{"MethodNum":"5","Params":{"Sectors":[{"SectorExpiry":3149856,"DealIDs":[4137277]}]},"Return":{"Sectors":[{"DealSpace":34359738368,"DealWeight":"0","VerifiedDealWeight":"52941484877414400"}]}}`,
-			height:    1594681,
+			name:     "NV15",
+			txType:   parser.MethodVerifyDealsForActivation,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"5","Params":{"Sectors":[{"SectorExpiry":3149856,"DealIDs":[4137277]}]},"Return":{"Sectors":[{"DealSpace":34359738368,"DealWeight":"0","VerifiedDealWeight":"52941484877414400"}]}}`,
+			height:   1594681,
 		},
 		{
-			name:      "NV17",
-			txType:    parser.MethodVerifyDealsForActivation,
-			actorName: manifest.VerifregKey,
-			txFrom:    txFrom,
-			txTo:      txTo,
-			metadata:  `{"MethodNum":"5","Params":{"Sectors":[{"SectorType":8,"SectorExpiry":3938176,"DealIDs":[17514444]}]},"Return":{"Sectors":[{"CommD":{"/":"baga6ea4seaqcvxnumewlmsy3dgd6fzqzkmx6gwg2hrlea3mfsgsp342hmqausea"}}]}}`,
-			height:    2383682,
+			name:     "NV17",
+			txType:   parser.MethodVerifyDealsForActivation,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"5","Params":{"Sectors":[{"SectorType":8,"SectorExpiry":3938176,"DealIDs":[17514444]}]},"Return":{"Sectors":[{"CommD":{"/":"baga6ea4seaqcvxnumewlmsy3dgd6fzqzkmx6gwg2hrlea3mfsgsp342hmqausea"}}]}}`,
+			height:   2383682,
 		},
 		{
-			name:      "NV18",
-			txType:    parser.MethodVerifyDealsForActivation,
-			actorName: manifest.VerifregKey,
-			txFrom:    txFrom,
-			txTo:      txTo,
-			metadata:  `{"MethodNum":"5","Params":{"Sectors":[{"SectorType":9,"SectorExpiry":3752099,"DealIDs":[28436872,28436293]}]},"Return":{"Sectors":[{"CommD":{"/":"baga6ea4seaqezng67jc7t2mowage34tt4emcd4w7d5jnpusv5obmpexsq335ihy"}}]}}`,
-			height:    2683349,
+			name:     "NV18",
+			txType:   parser.MethodVerifyDealsForActivation,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"5","Params":{"Sectors":[{"SectorType":9,"SectorExpiry":3752099,"DealIDs":[28436872,28436293]}]},"Return":{"Sectors":[{"CommD":{"/":"baga6ea4seaqezng67jc7t2mowage34tt4emcd4w7d5jnpusv5obmpexsq335ihy"}}]}}`,
+			height:   2683349,
 		},
 		{
-			name:      "NV19",
-			txType:    parser.MethodVerifyDealsForActivation,
-			actorName: manifest.VerifregKey,
-			txFrom:    txFrom,
-			txTo:      txTo,
-			metadata:  `{"MethodNum":"5","Params":{"Sectors":[{"SectorType":8,"SectorExpiry":4364609,"DealIDs":[34223220]}]},"Return":{"Sectors":[{"CommD":{"/":"baga6ea4seaqbro6cy6d6hp7ywf3ktxt3hygi376cannpbint5sqeih6nintqioq"}}]}}`,
-			height:    2809801,
+			name:     "NV19",
+			txType:   parser.MethodVerifyDealsForActivation,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"5","Params":{"Sectors":[{"SectorType":8,"SectorExpiry":4364609,"DealIDs":[34223220]}]},"Return":{"Sectors":[{"CommD":{"/":"baga6ea4seaqbro6cy6d6hp7ywf3ktxt3hygi376cannpbint5sqeih6nintqioq"}}]}}`,
+			height:   2809801,
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.txType, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			_, err := eg.GenerateDealsEvents(context.Background(), []*types.Transaction{
 				{
 					TxBasicBlockData: types.TxBasicBlockData{
