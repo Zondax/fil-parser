@@ -13,6 +13,7 @@ import (
 	miner14 "github.com/filecoin-project/go-state-types/builtin/v14/miner"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
+	miner17 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -94,6 +95,8 @@ func getControlAddress(controlReturn any) (parser.ControlAddress, error) {
 	case *miner15.GetControlAddressesReturn:
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	case *miner16.GetControlAddressesReturn:
+		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
+	case *miner17.GetControlAddressesReturn:
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	default:
 		return controlAddress, fmt.Errorf("unsupported control return type: %T", v)
@@ -249,6 +252,42 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		}
 	case tools.V25.IsSupported(network, height):
 		tmp := &miner16.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
+	case tools.V26.IsSupported(network, height):
+		tmp := &miner16.GetBeneficiaryReturn{}
+		err := tmp.UnmarshalCBOR(reader)
+		if err != nil {
+			return parser.GetBeneficiaryReturn{}, err
+		}
+		beneficiary = tmp.Active.Beneficiary.String()
+		quota = tmp.Active.Term.Quota.String()
+		usedQuota = tmp.Active.Term.UsedQuota.String()
+		expiration = int64(tmp.Active.Term.Expiration)
+
+		if tmp.Proposed != nil {
+			newBeneficiary = tmp.Proposed.NewBeneficiary.String()
+			newQuota = tmp.Proposed.NewQuota.String()
+			newExpiration = int64(tmp.Proposed.NewExpiration)
+			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
+			approvedByNominee = tmp.Proposed.ApprovedByNominee
+		}
+	case tools.V27.IsSupported(network, height):
+		tmp := &miner17.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
 			return parser.GetBeneficiaryReturn{}, err

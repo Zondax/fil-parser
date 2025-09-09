@@ -10,6 +10,7 @@ import (
 	powerv14 "github.com/filecoin-project/go-state-types/builtin/v14/power"
 	powerv15 "github.com/filecoin-project/go-state-types/builtin/v15/power"
 	powerv16 "github.com/filecoin-project/go-state-types/builtin/v16/power"
+	powerv17 "github.com/filecoin-project/go-state-types/builtin/v17/power"
 	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/power"
@@ -129,6 +130,8 @@ var currentTotalPowerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.CurrentTotalPowerReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.CurrentTotalPowerReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.CurrentTotalPowerReturn) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.CurrentTotalPowerReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.CurrentTotalPowerReturn) },
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -163,6 +166,8 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.MinerConstructorParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.MinerConstructorParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerConstructorParams) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerConstructorParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.MinerConstructorParams) },
 }
 
 var createMinerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -197,6 +202,8 @@ var createMinerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.CreateMinerParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.CreateMinerParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.CreateMinerParams) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.CreateMinerParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.CreateMinerParams) },
 }
 
 var createMinerReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -231,6 +238,8 @@ var createMinerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.CreateMinerReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.CreateMinerReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.CreateMinerReturn) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.CreateMinerReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.CreateMinerReturn) },
 }
 
 var enrollCronEventParams = map[string]func() cbg.CBORUnmarshaler{
@@ -265,6 +274,8 @@ var enrollCronEventParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.EnrollCronEventParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.EnrollCronEventParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.EnrollCronEventParams) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.EnrollCronEventParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.EnrollCronEventParams) },
 }
 
 var updateClaimedPowerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -299,6 +310,8 @@ var updateClaimedPowerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.UpdateClaimedPowerParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.UpdateClaimedPowerParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.UpdateClaimedPowerParams) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.UpdateClaimedPowerParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.UpdateClaimedPowerParams) },
 }
 
 var networkRawPowerReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -312,6 +325,8 @@ var networkRawPowerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.NetworkRawPowerReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.NetworkRawPowerReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.NetworkRawPowerReturn) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.NetworkRawPowerReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.NetworkRawPowerReturn) },
 }
 
 var minerRawPowerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -325,6 +340,8 @@ var minerRawPowerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.MinerRawPowerParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.MinerRawPowerParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerRawPowerParams) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerRawPowerParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.MinerRawPowerParams) },
 }
 
 var minerRawPowerReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -338,6 +355,8 @@ var minerRawPowerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.MinerRawPowerReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.MinerRawPowerReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerRawPowerReturn) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerRawPowerReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.MinerRawPowerReturn) },
 }
 
 var minerCountReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -351,6 +370,8 @@ var minerCountReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.MinerCountReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.MinerCountReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerCountReturn) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerCountReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.MinerCountReturn) },
 }
 
 var minerConsensusCountReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -364,4 +385,6 @@ var minerConsensusCountReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(powerv14.MinerConsensusCountReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(powerv15.MinerConsensusCountReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerConsensusCountReturn) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(powerv16.MinerConsensusCountReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(powerv17.MinerConsensusCountReturn) },
 }
