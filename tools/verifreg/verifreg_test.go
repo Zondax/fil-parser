@@ -151,7 +151,7 @@ func TestParseUniversalReceiverHook(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.txType, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			_, err := eg.GenerateVerifregEvents(context.Background(), []*types.Transaction{
 				{
 					TxBasicBlockData: types.TxBasicBlockData{
