@@ -20,6 +20,7 @@ import (
 	ethaccountv14 "github.com/filecoin-project/go-state-types/builtin/v14/ethaccount"
 	ethaccountv15 "github.com/filecoin-project/go-state-types/builtin/v15/ethaccount"
 	ethaccountv16 "github.com/filecoin-project/go-state-types/builtin/v16/ethaccount"
+	ethaccountv17 "github.com/filecoin-project/go-state-types/builtin/v17/ethaccount"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/miner"
@@ -75,6 +76,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(ethaccountv14.Methods, customMethods(&EthAccount{})),
 	tools.V24.String(): actors.CopyMethods(ethaccountv15.Methods, customMethods(&EthAccount{})),
 	tools.V25.String(): actors.CopyMethods(ethaccountv16.Methods, customMethods(&EthAccount{})),
+	tools.V26.String(): actors.CopyMethods(ethaccountv17.Methods, customMethods(&EthAccount{})),
 }
 
 func (e *EthAccount) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

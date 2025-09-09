@@ -23,6 +23,7 @@ import (
 	eamv14 "github.com/filecoin-project/go-state-types/builtin/v14/eam"
 	eamv15 "github.com/filecoin-project/go-state-types/builtin/v15/eam"
 	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
+	eamv17 "github.com/filecoin-project/go-state-types/builtin/v17/eam"
 
 	typegen "github.com/whyrusleeping/cbor-gen"
 
@@ -61,6 +62,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(eamv14.Methods),
 	tools.V24.String(): actors.CopyMethods(eamv15.Methods),
 	tools.V25.String(): actors.CopyMethods(eamv16.Methods),
+	tools.V26.String(): actors.CopyMethods(eamv17.Methods),
 }
 
 func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -108,6 +110,13 @@ func (e *Eam) newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *
 
 	}
 	switch v := r.(type) {
+	case *eamv17.CreateReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv17.Create2Return:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv17.CreateExternalReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+
 	case *eamv16.CreateReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 	case *eamv16.Create2Return:
@@ -179,6 +188,13 @@ func validateEamReturn(ret typegen.CBORUnmarshaler) error {
 	}
 
 	switch v := ret.(type) {
+	case *eamv17.CreateReturn:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv17.Create2Return:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv17.CreateExternalReturn:
+		return checkAndSetAddress(&v.RobustAddress)
+
 	case *eamv16.CreateReturn:
 		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv16.Create2Return:

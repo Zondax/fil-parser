@@ -11,6 +11,7 @@ import (
 	rewardv14 "github.com/filecoin-project/go-state-types/builtin/v14/reward"
 	rewardv15 "github.com/filecoin-project/go-state-types/builtin/v15/reward"
 	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
+	rewardv17 "github.com/filecoin-project/go-state-types/builtin/v17/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/reward"
@@ -67,6 +68,7 @@ func TestGetMinerFromAwardBlockRewardParams(t *testing.T) {
 		{name: "*v14", params: &rewardv14.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 		{name: "*v15", params: &rewardv15.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 		{name: "*v16", params: &rewardv16.AwardBlockRewardParams{Miner: addr}, want: addrStr},
+		{name: "*v17", params: &rewardv17.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 	}
 
 	for _, test := range tests {

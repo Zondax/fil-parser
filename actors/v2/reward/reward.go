@@ -17,6 +17,7 @@ import (
 	rewardv14 "github.com/filecoin-project/go-state-types/builtin/v14/reward"
 	rewardv15 "github.com/filecoin-project/go-state-types/builtin/v15/reward"
 	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
+	rewardv17 "github.com/filecoin-project/go-state-types/builtin/v17/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 
@@ -73,6 +74,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(rewardv14.Methods),
 	tools.V24.String(): actors.CopyMethods(rewardv15.Methods),
 	tools.V25.String(): actors.CopyMethods(rewardv16.Methods),
+	tools.V26.String(): actors.CopyMethods(rewardv17.Methods),
 }
 
 func (r *Reward) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
