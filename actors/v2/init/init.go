@@ -23,6 +23,7 @@ import (
 	builtinInitv14 "github.com/filecoin-project/go-state-types/builtin/v14/init"
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
 	builtinInitv16 "github.com/filecoin-project/go-state-types/builtin/v16/init"
+	builtinInitv17 "github.com/filecoin-project/go-state-types/builtin/v17/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 
@@ -82,6 +83,8 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(builtinInitv14.Methods),
 	tools.V24.String(): actors.CopyMethods(builtinInitv15.Methods),
 	tools.V25.String(): actors.CopyMethods(builtinInitv16.Methods),
+	tools.V26.String(): actors.CopyMethods(builtinInitv16.Methods),
+	tools.V27.String(): actors.CopyMethods(builtinInitv17.Methods),
 }
 
 func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

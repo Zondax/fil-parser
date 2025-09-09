@@ -62,6 +62,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(eamv14.Methods),
 	tools.V24.String(): actors.CopyMethods(eamv15.Methods),
 	tools.V25.String(): actors.CopyMethods(eamv16.Methods),
+	tools.V26.String(): actors.CopyMethods(eamv16.Methods),
 	tools.V27.String(): actors.CopyMethods(eamv17.Methods),
 }
 

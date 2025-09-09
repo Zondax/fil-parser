@@ -51,6 +51,7 @@ func TestGetMinerFromAwardBlockRewardParams(t *testing.T) {
 		{name: "v14", params: rewardv14.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 		{name: "v15", params: rewardv15.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 		{name: "v16", params: rewardv16.AwardBlockRewardParams{Miner: addr}, want: addrStr},
+		{name: "v17", params: rewardv17.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 
 		{name: "*legacyv1", params: &legacyv1.AwardBlockRewardParams{Miner: addr}, want: addrStr},
 		{name: "*legacyv2", params: &legacyv2.AwardBlockRewardParams{Miner: addr}, want: addrStr},

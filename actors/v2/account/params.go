@@ -64,5 +64,6 @@ var authenticateMessageParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(accountv14.AuthenticateMessageParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(accountv15.AuthenticateMessageParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(accountv16.AuthenticateMessageParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(accountv16.AuthenticateMessageParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(accountv17.AuthenticateMessageParams) },
 }

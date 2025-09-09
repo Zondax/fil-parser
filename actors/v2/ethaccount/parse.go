@@ -76,6 +76,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(ethaccountv14.Methods, customMethods(&EthAccount{})),
 	tools.V24.String(): actors.CopyMethods(ethaccountv15.Methods, customMethods(&EthAccount{})),
 	tools.V25.String(): actors.CopyMethods(ethaccountv16.Methods, customMethods(&EthAccount{})),
+	tools.V26.String(): actors.CopyMethods(ethaccountv16.Methods, customMethods(&EthAccount{})),
 	tools.V27.String(): actors.CopyMethods(ethaccountv17.Methods, customMethods(&EthAccount{})),
 }
 

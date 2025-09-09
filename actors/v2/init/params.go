@@ -100,6 +100,7 @@ var constructorParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv14.ConstructorParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv15.ConstructorParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ConstructorParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ConstructorParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.ConstructorParams) },
 }
 
@@ -135,6 +136,7 @@ var execParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv14.ExecParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv15.ExecParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.ExecParams) },
 }
 
@@ -170,6 +172,7 @@ var execReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv14.ExecReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv15.ExecReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecReturn) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.ExecReturn) },
 }
 
@@ -184,6 +187,7 @@ var exec4Params = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv14.Exec4Params) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv15.Exec4Params) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Params) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Params) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.Exec4Params) },
 }
 
@@ -198,5 +202,6 @@ var exec4Return = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv14.Exec4Return) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv15.Exec4Return) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Return) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Return) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.Exec4Return) },
 }

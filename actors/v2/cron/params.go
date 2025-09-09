@@ -99,5 +99,6 @@ var cronConstructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(cronv14.State) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(cronv15.State) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(cronv16.State) },
+	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(cronv16.State) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(cronv17.State) },
 }
