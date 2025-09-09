@@ -76,7 +76,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(v14Market.Methods),
 	tools.V24.String(): actors.CopyMethods(v15Market.Methods),
 	tools.V25.String(): actors.CopyMethods(v16Market.Methods),
-	tools.V26.String(): actors.CopyMethods(v17Market.Methods),
+	tools.V27.String(): actors.CopyMethods(v17Market.Methods),
 }
 
 func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

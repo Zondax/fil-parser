@@ -32,7 +32,7 @@ var customSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 }
 
 // some sector deals INCLUDE the sector number
@@ -44,7 +44,7 @@ var canonicalSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.SectorDeals) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.SectorDeals) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SectorDeals) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v17Market.SectorDeals) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.SectorDeals) },
 }
 
 var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
@@ -55,7 +55,7 @@ var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(v14Market.VerifiedDealInfo) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(v15Market.VerifiedDealInfo) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifiedDealInfo) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v17Market.VerifiedDealInfo) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.VerifiedDealInfo) },
 }
 
 type SectorDeals struct {

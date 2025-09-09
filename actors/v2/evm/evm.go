@@ -79,7 +79,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(evmv14.Methods, customMethods(&Evm{})),
 	tools.V24.String(): actors.CopyMethods(evmv15.Methods, customMethods(&Evm{})),
 	tools.V25.String(): actors.CopyMethods(evmv16.Methods, customMethods(&Evm{})),
-	tools.V26.String(): actors.CopyMethods(evmv17.Methods, customMethods(&Evm{})),
+	tools.V27.String(): actors.CopyMethods(evmv17.Methods, customMethods(&Evm{})),
 }
 
 func (e *Evm) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

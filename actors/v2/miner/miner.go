@@ -121,7 +121,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(customMethods(), miner14.Methods),
 	tools.V24.String(): actors.CopyMethods(customMethods(), miner15.Methods),
 	tools.V25.String(): actors.CopyMethods(customMethods(), miner16.Methods),
-	tools.V26.String(): actors.CopyMethods(customMethods(), miner17.Methods),
+	tools.V27.String(): actors.CopyMethods(customMethods(), miner17.Methods),
 }
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

@@ -110,7 +110,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(paychv14.ConstructorParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(paychv15.ConstructorParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(paychv16.ConstructorParams) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(paychv17.ConstructorParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(paychv17.ConstructorParams) },
 }
 
 var updateChannelStateParams = map[string]func() cbg.CBORUnmarshaler{
@@ -145,5 +145,5 @@ var updateChannelStateParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(paychv14.UpdateChannelStateParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(paychv15.UpdateChannelStateParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(paychv16.UpdateChannelStateParams) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(paychv17.UpdateChannelStateParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(paychv17.UpdateChannelStateParams) },
 }

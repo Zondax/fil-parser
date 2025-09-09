@@ -63,7 +63,7 @@ var removeSignerParams2 = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.RemoveSignerParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.RemoveSignerParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.RemoveSignerParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.RemoveSignerParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.RemoveSignerParams{} },
 }
 
 var changeNumApprovalsThresholdParams = map[string]func() cbg.CBORUnmarshaler{
@@ -98,7 +98,7 @@ var changeNumApprovalsThresholdParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.ChangeNumApprovalsThresholdParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.ChangeNumApprovalsThresholdParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ChangeNumApprovalsThresholdParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.ChangeNumApprovalsThresholdParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ChangeNumApprovalsThresholdParams{} },
 }
 
 var lockBalanceParams = map[string]func() cbg.CBORUnmarshaler{
@@ -133,7 +133,7 @@ var lockBalanceParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.LockBalanceParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.LockBalanceParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.LockBalanceParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.LockBalanceParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.LockBalanceParams{} },
 }
 
 var approveReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -168,7 +168,7 @@ var approveReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.ApproveReturn{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.ApproveReturn{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ApproveReturn{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.ApproveReturn{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ApproveReturn{} },
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -203,7 +203,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.ConstructorParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.ConstructorParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ConstructorParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.ConstructorParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ConstructorParams{} },
 }
 
 var addSignerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -238,7 +238,7 @@ var addSignerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.AddSignerParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.AddSignerParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.AddSignerParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.AddSignerParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.AddSignerParams{} },
 }
 
 var swapSignerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -273,7 +273,7 @@ var swapSignerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.SwapSignerParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.SwapSignerParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.SwapSignerParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.SwapSignerParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.SwapSignerParams{} },
 }
 
 var txnIDParams = map[string]func() cbg.CBORUnmarshaler{
@@ -308,7 +308,7 @@ var txnIDParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.TxnIDParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.TxnIDParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.TxnIDParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.TxnIDParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.TxnIDParams{} },
 }
 
 var proposeReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -343,7 +343,7 @@ var proposeReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.ProposeReturn{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.ProposeReturn{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ProposeReturn{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.ProposeReturn{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ProposeReturn{} },
 }
 
 var proposeParams = map[string]func() cbg.CBORUnmarshaler{
@@ -378,7 +378,7 @@ var proposeParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return &multisig14.ProposeParams{} },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return &multisig15.ProposeParams{} },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ProposeParams{} },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig17.ProposeParams{} },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ProposeParams{} },
 }
 
 func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to address.Address, value string, params cbg.CBORUnmarshaler, err error) {

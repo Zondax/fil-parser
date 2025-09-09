@@ -79,7 +79,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(powerv14.Methods),
 	tools.V24.String(): actors.CopyMethods(powerv15.Methods),
 	tools.V25.String(): actors.CopyMethods(powerv16.Methods),
-	tools.V26.String(): actors.CopyMethods(powerv17.Methods),
+	tools.V27.String(): actors.CopyMethods(powerv17.Methods),
 }
 
 func (p *Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

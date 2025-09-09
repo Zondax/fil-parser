@@ -109,7 +109,7 @@ var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(rewardv14.AwardBlockRewardParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(rewardv15.AwardBlockRewardParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.AwardBlockRewardParams) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.AwardBlockRewardParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.AwardBlockRewardParams) },
 }
 
 var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -144,7 +144,7 @@ var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(rewardv14.ThisEpochRewardReturn) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(rewardv15.ThisEpochRewardReturn) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.ThisEpochRewardReturn) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.ThisEpochRewardReturn) },
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -182,7 +182,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V24.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
-	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 }
 
 func GetMinerFromAwardBlockRewardParams(params any) string {

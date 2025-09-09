@@ -76,7 +76,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(datacapv14.Methods, legacyMethods()),
 	tools.V24.String(): actors.CopyMethods(datacapv15.Methods, legacyMethods()),
 	tools.V25.String(): actors.CopyMethods(datacapv16.Methods, legacyMethods()),
-	tools.V26.String(): actors.CopyMethods(datacapv17.Methods, legacyMethods()),
+	tools.V27.String(): actors.CopyMethods(datacapv17.Methods, legacyMethods()),
 }
 
 func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

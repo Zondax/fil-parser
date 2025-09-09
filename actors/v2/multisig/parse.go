@@ -160,7 +160,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(multisigv14.Methods),
 	tools.V24.String(): actors.CopyMethods(multisigv15.Methods),
 	tools.V25.String(): actors.CopyMethods(multisigv16.Methods),
-	tools.V26.String(): actors.CopyMethods(multisigv17.Methods),
+	tools.V27.String(): actors.CopyMethods(multisigv17.Methods),
 }
 
 func (m *Msig) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

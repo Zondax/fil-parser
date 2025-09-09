@@ -268,7 +268,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V26.IsSupported(network, height):
+	case tools.V27.IsSupported(network, height):
 		tmp := &miner17.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {

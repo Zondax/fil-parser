@@ -73,7 +73,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(paychv14.Methods),
 	tools.V24.String(): actors.CopyMethods(paychv15.Methods),
 	tools.V25.String(): actors.CopyMethods(paychv16.Methods),
-	tools.V26.String(): actors.CopyMethods(paychv17.Methods),
+	tools.V27.String(): actors.CopyMethods(paychv17.Methods),
 }
 
 func (p *PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
