@@ -19,6 +19,7 @@ import (
 	cronv14 "github.com/filecoin-project/go-state-types/builtin/v14/cron"
 	cronv15 "github.com/filecoin-project/go-state-types/builtin/v15/cron"
 	cronv16 "github.com/filecoin-project/go-state-types/builtin/v16/cron"
+	cronv17 "github.com/filecoin-project/go-state-types/builtin/v17/cron"
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
 
@@ -76,6 +77,8 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(cronv14.Methods),
 	tools.V24.String(): actors.CopyMethods(cronv15.Methods),
 	tools.V25.String(): actors.CopyMethods(cronv16.Methods),
+	tools.V26.String(): actors.CopyMethods(cronv16.Methods),
+	tools.V27.String(): actors.CopyMethods(cronv17.Methods),
 }
 
 func (c *Cron) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
