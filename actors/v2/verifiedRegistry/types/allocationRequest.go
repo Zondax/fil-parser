@@ -6,16 +6,15 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	v9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	"github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 )
 
-// We need custom parsing for AllocationRequest in NV17 because the Provider field in go-state-types is a uint64 but in builtin-actors it is an address.Address
-type AllocationRequests struct {
-	Allocations []AllocationRequest        `json:"Allocations"`
-	Extensions  []v9.ClaimExtensionRequest `json:"Extensions"`
+// We need custom parsing for AllocationRequest in NV17 and NV18 because the Provider field in go-state-types is a uint64 but in builtin-actors it is an address.Address
+type AllocationRequests[T cbg.CBORUnmarshaler] struct {
+	Allocations []AllocationRequest `json:"Allocations"`
+	Extensions  []T                 `json:"Extensions"`
 }
 
 type AllocationRequest struct {
@@ -27,8 +26,8 @@ type AllocationRequest struct {
 	Expiration abi.ChainEpoch
 }
 
-func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = AllocationRequests{}
+func (t *AllocationRequests[T]) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = AllocationRequests[T]{}
 
 	cr := cbg.NewCborReader(r)
 
@@ -90,7 +89,7 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 0 {
-		t.Extensions = make([]v9.ClaimExtensionRequest, extra)
+		t.Extensions = make([]T, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
