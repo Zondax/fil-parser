@@ -10,6 +10,7 @@ import (
 	accountv14 "github.com/filecoin-project/go-state-types/builtin/v14/account"
 	accountv15 "github.com/filecoin-project/go-state-types/builtin/v15/account"
 	accountv16 "github.com/filecoin-project/go-state-types/builtin/v16/account"
+	accountv17 "github.com/filecoin-project/go-state-types/builtin/v17/account"
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
 	typegen "github.com/whyrusleeping/cbor-gen"
@@ -63,4 +64,6 @@ var authenticateMessageParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(accountv14.AuthenticateMessageParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(accountv15.AuthenticateMessageParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(accountv16.AuthenticateMessageParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(accountv16.AuthenticateMessageParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(accountv17.AuthenticateMessageParams) },
 }
