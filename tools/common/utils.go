@@ -17,6 +17,7 @@ import (
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
+	rosettaFilecoinLibActors "github.com/zondax/rosetta-filecoin-lib/actors"
 	"golang.org/x/exp/constraints"
 )
 
@@ -27,7 +28,7 @@ const (
 func GetActorNameFromAddress(helper *helper.Helper, addr address.Address, height int64, tipsetKey filTypes.TipSetKey) (string, error) {
 	// #nosec G115
 	actorName, err := helper.GetActorNameFromAddress(addr, height, tipsetKey)
-	if err != nil {
+	if (actorName == rosettaFilecoinLibActors.UnknownStr || actorName == "") && err != nil {
 		if errors.Is(err, cache.ErrBadAddress) {
 			// the bad address may have been set due to a previous failed request to the node
 			// clear the cache to allow trying again when reprocessed
