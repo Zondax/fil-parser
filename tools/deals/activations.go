@@ -135,7 +135,7 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 			VerifiedDealWeight abi.DealWeight // Total space*time of submitted verified deals.
 		}
 	*/
-	if version.NodeVersion() > minVersion && version.NodeVersion() <= maxVersion {
+	if version.NodeVersion() > minVersion && version.NodeVersion() < maxVersion {
 		// number of SectorDeals and SectorWeights will always be the same are they are processed in an all or nothing manner
 		sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 		if err != nil {
