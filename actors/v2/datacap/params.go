@@ -8,7 +8,9 @@ import (
 	datacapv14 "github.com/filecoin-project/go-state-types/builtin/v14/datacap"
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
+	datacapv17 "github.com/filecoin-project/go-state-types/builtin/v17/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+
 	typegen "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -23,6 +25,8 @@ var increaseAllowanceParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.IncreaseAllowanceParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.IncreaseAllowanceParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.IncreaseAllowanceParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.IncreaseAllowanceParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.IncreaseAllowanceParams) },
 }
 
 var decreaseAllowanceParams = map[string]func() typegen.CBORUnmarshaler{
@@ -35,6 +39,8 @@ var decreaseAllowanceParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.DecreaseAllowanceParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.DecreaseAllowanceParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.DecreaseAllowanceParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.DecreaseAllowanceParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.DecreaseAllowanceParams) },
 }
 
 var revokeAllowanceParams = map[string]func() typegen.CBORUnmarshaler{
@@ -47,6 +53,8 @@ var revokeAllowanceParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.RevokeAllowanceParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.RevokeAllowanceParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.RevokeAllowanceParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.RevokeAllowanceParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.RevokeAllowanceParams) },
 }
 
 var allowanceParams = map[string]func() typegen.CBORUnmarshaler{
@@ -59,6 +67,8 @@ var allowanceParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.GetAllowanceParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.GetAllowanceParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.GetAllowanceParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.GetAllowanceParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.GetAllowanceParams) },
 }
 
 var burnParams = map[string]func() typegen.CBORUnmarshaler{
@@ -71,6 +81,8 @@ var burnParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.BurnParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.BurnParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.BurnParams) },
 }
 
 var burnReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -83,6 +95,8 @@ var burnReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.BurnReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.BurnReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnReturn) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.BurnReturn) },
 }
 
 var burnFromParams = map[string]func() typegen.CBORUnmarshaler{
@@ -95,6 +109,8 @@ var burnFromParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.BurnFromParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.BurnFromParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnFromParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnFromParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.BurnFromParams) },
 }
 
 var burnFromReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -107,6 +123,8 @@ var burnFromReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.BurnFromReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.BurnFromReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnFromReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.BurnFromReturn) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.BurnFromReturn) },
 }
 
 var destroyParams = map[string]func() typegen.CBORUnmarshaler{
@@ -119,6 +137,8 @@ var destroyParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.DestroyParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.DestroyParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.DestroyParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.DestroyParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.DestroyParams) },
 }
 
 var granularityReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -130,6 +150,8 @@ var granularityReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.GranularityReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.GranularityReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.GranularityReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.GranularityReturn) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.GranularityReturn) },
 }
 
 var mintParams = map[string]func() typegen.CBORUnmarshaler{
@@ -142,6 +164,8 @@ var mintParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.MintParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.MintParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.MintParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.MintParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.MintParams) },
 }
 
 var mintReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -154,6 +178,8 @@ var mintReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.MintReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.MintReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.MintReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.MintReturn) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.MintReturn) },
 }
 
 var transferParams = map[string]func() typegen.CBORUnmarshaler{
@@ -166,6 +192,8 @@ var transferParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.TransferParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.TransferParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.TransferParams) },
 }
 
 var transferReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -178,6 +206,8 @@ var transferReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.TransferReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.TransferReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferReturn) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.TransferReturn) },
 }
 
 var transferFromParams = map[string]func() typegen.CBORUnmarshaler{
@@ -190,6 +220,8 @@ var transferFromParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.TransferFromParams) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.TransferFromParams) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferFromParams) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferFromParams) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.TransferFromParams) },
 }
 
 var transferFromReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -202,4 +234,6 @@ var transferFromReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V23.String(): func() typegen.CBORUnmarshaler { return new(datacapv14.TransferFromReturn) },
 	tools.V24.String(): func() typegen.CBORUnmarshaler { return new(datacapv15.TransferFromReturn) },
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferFromReturn) },
+	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(datacapv16.TransferFromReturn) },
+	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(datacapv17.TransferFromReturn) },
 }
