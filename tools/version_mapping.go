@@ -31,9 +31,9 @@ type version struct {
 
 var (
 	LatestMainnetVersion     version = V25
-	LatestCalibrationVersion version = V25
+	LatestCalibrationVersion version = V26
 
-	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25}
+	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26}
 	supportedVersionsList *list.List
 
 	// V0 genesis, spec-actors: v1, calibration: 0, mainnet: 0
@@ -109,6 +109,9 @@ var (
 
 	// V25 Teep, builtin-actors(go-state-types): v16, calibration: 2523454, mainnet: 4878840
 	V25 version = version{calibration: 2523454, mainnet: buildconstants.UpgradeTeepHeight, nodeVersion: 25}
+
+	// V26 GoldenWeek, builtin-actors(go-state-types): v17, calibration: 3007294, mainnet: <unknown>
+	V26 version = version{calibration: 3007294, mainnet: buildconstants.UpgradeGoldenWeekHeight, nodeVersion: 26}
 )
 
 func init() {
