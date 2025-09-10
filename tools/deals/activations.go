@@ -15,6 +15,9 @@ import (
 const (
 	KeySectors              = "Sectors"
 	KeyActivations          = "Activations"
+	KeyActivationResults    = "ActivationResults"
+	KeyFailCodes            = "FailCodes"
+	KeyIdx                  = "Idx"
 	KeyDealWeight           = "DealWeight"
 	KeyVerifiedDealWeight   = "VerifiedDealWeight"
 	KeyNonVerifiedDealSpace = "NonVerifiedDealSpace"
@@ -239,15 +242,35 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 	if err != nil {
 		return nil, nil, err
 	}
-	activations, err := common.GetSlice[map[string]interface{}](ret, KeyActivations, false)
+	// activations can be nil if all activations failed
+	activations, err := common.GetSlice[map[string]interface{}](ret, KeyActivations, true)
 	if err != nil {
 		return nil, nil, err
 	}
-	if len(sectorDeals) != len(activations) {
-		return nil, nil, fmt.Errorf("sectorDeals and activations have different lengths: sectorDeals(%d) != activations(%d)", len(sectorDeals), len(activations))
+
+	activationResults, err := common.GetItem[map[string]interface{}](ret, KeyActivationResults, true)
+	if err != nil {
+		return nil, nil, err
+	}
+	failedActivations := map[int64]bool{}
+	if len(activationResults) > 0 {
+		failCodes, err := common.GetSlice[map[string]interface{}](activationResults, KeyFailCodes, true)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, failCode := range failCodes {
+			idx, err := common.GetInteger[int64](failCode, KeyIdx, false)
+			if err != nil {
+				return nil, nil, err
+			}
+			failedActivations[idx] = true
+		}
 	}
 
 	for i := range sectorDeals {
+		if failedActivations[int64(i)] {
+			continue
+		}
 		if err := parseDeals(sectorDeals[i], activations[i]); err != nil {
 			return nil, nil, err
 		}
