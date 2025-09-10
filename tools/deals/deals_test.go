@@ -202,12 +202,100 @@ func TestActivateDeals(t *testing.T) {
 			height:   3857557,
 		},
 		{
-			name:     "NV22 - failed activation",
+			name:     "NV22 - failed activation ( last deal )",
 			txType:   parser.MethodActivateDeals,
 			txFrom:   txFrom,
 			txTo:     txTo,
-			metadata: `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":37656,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78950968]},{"SectorNumber":37888,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78951195]},{"SectorNumber":37549,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[79166044]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":2,"FailCodes":[{"Idx":1,"Code":16}]},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61239862,"Data":{"/":"baga6ea4seaqgvrjfj65lawcocwvrpgq7h53oghvto6akrys6wllhbbckchfgefy"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61240089,"Data":{"/":"baga6ea4seaqbuieim7slc3wu7kms436xpnorao5jxr6tqftnqsysfxcp5dnduia"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61454935,"Data":{"/":"baga6ea4seaqfodzysx243k4s6ieuxzzoawew4ckycynubcd5t67vxctunfjt6pq"},"Size":34359738368}],"UnsealedCid":{}}]}}`,
+			metadata: `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":37656,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78950968]},{"SectorNumber":37888,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78951195]},{"SectorNumber":37549,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[79166044]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":2,"FailCodes":[{"Idx":2,"Code":16}]},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61239862,"Data":{"/":"baga6ea4seaqgvrjfj65lawcocwvrpgq7h53oghvto6akrys6wllhbbckchfgefy"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61240089,"Data":{"/":"baga6ea4seaqbuieim7slc3wu7kms436xpnorao5jxr6tqftnqsysfxcp5dnduia"},"Size":34359738368}],"UnsealedCid":{}}]}}`,
 			height:   3857557,
+		},
+		{
+			name:     "NV22 - failed activation ( first deal )",
+			txType:   parser.MethodActivateDeals,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":5926,"SectorType":8,"SectorExpiry":5388210,"DealIDs":[79173041]},{"SectorNumber":5839,"SectorType":8,"SectorExpiry":5388210,"DealIDs":[79174788]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":1,"FailCodes":[{"Idx":0,"Code":16}]},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":2026357,"AllocationId":61463679,"Data":{"/":"baga6ea4seaqpol3htxs5b2iwsvzqssuuzvld6a3g445gn6axaumw4yzuvkmvgei"},"Size":34359738368}],"UnsealedCid":{}}]}}`,
+			height:   3857651,
+		},
+		{
+			name:   "NV22 - failed activation ( middle deal )",
+			txType: parser.MethodActivateDeals,
+			txFrom: txFrom,
+			txTo:   txTo,
+			metadata: `{
+					"MethodNum": "6",
+					"Params": {
+						"Sectors": [
+							{
+								"SectorNumber": 5926,
+								"SectorType": 8,
+								"SectorExpiry": 5388210,
+								"DealIDs": [
+									79173041
+								]
+							},
+							{
+								"SectorNumber": 5839,
+								"SectorType": 8,
+								"SectorExpiry": 5388210,
+								"DealIDs": [
+									79174788
+								]
+							},
+							{
+								"SectorNumber": 50009,
+								"SectorType": 8,
+								"SectorExpiry": 5388210,
+								"DealIDs": [
+									791747838
+								]
+							}
+						],
+						"ComputeCID": false
+					},
+					"Return": {
+						"ActivationResults": {
+							"SuccessCount": 2,
+							"FailCodes": [
+								{
+									"Idx": 1,
+									"Code": 16
+								}
+							]
+						},
+						"Activations": [
+							{
+								"NonVerifiedDealSpace": "0",
+								"VerifiedInfos": [
+									{
+										"Client": 2026357,
+										"AllocationId": 61463679,
+										"Data": {
+											"/": "baga6ea4seaqpol3htxs5b2iwsvzqssuuzvld6a3g445gn6axaumw4yzuvkmvgei"
+										},
+										"Size": 34359738368
+									}
+								],
+								"UnsealedCid": {}
+							},
+							{
+								"NonVerifiedDealSpace": "0",
+								"VerifiedInfos": [
+									{
+										"Client": 2026357,
+										"AllocationId": 61463679,
+										"Data": {
+											"/": "baga6ea4seaqpol3htxs5b2iwsvzqssuuzvld6a3g445gn6axaumw4yzuvkmvgei"
+										},
+										"Size": 34359738368
+									}
+								],
+								"UnsealedCid": {}
+							}
+						]
+					}   
+				}`,
+			height: 3857651,
 		},
 	}
 
