@@ -267,13 +267,15 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		}
 	}
 
-	for i := range sectorDeals {
-		if failedActivations[int64(i)] {
+	activationIdx := 0
+	for dealIdx := range sectorDeals {
+		if failedActivations[int64(dealIdx)] {
 			continue
 		}
-		if err := parseDeals(sectorDeals[i], activations[i]); err != nil {
+		if err := parseDeals(sectorDeals[dealIdx], activations[activationIdx]); err != nil {
 			return nil, nil, err
 		}
+		activationIdx++
 	}
 	return dealActivations, dealSpaceInfo, nil
 }
