@@ -201,6 +201,14 @@ func TestActivateDeals(t *testing.T) {
 			metadata: `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":37656,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78950968]},{"SectorNumber":37888,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78951195]},{"SectorNumber":37549,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[79166044]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":3,"FailCodes":null},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61239862,"Data":{"/":"baga6ea4seaqgvrjfj65lawcocwvrpgq7h53oghvto6akrys6wllhbbckchfgefy"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61240089,"Data":{"/":"baga6ea4seaqbuieim7slc3wu7kms436xpnorao5jxr6tqftnqsysfxcp5dnduia"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61454935,"Data":{"/":"baga6ea4seaqfodzysx243k4s6ieuxzzoawew4ckycynubcd5t67vxctunfjt6pq"},"Size":34359738368}],"UnsealedCid":{}}]}}`,
 			height:   3857557,
 		},
+		{
+			name:     "NV22 - failed activation",
+			txType:   parser.MethodActivateDeals,
+			txFrom:   txFrom,
+			txTo:     txTo,
+			metadata: `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":37656,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78950968]},{"SectorNumber":37888,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78951195]},{"SectorNumber":37549,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[79166044]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":2,"FailCodes":[{"Idx":1,"Code":16}]},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61239862,"Data":{"/":"baga6ea4seaqgvrjfj65lawcocwvrpgq7h53oghvto6akrys6wllhbbckchfgefy"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61240089,"Data":{"/":"baga6ea4seaqbuieim7slc3wu7kms436xpnorao5jxr6tqftnqsysfxcp5dnduia"},"Size":34359738368}],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[{"Client":3061409,"AllocationId":61454935,"Data":{"/":"baga6ea4seaqfodzysx243k4s6ieuxzzoawew4ckycynubcd5t67vxctunfjt6pq"},"Size":34359738368}],"UnsealedCid":{}}]}}`,
+			height:   3857557,
+		},
 	}
 
 	for _, test := range tests {
