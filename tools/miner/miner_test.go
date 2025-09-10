@@ -414,6 +414,17 @@ func TestMinerSectors_ExpiryExtension(t *testing.T) {
 				MinerSectors: getSectorEvents(t, parser.MethodExtendSectorExpiration2, txTo, txCid, 10),
 			},
 		},
+		{
+			name:      "Extend Sector Expiration 2 - null extensions",
+			txType:    parser.MethodExtendSectorExpiration2,
+			actorName: manifest.MinerKey,
+			txFrom:    txFrom,
+			txTo:      txTo,
+			metadata:  `{"MethodNum":"32","Params":{"Extensions":null}}`,
+			want: &types.MinerEvents{
+				MinerSectors: []*types.MinerSectorEvent{},
+			},
+		},
 	}
 
 	for _, test := range tests {
