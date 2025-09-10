@@ -241,7 +241,8 @@ func (eg *eventGenerator) parseSectorTerminationFaultAndRecoveries(_ context.Con
 
 func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
 	var sectorEvents []*types.MinerSectorEvent
-	extensions, err := common.GetSlice[map[string]interface{}](params, KeyExtensions, false)
+	// extensions can be nil
+	extensions, err := common.GetSlice[map[string]interface{}](params, KeyExtensions, true)
 	if err != nil {
 		return nil, err
 	}
