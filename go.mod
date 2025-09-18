@@ -9,8 +9,8 @@ require (
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-f3 v0.8.10
-	github.com/filecoin-project/go-state-types v0.17.0-dev2
-	github.com/filecoin-project/lotus v1.34.0-rc2
+	github.com/filecoin-project/go-state-types v0.17.0
+	github.com/filecoin-project/lotus v1.34.1
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
 	github.com/google/uuid v1.6.0
@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	github.com/zondax/golem v0.26.0
-	github.com/zondax/rosetta-filecoin-lib v1.3400.0-rc2
+	github.com/zondax/rosetta-filecoin-lib v1.3401.0
 )
 
 require (
