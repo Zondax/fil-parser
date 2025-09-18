@@ -55,9 +55,10 @@ const (
 	tipsetPrefix      = "tipset"
 	ethLogPrefix      = "ethlog"
 	nativeLogPrefix   = "nativelog"
-	nodeUrl           = "https://node-fil-mainnet-stable.zondax.ch/rpc/v1"
-	calibNextNodeUrl  = "https://node-fil-calibration-stable.zondax.ch/rpc/v1"
-	feeType           = "fee"
+	// nodeUrl           = "https://node-fil-mainnet-stable.zondax.ch/rpc/v1"
+	nodeUrl          = "https://node-fil-mainnet-next-light.zondax.dev/rpc/v1"
+	calibNextNodeUrl = "https://node-fil-calibration-stable.zondax.ch/rpc/v1"
+	feeType          = "fee"
 )
 
 var gLogger = logger.NewLogger(logger.Config{
