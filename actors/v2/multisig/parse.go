@@ -20,6 +20,7 @@ import (
 	multisigv14 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	multisigv15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
 	multisigv16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
+	multisigv17 "github.com/filecoin-project/go-state-types/builtin/v17/multisig"
 	multisigv8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisigv9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 
@@ -159,6 +160,8 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(multisigv14.Methods),
 	tools.V24.String(): actors.CopyMethods(multisigv15.Methods),
 	tools.V25.String(): actors.CopyMethods(multisigv16.Methods),
+	tools.V26.String(): actors.CopyMethods(multisigv16.Methods),
+	tools.V27.String(): actors.CopyMethods(multisigv17.Methods),
 }
 
 func (m *Msig) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
