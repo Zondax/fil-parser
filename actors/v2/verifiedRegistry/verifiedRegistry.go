@@ -19,6 +19,7 @@ import (
 	verifregv14 "github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 	verifregv15 "github.com/filecoin-project/go-state-types/builtin/v15/verifreg"
 	verifregv16 "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
+	verifregv17 "github.com/filecoin-project/go-state-types/builtin/v17/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
@@ -76,6 +77,8 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V23.String(): actors.CopyMethods(verifregv14.Methods),
 	tools.V24.String(): actors.CopyMethods(verifregv15.Methods),
 	tools.V25.String(): actors.CopyMethods(verifregv16.Methods),
+	tools.V26.String(): actors.CopyMethods(verifregv16.Methods),
+	tools.V27.String(): actors.CopyMethods(verifregv17.Methods),
 }
 
 func (v *VerifiedRegistry) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
