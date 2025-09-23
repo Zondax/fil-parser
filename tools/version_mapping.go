@@ -30,7 +30,7 @@ type version struct {
 }
 
 var (
-	LatestMainnetVersion     version = V26
+	LatestMainnetVersion     version = V27
 	LatestCalibrationVersion version = V27
 
 	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27}
@@ -114,7 +114,7 @@ var (
 	// https://github.com/filecoin-project/lotus/blob/dad411cf73cb6bf662e3b75492cc3a76e99ca43b/CHANGELOG.md?plain=1#L278
 	V26 version = version{calibration: 2543614, mainnet: buildconstants.UpgradeTockHeight, nodeVersion: 26}
 
-	// V27 GoldenWeek, builtin-actors(go-state-types): v17, calibration: 3007294, mainnet: <unknown>
+	// V27 GoldenWeek, builtin-actors(go-state-types): v17, calibration: 3007294, mainnet: 5348280
 	V27 version = version{calibration: 3007294, mainnet: buildconstants.UpgradeGoldenWeekHeight, nodeVersion: 27}
 )
 
