@@ -162,7 +162,7 @@ func TestActorParserV2_DatacapWithParamsAndReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
@@ -193,7 +193,7 @@ func TestActorParserV2_DatacapWithParamsOrReturn(t *testing.T) {
 			} else {
 				msg.Params = rawParams
 			}
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)

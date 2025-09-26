@@ -151,7 +151,7 @@ func TestActorParserV1_MultisigApprove(t *testing.T) {
 
 			got, err := p.ParseMultisig(tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, int64(tipSet.Height()), tipSet.Key())
+			}, int64(tipSet.Height()), tipSet.Key(), true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})
@@ -172,7 +172,7 @@ func TestActorParserV1_MultisigWithParamsAndReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, height, filTypes.EmptyTSK)
+			}, height, filTypes.EmptyTSK, true)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)
@@ -202,7 +202,7 @@ func TestActorParserV1_MultisigWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, err := p.ParseMultisig(tt.txType, msg, msgRct, height, filTypes.EmptyTSK)
+			got, err := p.ParseMultisig(tt.txType, msg, msgRct, height, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -225,7 +225,7 @@ func TestActorParserV1_MultiSigParams(t *testing.T) {
 
 			got, err := p.ParseMultisig(tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: nil,
-			}, int64(tipset.Height()), tipset.Key())
+			}, int64(tipset.Height()), tipset.Key(), true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})
@@ -296,7 +296,7 @@ func TestActorParserV2_MultisigApprove(t *testing.T) {
 
 			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, int64(tipSet.Height()), tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, msg.Cid, tipSet.Key())
+			}, msg.Cid, tipSet.Key(), true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})
@@ -320,7 +320,7 @@ func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)
@@ -352,7 +352,7 @@ func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -378,7 +378,7 @@ func TestActorParserV2_MultiSigParams(t *testing.T) {
 
 			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, int64(tipset.Height()), tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: nil,
-			}, msg.Cid, tipset.Key())
+			}, msg.Cid, tipset.Key(), true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 		})
@@ -416,7 +416,7 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 			Params: rawParams,
 		}, &parser.LotusMessageReceipt{
 			Return: rawReturn,
-		}, cid.Undef, filTypes.EmptyTSK)
+		}, cid.Undef, filTypes.EmptyTSK, true)
 		require.NoError(t, err, "Error parsing metadata for txType %s", txType)
 
 		// expected, err := unmarshalExpected(txType, expectedStr)
