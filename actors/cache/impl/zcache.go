@@ -162,6 +162,14 @@ func (m *ZCache) initMapsLocalCache() error {
 	); err != nil {
 		return fmt.Errorf("error creating selectorHashSigMap for local zcache, err: %s", err)
 	}
+
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
+		Prefix:       Short2CidMapPrefix,
+		Logger:       m.logger,
+		MetricServer: metrics2.NewNoopMetrics()},
+	); err != nil {
+		return fmt.Errorf("error creating shortCidMap for local zcache, err: %s", err)
+	}
 	return nil
 }
 
