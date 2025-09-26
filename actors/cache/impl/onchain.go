@@ -56,7 +56,7 @@ func (m *OnChain) ImplementationType() string {
 	return OnChainImpl
 }
 
-func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
+func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _, _ bool) (string, error) {
 	actorCid, err := m.retrieveActorFromLotus(address, key)
 	if err != nil {
 		return cid.Undef.String(), err
@@ -65,7 +65,7 @@ func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, 
 	return actorCid.String(), nil
 }
 
-func (m *OnChain) GetRobustAddress(address address.Address) (string, error) {
+func (m *OnChain) GetRobustAddress(address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -85,7 +85,7 @@ func (m *OnChain) GetRobustAddress(address address.Address) (string, error) {
 	return robustAdd, nil
 }
 
-func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
+func (m *OnChain) GetShortAddress(address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err

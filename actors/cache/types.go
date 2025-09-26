@@ -18,9 +18,9 @@ const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
 
 type IActorsCache interface {
 	NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error
-	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error)
-	GetRobustAddress(add address.Address) (string, error)
-	GetShortAddress(add address.Address) (string, error)
+	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (string, error)
+	GetRobustAddress(add address.Address, canonical bool) (string, error)
+	GetShortAddress(add address.Address, canonical bool) (string, error)
 	StoreAddressInfo(info types.AddressInfo)
 	GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error)
 	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error
