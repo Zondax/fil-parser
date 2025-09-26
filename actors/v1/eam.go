@@ -18,18 +18,18 @@ import (
 )
 
 // TODO: do we need ethLogs?
-func (p *ActorParser) ParseEam(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) ParseEam(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	var err error
 	switch txType {
 	case parser.MethodConstructor:
 		metadata, err = p.emptyParamsAndReturn()
 	case parser.MethodCreate:
-		return p.parseCreate(msg, msgRct, mainMsgCid)
+		return p.parseCreate(msg, msgRct, mainMsgCid, canonical)
 	case parser.MethodCreate2:
-		return p.parseCreate2(msg, msgRct, mainMsgCid)
+		return p.parseCreate2(msg, msgRct, mainMsgCid, canonical)
 	case parser.MethodCreateExternal:
-		return p.parseCreateExternal(msg, msgRct, mainMsgCid)
+		return p.parseCreateExternal(msg, msgRct, mainMsgCid, canonical)
 	case parser.UnknownStr:
 		metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
 	default:
@@ -77,7 +77,7 @@ func (p *ActorParser) newEamCreate(r eam.CreateReturn) parser.EamCreateReturn {
 	}
 }
 
-func (p *ActorParser) parseCreate(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreate(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 
 	reader := bytes.NewReader(msg.Params)
@@ -107,6 +107,7 @@ func (p *ActorParser) parseCreate(msg *parser.LotusMessage, msgRct *parser.Lotus
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
 		ActorType:     manifest.EvmKey,
 		CreationTxCid: mainMsgCid.String(),
+		IsCanonical:   canonical,
 	}
 
 	if msgRct.ExitCode.IsSuccess() {
@@ -116,7 +117,7 @@ func (p *ActorParser) parseCreate(msg *parser.LotusMessage, msgRct *parser.Lotus
 	return metadata, createdEvmActor, nil
 }
 
-func (p *ActorParser) parseCreate2(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreate2(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 
 	reader := bytes.NewReader(msg.Params)
@@ -145,6 +146,7 @@ func (p *ActorParser) parseCreate2(msg *parser.LotusMessage, msgRct *parser.Lotu
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
 		ActorType:     manifest.EvmKey,
 		CreationTxCid: mainMsgCid.String(),
+		IsCanonical:   canonical,
 	}
 
 	if msgRct.ExitCode.IsSuccess() {
@@ -154,7 +156,7 @@ func (p *ActorParser) parseCreate2(msg *parser.LotusMessage, msgRct *parser.Lotu
 	return metadata, createdEvmActor, nil
 }
 
-func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	metadata[parser.ParamsKey] = parser.EthPrefix + hex.EncodeToString(msg.Params)
@@ -187,6 +189,7 @@ func (p *ActorParser) parseCreateExternal(msg *parser.LotusMessage, msgRct *pars
 		EthAddress:    parser.EthPrefix + hex.EncodeToString(r.EthAddress[:]),
 		ActorType:     manifest.EvmKey,
 		CreationTxCid: mainMsgCid.String(),
+		IsCanonical:   canonical,
 	}
 
 	if msgRct.ExitCode.IsSuccess() {

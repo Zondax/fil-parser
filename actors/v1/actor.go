@@ -35,13 +35,13 @@ func NewActorParser(helper *helper.Helper, logger *logger.Logger, metrics metric
 }
 
 func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
+	height int64, key filTypes.TipSetKey, canonical bool) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return "", metadata, nil, nil
 	}
 
-	_, actor, err := p.helper.GetActorInfoFromAddress(msg.To, height, key)
+	_, actor, err := p.helper.GetActorInfoFromAddress(msg.To, height, key, canonical)
 	if err != nil {
 		return "", metadata, nil, err
 	}
@@ -54,13 +54,13 @@ func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, ms
 	var addressInfo *types.AddressInfo
 	switch actor {
 	case manifest.InitKey:
-		metadata, addressInfo, err = p.ParseInit(txType, msg, msgRct)
+		metadata, addressInfo, err = p.ParseInit(txType, msg, msgRct, canonical)
 	case manifest.CronKey:
 		metadata, err = p.ParseCron(txType, msg, msgRct)
 	case manifest.AccountKey:
 		metadata, err = p.ParseAccount(txType, msg, msgRct)
 	case manifest.PowerKey:
-		metadata, addressInfo, err = p.ParseStoragepower(txType, msg, msgRct)
+		metadata, addressInfo, err = p.ParseStoragepower(txType, msg, msgRct, canonical)
 	case manifest.MinerKey:
 		metadata, err = p.ParseStorageminer(txType, msg, msgRct)
 	case manifest.MarketKey:
@@ -68,7 +68,7 @@ func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, ms
 	case manifest.PaychKey:
 		metadata, err = p.ParsePaymentchannel(txType, msg, msgRct)
 	case manifest.MultisigKey:
-		metadata, err = p.ParseMultisig(txType, msg, msgRct, height, key)
+		metadata, err = p.ParseMultisig(txType, msg, msgRct, height, key, canonical)
 	case manifest.RewardKey:
 		metadata, err = p.ParseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:
@@ -76,7 +76,7 @@ func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, ms
 	case manifest.EvmKey:
 		metadata, err = p.ParseEvm(txType, msg, msgRct)
 	case manifest.EamKey:
-		metadata, addressInfo, err = p.ParseEam(txType, msg, msgRct, mainMsgCid)
+		metadata, addressInfo, err = p.ParseEam(txType, msg, msgRct, mainMsgCid, canonical)
 	case manifest.DatacapKey:
 		metadata, err = p.ParseDatacap(txType, msg, msgRct)
 	case manifest.EthAccountKey:

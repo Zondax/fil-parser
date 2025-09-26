@@ -10,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Eam) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Eam) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, _ filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	var err error
 	switch txType {
@@ -21,11 +21,11 @@ func (p *Eam) Parse(_ context.Context, network string, height int64, txType stri
 		resp, err := actors.ParseEmptyParamsAndReturn()
 		return resp, nil, err
 	case parser.MethodCreate:
-		return p.Create(network, height, msg.Params, msgRct.Return, msgRct.ExitCode, mainMsgCid)
+		return p.Create(network, height, msg.Params, msgRct.Return, msgRct.ExitCode, mainMsgCid, canonical)
 	case parser.MethodCreate2:
-		return p.Create2(network, height, msg.Params, msgRct.Return, msgRct.ExitCode, mainMsgCid)
+		return p.Create2(network, height, msg.Params, msgRct.Return, msgRct.ExitCode, mainMsgCid, canonical)
 	case parser.MethodCreateExternal:
-		return p.CreateExternal(network, height, msg.Params, msgRct.Return, msgRct.ExitCode, mainMsgCid)
+		return p.CreateExternal(network, height, msg.Params, msgRct.Return, msgRct.ExitCode, mainMsgCid, canonical)
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
