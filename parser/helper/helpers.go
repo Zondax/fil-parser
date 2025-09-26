@@ -199,7 +199,7 @@ func (h *Helper) GetFilecoinNodeClient() api.FullNode {
 // - Short
 // - Robust
 // - IsSystemActor
-func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey, height abi.ChainEpoch) *types.AddressInfo {
+func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) *types.AddressInfo {
 	var err error
 	addInfo := &types.AddressInfo{}
 
@@ -207,7 +207,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		return addInfo
 	}
 
-	actorCid, actorName, err := h.GetActorInfoFromAddress(add, int64(height), key)
+	actorCid, actorName, err := h.GetActorInfoFromAddress(add, int64(height), key, canonical)
 	if err != nil {
 		h.logger.Errorf("could not get actor cid and name from address. Err: %s", err)
 	} else {
@@ -215,7 +215,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		addInfo.ActorType = actorName
 	}
 
-	addInfo.Short, err = h.actorCache.GetShortAddress(add)
+	addInfo.Short, err = h.actorCache.GetShortAddress(add, canonical)
 	if err != nil {
 		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
 			addInfo.Short = ZeroAddressAccountActorShort
@@ -223,7 +223,7 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 		h.logger.Errorf("could not get short address for %s. Err: %v", add.String(), err)
 	}
 
-	addInfo.Robust, err = h.actorCache.GetRobustAddress(add)
+	addInfo.Robust, err = h.actorCache.GetRobustAddress(add, canonical)
 	if err != nil {
 		if ok, _, _ := h.IsZeroAddressAccountActor(add); ok {
 			addInfo.Robust = ZeroAddressAccountActorRobust
@@ -237,8 +237,8 @@ func (h *Helper) GetActorAddressInfo(add address.Address, key filTypes.TipSetKey
 }
 
 // GetActorNameFromAddress returns the actor name for the given address.
-func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (string, error) {
-	_, actorName, err := h.GetActorInfoFromAddress(add, height, key)
+func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key filTypes.TipSetKey, canonical bool) (string, error) {
+	_, actorName, err := h.GetActorInfoFromAddress(add, height, key, canonical)
 	if err != nil {
 		switch add.Protocol() {
 		// f1 or f3 is an account
@@ -258,7 +258,7 @@ func (h *Helper) GetActorNameFromAddress(add address.Address, height int64, key 
 }
 
 // GetActorInfoFromAddress returns the actor cid and name for the given address.
-func (h *Helper) GetActorInfoFromAddress(add address.Address, height int64, key filTypes.TipSetKey) (cid.Cid, string, error) {
+func (h *Helper) GetActorInfoFromAddress(add address.Address, height int64, key filTypes.TipSetKey, canonical bool) (cid.Cid, string, error) {
 	if add == address.Undef {
 		return cid.Undef, "", errors.New("address is undefined")
 	}
@@ -270,7 +270,7 @@ func (h *Helper) GetActorInfoFromAddress(add address.Address, height int64, key 
 	onChainOnly := false
 	for {
 		// Search for actor in cache
-		actorCode, err := h.actorCache.GetActorCode(add, key, onChainOnly)
+		actorCode, err := h.actorCache.GetActorCode(add, key, onChainOnly, canonical)
 		if err != nil {
 			return cid.Undef, actors.UnknownStr, err
 		}
@@ -351,7 +351,7 @@ func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) 
 }
 
 // Deprecated: Use v2/tools.GetMethodName instead
-func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey) (string, error) {
+func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, canonical bool) (string, error) {
 	if msg == nil {
 		return "", errors.New("malformed value")
 	}
@@ -366,7 +366,7 @@ func (h *Helper) GetMethodName(msg *parser.LotusMessage, height int64, key filTy
 		return parser.MethodConstructor, nil
 	}
 
-	_, actorName, err := h.GetActorInfoFromAddress(msg.To, height, key)
+	_, actorName, err := h.GetActorInfoFromAddress(msg.To, height, key, canonical)
 	if err != nil {
 		_ = h.metrics.UpdateActorNameErrorMetric(fmt.Sprint(uint64(msg.Method)))
 	}
@@ -412,7 +412,7 @@ func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (stri
 	return s, err
 }
 
-func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey) ([]*types.Transaction, error) {
+func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transaction, actorType string, tipsetKey filTypes.TipSetKey, canonical bool) ([]*types.Transaction, error) {
 	var result []*types.Transaction
 	for _, tx := range txs {
 		addrTo, err := address.NewFromString(tx.TxTo)
@@ -429,7 +429,7 @@ func (h *Helper) FilterTxsByActorType(ctx context.Context, txs []*types.Transact
 		}
 
 		// #nosec G115
-		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType)
+		isType, err := h.isAnyAddressOfType(ctx, []address.Address{addrTo, addrFrom}, int64(tx.Height), tipsetKey, actorType, canonical)
 		if err != nil {
 			h.logger.Errorf("could not get actor type from address. Err: %s", err)
 			continue
@@ -451,20 +451,20 @@ func (h *Helper) IsGenesisActor(addr address.Address) bool {
 	return h.actorCache.IsGenesisActor(addr.String())
 }
 
-func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey) bool {
-	_, actorName, err := h.GetActorInfoFromAddress(addr, height, tipsetKey)
+func (h *Helper) IsCronActor(height int64, addr address.Address, tipsetKey filTypes.TipSetKey, canonical bool) bool {
+	_, actorName, err := h.GetActorInfoFromAddress(addr, height, tipsetKey, canonical)
 	if err != nil {
 		return false
 	}
 	return strings.Contains(actorName, manifest.CronKey)
 }
 
-func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string) (bool, error) {
+func (h *Helper) isAnyAddressOfType(_ context.Context, addresses []address.Address, height int64, key filTypes.TipSetKey, actorType string, canonical bool) (bool, error) {
 	for _, addr := range addresses {
 		if addr == address.Undef {
 			continue
 		}
-		_, actorName, err := h.GetActorInfoFromAddress(addr, height, key)
+		_, actorName, err := h.GetActorInfoFromAddress(addr, height, key, canonical)
 		if err != nil {
 			return false, err
 		}

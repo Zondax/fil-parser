@@ -17,6 +17,7 @@ type AddressInfo struct {
 	CreationTxCid string `json:"creation_tx_cid" gorm:"index:idx_addresses_creation_tx_cid"`
 
 	IsSystemActor bool `json:"-" gorm:"-"`
+	IsCanonical   bool `json:"-" gorm:"-"`
 }
 
 type AddressInfoMap struct {

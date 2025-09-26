@@ -5,10 +5,11 @@ import (
 )
 
 type TxsData struct {
-	Traces   []byte
-	Tipset   *ExtendedTipSet
-	EthLogs  []EthLog
-	Metadata BlockMetadata
+	Traces    []byte
+	Tipset    *ExtendedTipSet
+	EthLogs   []EthLog
+	Metadata  BlockMetadata
+	Canonical bool
 }
 
 type TxsParsedResult struct {
@@ -22,6 +23,7 @@ type EventsData struct {
 	NativeLog []*filTypes.ActorEvent
 	EthLogs   []EthLog
 	Metadata  BlockMetadata
+	Canonical bool
 }
 
 type EventsParsedResult struct {
