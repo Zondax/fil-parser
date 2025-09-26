@@ -10,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *Power) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Power) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, _ filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var err error
 	var addressInfo *types.AddressInfo
 	metadata := make(map[string]interface{})
@@ -21,7 +21,7 @@ func (p *Power) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodConstructor:
 		metadata, err = p.Constructor(network, height, msg, msg.Params)
 	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
-		metadata, addressInfo, err = p.CreateMinerExported(network, msg, height, msg.Params, msgRct.Return, msgRct.ExitCode)
+		metadata, addressInfo, err = p.CreateMinerExported(network, msg, height, msg.Params, msgRct.Return, msgRct.ExitCode, canonical)
 	case parser.MethodUpdateClaimedPower:
 		metadata, err = p.UpdateClaimedPower(network, msg, height, msg.Params, msgRct.Return)
 	case parser.MethodEnrollCronEvent:

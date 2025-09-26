@@ -142,7 +142,7 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 			return "", "", nil, fmt.Errorf("error marshalling allocation: %w", err)
 		}
 
-		params.From, err = common.ConsolidateAddress(params.From, eg.helper, eg.logger, eg.config)
+		params.From, err = common.ConsolidateAddress(params.From, eg.helper, eg.logger, eg.config, true)
 		if err != nil {
 			eg.logger.Errorf("error consolidating from: %s", err)
 		}
@@ -164,10 +164,10 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 		// some messages use string or integer id addresses for the provider field
 		switch provider := allocations[i].AllocationData.Provider.(type) {
 		case string:
-			addr, err = common.ConsolidateAddress(provider, eg.helper, eg.logger, eg.config)
+			addr, err = common.ConsolidateAddress(provider, eg.helper, eg.logger, eg.config, true)
 		// any number parsed from json to the interface{} field will be a float64
 		case float64:
-			addr, err = common.ConsolidateIDAddress(uint64(provider), eg.helper, eg.logger, eg.config)
+			addr, err = common.ConsolidateIDAddress(uint64(provider), eg.helper, eg.logger, eg.config, true)
 		default:
 			return "", "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
 		}

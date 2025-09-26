@@ -76,7 +76,7 @@ func TestVersionCoverage(t *testing.T) {
 								continue
 							}
 						}
-						_, _, err := actor.Parse(context.Background(), tt.network, height, method.Name, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{})
+						_, _, err := actor.Parse(context.Background(), tt.network, height, method.Name, &parser.LotusMessage{}, &parser.LotusMessageReceipt{}, cid.Undef, filTypes.TipSetKey{}, true)
 						require.Falsef(t, errors.Is(err, actors.ErrUnsupportedHeight), "Missing support for txType: %s, actor: %s version: %s height: %d", method.Name, actor.Name(), version, height)
 						require.Falsef(t, errors.Is(err, parser.ErrUnknownMethod), "Method missing in actor.Parse: %s, actor: %s version: %s height: %d", method.Name, actor.Name(), version, height)
 					}

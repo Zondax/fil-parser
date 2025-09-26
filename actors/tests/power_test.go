@@ -108,7 +108,7 @@ func TestActorParserV1_PowerWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := p.ParseStoragepower(tt.txType, msg, msgRct)
+			got, _, err := p.ParseStoragepower(tt.txType, msg, msgRct, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -131,7 +131,7 @@ func TestActorParserV1_PowerWithParamsAndReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			})
+			}, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
@@ -157,7 +157,7 @@ func TestActorParserV1_ParseCreateMiner(t *testing.T) {
 
 			got, addr, err := p.ParseStoragepower(tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			})
+			}, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.NotNil(t, addr)
@@ -187,7 +187,7 @@ func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -213,7 +213,7 @@ func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
@@ -242,7 +242,7 @@ func TestActorParserV2_ParseCreateMiner(t *testing.T) {
 
 			got, addr, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)

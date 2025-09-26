@@ -144,7 +144,7 @@ func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage
 	return parse(raw, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
-func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte, ec exitcode.ExitCode) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := createMinerParams[version.String()]
 	if !ok {
@@ -162,6 +162,7 @@ func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, he
 	}
 
 	if ec.IsSuccess() && addressInfo != nil {
+		addressInfo.IsCanonical = canonical
 		p.helper.GetActorsCache().StoreAddressInfo(*addressInfo)
 	}
 

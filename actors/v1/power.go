@@ -12,7 +12,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *ActorParser) ParseStoragepower(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) ParseStoragepower(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var err error
 	var addressInfo *types.AddressInfo
 	metadata := make(map[string]interface{})
@@ -22,7 +22,7 @@ func (p *ActorParser) ParseStoragepower(txType string, msg *parser.LotusMessage,
 	case parser.MethodConstructor:
 		metadata, err = p.powerConstructor(msg.Params)
 	case parser.MethodCreateMiner, parser.MethodCreateMinerExported:
-		return p.parseCreateMiner(msg, msgRct)
+		return p.parseCreateMiner(msg, msgRct, canonical)
 	case parser.MethodUpdateClaimedPower:
 		metadata, err = p.updateClaimedPower(msg.Params)
 	case parser.MethodEnrollCronEvent:
@@ -87,7 +87,7 @@ func (p *ActorParser) powerConstructor(raw []byte) (map[string]interface{}, erro
 	return metadata, nil
 }
 
-func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params power.CreateMinerParams
@@ -108,6 +108,7 @@ func (p *ActorParser) parseCreateMiner(msg *parser.LotusMessage, msgRct *parser.
 		Robust:        r.RobustAddress.String(),
 		ActorType:     manifest.MinerKey,
 		CreationTxCid: msg.Cid.String(),
+		IsCanonical:   canonical,
 	}
 	metadata[parser.ReturnKey] = createdActor
 

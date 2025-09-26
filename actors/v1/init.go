@@ -15,7 +15,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (p *ActorParser) ParseInit(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) ParseInit(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var err error
 	metadata := make(map[string]interface{})
 	switch txType {
@@ -24,9 +24,9 @@ func (p *ActorParser) ParseInit(txType string, msg *parser.LotusMessage, msgRct 
 	case parser.MethodConstructor:
 		metadata, err = p.initConstructor(msg.Params)
 	case parser.MethodExec:
-		return p.parseExec(msg, msgRct)
+		return p.parseExec(msg, msgRct, canonical)
 	case parser.MethodExec4:
-		return p.parseExec4(msg, msgRct)
+		return p.parseExec4(msg, msgRct, canonical)
 	case parser.UnknownStr:
 		metadata, err = p.unknownMetadata(msg.Params, msgRct.Return)
 	default:
@@ -47,7 +47,7 @@ func (p *ActorParser) initConstructor(raw []byte) (map[string]interface{}, error
 	return metadata, nil
 }
 
-func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params filInit.ExecParams
@@ -76,6 +76,7 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMe
 		ActorCid:      params.CodeCID.String(),
 		ActorType:     parseExecActor(createdActorName),
 		CreationTxCid: msg.Cid.String(),
+		IsCanonical:   canonical,
 	}
 	metadata[parser.ReturnKey] = createdActor
 
@@ -86,7 +87,7 @@ func (p *ActorParser) parseExec(msg *parser.LotusMessage, msgRct *parser.LotusMe
 	return metadata, createdActor, nil
 }
 
-func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	reader := bytes.NewReader(msg.Params)
 	var params finit.Exec4Params
@@ -118,6 +119,7 @@ func (p *ActorParser) parseExec4(msg *parser.LotusMessage, msgRct *parser.LotusM
 		ActorCid:      params.CodeCID.String(),
 		ActorType:     parseExecActor(createdActorName),
 		CreationTxCid: msg.Cid.String(),
+		IsCanonical:   canonical,
 	}
 	metadata[parser.ReturnKey] = createdActor
 

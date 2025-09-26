@@ -208,7 +208,7 @@ func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -234,7 +234,7 @@ func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
@@ -268,7 +268,7 @@ func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: rawReturn,
-	}, cid.Undef, filTypes.EmptyTSK)
+	}, cid.Undef, filTypes.EmptyTSK, true)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.Equal(t, got["Params"], "0x8381e182ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000008b21c7d96a349834dcfaddf871accda700b843e1")
@@ -298,7 +298,7 @@ func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: rawReturn,
-	}, cid.Undef, filTypes.EmptyTSK)
+	}, cid.Undef, filTypes.EmptyTSK, true)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 }
@@ -327,7 +327,7 @@ func TestActorParserV2_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: rawReturn,
-	}, cid.Undef, filTypes.EmptyTSK)
+	}, cid.Undef, filTypes.EmptyTSK, true)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.Equal(t, got["Params"], "0x70a082310000000000000000000000001a5ef7ef64e3fb12be3b43edd77819dc7f034b1f")
