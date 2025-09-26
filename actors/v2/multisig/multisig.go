@@ -72,7 +72,9 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 		return nil, err
 	}
 	applied, exitCode, innerReturnRaw, innerReturnParsed, err := getProposeReturn(network, height, rawReturn)
-	if err != nil {
+	// Proposed send transactions may not have a return value
+	// See: bafy2bzaceccw7kebcqvs6hz7ckfgndbydm7l3sludmd7vk4ji2d4dgsiduwoo on Calibration
+	if err != nil && len(rawReturn) > 0 {
 		return nil, err
 	}
 
