@@ -1,9 +1,10 @@
 package common
 
 import (
+	"time"
+
 	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/golem/pkg/zcache"
-	"time"
 )
 
 type DataSourceConfig struct {
@@ -18,5 +19,6 @@ type DataSource struct {
 
 type CacheConfig struct {
 	*zcache.CombinedConfig
-	Ttl time.Duration
+	Ttl            time.Duration
+	LatestCacheTTL time.Duration
 }
