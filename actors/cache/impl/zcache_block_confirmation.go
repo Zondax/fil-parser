@@ -61,33 +61,55 @@ func (m *ZCacheBlockConfirmation) StoreAddressInfo(info types.AddressInfo) {
 }
 
 func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
-	if canonical {
-		return m.offChainCanonical.GetActorCode(address, key)
+	// try canonical first
+	code, err := m.offChainCanonical.GetActorCode(address, key)
+	if err == nil {
+		return code, nil
 	}
-	return m.offChainLatest.GetActorCode(address, key)
+	if !canonical {
+		// try latest
+		return m.offChainLatest.GetActorCode(address, key)
+	}
+	return "", err
 }
 
 func (m *ZCacheBlockConfirmation) GetRobustAddress(address address.Address, canonical bool) (string, error) {
-	if canonical {
-		return m.offChainCanonical.GetRobustAddress(address)
+	// try canonical first
+	robust, err := m.offChainCanonical.GetRobustAddress(address)
+	if err == nil {
+		return robust, nil
 	}
-	return m.offChainLatest.GetRobustAddress(address)
+	if !canonical {
+		// try latest
+		return m.offChainLatest.GetRobustAddress(address)
+	}
+	return "", err
 }
 
 func (m *ZCacheBlockConfirmation) GetShortAddress(address address.Address, canonical bool) (string, error) {
-	if canonical {
-		return m.offChainCanonical.GetShortAddress(address)
+	// try canonical first
+	short, err := m.offChainCanonical.GetShortAddress(address)
+	if err == nil {
+		return short, nil
 	}
-
-	return m.offChainLatest.GetShortAddress(address)
+	if !canonical {
+		// try latest
+		return m.offChainLatest.GetShortAddress(address)
+	}
+	return "", err
 }
 
 func (m *ZCacheBlockConfirmation) GetEVMSelectorSig(ctx context.Context, selectorHash string, canonical bool) (string, error) {
-	if canonical {
-		return m.offChainCanonical.GetEVMSelectorSig(ctx, selectorHash)
+	// try canonical first
+	selectorSig, err := m.offChainCanonical.GetEVMSelectorSig(ctx, selectorHash)
+	if err == nil {
+		return selectorSig, nil
 	}
-
-	return m.offChainLatest.GetEVMSelectorSig(ctx, selectorHash)
+	if !canonical {
+		// try latest
+		return m.offChainLatest.GetEVMSelectorSig(ctx, selectorHash)
+	}
+	return "", err
 }
 
 func (m *ZCacheBlockConfirmation) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string, canonical bool) error {
