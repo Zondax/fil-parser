@@ -77,9 +77,9 @@ func (_m *IActorsCache) GetActorCode(add address.Address, key types.TipSetKey, o
 	return r0, r1
 }
 
-// GetEVMSelectorSig provides a mock function with given fields: ctx, selectorHash
-func (_m *IActorsCache) GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error) {
-	ret := _m.Called(ctx, selectorHash)
+// GetEVMSelectorSig provides a mock function with given fields: ctx, selectorHash, canonical
+func (_m *IActorsCache) GetEVMSelectorSig(ctx context.Context, selectorHash string, canonical bool) (string, error) {
+	ret := _m.Called(ctx, selectorHash, canonical)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetEVMSelectorSig")
@@ -87,17 +87,17 @@ func (_m *IActorsCache) GetEVMSelectorSig(ctx context.Context, selectorHash stri
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
-		return rf(ctx, selectorHash)
+	if rf, ok := ret.Get(0).(func(context.Context, string, bool) (string, error)); ok {
+		return rf(ctx, selectorHash, canonical)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
-		r0 = rf(ctx, selectorHash)
+	if rf, ok := ret.Get(0).(func(context.Context, string, bool) string); ok {
+		r0 = rf(ctx, selectorHash, canonical)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, selectorHash)
+	if rf, ok := ret.Get(1).(func(context.Context, string, bool) error); ok {
+		r1 = rf(ctx, selectorHash, canonical)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -238,17 +238,17 @@ func (_m *IActorsCache) StoreAddressInfo(info fil_parsertypes.AddressInfo) {
 	_m.Called(info)
 }
 
-// StoreEVMSelectorSig provides a mock function with given fields: ctx, selectorHash, selectorSig
-func (_m *IActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorHash string, selectorSig string) error {
-	ret := _m.Called(ctx, selectorHash, selectorSig)
+// StoreEVMSelectorSig provides a mock function with given fields: ctx, selectorHash, selectorSig, canonical
+func (_m *IActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorHash string, selectorSig string, canonical bool) error {
+	ret := _m.Called(ctx, selectorHash, selectorSig, canonical)
 
 	if len(ret) == 0 {
 		panic("no return value specified for StoreEVMSelectorSig")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, selectorHash, selectorSig)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool) error); ok {
+		r0 = rf(ctx, selectorHash, selectorSig, canonical)
 	} else {
 		r0 = ret.Error(0)
 	}

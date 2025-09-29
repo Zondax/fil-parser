@@ -404,8 +404,8 @@ func (h *Helper) CheckCommonMethods(msg *parser.LotusMessage, height int64, key 
 	return "", nil
 }
 
-func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
-	s, err := h.actorCache.GetEVMSelectorSig(ctx, selectorID)
+func (h *Helper) GetEVMSelectorSig(ctx context.Context, selectorID string, canonical bool) (string, error) {
+	s, err := h.actorCache.GetEVMSelectorSig(ctx, selectorID, canonical)
 	if err != nil {
 		_ = h.metrics.UpdateGetEvmSelectorSigMetric()
 	}

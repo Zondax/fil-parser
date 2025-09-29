@@ -271,7 +271,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*
 
 	for idx, ethLog := range eventsData.EthLogs {
 		// #nosec G115
-		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx))
+		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx), eventsData.Canonical)
 		if err != nil {
 			_ = p.metrics.UpdateParseEthLogMetric()
 			p.logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
