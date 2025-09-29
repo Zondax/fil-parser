@@ -27,6 +27,19 @@ const (
 	isNotSuccess   = false
 )
 
+const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
+
+// FourBytesSignatureResult represents the response from SignatureDBURL
+type FourBytesSignatureResult struct {
+	Results []struct {
+		HexSignature  string `json:"hex_signature"`
+		TextSignature string `json:"text_signature"`
+	} `json:"results"`
+	Count    int    `json:"count"`
+	Next     string `json:"next"`
+	Previous string `json:"previous"`
+}
+
 type NodeApiResponse interface {
 	address.Address | *filTypes.Actor | *ethtypes.EthHash | *filTypes.TipSet
 }

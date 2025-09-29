@@ -3,7 +3,6 @@ package impl
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/filecoin-project/go-address"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -24,7 +23,7 @@ func (m *ZCacheBlockConfirmation) NewImpl(source common.DataSource, logger *logg
 	if err := m.offChainCanonical.NewImpl(source, logger, metrics); err != nil {
 		return err
 	}
-	source.Config.Cache.Ttl = time.Minute * 30
+	source.Config.Cache.Ttl = source.Config.Cache.LatestCacheTTL
 	source.Config.Cache.GlobalPrefix = fmt.Sprintf("%s-%s", "latest", source.Config.Cache.GlobalPrefix)
 	m.offChainLatest = &ZCache{}
 	if err := m.offChainLatest.NewImpl(source, logger, metrics); err != nil {
@@ -62,69 +61,40 @@ func (m *ZCacheBlockConfirmation) StoreAddressInfo(info types.AddressInfo) {
 }
 
 func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
-	shortAddress, err := m.offChainCanonical.GetActorCode(address, key)
-	if err == nil {
-		return shortAddress, nil
+	if canonical {
+		return m.offChainCanonical.GetActorCode(address, key)
 	}
-
-	shortAddress, err = m.offChainLatest.GetActorCode(address, key)
-	if err == nil {
-		return shortAddress, nil
-	}
-
-	return "", common.ErrKeyNotFound
+	return m.offChainLatest.GetActorCode(address, key)
 }
 
-func (m *ZCacheBlockConfirmation) GetRobustAddress(address address.Address, _ bool) (string, error) {
-	robustAddress, err := m.offChainLatest.GetRobustAddress(address)
-	if err == nil {
-		return robustAddress, nil
+func (m *ZCacheBlockConfirmation) GetRobustAddress(address address.Address, canonical bool) (string, error) {
+	if canonical {
+		return m.offChainCanonical.GetRobustAddress(address)
 	}
-
-	robustAddress, err = m.offChainCanonical.GetRobustAddress(address)
-	if err == nil {
-		return robustAddress, nil
-	}
-
-	return "", common.ErrKeyNotFound
+	return m.offChainLatest.GetRobustAddress(address)
 }
 
-func (m *ZCacheBlockConfirmation) GetShortAddress(address address.Address, _ bool) (string, error) {
-	shortAddress, err := m.offChainLatest.GetShortAddress(address)
-	if err == nil {
-		return shortAddress, nil
+func (m *ZCacheBlockConfirmation) GetShortAddress(address address.Address, canonical bool) (string, error) {
+	if canonical {
+		return m.offChainCanonical.GetShortAddress(address)
 	}
 
-	shortAddress, err = m.offChainCanonical.GetShortAddress(address)
-	if err == nil {
-		return shortAddress, nil
-	}
-
-	return "", common.ErrKeyNotFound
+	return m.offChainLatest.GetShortAddress(address)
 }
 
-func (m *ZCacheBlockConfirmation) GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error) {
-	selectorSig, err := m.offChainLatest.GetEVMSelectorSig(ctx, selectorHash)
-	if err == nil {
-		return selectorSig, nil
+func (m *ZCacheBlockConfirmation) GetEVMSelectorSig(ctx context.Context, selectorHash string, canonical bool) (string, error) {
+	if canonical {
+		return m.offChainCanonical.GetEVMSelectorSig(ctx, selectorHash)
 	}
 
-	selectorSig, err = m.offChainCanonical.GetEVMSelectorSig(ctx, selectorHash)
-	if err == nil {
-		return selectorSig, nil
-	}
-
-	return "", common.ErrKeyNotFound
+	return m.offChainLatest.GetEVMSelectorSig(ctx, selectorHash)
 }
 
-func (m *ZCacheBlockConfirmation) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error {
-	if err := m.offChainLatest.StoreEVMSelectorSig(ctx, selectorHash, selectorSig); err != nil {
-		return fmt.Errorf("error adding selector_sig to cache: %w", err)
+func (m *ZCacheBlockConfirmation) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string, canonical bool) error {
+	if canonical {
+		return m.offChainCanonical.StoreEVMSelectorSig(ctx, selectorHash, selectorSig)
 	}
-	if err := m.offChainCanonical.StoreEVMSelectorSig(ctx, selectorHash, selectorSig); err != nil {
-		return fmt.Errorf("error adding selector_sig to cache: %w", err)
-	}
-	return nil
+	return m.offChainLatest.StoreEVMSelectorSig(ctx, selectorHash, selectorSig)
 }
 
 func (m *ZCacheBlockConfirmation) ClearBadAddressCache() {

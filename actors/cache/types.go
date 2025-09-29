@@ -14,16 +14,14 @@ import (
 	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
-const SignatureDBURL = "https://www.4byte.directory/api/v1/event-signatures/"
-
 type IActorsCache interface {
 	NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error
 	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (string, error)
 	GetRobustAddress(add address.Address, canonical bool) (string, error)
 	GetShortAddress(add address.Address, canonical bool) (string, error)
 	StoreAddressInfo(info types.AddressInfo)
-	GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error)
-	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error
+	GetEVMSelectorSig(ctx context.Context, selectorHash string, canonical bool) (string, error)
+	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string, canonical bool) error
 	IsSystemActor(addr string) bool
 	IsGenesisActor(addr string) bool
 	BackFill() error
@@ -39,15 +37,4 @@ type ActorsCache struct {
 	httpClient    *resty.Client
 	networkName   string
 	metrics       *cacheMetrics.ActorsCacheMetricsClient
-}
-
-// FourBytesSignatureResult represents the response from SignatureDBURL
-type FourBytesSignatureResult struct {
-	Results []struct {
-		HexSignature  string `json:"hex_signature"`
-		TextSignature string `json:"text_signature"`
-	} `json:"results"`
-	Count    int    `json:"count"`
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
 }
