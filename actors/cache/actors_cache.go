@@ -154,21 +154,6 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 }
 
 func (a *ActorsCache) GetRobustAddress(add address.Address, canonical bool) (string, error) {
-	addStr := add.String()
-	// check if the address is a system actor ( no robust address)
-	if _, ok := SystemActorsId[addStr]; ok {
-		return addStr, nil
-	}
-	// check if the address is a genesis actor ( no robust address)
-	if _, ok := GenesisActorsId[addStr]; ok {
-		return addStr, nil
-	}
-	// check if the address is a calibration genesis actor ( no robust address)
-	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
-		if _, ok := CalibrationActorsId[addStr]; ok {
-			return addStr, nil
-		}
-	}
 
 	robust, err := a.getRobustAddress(add, canonical)
 	if err != nil {
@@ -271,6 +256,21 @@ func (a *ActorsCache) getShortAddress(add address.Address, canonical bool) (stri
 
 func (a *ActorsCache) getRobustAddress(add address.Address, canonical bool) (string, error) {
 	addStr := add.String()
+	// check if the address is a system actor ( no robust address)
+	if _, ok := SystemActorsId[addStr]; ok {
+		return addStr, nil
+	}
+	// check if the address is a genesis actor ( no robust address)
+	if _, ok := GenesisActorsId[addStr]; ok {
+		return addStr, nil
+	}
+	// check if the address is a calibration genesis actor ( no robust address)
+	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
+		if _, ok := CalibrationActorsId[addStr]; ok {
+			return addStr, nil
+		}
+	}
+
 	robust, err := a.offChainCache.GetRobustAddress(add, canonical)
 	if err == nil {
 		return robust, nil
@@ -291,7 +291,7 @@ func (a *ActorsCache) getRobustAddress(add address.Address, canonical bool) (str
 
 func (a *ActorsCache) getActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (string, error) {
 	addStr := add.String()
-	actorCode, err := a.offChainCache.GetActorCode(add, key, onChainOnly, true)
+	actorCode, err := a.offChainCache.GetActorCode(add, key, onChainOnly, canonical)
 	if err == nil {
 		return actorCode, nil
 	}
@@ -301,7 +301,7 @@ func (a *ActorsCache) getActorCode(add address.Address, key filTypes.TipSetKey, 
 		return "", fmt.Errorf(" %w : %s is flagged as bad", ErrBadAddress, addStr)
 	}
 
-	actorCode, err = a.onChainCache.GetActorCode(add, key, onChainOnly, true)
+	actorCode, err = a.onChainCache.GetActorCode(add, key, onChainOnly, canonical)
 	if err == nil {
 		return actorCode, nil
 	}
