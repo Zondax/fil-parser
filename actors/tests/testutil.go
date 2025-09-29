@@ -41,8 +41,8 @@ func getActorParser(actorParserFn any) actors.ActorParserInterface {
 
 	cache := &mocks.IActorsCache{}
 	cache.On("StoreAddressInfo", mock.Anything).Return(nil)
-	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything).Return(actorCid.String(), nil)
-	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything).Return(manifest.MultisigKey, nil)
+	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(actorCid.String(), nil)
+	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(manifest.MultisigKey, nil)
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(lotusClient)
 	helper := helper2.NewHelper(lib, cache, lotusClient, nil, metrics.NewNoopMetricsClient())
