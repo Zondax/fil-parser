@@ -67,7 +67,6 @@ func (m *ZCacheBlockConfirmation) StoreAddressInfo(info types.AddressInfo) {
 }
 
 func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
-	fmt.Println(address.String())
 	// try canonical first
 	code, err := m.offChainCanonical.GetActorCode(address, key)
 	if err == nil {
