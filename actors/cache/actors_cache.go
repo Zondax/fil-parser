@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -91,6 +90,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 	defer setupMu.Unlock()
 
 	var offChainCache IActorsCache
+
 	var onChainCache impl.OnChain
 
 	logger = logger2.GetSafeLogger(logger)
@@ -101,7 +101,7 @@ func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metri
 		return nil, err
 	}
 
-	var combinedCache impl.ZCache
+	var combinedCache impl.ZCacheBlockConfirmation
 	if err = combinedCache.NewImpl(dataSource, logger, metrics, backoff); err != nil {
 		logger.Errorf("[ActorsCache] - Unable to initialize combined cache: %s", err.Error())
 		return nil, err
@@ -126,23 +126,10 @@ func (a *ActorsCache) ClearBadAddressCache() {
 	a.badAddress.Clear()
 }
 
-func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly bool) (string, error) {
+func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (string, error) {
 	addStr := add.String()
-	// Check if this address is flagged as bad
-	if a.isBadAddress(add) {
-		return "", fmt.Errorf(" %w : %s is flagged as bad", ErrBadAddress, addStr)
-	}
 
-	if !onChainOnly {
-		actorCode, err := a.offChainCache.GetActorCode(add, key, onChainOnly)
-		if err == nil {
-			return actorCode, nil
-		}
-		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", addStr)
-	}
-
-	// Try on-chain cache
-	actorCode, err := a.onChainCache.GetActorCode(add, key, onChainOnly)
+	store, actorCode, err := a.getActorCode(add, key, onChainOnly, canonical)
 	if err != nil {
 		a.logger.Errorf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		if strings.Contains(err.Error(), "actor not found") {
@@ -152,9 +139,14 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 		return "", err
 	}
 
+	if !store {
+		return actorCode, nil
+	}
+
 	// Code is not cached, store it
 	err = a.storeActorCode(add, types.AddressInfo{
-		ActorCid: actorCode,
+		ActorCid:    actorCode,
+		IsCanonical: canonical,
 	})
 
 	if err != nil {
@@ -165,46 +157,20 @@ func (a *ActorsCache) GetActorCode(add address.Address, key filTypes.TipSetKey, 
 	return actorCode, nil
 }
 
-func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
-	addStr := add.String()
-	// check if the address is a system actor ( no robust address)
-	if _, ok := SystemActorsId[addStr]; ok {
-		return addStr, nil
-	}
-	// check if the address is a genesis actor ( no robust address)
-	if _, ok := GenesisActorsId[addStr]; ok {
-		return addStr, nil
-	}
-	// check if the address is a calibration genesis actor ( no robust address)
-	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
-		if _, ok := CalibrationActorsId[addStr]; ok {
-			return addStr, nil
-		}
-	}
-
-	// Try offline store cache
-	robust, err := a.offChainCache.GetRobustAddress(add)
-	if err == nil {
-		return robust, nil
-	}
-
-	// Check if this is a flagged address
-	if a.isBadAddress(add) {
-		return "", fmt.Errorf("%w: address %s is flagged as bad", ErrBadAddress, addStr)
-	}
-
-	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying on-chain cache", addStr)
-
-	// Try on-chain cache
-	robust, err = a.onChainCache.GetRobustAddress(add)
+func (a *ActorsCache) GetRobustAddress(add address.Address, canonical bool) (string, error) {
+	store, robust, err := a.getRobustAddress(add, canonical)
 	if err != nil {
-		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
+	}
+
+	if !store {
+		return robust, nil
 	}
 
 	// Robust address is not cached, store it
 	err = a.storeRobustAddress(add, types.AddressInfo{
-		Robust: robust,
+		Robust:      robust,
+		IsCanonical: canonical,
 	})
 
 	if err != nil {
@@ -215,31 +181,19 @@ func (a *ActorsCache) GetRobustAddress(add address.Address) (string, error) {
 	return robust, nil
 }
 
-func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
-	addStr := add.String()
-	// Try kv store cache
-	short, err := a.offChainCache.GetShortAddress(add)
-	if err == nil {
-		return short, nil
-	}
-
-	// Check if this is a flagged address
-	if a.isBadAddress(add) {
-		return "", fmt.Errorf("address %s is flagged as bad", addStr)
-	}
-
-	a.logger.Debugf("[ActorsCache] - Unable to retrieve short address from offchain cache for address %s. Trying on-chain cache", addStr)
-
-	// Try on-chain cache
-	short, err = a.onChainCache.GetShortAddress(add)
+func (a *ActorsCache) GetShortAddress(add address.Address, canonical bool) (string, error) {
+	store, short, err := a.getShortAddress(add, canonical)
 	if err != nil {
-		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from node: %s", err.Error())
 		return "", err
 	}
 
+	if !store {
+		return short, nil
+	}
 	// Robust address is not cached, store it
 	err = a.storeShortAddress(add, types.AddressInfo{
-		Short: short,
+		Short:       short,
+		IsCanonical: canonical,
 	})
 
 	if err != nil {
@@ -250,45 +204,16 @@ func (a *ActorsCache) GetShortAddress(add address.Address) (string, error) {
 	return short, nil
 }
 
-func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string) (string, error) {
-	selectorSig, err := a.offChainCache.GetEVMSelectorSig(ctx, selectorID)
+func (a *ActorsCache) GetEVMSelectorSig(ctx context.Context, selectorID string, canonical bool) (string, error) {
+	selectorSig, err := a.getEVMSelectorSig(ctx, selectorID, canonical)
 	if err != nil {
 		return "", err
 	}
 
-	if selectorSig != "" {
-		return selectorSig, nil
-	}
-
-	// not found in cache
-	resp, err := a.httpClient.NewRequest().
-		SetQueryParam("hex_signature", selectorID).
-		SetContext(ctx).
-		SetResult(&FourBytesSignatureResult{}).
-		Get(SignatureDBURL)
-	if err != nil {
-		return selectorSig, err
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		return selectorSig, fmt.Errorf("error from 4bytes: %v", resp.Error())
-	}
-
-	signatureData, ok := resp.Result().(*FourBytesSignatureResult)
-	if !ok {
-		return selectorSig, errors.New("error asserting result to SignatureResult")
-	}
-
-	if len(signatureData.Results) == 0 {
-		return selectorSig, fmt.Errorf("signature not found: %s", selectorID)
-	}
-
-	sig := signatureData.Results[0].TextSignature
-
-	if err := a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig); err != nil {
+	if err := a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, selectorSig, canonical); err != nil {
 		return selectorSig, fmt.Errorf("error adding selector_sig to cache: %w", err)
 	}
-	return sig, nil
+	return selectorSig, nil
 }
 
 // IsSystemActor checks if addr is a system actor as defined here:
@@ -302,50 +227,146 @@ func (a *ActorsCache) IsGenesisActor(addr string) bool {
 	return GenesisActorsId[addr]
 }
 
-func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string) error {
-	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig)
+func (a *ActorsCache) getEVMSelectorSig(ctx context.Context, selectorID string, canonical bool) (string, error) {
+	selectorSig, err := a.offChainCache.GetEVMSelectorSig(ctx, selectorID, canonical)
+	if err == nil {
+		return selectorSig, nil
+	}
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve selector_sig from offchain cache for selector_id %s. Trying onchain cache", selectorID)
+	// Try onchain
+	selectorSig, err = a.onChainCache.GetEVMSelectorSig(ctx, selectorID, canonical)
+	if err == nil {
+		return selectorSig, nil
+	}
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve selector_sig from onchain cache for selector_id %s", selectorID)
+	return "", err
+}
+
+func (a *ActorsCache) getShortAddress(add address.Address, canonical bool) (store bool, shortAddress string, err error) {
+	addStr := add.String()
+	// Try canonical cache
+	short, err := a.offChainCache.GetShortAddress(add, canonical)
+	if err == nil {
+		return false, short, nil
+	}
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve short address from offchain cache for address %s. Trying onchain cache", addStr)
+	// Try onchain
+	// Check if this is a flagged address
+	if a.isBadAddress(add) {
+		return false, "", fmt.Errorf("address %s is flagged as bad", addStr)
+	}
+	short, err = a.onChainCache.GetShortAddress(add, canonical)
+	if err != nil {
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve short address from onchain cache for address %s.", addStr)
+		return false, "", err
+	}
+
+	return true, short, nil
+}
+
+func (a *ActorsCache) getRobustAddress(add address.Address, canonical bool) (store bool, robustAddr string, err error) {
+	addStr := add.String()
+	// check if the address is a system actor ( no robust address)
+	if _, ok := SystemActorsId[addStr]; ok {
+		return false, addStr, nil
+	}
+	// check if the address is a genesis actor ( no robust address)
+	if _, ok := GenesisActorsId[addStr]; ok {
+		return false, addStr, nil
+	}
+	// check if the address is a calibration genesis actor ( no robust address)
+	if tools.ParseRawNetworkName(a.networkName) == tools.CalibrationNetwork {
+		if _, ok := CalibrationActorsId[addStr]; ok {
+			return false, addStr, nil
+		}
+	}
+
+	robust, err := a.offChainCache.GetRobustAddress(add, canonical)
+	if err == nil {
+		return false, robust, nil
+	}
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying onchain cache", addStr)
+	// Try onchain
+	if a.isBadAddress(add) {
+		return false, "", fmt.Errorf("%w: address %s is flagged as bad", ErrBadAddress, addStr)
+	}
+	robust, err = a.onChainCache.GetRobustAddress(add, canonical)
+	if err != nil {
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from onchain cache for address %s.", addStr)
+		return false, "", err
+	}
+
+	return true, robust, nil
+}
+
+func (a *ActorsCache) getActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (store bool, actorCode string, err error) {
+	addStr := add.String()
+	actorCode, err = a.offChainCache.GetActorCode(add, key, onChainOnly, canonical)
+	if err == nil {
+		return false, actorCode, nil
+	}
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from offchain cache for address %s. Trying on-chain cache", addStr)
+	// Try onchain
+	if a.isBadAddress(add) {
+		return false, "", fmt.Errorf(" %w : %s is flagged as bad", ErrBadAddress, addStr)
+	}
+
+	actorCode, err = a.onChainCache.GetActorCode(add, key, onChainOnly, canonical)
+	if err != nil {
+		a.logger.Debugf("[ActorsCache] - Unable to retrieve actor code from onchain cache for address %s.", addStr)
+		return false, "", err
+	}
+
+	return true, actorCode, nil
+}
+
+func (a *ActorsCache) StoreEVMSelectorSig(ctx context.Context, selectorID string, sig string, canonical bool) error {
+	return a.offChainCache.StoreEVMSelectorSig(ctx, selectorID, sig, canonical)
 }
 
 func (a *ActorsCache) storeActorCode(add address.Address, info types.AddressInfo) error {
-	shortAddress, err := a.GetShortAddress(add)
+	shortAddress, err := a.GetShortAddress(add, info.IsCanonical)
 	if err != nil {
 		return err
 	}
 
 	a.offChainCache.StoreAddressInfo(types.AddressInfo{
-		Short:    shortAddress,
-		ActorCid: info.ActorCid,
+		Short:       shortAddress,
+		ActorCid:    info.ActorCid,
+		IsCanonical: info.IsCanonical,
 	})
 
 	return nil
 }
 
 func (a *ActorsCache) storeShortAddress(add address.Address, info types.AddressInfo) error {
-	robustAddress, err := a.GetRobustAddress(add)
+	_, robustAddress, err := a.getRobustAddress(add, info.IsCanonical)
 	if err != nil {
 		return err
 	}
 
 	a.offChainCache.StoreAddressInfo(types.AddressInfo{
-		Short:  info.Short,
-		Robust: robustAddress,
+		Short:       info.Short,
+		Robust:      robustAddress,
+		IsCanonical: info.IsCanonical,
 	})
 
 	return nil
 }
 
 func (a *ActorsCache) storeRobustAddress(add address.Address, info types.AddressInfo) error {
-	shortAddress, err := a.GetShortAddress(add)
+	_, shortAddress, err := a.getShortAddress(add, info.IsCanonical)
 	if err != nil {
 		return err
 	}
 
 	a.offChainCache.StoreAddressInfo(types.AddressInfo{
-		Short:  shortAddress,
-		Robust: info.Robust,
+		Short:       shortAddress,
+		Robust:      info.Robust,
+		IsCanonical: info.IsCanonical,
 	})
-
 	return nil
+
 }
 
 func (a *ActorsCache) isBadAddress(add address.Address) bool {

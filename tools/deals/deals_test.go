@@ -54,8 +54,8 @@ func setupTest(_ *testing.T, network string) deals.EventGenerator {
 
 	cache := &mocks.IActorsCache{}
 	cache.On("StoreAddressInfo", mock.Anything).Return(nil)
-	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything).Return(actorCidStr, nil)
-	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything).Return(manifest.MinerKey, nil)
+	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(actorCidStr, nil)
+	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(manifest.MinerKey, nil)
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(node)
 	helper := helper.NewHelper(lib, cache, node, logger, metrics)

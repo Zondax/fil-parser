@@ -178,7 +178,7 @@ Still needs to parse:
 
 	Receive
 */
-func (p *Msig) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Msig) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var ret map[string]interface{}
 	var err error
 	switch txType {
@@ -188,7 +188,7 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 		resp := actors.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return)
+		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return, canonical)
 	case parser.MethodApprove, parser.MethodApproveExported:
 		ret, err = p.Approve(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodCancel, parser.MethodCancelExported:

@@ -48,7 +48,7 @@ func (eg *eventGenerator) createDataCapTokenEvents(ctx context.Context, tx *type
 			return nil, nil, fmt.Errorf("error parsing return value: %w", err)
 		}
 
-		tokenEvent, err := eg.parseMint(ctx, tx, tipsetCid, params, returnValue)
+		tokenEvent, err := eg.parseMint(ctx, tx, tipsetCid, params, returnValue, true)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error parsing mint: %w", err)
 		}
@@ -139,13 +139,13 @@ func (eg *eventGenerator) createDataCapTokenEvents(ctx context.Context, tx *type
 	return tokenEvents, allowanceEvents, nil
 }
 
-func (eg *eventGenerator) parseMint(ctx context.Context, tx *types.Transaction, tipsetCid string, params, ret map[string]interface{}) (*types.DataCapTokenEvent, error) {
+func (eg *eventGenerator) parseMint(ctx context.Context, tx *types.Transaction, tipsetCid string, params, ret map[string]interface{}, canonical bool) (*types.DataCapTokenEvent, error) {
 	to, err := common.GetItem[string](params, KeyTo, false)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing to: %w", err)
 	}
 
-	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config)
+	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config, canonical)
 	if err != nil {
 		eg.logger.Errorf("error consolidating to: %s", err)
 	}
@@ -178,7 +178,7 @@ func (eg *eventGenerator) parseDestroy(ctx context.Context, tx *types.Transactio
 		return nil, fmt.Errorf("error parsing owner: %w", err)
 	}
 
-	owner, err = common.ConsolidateAddress(owner, eg.helper, eg.logger, eg.config)
+	owner, err = common.ConsolidateAddress(owner, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating owner: %s", err)
 	}
@@ -205,7 +205,7 @@ func (eg *eventGenerator) parseTransfer(ctx context.Context, tx *types.Transacti
 	if err != nil {
 		return nil, fmt.Errorf("error parsing to: %w", err)
 	}
-	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config)
+	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating to: %s", err)
 	}
@@ -249,7 +249,7 @@ func (eg *eventGenerator) parseTransferFrom(ctx context.Context, tx *types.Trans
 	if err != nil {
 		return nil, nil, fmt.Errorf("error parsing from: %w", err)
 	}
-	from, err = common.ConsolidateAddress(from, eg.helper, eg.logger, eg.config)
+	from, err = common.ConsolidateAddress(from, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating from: %s", err)
 	}
@@ -257,7 +257,7 @@ func (eg *eventGenerator) parseTransferFrom(ctx context.Context, tx *types.Trans
 	if err != nil {
 		return nil, nil, fmt.Errorf("error parsing to: %w", err)
 	}
-	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config)
+	to, err = common.ConsolidateAddress(to, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating to: %s", err)
 	}
@@ -333,7 +333,7 @@ func (eg *eventGenerator) parseBurnFrom(ctx context.Context, tx *types.Transacti
 		return nil, nil, fmt.Errorf("error parsing owner: %w", err)
 	}
 
-	owner, err = common.ConsolidateAddress(owner, eg.helper, eg.logger, eg.config)
+	owner, err = common.ConsolidateAddress(owner, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating owner: %s", err)
 	}
@@ -375,7 +375,7 @@ func (eg *eventGenerator) parseIncreaseAndDecreaseAllowance(ctx context.Context,
 		return nil, fmt.Errorf("error parsing operator: %w", err)
 	}
 
-	operator, err = common.ConsolidateAddress(operator, eg.helper, eg.logger, eg.config)
+	operator, err = common.ConsolidateAddress(operator, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating operator: %s", err)
 	}
@@ -398,7 +398,7 @@ func (eg *eventGenerator) parseRevokeAllowance(ctx context.Context, tx *types.Tr
 		return nil, fmt.Errorf("error parsing operator: %w", err)
 	}
 
-	operator, err = common.ConsolidateAddress(operator, eg.helper, eg.logger, eg.config)
+	operator, err = common.ConsolidateAddress(operator, eg.helper, eg.logger, eg.config, true)
 	if err != nil {
 		eg.logger.Errorf("error consolidating operator: %s", err)
 	}

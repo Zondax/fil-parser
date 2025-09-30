@@ -54,7 +54,7 @@ func TestActorParserV1_InitWithParamsOrReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: nil,
-			})
+			}, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -75,7 +75,7 @@ func TestActorParserV1_Exec(t *testing.T) {
 			require.NotNil(t, msg)
 			got, addr, err := p.ParseInit(tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			})
+			}, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.NotNil(t, addr)
@@ -99,7 +99,7 @@ func TestActorParserV2_InitWithParamsOrReturn(t *testing.T) {
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: nil,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -126,7 +126,7 @@ func TestActorParserV2_Exec(t *testing.T) {
 				Params: msg.Params,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, cid.Undef, filTypes.EmptyTSK)
+			}, cid.Undef, filTypes.EmptyTSK, true)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)

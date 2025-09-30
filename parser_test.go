@@ -56,7 +56,7 @@ const (
 	ethLogPrefix      = "ethlog"
 	nativeLogPrefix   = "nativelog"
 	// nodeUrl           = "https://node-fil-mainnet-stable.zondax.ch/rpc/v1"
-	nodeUrl          = "https://node-fil-mainnet-next-light.zondax.dev/rpc/v1"
+	nodeUrl          = "https://node-fil-mainnet-light.zondax.ch/rpc/v1"
 	calibNextNodeUrl = "https://node-fil-calibration-stable.zondax.ch/rpc/v1"
 	feeType          = "fee"
 )
@@ -311,10 +311,11 @@ func TestParser_ParseTransactions(t *testing.T) {
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
-				EthLogs:  ethlogs,
-				Tipset:   tipset,
-				Traces:   traces,
-				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				EthLogs:   ethlogs,
+				Tipset:    tipset,
+				Traces:    traces,
+				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				Canonical: true,
 			}
 
 			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
@@ -425,10 +426,11 @@ func TestParser_InDepthCompare(t *testing.T) {
 			var parsedResultV2 *types.TxsParsedResult
 			go func() {
 				txsData1 := types.TxsData{
-					EthLogs:  ethlogs,
-					Tipset:   tipset,
-					Traces:   traces,
-					Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
+					EthLogs:   ethlogs,
+					Tipset:    tipset,
+					Traces:    traces,
+					Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.22"}},
+					Canonical: true,
 				}
 				defer wg.Done()
 				parsedResultV1, err1 = p1.ParseTransactions(context.Background(), txsData1)
@@ -436,10 +438,11 @@ func TestParser_InDepthCompare(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				txsData2 := types.TxsData{
-					EthLogs:  ethlogs,
-					Tipset:   tipset,
-					Traces:   traces,
-					Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}},
+					EthLogs:   ethlogs,
+					Tipset:    tipset,
+					Traces:    traces,
+					Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: "v1.23"}},
+					Canonical: true,
 				}
 				parsedResultV2, err2 = p2.ParseTransactions(context.Background(), txsData2)
 			}()
@@ -1795,10 +1798,11 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
-				EthLogs:  ethlogs,
-				Tipset:   tipset,
-				Traces:   traces,
-				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				EthLogs:   ethlogs,
+				Tipset:    tipset,
+				Traces:    traces,
+				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				Canonical: true,
 			}
 
 			parsedResult, err := p.ParseTransactions(context.Background(), txsData)
@@ -2055,10 +2059,11 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			require.NoError(t, err)
 
 			txsData := types.TxsData{
-				EthLogs:  ethlogs,
-				Tipset:   tipset,
-				Traces:   traces,
-				Metadata: types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				EthLogs:   ethlogs,
+				Tipset:    tipset,
+				Traces:    traces,
+				Metadata:  types.BlockMetadata{NodeInfo: types.NodeInfo{NodeMajorMinorVersion: tt.version}},
+				Canonical: true,
 			}
 
 			wg := sync.WaitGroup{}

@@ -2,9 +2,13 @@ package impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/filecoin-project/go-address"
@@ -23,10 +27,11 @@ const OnChainImpl = "on-chain"
 
 // OnChain implementation
 type OnChain struct {
-	Node    api.FullNode
-	logger  *logger.Logger
-	backoff *golemBackoff.BackOff
-	metrics *cacheMetrics.ActorsCacheMetricsClient
+	Node       api.FullNode
+	logger     *logger.Logger
+	backoff    *golemBackoff.BackOff
+	metrics    *cacheMetrics.ActorsCacheMetricsClient
+	httpClient *resty.Client
 }
 
 func (m *OnChain) StoreAddressInfo(info types.AddressInfo) {
@@ -48,6 +53,7 @@ func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metri
 	m.Node = source.Node
 	m.metrics = metrics
 	m.backoff = backoff
+	m.httpClient = resty.New().SetTimeout(30 * time.Second)
 
 	return nil
 }
@@ -56,7 +62,7 @@ func (m *OnChain) ImplementationType() string {
 	return OnChainImpl
 }
 
-func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
+func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _, _ bool) (string, error) {
 	actorCid, err := m.retrieveActorFromLotus(address, key)
 	if err != nil {
 		return cid.Undef.String(), err
@@ -65,7 +71,7 @@ func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, 
 	return actorCid.String(), nil
 }
 
-func (m *OnChain) GetRobustAddress(address address.Address) (string, error) {
+func (m *OnChain) GetRobustAddress(address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -85,7 +91,7 @@ func (m *OnChain) GetRobustAddress(address address.Address) (string, error) {
 	return robustAdd, nil
 }
 
-func (m *OnChain) GetShortAddress(address address.Address) (string, error) {
+func (m *OnChain) GetShortAddress(address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -193,11 +199,34 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	return key.String(), nil
 }
 
-func (m *OnChain) GetEVMSelectorSig(ctx context.Context, selectorHash string) (string, error) {
-	return "", fmt.Errorf("unimplimented")
+func (m *OnChain) GetEVMSelectorSig(ctx context.Context, selectorID string, _ bool) (string, error) {
+	resp, err := m.httpClient.NewRequest().
+		SetQueryParam("hex_signature", selectorID).
+		SetContext(ctx).
+		SetResult(&FourBytesSignatureResult{}).
+		Get(SignatureDBURL)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return "", fmt.Errorf("error from 4bytes: %v", resp.Error())
+	}
+
+	signatureData, ok := resp.Result().(*FourBytesSignatureResult)
+	if !ok {
+		return "", errors.New("error asserting result to SignatureResult")
+	}
+
+	if len(signatureData.Results) == 0 {
+		return "", fmt.Errorf("signature not found: %s", selectorID)
+	}
+
+	sig := signatureData.Results[0].TextSignature
+	return sig, nil
 }
 
-func (m *OnChain) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string) error {
+func (m *OnChain) StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string, _ bool) error {
 	return fmt.Errorf("unimplimented")
 }
 

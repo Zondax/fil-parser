@@ -67,7 +67,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 		}
 
 		// #nosec G115
-		actorName, err := common.GetActorNameFromAddress(eg.helper, addr, int64(tx.Height), tipsetKey)
+		actorName, err := common.GetActorNameFromAddress(eg.helper, addr, int64(tx.Height), tipsetKey, true)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err

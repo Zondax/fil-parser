@@ -94,7 +94,7 @@ func (*System) Methods(_ context.Context, network string, height int64) (map[abi
 	return methods, nil
 }
 
-func (s *System) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (s *System) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var resp map[string]interface{}
 	var err error
 	switch txType {

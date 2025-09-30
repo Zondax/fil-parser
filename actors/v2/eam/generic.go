@@ -32,7 +32,7 @@ func parseEamReturn[R typegen.CBORUnmarshaler](rawReturn []byte, r R) (R, error)
 	return r, nil
 }
 
-func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, params T, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, params T, r R, h *helper.Helper, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -45,13 +45,13 @@ func parseCreate[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](e *Eam, r
 	}
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(e, rawReturn, ec, metadata, msgCid, r, h)
+		return handleReturnValue(e, rawReturn, ec, metadata, msgCid, r, h, canonical)
 	}
 
 	return metadata, nil, nil
 }
 
-func parseCreateExternal[T typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func parseCreateExternal[T typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, params abi.CborBytes, r T, h *helper.Helper, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if len(rawParams) > 0 {
 		reader := bytes.NewReader(rawParams)
@@ -67,12 +67,12 @@ func parseCreateExternal[T typegen.CBORUnmarshaler](e *Eam, rawParams, rawReturn
 	}
 
 	if len(rawReturn) > 0 {
-		return handleReturnValue(e, rawReturn, ec, metadata, msgCid, r, h)
+		return handleReturnValue(e, rawReturn, ec, metadata, msgCid, r, h, canonical)
 	}
 	return metadata, nil, nil
 }
 
-func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, ec exitcode.ExitCode, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper) (map[string]interface{}, *types.AddressInfo, error) {
+func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, ec exitcode.ExitCode, metadata map[string]interface{}, msgCid cid.Cid, r R, h *helper.Helper, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	createReturn, err := parseEamReturn(rawReturn, r)
 	if err != nil {
 		return nil, nil, err
@@ -85,6 +85,7 @@ func handleReturnValue[R typegen.CBORUnmarshaler](e *Eam, rawReturn []byte, ec e
 	}
 	metadata[parser.EthHashKey] = ethHash
 
+	createdEvmActor.IsCanonical = canonical
 	if ec.IsSuccess() {
 		h.GetActorsCache().StoreAddressInfo(*createdEvmActor)
 	}
