@@ -285,7 +285,7 @@ func (a *ActorsCache) getRobustAddress(add address.Address, canonical bool) (sto
 	if err == nil {
 		return false, robust, nil
 	}
-	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying latest cache", addStr)
+	a.logger.Debugf("[ActorsCache] - Unable to retrieve robust address from offchain cache for address %s. Trying onchain cache", addStr)
 	// Try onchain
 	if a.isBadAddress(add) {
 		return false, "", fmt.Errorf("%w: address %s is flagged as bad", ErrBadAddress, addStr)

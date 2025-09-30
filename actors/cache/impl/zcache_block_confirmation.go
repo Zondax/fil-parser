@@ -23,10 +23,16 @@ func (m *ZCacheBlockConfirmation) NewImpl(source common.DataSource, logger *logg
 	if err := m.offChainCanonical.NewImpl(source, logger, metrics); err != nil {
 		return err
 	}
-	source.Config.Cache.Ttl = source.Config.Cache.LatestCacheTTL
-	source.Config.Cache.GlobalPrefix = fmt.Sprintf("%s-%s", "latest", source.Config.Cache.GlobalPrefix)
+	latestSource := common.DataSource{
+		Node: source.Node,
+		Config: common.DataSourceConfig{
+			Cache: source.Config.Cache.Copy(),
+		},
+	}
+	latestSource.Config.Cache.Ttl = source.Config.Cache.LatestCacheTTL
+	latestSource.Config.Cache.GlobalPrefix = fmt.Sprintf("%s-%s", "latest", source.Config.Cache.GlobalPrefix)
 	m.offChainLatest = &ZCache{}
-	if err := m.offChainLatest.NewImpl(source, logger, metrics); err != nil {
+	if err := m.offChainLatest.NewImpl(latestSource, logger, metrics); err != nil {
 		return err
 	}
 
@@ -61,6 +67,7 @@ func (m *ZCacheBlockConfirmation) StoreAddressInfo(info types.AddressInfo) {
 }
 
 func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
+	fmt.Println(address.String())
 	// try canonical first
 	code, err := m.offChainCanonical.GetActorCode(address, key)
 	if err == nil {
