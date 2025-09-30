@@ -46,7 +46,7 @@ func TestActorParserV1_EamCreates(t *testing.T) {
 			require.NotNil(t, msg)
 			got, _, err := p.ParseEam(tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, msg.Cid)
+			}, msg.Cid, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")
@@ -76,7 +76,7 @@ func TestActorParserV2_EamCreates(t *testing.T) {
 
 			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
-			}, msg.Cid, filTypes.EmptyTSK)
+			}, msg.Cid, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, parser.ParamsKey, "Params could no be found in metadata")

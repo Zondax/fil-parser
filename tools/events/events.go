@@ -5,8 +5,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/zondax/golem/pkg/logger"
 	"strings"
+
+	"github.com/zondax/golem/pkg/logger"
 
 	"github.com/zondax/fil-parser/parser"
 
@@ -126,7 +127,7 @@ func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEven
 	return event, nil
 }
 
-func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper, logIndex uint64) (*types.Event, error) {
+func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *helper.Helper, logIndex uint64, canonical bool) (*types.Event, error) {
 	event := &types.Event{}
 	event.TxCid = ethLog.TransactionCid
 	event.Emitter = ethLog.Address.String()
@@ -142,7 +143,7 @@ func ParseEthLog(tipset *types.ExtendedTipSet, ethLog types.EthLog, helper *help
 
 	if event.SelectorID != "" {
 		var err error
-		event.SelectorSig, err = helper.GetEVMSelectorSig(context.Background(), event.SelectorID)
+		event.SelectorSig, err = helper.GetEVMSelectorSig(context.Background(), event.SelectorID, canonical)
 		if err != nil {
 			logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
 		}

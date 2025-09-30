@@ -19,7 +19,6 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 	metrics2 "github.com/zondax/golem/pkg/metrics"
 	"github.com/zondax/golem/pkg/zcache"
-	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 )
 
 const (
@@ -44,7 +43,7 @@ type ZCache struct {
 	metrics            *cacheMetrics.ActorsCacheMetricsClient
 }
 
-func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, _ *golemBackoff.BackOff) error {
+func (m *ZCache) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient) error {
 	var newImplMu sync.Mutex
 	newImplMu.Lock()
 	defer newImplMu.Unlock()
@@ -162,33 +161,18 @@ func (m *ZCache) initMapsLocalCache() error {
 	); err != nil {
 		return fmt.Errorf("error creating selectorHashSigMap for local zcache, err: %s", err)
 	}
+
+	if m.shortCidMap, err = zcache.NewLocalCache(&zcache.LocalConfig{
+		Prefix:       Short2CidMapPrefix,
+		Logger:       m.logger,
+		MetricServer: metrics2.NewNoopMetrics()},
+	); err != nil {
+		return fmt.Errorf("error creating shortCidMap for local zcache, err: %w", err)
+	}
 	return nil
 }
 
-func (m *ZCache) ImplementationType() string {
-	return ZCacheImpl + "/" + m.cacheType
-}
-
-func (m *ZCache) BackFill() error {
-	// Nothing to do
-	return nil
-}
-
-// IsSystemActor returns false for all ZCache implementations as the system actors list is maintained by the helper.
-// Use the ActorsCache directly.
-// Only required to satisfy IActorsCache.
-func (m *ZCache) IsSystemActor(_ string) bool {
-	return false
-}
-
-// IsGenesisActor returns false for all ZCache implementations as the genesis actors list is maintained by the helper.
-// Use the ActorsCache directly.
-// Only required to satisfy IActorsCache.
-func (m *ZCache) IsGenesisActor(_ string) bool {
-	return false
-}
-
-func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey, _ bool) (string, error) {
+func (m *ZCache) GetActorCode(address address.Address, key filTypes.TipSetKey) (string, error) {
 	shortAddress, err := m.GetShortAddress(address)
 	if err != nil {
 		m.logger.Debugf("[ActorsCache] - short address [%s] not found, err: %s\n", address.String(), err.Error())
@@ -363,8 +347,4 @@ func (m *ZCache) tryToGetF4Address(ctx context.Context, address address.Address)
 
 	m.logger.Infof("no f4 address associated with f0 address: %s. The address might not be an EVM actor type.", f0Address)
 	return ""
-}
-
-func (m *ZCache) ClearBadAddressCache() {
-	// Nothing to do
 }

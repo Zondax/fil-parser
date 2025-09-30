@@ -235,7 +235,7 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.Even
 }
 
 func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error) {
-	multisigTxs, err := p.Helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey, tipsetKey)
+	multisigTxs, err := p.Helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey, tipsetKey, true)
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +423,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	return multisigInfos, nil
 }
 
-func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet, canonical bool) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
 	addresses := types.NewAddressInfoMap()
 	nodeFullVersion := parser.UnknownStr
 	nodeMajorMinorVersion := parser.UnknownStr
@@ -481,7 +481,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, tra
 	for _, block := range tipset.Blocks() {
 		minerAddr := block.Miner.String()
 		if consolidateAddrs {
-			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort)
+			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort, canonical)
 			if err != nil {
 				p.logger.Errorf("error consolidating miner address: %s. err: %s", block.Miner.String(), err)
 			} else {
@@ -493,7 +493,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, tra
 			Miner:    minerAddr,
 		})
 
-		addressInfo := p.Helper.GetActorAddressInfo(block.Miner, tipset.Key(), block.Height)
+		addressInfo := p.Helper.GetActorAddressInfo(block.Miner, tipset.Key(), block.Height, canonical)
 		parser.AppendToAddressesMap(addresses, addressInfo)
 	}
 	blocksBlob, _ := json.Marshal(blocksInfo)
@@ -528,19 +528,19 @@ func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *h
 		return nil, fmt.Errorf("could not parse address: %s. err: %s", addrStr, err)
 	}
 
-	shortAdd, err := helper.GetActorsCache().GetShortAddress(filAdd)
+	shortAdd, err := helper.GetActorsCache().GetShortAddress(filAdd, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get short address: %s. err: %s", addrStr, err)
 	}
-	robustAdd, err := helper.GetActorsCache().GetRobustAddress(filAdd)
+	robustAdd, err := helper.GetActorsCache().GetRobustAddress(filAdd, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get robust address: %s. err: %s", addrStr, err)
 	}
-	actorCode, err := helper.GetActorsCache().GetActorCode(filAdd, tipsetKey, false)
+	actorCode, err := helper.GetActorsCache().GetActorCode(filAdd, tipsetKey, false, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor code: %s. err: %s", addrStr, err)
 	}
-	_, actorName, err := helper.GetActorInfoFromAddress(filAdd, 0, tipsetKey)
+	_, actorName, err := helper.GetActorInfoFromAddress(filAdd, 0, tipsetKey, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor name: %s. err: %s", addrStr, err)
 	}

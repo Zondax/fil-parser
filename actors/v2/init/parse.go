@@ -10,7 +10,7 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
-func (i *Init) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, _ filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, _ filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var err error
 	metadata := make(map[string]interface{})
 	switch txType {
@@ -21,9 +21,9 @@ func (i *Init) Parse(_ context.Context, network string, height int64, txType str
 		resp, err := i.Constructor(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodExec:
-		return i.Exec(network, height, msg, msgRct.Return, msgRct.ExitCode)
+		return i.Exec(network, height, msg, msgRct.Return, msgRct.ExitCode, canonical)
 	case parser.MethodExec4:
-		return i.Exec4(network, height, msg, msgRct.Return, msgRct.ExitCode)
+		return i.Exec4(network, height, msg, msgRct.Return, msgRct.ExitCode, canonical)
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err

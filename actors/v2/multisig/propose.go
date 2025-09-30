@@ -23,6 +23,7 @@ import (
 func (m *Msig) parseInnerProposeMsg(
 	msg *parser.LotusMessage, to address.Address, network string, height int64, method abi.MethodNum,
 	proposeParams, proposeReturn []byte, key filTypes.TipSetKey, applied bool, exitCode exitcode.ExitCode,
+	canonical bool,
 ) (string, map[string]interface{}, error) {
 	proposeMsg := &parser.LotusMessage{
 		To:     to,
@@ -34,12 +35,12 @@ func (m *Msig) parseInnerProposeMsg(
 
 	proposeMsgRct := &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: proposeReturn}
 
-	actor, proposedMethod, err := m.innerProposeMethod(proposeMsg, network, height, key)
+	actor, proposedMethod, err := m.innerProposeMethod(proposeMsg, network, height, key, canonical)
 	if err != nil {
 		return "", nil, err
 	}
 
-	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, proposeMsgRct, msg.Cid, key)
+	metadata, _, err := actor.Parse(context.Background(), network, height, proposedMethod, proposeMsg, proposeMsgRct, msg.Cid, key, canonical)
 	// If the proposal didn't execute successfully, we don't return a parsing error
 	//  https://github.com/filecoin-project/ref-fvm/blob/4eae3b6e8d1858abfdb82956dc8cbf082a0cac66/shared/src/error/mod.rs#L55
 	if err != nil && (applied && exitCode == exitcode.Ok) {
@@ -54,8 +55,9 @@ func (m *Msig) parseInnerProposeMsg(
 // 2. Using the methodNameFn to get the methodName from the methodNum for the actor.
 func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
+	canonical bool,
 ) (actors.Actor, string, error) {
-	actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key)
+	actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key, canonical)
 	if err != nil {
 		return nil, "", err
 	}

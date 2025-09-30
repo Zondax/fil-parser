@@ -221,7 +221,7 @@ func (eg *eventGenerator) consolidateAddress(addrStr string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error parsing address: %w", err)
 	}
-	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort)
+	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
 	if err != nil {
 		return "", fmt.Errorf("error consolidating address: %w", err)
 	}

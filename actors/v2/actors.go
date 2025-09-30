@@ -45,7 +45,7 @@ func NewActorParser(network string, helper *helper.Helper, logger *logger.Logger
 }
 
 func (p *ActorParser) GetMetadata(ctx context.Context, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
-	height int64, key filTypes.TipSetKey) (string, map[string]interface{}, *types.AddressInfo, error) {
+	height int64, key filTypes.TipSetKey, canonical bool) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return "", metadata, nil, nil
@@ -55,7 +55,7 @@ func (p *ActorParser) GetMetadata(ctx context.Context, actorName string, txType 
 	if err != nil {
 		return actorName, nil, nil, parser.ErrNotValidActor
 	}
-	metadata, addressInfo, err := actorParser.Parse(ctx, p.network, height, txType, msg, msgRct, mainMsgCid, key)
+	metadata, addressInfo, err := actorParser.Parse(ctx, p.network, height, txType, msg, msgRct, mainMsgCid, key, canonical)
 	return actorName, metadata, addressInfo, err
 }
 

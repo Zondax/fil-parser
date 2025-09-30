@@ -25,9 +25,9 @@ const (
 	TxStatusOk = "ok"
 )
 
-func GetActorNameFromAddress(helper *helper.Helper, addr address.Address, height int64, tipsetKey filTypes.TipSetKey) (string, error) {
+func GetActorNameFromAddress(helper *helper.Helper, addr address.Address, height int64, tipsetKey filTypes.TipSetKey, canonical bool) (string, error) {
 	// #nosec G115
-	actorName, err := helper.GetActorNameFromAddress(addr, height, tipsetKey)
+	actorName, err := helper.GetActorNameFromAddress(addr, height, tipsetKey, canonical)
 	if (actorName == rosettaFilecoinLibActors.UnknownStr || actorName == "") && err != nil {
 		if errors.Is(err, cache.ErrBadAddress) {
 			// the bad address may have been set due to a previous failed request to the node
@@ -181,13 +181,13 @@ func JsonEncodedBitfieldToIDs(bitField []int) ([]uint64, error) {
 	return ids, nil
 }
 
-func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logger.Logger, config parser.Config) (string, error) {
+func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logger.Logger, config parser.Config, canonical bool) (string, error) {
 	addr, err := address.NewIDAddress(idAddress)
 	if err != nil {
 		return "", fmt.Errorf("error parsing id address: %w", err)
 	}
 	if config.ConsolidateRobustAddress {
-		consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
+		consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			return addr.String(), fmt.Errorf("error consolidating id address: %w", err)
 		}
@@ -196,13 +196,13 @@ func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logge
 	return addr.String(), nil
 }
 
-func ConsolidateAddress(addrStr string, helper *helper.Helper, logger *logger.Logger, config parser.Config) (string, error) {
+func ConsolidateAddress(addrStr string, helper *helper.Helper, logger *logger.Logger, config parser.Config, canonical bool) (string, error) {
 	if config.ConsolidateRobustAddress {
 		addr, err := address.NewFromString(addrStr)
 		if err != nil {
 			return addrStr, fmt.Errorf("error parsing address: %w", err)
 		}
-		consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort)
+		consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			return addrStr, fmt.Errorf("error consolidating address: %w", err)
 		}

@@ -90,7 +90,7 @@ func (e *EthAccount) Methods(_ context.Context, network string, height int64) (m
 	return methods, nil
 }
 
-func (e *EthAccount) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (e *EthAccount) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var resp map[string]interface{}
 	var err error
 	switch txType {

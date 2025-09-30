@@ -65,7 +65,7 @@ func (*Placeholder) Methods(_ context.Context, network string, height int64) (ma
 	return methods, nil
 }
 
-func (p *Placeholder) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Placeholder) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, mainMsgCid cid.Cid, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	resp, err := p.parsePlaceholderAny(msg.Params, msgRct.Return)
 	return resp, nil, err
 }
