@@ -182,5 +182,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
-
-replace github.com/bytedance/sonic/loader => github.com/bytedance/sonic/loader v0.2.2
