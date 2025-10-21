@@ -44,6 +44,11 @@ func parseExec[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](msg *parser
 			return metadata, nil, fmt.Errorf("error unmarshaling exec return: %w", err)
 		}
 		createdActor = setReturnParams(msg, codeCid.String(), r)
+		// also set the subAddress if it is Exec4
+		switch params := tmp.(type) {
+		case parser.Exec4Params:
+			createdActor.EthAddress = params.SubAddress
+		}
 		metadata[parser.ReturnKey] = createdActor
 	}
 
