@@ -45,8 +45,7 @@ func parseExec[T typegen.CBORUnmarshaler, R typegen.CBORUnmarshaler](msg *parser
 		}
 		createdActor = setReturnParams(msg, codeCid.String(), r)
 		// also set the subAddress if it is Exec4
-		switch params := tmp.(type) {
-		case parser.Exec4Params:
+		if params, ok := tmp.(parser.Exec4Params); ok && createdActor != nil {
 			createdActor.EthAddress = params.SubAddress
 		}
 		metadata[parser.ReturnKey] = createdActor
