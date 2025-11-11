@@ -9,6 +9,7 @@ import (
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
@@ -18,7 +19,7 @@ import (
 )
 
 type ActorParserInterface interface {
-	GetMetadata(ctx context.Context, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+	GetMetadata(ctx context.Context, nodes []api.FullNode, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 		height int64, key filTypes.TipSetKey, canonical bool) (string, map[string]interface{}, *types.AddressInfo, error)
 }
 
@@ -32,7 +33,7 @@ type Actor interface {
 
 // MethodNameFn is a function type that resolves method names for actor methods based on their method number,
 // actor type, network parameters, and other contextual information. Allows actors to use GetMethodName without an import cycle.
-type MethodNameFn func(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error)
+type MethodNameFn func(ctx context.Context, nodes []api.FullNode, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error)
 
 func ParseSend(msg *parser.LotusMessage) map[string]interface{} {
 	metadata := make(map[string]interface{})

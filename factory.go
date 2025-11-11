@@ -17,6 +17,7 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	types2 "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/zondax/fil-parser/actors/cache"
@@ -49,14 +50,14 @@ type Parser interface {
 	Version() string
 	NodeVersionsSupported() []string
 	GetConfig() parser.Config
-	ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error)
-	ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
+	ParseTransactions(ctx context.Context, nodes []api.FullNode, txsData types.TxsData) (*types.TxsParsedResult, error)
+	ParseNativeEvents(ctx context.Context, nodes []api.FullNode, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	ParseMultisigEvents(ctx context.Context, multisigTxs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error)
 	ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error)
 	ParseVerifregEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.VerifregEvents, error)
 	ParseDataCapEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DataCapEvents, error)
 	ParseDealsEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DealsEvents, error)
-	ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error)
+	ParseEthLogs(ctx context.Context, nodes []api.FullNode, eventsData types.EventsData) (*types.EventsParsedResult, error)
 	GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64, error)
 	IsNodeVersionSupported(ver string) bool
 }
@@ -76,7 +77,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
+	actorsCache, err := cache.SetupMultiNodeActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
@@ -120,7 +121,7 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
+	actorsCache, err := cache.SetupMultiNodeActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
@@ -158,7 +159,7 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}, nil
 }
 
-func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
+func (p *FilecoinParser) ParseTransactions(ctx context.Context, nodes []api.FullNode, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(txsData.Metadata)
 	if err != nil {
 		return nil, errUnknownVersion
@@ -169,9 +170,9 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", txsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version:
-		parsedResult, err = p.parserV1.ParseTransactions(ctx, txsData)
+		parsedResult, err = p.parserV1.ParseTransactions(ctx, nodes, txsData)
 	case v2.Version:
-		parsedResult, err = p.parserV2.ParseTransactions(ctx, txsData)
+		parsedResult, err = p.parserV2.ParseTransactions(ctx, nodes, txsData)
 	default:
 		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
@@ -186,7 +187,7 @@ func (p *FilecoinParser) ParseTransactions(ctx context.Context, txsData types.Tx
 	return parsedResult, nil
 }
 
-func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, nodes []api.FullNode, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(eventsData.Metadata)
 	if err != nil {
 		return nil, errUnknownVersion
@@ -197,7 +198,7 @@ func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types
 	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
-		parsedResult, err = p.parserV2.ParseNativeEvents(ctx, eventsData)
+		parsedResult, err = p.parserV2.ParseNativeEvents(ctx, nodes, eventsData)
 	default:
 		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
@@ -210,7 +211,7 @@ func (p *FilecoinParser) ParseNativeEvents(ctx context.Context, eventsData types
 	return parsedResult, nil
 }
 
-func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *FilecoinParser) ParseEthLogs(ctx context.Context, nodes []api.FullNode, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	parserVersion, err := p.translateParserVersionFromMetadata(eventsData.Metadata)
 	if err != nil {
 		return nil, errUnknownVersion
@@ -221,7 +222,7 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.Even
 	p.logger.Debugf("trace files node version: [%s] - parser to use: [%s]", eventsData.Metadata.NodeMajorMinorVersion, parserVersion)
 	switch parserVersion {
 	case v1.Version, v2.Version:
-		parsedResult, err = p.parserV2.ParseEthLogs(ctx, eventsData)
+		parsedResult, err = p.parserV2.ParseEthLogs(ctx, nodes, eventsData)
 	default:
 		p.logger.Errorf("[parser] implementation not supported: %s", parserVersion)
 		return nil, errUnknownImpl
@@ -234,8 +235,8 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, eventsData types.Even
 	return parsedResult, nil
 }
 
-func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error) {
-	multisigTxs, err := p.Helper.FilterTxsByActorType(ctx, txs, manifest.MultisigKey, tipsetKey, true)
+func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, nodes []api.FullNode, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error) {
+	multisigTxs, err := p.Helper.FilterTxsByActorType(ctx, nodes, txs, manifest.MultisigKey, tipsetKey, true)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +303,7 @@ func (p *FilecoinParser) GetBaseFee(traces []byte, metadata types.BlockMetadata,
 	return 0, errUnknownImpl
 }
 
-func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.Transaction, *types.AddressInfoMap) {
+func (p *FilecoinParser) ParseGenesis(nodes []api.FullNode, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.Transaction, *types.AddressInfoMap) {
 	postGenesisActors := parser.MainnetPostGenesisActors
 	if p.network == tools.CalibrationNetwork {
 		postGenesisActors = parser.CalibrationPostGenesisActors
@@ -325,7 +326,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 			continue
 		}
 
-		addressInfo, err := getGenesisAddressInfo(actorInfo[0], tipsetKey, p.Helper)
+		addressInfo, err := getGenesisAddressInfo(nodes, actorInfo[0], tipsetKey, p.Helper)
 		if err != nil {
 			p.logger.Errorf("genesis could not get address info: %s. err: %s", actorInfo[0], err)
 		} else {
@@ -334,7 +335,7 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 	}
 
 	for _, balance := range genesis.Actors.All {
-		addressInfo, err := getGenesisAddressInfo(balance.Key, genesisTipset.Key(), p.Helper)
+		addressInfo, err := getGenesisAddressInfo(nodes, balance.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
 			p.logger.Errorf("genesis could not get address info: %s. err: %s", balance.Key, err)
 		} else {
@@ -378,11 +379,11 @@ func (p *FilecoinParser) ParseGenesis(genesis *types.GenesisBalances, genesisTip
 	return genesisTxs, addresses
 }
 
-func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
+func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, nodes []api.FullNode, genesis *types.GenesisBalances, genesisTipset *types.ExtendedTipSet) ([]*types.MultisigInfo, error) {
 	var multisigInfos []*types.MultisigInfo
 
 	for _, actor := range genesis.Actors.All {
-		addressInfo, err := getGenesisAddressInfo(actor.Key, genesisTipset.Key(), p.Helper)
+		addressInfo, err := getGenesisAddressInfo(nodes, actor.Key, genesisTipset.Key(), p.Helper)
 		if err != nil {
 			p.logger.Errorf("multisig genesis could not get address info: %s. err: %s", actor.Key, err)
 			continue
@@ -423,7 +424,7 @@ func (p *FilecoinParser) ParseGenesisMultisig(ctx context.Context, genesis *type
 	return multisigInfos, nil
 }
 
-func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet, canonical bool) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
+func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, nodes []api.FullNode, height uint64, trace []byte, metadata types.BlockMetadata, tipset *types.ExtendedTipSet, canonical bool) (*types.BlocksTimestamp, *types.AddressInfoMap, error) {
 	addresses := types.NewAddressInfoMap()
 	nodeFullVersion := parser.UnknownStr
 	nodeMajorMinorVersion := parser.UnknownStr
@@ -481,7 +482,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, tra
 	for _, block := range tipset.Blocks() {
 		minerAddr := block.Miner.String()
 		if consolidateAddrs {
-			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(block.Miner, p.Helper, p.logger, bestEffort, canonical)
+			consolidatedMinerAddr, err := actors.ConsolidateToRobustAddress(nodes, block.Miner, p.Helper, p.logger, bestEffort, canonical)
 			if err != nil {
 				p.logger.Errorf("error consolidating miner address: %s. err: %s", block.Miner.String(), err)
 			} else {
@@ -493,7 +494,7 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, tra
 			Miner:    minerAddr,
 		})
 
-		addressInfo := p.Helper.GetActorAddressInfo(block.Miner, tipset.Key(), block.Height, canonical)
+		addressInfo := p.Helper.GetActorAddressInfo(nodes, block.Miner, tipset.Key(), block.Height, canonical)
 		parser.AppendToAddressesMap(addresses, addressInfo)
 	}
 	blocksBlob, _ := json.Marshal(blocksInfo)
@@ -522,25 +523,25 @@ func (p *FilecoinParser) ParseBlocksInfo(ctx context.Context, height uint64, tra
 
 }
 
-func getGenesisAddressInfo(addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
+func getGenesisAddressInfo(nodes []api.FullNode, addrStr string, tipsetKey types2.TipSetKey, helper *helper2.Helper) (*types.AddressInfo, error) {
 	filAdd, err := address.NewFromString(addrStr)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse address: %s. err: %s", addrStr, err)
 	}
 
-	shortAdd, err := helper.GetActorsCache().GetShortAddress(filAdd, true)
+	shortAdd, err := helper.GetActorsCache().GetShortAddress(nodes, filAdd, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get short address: %s. err: %s", addrStr, err)
 	}
-	robustAdd, err := helper.GetActorsCache().GetRobustAddress(filAdd, true)
+	robustAdd, err := helper.GetActorsCache().GetRobustAddress(nodes, filAdd, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get robust address: %s. err: %s", addrStr, err)
 	}
-	actorCode, err := helper.GetActorsCache().GetActorCode(filAdd, tipsetKey, false, true)
+	actorCode, err := helper.GetActorsCache().GetActorCode(nodes, filAdd, tipsetKey, false, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor code: %s. err: %s", addrStr, err)
 	}
-	_, actorName, err := helper.GetActorInfoFromAddress(filAdd, 0, tipsetKey, true)
+	_, actorName, err := helper.GetActorInfoFromAddress(nodes, filAdd, 0, tipsetKey, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not get actor name: %s. err: %s", addrStr, err)
 	}
