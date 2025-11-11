@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
@@ -66,7 +67,7 @@ func (m *ZCacheBlockConfirmation) StoreAddressInfo(info types.AddressInfo) {
 	}
 }
 
-func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
+func (m *ZCacheBlockConfirmation) GetActorCode(_ []api.FullNode, address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
 	// try canonical first
 	code, err := m.offChainCanonical.GetActorCode(address, key)
 	if err == nil {
@@ -79,7 +80,7 @@ func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filT
 	return "", err
 }
 
-func (m *ZCacheBlockConfirmation) GetRobustAddress(address address.Address, canonical bool) (string, error) {
+func (m *ZCacheBlockConfirmation) GetRobustAddress(_ []api.FullNode, address address.Address, canonical bool) (string, error) {
 	// try canonical first
 	robust, err := m.offChainCanonical.GetRobustAddress(address)
 	if err == nil {
@@ -92,7 +93,7 @@ func (m *ZCacheBlockConfirmation) GetRobustAddress(address address.Address, cano
 	return "", err
 }
 
-func (m *ZCacheBlockConfirmation) GetShortAddress(address address.Address, canonical bool) (string, error) {
+func (m *ZCacheBlockConfirmation) GetShortAddress(_ []api.FullNode, address address.Address, canonical bool) (string, error) {
 	// try canonical first
 	short, err := m.offChainCanonical.GetShortAddress(address)
 	if err == nil {

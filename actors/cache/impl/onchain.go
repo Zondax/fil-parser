@@ -27,7 +27,6 @@ const OnChainImpl = "on-chain"
 
 // OnChain implementation
 type OnChain struct {
-	Node       api.FullNode
 	logger     *logger.Logger
 	backoff    *golemBackoff.BackOff
 	metrics    *cacheMetrics.ActorsCacheMetricsClient
@@ -43,14 +42,10 @@ func (m *OnChain) BackFill() error {
 	return nil
 }
 
-func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
+func (m *OnChain) NewImpl(logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
 	// Node datastore is required
 	m.logger = logger2.GetSafeLogger(logger)
-	if source.Node == nil {
-		m.logger.Panic("[ActorsCache] - Node ptr is nil")
-	}
 
-	m.Node = source.Node
 	m.metrics = metrics
 	m.backoff = backoff
 	m.httpClient = resty.New().SetTimeout(30 * time.Second)
@@ -62,16 +57,22 @@ func (m *OnChain) ImplementationType() string {
 	return OnChainImpl
 }
 
-func (m *OnChain) GetActorCode(address address.Address, key filTypes.TipSetKey, _, _ bool) (string, error) {
-	actorCid, err := m.retrieveActorFromLotus(address, key)
-	if err != nil {
-		return cid.Undef.String(), err
+func (m *OnChain) GetActorCode(nodes []api.FullNode, address address.Address, key filTypes.TipSetKey, _, _ bool) (string, error) {
+	var actorCid cid.Cid
+	var err error
+
+	for _, node := range nodes {
+		actorCid, err = m.retrieveActorFromLotus(node, address, key)
+		// TODO: check for rpc errors
+		if err != nil && !strings.Contains(err.Error(), "") {
+			return cid.Undef.String(), err
+		}
 	}
 
 	return actorCid.String(), nil
 }
 
-func (m *OnChain) GetRobustAddress(address address.Address, _ bool) (string, error) {
+func (m *OnChain) GetRobustAddress(nodes []api.FullNode, address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -82,16 +83,20 @@ func (m *OnChain) GetRobustAddress(address address.Address, _ bool) (string, err
 		return address.String(), nil
 	}
 
+	var robustAdd string
 	// Address is not in cache, get robust address from lotus
-	robustAdd, err := m.retrieveActorPubKeyFromLotus(address, false)
-	if err != nil {
-		return "", err
+	for _, node := range nodes {
+		robustAdd, err = m.retrieveActorPubKeyFromLotus(node, address, false)
+		// TODO: rpc errors
+		if err != nil && !strings.Contains(err.Error(), "") {
+			return "", err
+		}
 	}
 
 	return robustAdd, nil
 }
 
-func (m *OnChain) GetShortAddress(address address.Address, _ bool) (string, error) {
+func (m *OnChain) GetShortAddress(nodes []api.FullNode, address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -102,9 +107,12 @@ func (m *OnChain) GetShortAddress(address address.Address, _ bool) (string, erro
 		return address.String(), nil
 	}
 
-	shortAdd, err := m.retrieveActorPubKeyFromLotus(address, true)
-	if err != nil {
-		return "", common.ErrKeyNotFound
+	var shortAdd string
+	for _, node := range nodes {
+		shortAdd, err = m.retrieveActorPubKeyFromLotus(node, address, true)
+		if err != nil && !strings.Contains(err.Error(), "") {
+			return "", common.ErrKeyNotFound
+		}
 	}
 
 	return shortAdd, nil
@@ -124,12 +132,12 @@ func (m *OnChain) IsGenesisActor(_ string) bool {
 	return false
 }
 
-func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
+func (m *OnChain) retrieveActorFromLotus(node api.FullNode, add address.Address, key filTypes.TipSetKey) (cid.Cid, error) {
 	nodeApiCallOptions := &NodeApiCallWithRetryOptions[*filTypes.Actor]{
 		RequestName: "StateGetActorWithTipSetKey",
 		BackOff:     *m.backoff,
 		Request: func() (*filTypes.Actor, error) {
-			return m.Node.StateGetActor(context.Background(), add, key)
+			return node.StateGetActor(context.Background(), add, key)
 		},
 		RetryErrStrings: []string{"ipld: could not find", "RPC client error", "503"},
 	}
@@ -139,7 +147,7 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 		// Try again but with an empty tipset Key
 		nodeApiCallOptions.RequestName = "StateGetActor"
 		nodeApiCallOptions.Request = func() (*filTypes.Actor, error) {
-			return m.Node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
+			return node.StateGetActor(context.Background(), add, filTypes.EmptyTSK)
 		}
 		actor, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 		if err != nil {
@@ -151,7 +159,7 @@ func (m *OnChain) retrieveActorFromLotus(add address.Address, key filTypes.TipSe
 	return actor.Code, nil
 }
 
-func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool) (string, error) {
+func (m *OnChain) retrieveActorPubKeyFromLotus(node api.FullNode, add address.Address, reverse bool) (string, error) {
 	var key address.Address
 	var err error
 
@@ -163,13 +171,13 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 	if reverse {
 		nodeApiCallOptions.RequestName = "StateLookupID"
 		nodeApiCallOptions.Request = func() (address.Address, error) {
-			return m.Node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
+			return node.StateLookupID(context.Background(), add, filTypes.EmptyTSK)
 		}
 		key, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 	} else {
 		nodeApiCallOptions.RequestName = "StateAccountKey"
 		nodeApiCallOptions.Request = func() (address.Address, error) {
-			return m.Node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
+			return node.StateAccountKey(context.Background(), add, filTypes.EmptyTSK)
 		}
 		key, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 	}
@@ -178,7 +186,7 @@ func (m *OnChain) retrieveActorPubKeyFromLotus(add address.Address, reverse bool
 		if strings.Contains(err.Error(), "actor code is not account") {
 			nodeApiCallOptions.RequestName = "StateLookupRobustAddress"
 			nodeApiCallOptions.Request = func() (address.Address, error) {
-				return m.Node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
+				return node.StateLookupRobustAddress(context.Background(), add, filTypes.EmptyTSK)
 			}
 			key, err = NodeApiCallWithRetry(nodeApiCallOptions, m.metrics)
 			if err != nil {
