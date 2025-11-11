@@ -9,6 +9,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
@@ -29,15 +30,17 @@ type eventGenerator struct {
 	metrics *dealsMetricsClient
 	network string
 	config  parser.Config
+	nodes   []api.FullNode
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
+func NewEventGenerator(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
 		metrics: newClient(metrics, "deals"),
 		network: network,
 		config:  config,
+		nodes:   nodes,
 	}
 }
 
@@ -61,7 +64,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		}
 
 		// #nosec G115
-		actorName, err := common.GetActorNameFromAddress(eg.helper, addr, int64(tx.Height), tipsetKey, true)
+		actorName, err := common.GetActorNameFromAddress(eg.nodes, eg.helper, addr, int64(tx.Height), tipsetKey, true)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err

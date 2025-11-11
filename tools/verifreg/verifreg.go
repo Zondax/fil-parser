@@ -15,6 +15,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
@@ -35,9 +36,10 @@ type eventGenerator struct {
 	config           parser.Config
 	network          string
 	metrics          *verifregMetricsClient
+	nodes            []api.FullNode
 }
 
-func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
+func NewEventGenerator(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:           helper,
 		logger:           logger,
@@ -45,6 +47,7 @@ func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics met
 		verifiedRegistry: verifiedRegistry.New(logger),
 		config:           config,
 		metrics:          newClient(metrics, manifest.VerifregKey),
+		nodes:            nodes,
 	}
 }
 
@@ -67,7 +70,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 		}
 
 		// #nosec G115
-		actorName, err := common.GetActorNameFromAddress(eg.helper, addr, int64(tx.Height), tipsetKey, true)
+		actorName, err := common.GetActorNameFromAddress(eg.nodes, eg.helper, addr, int64(tx.Height), tipsetKey, true)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err

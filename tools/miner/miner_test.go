@@ -6,6 +6,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filApiTypes "github.com/filecoin-project/lotus/api/types"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
@@ -61,7 +62,7 @@ func setupTest(*testing.T) miner.EventGenerator {
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(node)
 	helper := helper.NewHelper(lib, cache, node, logger, metrics)
 
-	return miner.NewEventGenerator(helper, logger, metrics, parser.Config{})
+	return miner.NewEventGenerator([]api.FullNode{node}, helper, logger, metrics, parser.Config{})
 }
 
 func assertSectorEvents(t *testing.T, want []*types.MinerSectorEvent, got []*types.MinerSectorEvent) {
