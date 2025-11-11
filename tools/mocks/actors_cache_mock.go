@@ -4,6 +4,8 @@ package mocks
 
 import (
 	address "github.com/filecoin-project/go-address"
+	api "github.com/filecoin-project/lotus/api"
+
 	backoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 
 	common "github.com/zondax/fil-parser/actors/cache/impl/common"
@@ -49,9 +51,9 @@ func (_m *IActorsCache) ClearBadAddressCache() {
 	_m.Called()
 }
 
-// GetActorCode provides a mock function with given fields: add, key, onChainOnly, canonical
-func (_m *IActorsCache) GetActorCode(add address.Address, key types.TipSetKey, onChainOnly bool, canonical bool) (string, error) {
-	ret := _m.Called(add, key, onChainOnly, canonical)
+// GetActorCode provides a mock function with given fields: nodes, add, key, onChainOnly, canonical
+func (_m *IActorsCache) GetActorCode(nodes []api.FullNode, add address.Address, key types.TipSetKey, onChainOnly bool, canonical bool) (string, error) {
+	ret := _m.Called(nodes, add, key, onChainOnly, canonical)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetActorCode")
@@ -59,17 +61,17 @@ func (_m *IActorsCache) GetActorCode(add address.Address, key types.TipSetKey, o
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(address.Address, types.TipSetKey, bool, bool) (string, error)); ok {
-		return rf(add, key, onChainOnly, canonical)
+	if rf, ok := ret.Get(0).(func([]api.FullNode, address.Address, types.TipSetKey, bool, bool) (string, error)); ok {
+		return rf(nodes, add, key, onChainOnly, canonical)
 	}
-	if rf, ok := ret.Get(0).(func(address.Address, types.TipSetKey, bool, bool) string); ok {
-		r0 = rf(add, key, onChainOnly, canonical)
+	if rf, ok := ret.Get(0).(func([]api.FullNode, address.Address, types.TipSetKey, bool, bool) string); ok {
+		r0 = rf(nodes, add, key, onChainOnly, canonical)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(address.Address, types.TipSetKey, bool, bool) error); ok {
-		r1 = rf(add, key, onChainOnly, canonical)
+	if rf, ok := ret.Get(1).(func([]api.FullNode, address.Address, types.TipSetKey, bool, bool) error); ok {
+		r1 = rf(nodes, add, key, onChainOnly, canonical)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -105,9 +107,9 @@ func (_m *IActorsCache) GetEVMSelectorSig(ctx context.Context, selectorHash stri
 	return r0, r1
 }
 
-// GetRobustAddress provides a mock function with given fields: add, canonical
-func (_m *IActorsCache) GetRobustAddress(add address.Address, canonical bool) (string, error) {
-	ret := _m.Called(add, canonical)
+// GetRobustAddress provides a mock function with given fields: nodes, add, canonical
+func (_m *IActorsCache) GetRobustAddress(nodes []api.FullNode, add address.Address, canonical bool) (string, error) {
+	ret := _m.Called(nodes, add, canonical)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRobustAddress")
@@ -115,17 +117,17 @@ func (_m *IActorsCache) GetRobustAddress(add address.Address, canonical bool) (s
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(address.Address, bool) (string, error)); ok {
-		return rf(add, canonical)
+	if rf, ok := ret.Get(0).(func([]api.FullNode, address.Address, bool) (string, error)); ok {
+		return rf(nodes, add, canonical)
 	}
-	if rf, ok := ret.Get(0).(func(address.Address, bool) string); ok {
-		r0 = rf(add, canonical)
+	if rf, ok := ret.Get(0).(func([]api.FullNode, address.Address, bool) string); ok {
+		r0 = rf(nodes, add, canonical)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(address.Address, bool) error); ok {
-		r1 = rf(add, canonical)
+	if rf, ok := ret.Get(1).(func([]api.FullNode, address.Address, bool) error); ok {
+		r1 = rf(nodes, add, canonical)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -133,9 +135,9 @@ func (_m *IActorsCache) GetRobustAddress(add address.Address, canonical bool) (s
 	return r0, r1
 }
 
-// GetShortAddress provides a mock function with given fields: add, canonical
-func (_m *IActorsCache) GetShortAddress(add address.Address, canonical bool) (string, error) {
-	ret := _m.Called(add, canonical)
+// GetShortAddress provides a mock function with given fields: nodes, add, canonical
+func (_m *IActorsCache) GetShortAddress(nodes []api.FullNode, add address.Address, canonical bool) (string, error) {
+	ret := _m.Called(nodes, add, canonical)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetShortAddress")
@@ -143,17 +145,17 @@ func (_m *IActorsCache) GetShortAddress(add address.Address, canonical bool) (st
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(address.Address, bool) (string, error)); ok {
-		return rf(add, canonical)
+	if rf, ok := ret.Get(0).(func([]api.FullNode, address.Address, bool) (string, error)); ok {
+		return rf(nodes, add, canonical)
 	}
-	if rf, ok := ret.Get(0).(func(address.Address, bool) string); ok {
-		r0 = rf(add, canonical)
+	if rf, ok := ret.Get(0).(func([]api.FullNode, address.Address, bool) string); ok {
+		r0 = rf(nodes, add, canonical)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(address.Address, bool) error); ok {
-		r1 = rf(add, canonical)
+	if rf, ok := ret.Get(1).(func([]api.FullNode, address.Address, bool) error); ok {
+		r1 = rf(nodes, add, canonical)
 	} else {
 		r1 = ret.Error(1)
 	}

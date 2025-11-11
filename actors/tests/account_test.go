@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
@@ -12,6 +13,7 @@ import (
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/mocks"
 )
 
 var accountTests = []struct {
@@ -55,8 +57,9 @@ func TestActorParserV1_Account(t *testing.T) {
 }
 
 func TestActorParserV2_Account(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.AccountKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.AccountKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

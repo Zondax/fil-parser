@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,7 @@ import (
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/mocks"
 )
 
 var evmWithParamsOrReturnTests = []struct {
@@ -188,8 +190,9 @@ func TestActorParserV1_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 }
 
 func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -218,8 +221,9 @@ func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 }
 
 func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -246,8 +250,9 @@ func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 }
 
 func TestActorParserV2_EVMInvokeContract(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -276,8 +281,9 @@ func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 }
 
 func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -304,8 +310,9 @@ func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 }
 
 func TestActorParserV2_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.EvmKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.EvmKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

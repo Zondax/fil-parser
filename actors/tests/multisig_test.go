@@ -20,6 +20,7 @@ import (
 	"github.com/ipfs/go-cid"
 
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,6 +29,7 @@ import (
 	"github.com/zondax/fil-parser/actors/v2/multisig"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
+	"github.com/zondax/fil-parser/tools/mocks"
 )
 
 var multisigWithParamsOrReturnTests = []struct {
@@ -277,8 +279,9 @@ func TestActorParserV1_ParseMultisigMetadata(t *testing.T) {
 }
 
 func TestActorParserV2_MultisigApprove(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.MultisigKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -304,8 +307,9 @@ func TestActorParserV2_MultisigApprove(t *testing.T) {
 }
 
 func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.MultisigKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -333,8 +337,9 @@ func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 }
 
 func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.MultisigKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -362,8 +367,9 @@ func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 }
 
 func TestActorParserV2_MultiSigParams(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.MultisigKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -386,8 +392,9 @@ func TestActorParserV2_MultiSigParams(t *testing.T) {
 }
 
 func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
+	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor(manifest.MultisigKey)
+	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.MultisigKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 	msigActor := actor.(*multisig.Msig)
