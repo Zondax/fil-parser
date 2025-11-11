@@ -14,6 +14,7 @@ import (
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/network"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
@@ -36,12 +37,14 @@ import (
 type Init struct {
 	helper *helper.Helper
 	logger *logger.Logger
+	nodes  []api.FullNode
 }
 
-func New(helper *helper.Helper, logger *logger.Logger) *Init {
+func New(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger) *Init {
 	return &Init{
 		helper: helper,
 		logger: logger,
+		nodes:  nodes,
 	}
 }
 
@@ -178,7 +181,7 @@ func (i *Init) getActorDetailsFromAddress(height int64, version network.Version,
 	parsedActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCidByVersion(parsedActorCid, version)
 	if err != nil {
 		i.logger.Warnf("initActor: error getting actor details from rosetta: %s", err)
-		gotActorCid, gotActorName, err := i.helper.GetActorInfoFromAddress(addr, height, filTypes.EmptyTSK, canonical)
+		gotActorCid, gotActorName, err := i.helper.GetActorInfoFromAddress(i.nodes, addr, height, filTypes.EmptyTSK, canonical)
 		if err != nil {
 			i.logger.Errorf("initActor: error getting actor details from node: %s", err)
 			return cid.Undef, parsedActorName, err

@@ -57,7 +57,7 @@ func (m *Msig) innerProposeMethod(
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 	canonical bool,
 ) (actors.Actor, string, error) {
-	actorName, err := m.helper.GetActorNameFromAddress(msg.To, height, key, canonical)
+	actorName, err := m.helper.GetActorNameFromAddress(m.nodes, msg.To, height, key, canonical)
 	if err != nil {
 		return nil, "", err
 	}
@@ -65,13 +65,13 @@ func (m *Msig) innerProposeMethod(
 	if strings.Contains(actorName, manifest.MultisigKey) {
 		actor = m
 	} else {
-		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
+		actor, err = internal.GetActor(m.nodes, actorName, m.logger, m.helper, m.metrics)
 		if err != nil {
 			return nil, "", err
 		}
 	}
 
-	methodName, err := m.methodNameFn(context.Background(), msg.Method, actorName, height, network, m.helper, m.logger)
+	methodName, err := m.methodNameFn(context.Background(), m.nodes, msg.Method, actorName, height, network, m.helper, m.logger)
 	if err != nil {
 		return nil, "", err
 	}

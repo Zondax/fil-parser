@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/actors/v2/reward"
 	metrics2 "github.com/zondax/fil-parser/metrics"
@@ -18,7 +19,7 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 )
 
-func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error) {
+func GetMethodName(ctx context.Context, nodes []api.FullNode, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error) {
 	// Shortcut 1 - Method "0" corresponds to "MethodSend"
 	if methodNum == 0 {
 		return parser.MethodSend, nil
@@ -29,7 +30,7 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 		return parser.MethodConstructor, nil
 	}
 
-	actorMethods, err := ActorMethods(ctx, actorName, height, network, helper, logger)
+	actorMethods, err := ActorMethods(ctx, nodes, actorName, height, network, helper, logger)
 	if err != nil {
 		return "", err
 	}
@@ -82,7 +83,7 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 // EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
 // We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
-func ActorMethods(ctx context.Context, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
+func ActorMethods(ctx context.Context, nodes []api.FullNode, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
 	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()}
 	mActorName := actorName
 	actorParser := &ActorParser{network, helper, logger, metricsClient}
@@ -90,7 +91,7 @@ func ActorMethods(ctx context.Context, actorName string, height int64, network s
 		mActorName = manifest.EvmKey
 	}
 
-	actor, err := actorParser.GetActor(mActorName)
+	actor, err := actorParser.GetActor(nodes, mActorName)
 	if err != nil {
 		return nil, err
 	}

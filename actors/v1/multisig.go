@@ -15,6 +15,7 @@ import (
 	multisig2 "github.com/filecoin-project/go-state-types/builtin/v14/multisig"
 	"github.com/filecoin-project/go-state-types/cbor"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
@@ -175,7 +176,8 @@ func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, method string, k
 		return "", err
 	}
 
-	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key, false, canonical)
+	// uses helper filecoin node client as the v1 package is depracated and unused and a full refactor of v1 multisig is unnecessary.
+	actorCode, err := p.helper.GetActorsCache().GetActorCode([]api.FullNode{p.helper.GetFilecoinNodeClient()}, msg.To, key, false, canonical)
 	if err != nil {
 		return "", err
 	}

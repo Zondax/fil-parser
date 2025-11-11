@@ -10,6 +10,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 
@@ -42,11 +43,12 @@ type Msig struct {
 	miner    *miner.Miner
 	verifreg *verifiedRegistry.VerifiedRegistry
 	evm      *evm.Evm
+	nodes    []api.FullNode
 
 	methodNameFn actors.MethodNameFn
 }
 
-func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient, methodNameFn actors.MethodNameFn) *Msig {
+func New(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient, methodNameFn actors.MethodNameFn) *Msig {
 	return &Msig{
 		helper:       helper,
 		logger:       logger,
@@ -55,6 +57,7 @@ func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMe
 		verifreg:     verifiedRegistry.New(logger),
 		evm:          evm.New(logger, metrics),
 		methodNameFn: methodNameFn,
+		nodes:        nodes,
 	}
 }
 
