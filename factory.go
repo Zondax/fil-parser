@@ -77,7 +77,7 @@ func NewFilecoinParser(lib *rosettaFilecoinLib.RosettaConstructionFilecoin, cach
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupMultiNodeActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err
@@ -121,7 +121,7 @@ func NewFilecoinParserWithActorV2(lib *rosettaFilecoinLib.RosettaConstructionFil
 	}
 
 	logger = logger2.GetSafeLogger(logger)
-	actorsCache, err := cache.SetupMultiNodeActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
+	actorsCache, err := cache.SetupActorsCache(cacheSource, logger, defaultOpts.metrics, defaultOpts.backoff)
 	if err != nil {
 		logger.Errorf("could not setup actors cache: %v", err)
 		return nil, err

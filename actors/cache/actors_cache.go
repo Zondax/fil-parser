@@ -85,7 +85,7 @@ var ErrBadAddress = errors.New("ErrBadAddress")
 
 const combinedCacheImpl = "combined"
 
-func SetupMultiNodeActorsCache(dataSource common.DataSource, logger *logger.Logger, metricsClient metrics.MetricsClient, backoff *golemBackoff.BackOff) (*ActorsCache, error) {
+func SetupActorsCache(dataSource common.DataSource, logger *logger.Logger, metricsClient metrics.MetricsClient, backoff *golemBackoff.BackOff) (*ActorsCache, error) {
 	var setupMu sync.Mutex
 	setupMu.Lock()
 	defer setupMu.Unlock()
