@@ -1,10 +1,10 @@
 package actors
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
 	"github.com/zondax/fil-parser/parser/helper"
 	"github.com/zondax/golem/pkg/logger"
@@ -14,7 +14,7 @@ import (
 // if the address is a zero address account actor, it returns the robust address of the zero address account actor
 // if the address is already a robust address, it returns the address
 // if the address is f2 evm, we consolidate f2 -> f0 -> f4
-func ConsolidateToRobustAddress(nodes []api.FullNode, addr address.Address, h *helper.Helper, logger *logger.Logger, bestEffort bool, canonical bool) (string, error) {
+func ConsolidateToRobustAddress(ctx context.Context, addr address.Address, h *helper.Helper, logger *logger.Logger, bestEffort bool, canonical bool) (string, error) {
 	actorCache := h.GetActorsCache()
 	if ok, _, _ := h.IsZeroAddressAccountActor(addr); ok {
 		return helper.ZeroAddressAccountActorRobust, nil
@@ -23,10 +23,10 @@ func ConsolidateToRobustAddress(nodes []api.FullNode, addr address.Address, h *h
 	if isRobust, _ := common.IsRobustAddress(addr); isRobust {
 		// we need to handle cases where a f2 address for evm actors is used
 		// f2 -> f0 -> f4, as we want to consolidate the address to f4 style
-		shortAddressStr, err := actorCache.GetShortAddress(nodes, addr, canonical)
+		shortAddressStr, err := actorCache.GetShortAddress(ctx, addr, canonical)
 		if err == nil {
 			shortAddress, _ := address.NewFromString(shortAddressStr)
-			addrStr, err := actorCache.GetRobustAddress(nodes, shortAddress, canonical)
+			addrStr, err := actorCache.GetRobustAddress(ctx, shortAddress, canonical)
 			if err == nil {
 				addr, _ = address.NewFromString(addrStr)
 			}
@@ -34,7 +34,7 @@ func ConsolidateToRobustAddress(nodes []api.FullNode, addr address.Address, h *h
 		return addr.String(), nil
 	}
 
-	robustAddress, err := actorCache.GetRobustAddress(nodes, addr, canonical)
+	robustAddress, err := actorCache.GetRobustAddress(ctx, addr, canonical)
 	if err != nil && !bestEffort {
 		logger.Warnf("Error converting address %s to robust format: %v", addr, err)
 		return "", fmt.Errorf("error converting address to robust format: %v", err) // Fallback

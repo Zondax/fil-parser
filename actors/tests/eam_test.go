@@ -5,14 +5,12 @@ import (
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/stretchr/testify/require"
 	actorsV1 "github.com/zondax/fil-parser/actors/v1"
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"github.com/zondax/fil-parser/tools/mocks"
 )
 
 var eamTests = []struct {
@@ -60,9 +58,8 @@ func TestActorParserV1_EamCreates(t *testing.T) {
 }
 
 func TestActorParserV2_EamCreates(t *testing.T) {
-	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.EamKey)
+	actor, err := p.GetActor(manifest.EamKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

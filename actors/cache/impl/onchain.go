@@ -16,6 +16,8 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors/cache/impl/common"
+	parserContext "github.com/zondax/fil-parser/context"
+
 	golemBackoff "github.com/zondax/golem/pkg/zhttpclient/backoff"
 
 	cacheMetrics "github.com/zondax/fil-parser/actors/cache/metrics"
@@ -42,7 +44,7 @@ func (m *OnChain) BackFill() error {
 	return nil
 }
 
-func (m *OnChain) NewImpl(logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
+func (m *OnChain) NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error {
 	// Node datastore is required
 	m.logger = logger2.GetSafeLogger(logger)
 
@@ -57,14 +59,17 @@ func (m *OnChain) ImplementationType() string {
 	return OnChainImpl
 }
 
-func (m *OnChain) GetActorCode(nodes []api.FullNode, address address.Address, key filTypes.TipSetKey, _, _ bool) (string, error) {
+func (m *OnChain) GetActorCode(ctx context.Context, address address.Address, key filTypes.TipSetKey, _, _ bool) (string, error) {
 	var actorCid cid.Cid
 	var err error
 
+	nodes, err := parserContext.GetNodes(ctx)
+	if err != nil {
+		return "", err
+	}
 	for _, node := range nodes {
 		actorCid, err = m.retrieveActorFromLotus(node, address, key)
-		// TODO: check for rpc errors
-		if err != nil && !strings.Contains(err.Error(), "") {
+		if err != nil && !IsRetriableError(err) {
 			return cid.Undef.String(), err
 		}
 	}
@@ -72,7 +77,7 @@ func (m *OnChain) GetActorCode(nodes []api.FullNode, address address.Address, ke
 	return actorCid.String(), nil
 }
 
-func (m *OnChain) GetRobustAddress(nodes []api.FullNode, address address.Address, _ bool) (string, error) {
+func (m *OnChain) GetRobustAddress(ctx context.Context, address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -84,11 +89,14 @@ func (m *OnChain) GetRobustAddress(nodes []api.FullNode, address address.Address
 	}
 
 	var robustAdd string
+	nodes, err := parserContext.GetNodes(ctx)
+	if err != nil {
+		return "", err
+	}
 	// Address is not in cache, get robust address from lotus
 	for _, node := range nodes {
 		robustAdd, err = m.retrieveActorPubKeyFromLotus(node, address, false)
-		// TODO: rpc errors
-		if err != nil && !strings.Contains(err.Error(), "") {
+		if err != nil && !IsRetriableError(err) {
 			return "", err
 		}
 	}
@@ -96,7 +104,7 @@ func (m *OnChain) GetRobustAddress(nodes []api.FullNode, address address.Address
 	return robustAdd, nil
 }
 
-func (m *OnChain) GetShortAddress(nodes []api.FullNode, address address.Address, _ bool) (string, error) {
+func (m *OnChain) GetShortAddress(ctx context.Context, address address.Address, _ bool) (string, error) {
 	isRobustAddress, err := common.IsRobustAddress(address)
 	if err != nil {
 		return "", err
@@ -108,9 +116,13 @@ func (m *OnChain) GetShortAddress(nodes []api.FullNode, address address.Address,
 	}
 
 	var shortAdd string
+	nodes, err := parserContext.GetNodes(ctx)
+	if err != nil {
+		return "", err
+	}
 	for _, node := range nodes {
 		shortAdd, err = m.retrieveActorPubKeyFromLotus(node, address, true)
-		if err != nil && !strings.Contains(err.Error(), "") {
+		if err != nil && !IsRetriableError(err) {
 			return "", common.ErrKeyNotFound
 		}
 	}

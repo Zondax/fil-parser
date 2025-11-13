@@ -1,6 +1,7 @@
 package verifreg
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -117,7 +118,7 @@ func getVerifierFromVerifierRequest(value map[string]interface{}, key string) (s
 	return verifierAddress, verifierSignatureData, nil
 }
 
-func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tipsetCid string) (string, string, []*types.VerifregDeal, error) {
+func (eg *eventGenerator) parserUniversalReceiverHook(ctx context.Context, tx *types.Transaction, tipsetCid string) (string, string, []*types.VerifregDeal, error) {
 	// Parse the FRC46 transaction metadata
 	// #nosec G115
 	params, returnData, err := eg.ParseFRC46TransactionMetadata(tx.TxMetadata, int64(tx.Height))
@@ -142,7 +143,7 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 			return "", "", nil, fmt.Errorf("error marshalling allocation: %w", err)
 		}
 
-		params.From, err = common.ConsolidateAddress(eg.nodes, params.From, eg.helper, eg.logger, eg.config, true)
+		params.From, err = common.ConsolidateAddress(ctx, params.From, eg.helper, eg.logger, eg.config, true)
 		if err != nil {
 			eg.logger.Errorf("error consolidating from: %s", err)
 		}
@@ -164,10 +165,10 @@ func (eg *eventGenerator) parserUniversalReceiverHook(tx *types.Transaction, tip
 		// some messages use string or integer id addresses for the provider field
 		switch provider := allocations[i].AllocationData.Provider.(type) {
 		case string:
-			addr, err = common.ConsolidateAddress(eg.nodes, provider, eg.helper, eg.logger, eg.config, true)
+			addr, err = common.ConsolidateAddress(ctx, provider, eg.helper, eg.logger, eg.config, true)
 		// any number parsed from json to the interface{} field will be a float64
 		case float64:
-			addr, err = common.ConsolidateIDAddress(eg.nodes, uint64(provider), eg.helper, eg.logger, eg.config, true)
+			addr, err = common.ConsolidateIDAddress(ctx, uint64(provider), eg.helper, eg.logger, eg.config, true)
 		default:
 			return "", "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
 		}

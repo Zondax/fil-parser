@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 
@@ -43,12 +42,11 @@ type Msig struct {
 	miner    *miner.Miner
 	verifreg *verifiedRegistry.VerifiedRegistry
 	evm      *evm.Evm
-	nodes    []api.FullNode
 
 	methodNameFn actors.MethodNameFn
 }
 
-func New(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient, methodNameFn actors.MethodNameFn) *Msig {
+func New(helper *helper.Helper, logger *logger.Logger, metrics *metrics.ActorsMetricsClient, methodNameFn actors.MethodNameFn) *Msig {
 	return &Msig{
 		helper:       helper,
 		logger:       logger,
@@ -57,7 +55,6 @@ func New(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, met
 		verifreg:     verifiedRegistry.New(logger),
 		evm:          evm.New(logger, metrics),
 		methodNameFn: methodNameFn,
-		nodes:        nodes,
 	}
 }
 
@@ -181,7 +178,7 @@ Still needs to parse:
 
 	Receive
 */
-func (p *Msig) Parse(_ context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
+func (p *Msig) Parse(ctx context.Context, network string, height int64, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, _ cid.Cid, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	var ret map[string]interface{}
 	var err error
 	switch txType {
@@ -191,7 +188,7 @@ func (p *Msig) Parse(_ context.Context, network string, height int64, txType str
 		resp := actors.ParseSend(msg)
 		return resp, nil, nil
 	case parser.MethodPropose, parser.MethodProposeExported:
-		ret, err = p.Propose(network, msg, height, txType, key, msg.Params, msgRct.Return, canonical)
+		ret, err = p.Propose(ctx, network, msg, height, txType, key, msg.Params, msgRct.Return, canonical)
 	case parser.MethodApprove, parser.MethodApproveExported:
 		ret, err = p.Approve(network, msg, height, key, msg.Params, msgRct.Return)
 	case parser.MethodCancel, parser.MethodCancelExported:

@@ -10,11 +10,9 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 
 	metrics2 "github.com/zondax/fil-parser/metrics"
-	"github.com/zondax/fil-parser/tools/mocks"
 
 	builtinActors "github.com/filecoin-project/go-state-types/actors"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/assert"
@@ -96,13 +94,12 @@ func TestAllActorsSupported(t *testing.T) {
 }
 
 func getActors(t *testing.T) []v2.Actor {
-	nodeMock := &mocks.FullNode{}
 	actorParser := v2.NewActorParser("mainnet", nil, l, metrics2.NewNoopMetricsClient()).(*v2.ActorParser)
 	// #nosec G115
 	filActors := manifest.GetBuiltinActorsKeys(builtinActors.Version(latestBuiltinActorVersion))
 	actors := []v2.Actor{}
 	for _, filActor := range filActors {
-		actor, err := actorParser.GetActor([]api.FullNode{nodeMock}, filActor)
+		actor, err := actorParser.GetActor(filActor)
 		require.NoErrorf(t, err, "Actor %s is not supported", filActor)
 		actors = append(actors, actor)
 	}

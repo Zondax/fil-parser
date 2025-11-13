@@ -15,7 +15,6 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/zondax/fil-parser/actors/v2/verifiedRegistry"
 	"github.com/zondax/fil-parser/parser"
@@ -36,10 +35,9 @@ type eventGenerator struct {
 	config           parser.Config
 	network          string
 	metrics          *verifregMetricsClient
-	nodes            []api.FullNode
 }
 
-func NewEventGenerator(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, network string, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:           helper,
 		logger:           logger,
@@ -47,7 +45,6 @@ func NewEventGenerator(nodes []api.FullNode, helper *helper.Helper, logger *logg
 		verifiedRegistry: verifiedRegistry.New(logger),
 		config:           config,
 		metrics:          newClient(metrics, manifest.VerifregKey),
-		nodes:            nodes,
 	}
 }
 
@@ -70,7 +67,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 		}
 
 		// #nosec G115
-		actorName, err := common.GetActorNameFromAddress(eg.nodes, eg.helper, addr, int64(tx.Height), tipsetKey, true)
+		actorName, err := common.GetActorNameFromAddress(ctx, eg.helper, addr, int64(tx.Height), tipsetKey, true)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err
@@ -80,7 +77,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 			continue
 		}
 
-		events, err = eg.createVerifregInfo(tx, tipsetCid, events)
+		events, err = eg.createVerifregInfo(ctx, tx, tipsetCid, events)
 		if err != nil {
 			return nil, fmt.Errorf("could not create verifreg info. err: %w", err)
 		}
@@ -94,7 +91,7 @@ func (eg *eventGenerator) isVerifregMessage(actorName, txType string) bool {
 	return strings.EqualFold(actorName, manifest.VerifregKey)
 }
 
-func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
+func (eg *eventGenerator) createVerifregInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
 
 	metadata := map[string]interface{}{}
 	err := json.Unmarshal([]byte(tx.TxMetadata), &metadata)
@@ -131,7 +128,7 @@ func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid st
 		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
 	case parser.MethodUniversalReceiverHook:
-		clientInfo, dealInfo, err := eg.universalReceiverHook(tx, tipsetCid)
+		clientInfo, dealInfo, err := eg.universalReceiverHook(ctx, tx, tipsetCid)
 		if err != nil {
 			return nil, err
 		}
@@ -258,8 +255,8 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata m
 		}, nil
 }
 
-func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
-	clientAddress, clientValue, dealValue, err := eg.parserUniversalReceiverHook(tx, tipsetCid)
+func (eg *eventGenerator) universalReceiverHook(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
+	clientAddress, clientValue, dealValue, err := eg.parserUniversalReceiverHook(ctx, tx, tipsetCid)
 	if err != nil {
 		return nil, nil, err
 	}

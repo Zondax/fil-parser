@@ -14,7 +14,6 @@ import (
 	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/network"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	builtinInitv10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
@@ -37,14 +36,12 @@ import (
 type Init struct {
 	helper *helper.Helper
 	logger *logger.Logger
-	nodes  []api.FullNode
 }
 
-func New(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger) *Init {
+func New(helper *helper.Helper, logger *logger.Logger) *Init {
 	return &Init{
 		helper: helper,
 		logger: logger,
-		nodes:  nodes,
 	}
 }
 
@@ -110,7 +107,7 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 	return initConstructor(raw, params())
 }
 
-func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec(ctx context.Context, network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := execParams[version.String()]
 	if !ok {
@@ -123,7 +120,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 
 	metadata, addressInfo, err := parseExec(msg, raw, params(), returnValue(), i.helper)
 	if addressInfo != nil {
-		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(height, version.FilNetworkVersion(), addressInfo, canonical)
+		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(ctx, height, version.FilNetworkVersion(), addressInfo, canonical)
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = tools.ParseActorName(createdActorName)
@@ -137,7 +134,7 @@ func (i *Init) Exec(network string, height int64, msg *parser.LotusMessage, raw 
 	return metadata, addressInfo, err
 }
 
-func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
+func (i *Init) Exec4(ctx context.Context, network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := exec4Params[version.String()]
 	if !ok {
@@ -150,7 +147,7 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 
 	metadata, addressInfo, err := parseExec(msg, raw, params(), returnValue(), i.helper)
 	if addressInfo != nil {
-		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(height, version.FilNetworkVersion(), addressInfo, canonical)
+		createdActorCid, createdActorName, err := i.getActorDetailsFromAddress(ctx, height, version.FilNetworkVersion(), addressInfo, canonical)
 		if err == nil {
 			addressInfo.ActorCid = createdActorCid.String()
 			addressInfo.ActorType = tools.ParseActorName(createdActorName)
@@ -164,7 +161,7 @@ func (i *Init) Exec4(network string, height int64, msg *parser.LotusMessage, raw
 	return metadata, addressInfo, err
 }
 
-func (i *Init) getActorDetailsFromAddress(height int64, version network.Version, addressInfo *types.AddressInfo, canonical bool) (actorCid cid.Cid, actorName string, err error) {
+func (i *Init) getActorDetailsFromAddress(ctx context.Context, height int64, version network.Version, addressInfo *types.AddressInfo, canonical bool) (actorCid cid.Cid, actorName string, err error) {
 	parsedActorCid, err := cid.Parse(addressInfo.ActorCid)
 	if err != nil {
 		return cid.Undef, "", err
@@ -181,7 +178,7 @@ func (i *Init) getActorDetailsFromAddress(height int64, version network.Version,
 	parsedActorName, err := i.helper.GetFilecoinLib().BuiltinActors.GetActorNameFromCidByVersion(parsedActorCid, version)
 	if err != nil {
 		i.logger.Warnf("initActor: error getting actor details from rosetta: %s", err)
-		gotActorCid, gotActorName, err := i.helper.GetActorInfoFromAddress(i.nodes, addr, height, filTypes.EmptyTSK, canonical)
+		gotActorCid, gotActorName, err := i.helper.GetActorInfoFromAddress(ctx, addr, height, filTypes.EmptyTSK, canonical)
 		if err != nil {
 			i.logger.Errorf("initActor: error getting actor details from node: %s", err)
 			return cid.Undef, parsedActorName, err

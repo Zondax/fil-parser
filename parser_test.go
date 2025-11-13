@@ -1804,6 +1804,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				p, err = NewFilecoinParserWithActorV2(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
 				node = calibNextNodeCacheDataSource.Node
 			}
+
 			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
@@ -1821,13 +1822,13 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				Canonical: true,
 			}
 
-			parsedResult, err := p.ParseTransactions(context.Background(), []api.FullNode{node}, txsData)
+			parsedResult, err := p.ParseTransactions(t.Context(), []api.FullNode{node}, txsData)
 			require.NoError(t, err)
 			require.NotNil(t, parsedResult.Txs)
 
 			tipsetCid := txsData.Tipset.GetCidString()
 			tipsetKey := txsData.Tipset.Key()
-			events, err := p.ParseMultisigEvents(context.Background(), []api.FullNode{node}, parsedResult.Txs, tipsetCid, tipsetKey)
+			events, err := p.ParseMultisigEvents(t.Context(), parsedResult.Txs, tipsetCid, tipsetKey)
 			require.NoError(t, err)
 			require.NotNil(t, events)
 
@@ -1911,7 +1912,7 @@ func TestParseGenesis(t *testing.T) {
 
 			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
 			require.NoError(t, err)
-			actualTxs, _ := p.ParseGenesis([]api.FullNode{tt.cacheDataSource.Node}, genesisBalances, genesisTipset)
+			actualTxs, _ := p.ParseGenesis(t.Context(), genesisBalances, genesisTipset)
 
 			assert.Equal(t, len(actualTxs), tt.expectedTxs)
 			assert.Equal(t, actualTxs[0].BlockCid, tt.expectedBlockCid)
@@ -1959,8 +1960,7 @@ func TestParseGenesisMultisig(t *testing.T) {
 			p, err := NewFilecoinParser(getLib(tt.nodeUrl), tt.cacheDataSource, gLogger)
 			require.NoError(t, err)
 
-			ctx := context.Background()
-			gotMultiSigInfo, err := p.ParseGenesisMultisig(ctx, []api.FullNode{tt.cacheDataSource.Node}, genesisBalances, genesisTipset)
+			gotMultiSigInfo, err := p.ParseGenesisMultisig(t.Context(), genesisBalances, genesisTipset)
 			require.NoError(t, err)
 			require.NotNil(t, gotMultiSigInfo)
 			require.Equal(t, len(expectedMultisigInfo), len(gotMultiSigInfo))

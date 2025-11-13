@@ -60,16 +60,14 @@ type eventGenerator struct {
 	logger  *logger.Logger
 	metrics *multisigMetricsClient
 	config  parser.Config
-	nodes   []api.FullNode
 }
 
-func NewEventGenerator(nodes []api.FullNode, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) EventGenerator {
+func NewEventGenerator(helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, config parser.Config) EventGenerator {
 	return &eventGenerator{
 		helper:  helper,
 		logger:  logger,
 		metrics: newClient(metrics, "multisigEventGenerator"),
 		config:  config,
-		nodes:   nodes,
 	}
 }
 
@@ -108,7 +106,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 			}
 
 			// #nosec G115
-			actorName, err := common.GetActorNameFromAddress(eg.nodes, eg.helper, addrTo, int64(tx.Height), tipsetKey, true)
+			actorName, err := common.GetActorNameFromAddress(ctx, eg.helper, addrTo, int64(tx.Height), tipsetKey, true)
 			if err != nil {
 				_ = eg.metrics.UpdateActorNameFromAddressMetric()
 				return nil, err
@@ -227,7 +225,7 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 				if err != nil {
 					return nil, fmt.Errorf("address.NewFromString(%s): %s", signerAddrStr, err)
 				}
-				signerAddrStr, err = actors.ConsolidateToRobustAddress(eg.nodes, signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
+				signerAddrStr, err = actors.ConsolidateToRobustAddress(ctx, signerAddr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
 				if err != nil {
 					return nil, fmt.Errorf("actors.ConsolidateToRobustAddress(%s): %s", signerAddrStr, err)
 				}
@@ -250,7 +248,7 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 						eg.logger.Errorf("address.NewFromString(%s): %s", signer, err)
 						break
 					}
-					robustAddr, err := actors.ConsolidateToRobustAddress(eg.nodes, addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
+					robustAddr, err := actors.ConsolidateToRobustAddress(ctx, addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
 					if err != nil {
 						eg.logger.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
 						break

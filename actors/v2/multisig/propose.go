@@ -21,6 +21,7 @@ import (
 // 2. Getting the actor and method name for the proposal
 // 3. Parsing the proposal parameters using the actor's Parse method
 func (m *Msig) parseInnerProposeMsg(
+	ctx context.Context,
 	msg *parser.LotusMessage, to address.Address, network string, height int64, method abi.MethodNum,
 	proposeParams, proposeReturn []byte, key filTypes.TipSetKey, applied bool, exitCode exitcode.ExitCode,
 	canonical bool,
@@ -35,7 +36,7 @@ func (m *Msig) parseInnerProposeMsg(
 
 	proposeMsgRct := &parser.LotusMessageReceipt{ExitCode: exitcode.Ok, Return: proposeReturn}
 
-	actor, proposedMethod, err := m.innerProposeMethod(proposeMsg, network, height, key, canonical)
+	actor, proposedMethod, err := m.innerProposeMethod(ctx, proposeMsg, network, height, key, canonical)
 	if err != nil {
 		return "", nil, err
 	}
@@ -54,10 +55,11 @@ func (m *Msig) parseInnerProposeMsg(
 // 1. Getting the actor name from the target address
 // 2. Using the methodNameFn to get the methodName from the methodNum for the actor.
 func (m *Msig) innerProposeMethod(
+	ctx context.Context,
 	msg *parser.LotusMessage, network string, height int64, key filTypes.TipSetKey,
 	canonical bool,
 ) (actors.Actor, string, error) {
-	actorName, err := m.helper.GetActorNameFromAddress(m.nodes, msg.To, height, key, canonical)
+	actorName, err := m.helper.GetActorNameFromAddress(ctx, msg.To, height, key, canonical)
 	if err != nil {
 		return nil, "", err
 	}
@@ -65,13 +67,13 @@ func (m *Msig) innerProposeMethod(
 	if strings.Contains(actorName, manifest.MultisigKey) {
 		actor = m
 	} else {
-		actor, err = internal.GetActor(m.nodes, actorName, m.logger, m.helper, m.metrics)
+		actor, err = internal.GetActor(actorName, m.logger, m.helper, m.metrics)
 		if err != nil {
 			return nil, "", err
 		}
 	}
 
-	methodName, err := m.methodNameFn(context.Background(), m.nodes, msg.Method, actorName, height, network, m.helper, m.logger)
+	methodName, err := m.methodNameFn(ctx, msg.Method, actorName, height, network, m.helper, m.logger)
 	if err != nil {
 		return nil, "", err
 	}

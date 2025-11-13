@@ -14,7 +14,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/exitcode"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
@@ -68,8 +67,6 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		logger.Fatal(err.Error())
 		return nil
 	}
-	// event generators do not need finality, we can use the default helper node
-	nodes := []api.FullNode{helper.GetFilecoinNodeClient()}
 
 	networkName := tools.ParseRawNetworkName(string(network))
 	p := &Parser{
@@ -78,11 +75,11 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, config),
-		minerEventGenerator:    minerTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, config),
-		verifregEventGenerator: verifregTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, networkName, config),
-		dataCapEventGenerator:  dataCapTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, config),
-		dealsEventGenerator:    dealsTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, networkName, config),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		verifregEventGenerator: verifregTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, networkName, config),
+		dataCapEventGenerator:  dataCapTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, networkName, config),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -93,20 +90,17 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 }
 
 func NewActorsV2Parser(network string, helper *helper.Helper, logger *logger.Logger, metrics metrics.MetricsClient, backoff *golemBackoff.BackOff, config parser.Config) *Parser {
-	// event generators do not need finality, we can use the default helper node
-	nodes := []api.FullNode{helper.GetFilecoinNodeClient()}
-
 	return &Parser{
 		network:                network,
 		actorParser:            actorsV2.NewActorParser(network, helper, logger, metrics),
 		addresses:              types.NewAddressInfoMap(),
 		helper:                 helper,
 		logger:                 logger2.GetSafeLogger(logger),
-		multisigEventGenerator: multisigTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, config),
-		minerEventGenerator:    minerTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, config),
-		verifregEventGenerator: verifregTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, network, config),
-		dataCapEventGenerator:  dataCapTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, config),
-		dealsEventGenerator:    dealsTools.NewEventGenerator(nodes, helper, logger2.GetSafeLogger(logger), metrics, network, config),
+		multisigEventGenerator: multisigTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		minerEventGenerator:    minerTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		verifregEventGenerator: verifregTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, network, config),
+		dataCapEventGenerator:  dataCapTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, config),
+		dealsEventGenerator:    dealsTools.NewEventGenerator(helper, logger2.GetSafeLogger(logger), metrics, network, config),
 		metrics:                parsermetrics.NewClient(metrics, "parserV2"),
 		actorsCacheMetrics:     cacheMetrics.NewClient(metrics, "actorsCache"),
 		config:                 config,
@@ -136,7 +130,7 @@ func (p *Parser) IsNodeVersionSupported(ver string) bool {
 	return false
 }
 
-func (p *Parser) ParseTransactions(ctx context.Context, nodes []api.FullNode, txsData types.TxsData) (*types.TxsParsedResult, error) {
+func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (*types.TxsParsedResult, error) {
 	// Unmarshal into vComputeState
 	computeState := &typesV2.ComputeStateOutputV2{}
 	err := sonic.UnmarshalString(string(txsData.Traces), &computeState)
@@ -175,7 +169,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, nodes []api.FullNode, tx
 
 		mainMsgCid := trace.MsgCid
 		mainMsgExitCode := trace.MsgRct.ExitCode
-		transaction, err := p.parseTrace(ctx, nodes, trace.ExecutionTrace, mainMsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution, mainMsgExitCode, txsData.Canonical)
+		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, mainMsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution, mainMsgExitCode, txsData.Canonical)
 		if err != nil {
 			p.logger.Errorf("Error parsing trace for tx %s: %v", mainMsgCid, err)
 			_ = p.metrics.UpdateParseTraceMetric()
@@ -189,7 +183,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, nodes []api.FullNode, tx
 		transactions = append(transactions, transaction)
 
 		// note: we are using the parent MsgRct.ExitCode not the ExecutionTrace.MsgRct.ExitCode
-		subTxs := p.parseSubTxs(ctx, nodes, trace.ExecutionTrace.Subcalls, mainMsgCid, txsData.Tipset, txsData.EthLogs,
+		subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, mainMsgCid, txsData.Tipset, txsData.EthLogs,
 			trace.Msg.Cid().String(), transaction.Id, 0, systemExecution, mainMsgExitCode, txsData.Canonical)
 		if len(subTxs) > 0 {
 			transactions = append(transactions, subTxs...)
@@ -197,7 +191,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, nodes []api.FullNode, tx
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(nodes, trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
+			feeTx := p.feesTransactions(ctx, trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
 			if p.config.FeesAsColumn {
 				transaction.FeeData = feeTx.TxMetadata
 			} else {
@@ -231,7 +225,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, nodes []api.FullNode, tx
 	}, nil
 }
 
-func (p *Parser) ParseNativeEvents(_ context.Context, nodes []api.FullNode, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []*types.Event
 	nativeEventsTotal, evmEventsTotal := 0, 0
 	for idx, nativeLog := range eventsData.NativeLog {
@@ -253,7 +247,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, nodes []api.FullNode, even
 			if err != nil {
 				return nil, err
 			}
-			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(nodes, eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
+			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(ctx, eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
 				event.Emitter = consolidatedAddr
 			}
 		}
@@ -266,7 +260,7 @@ func (p *Parser) ParseNativeEvents(_ context.Context, nodes []api.FullNode, even
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
-func (p *Parser) ParseEthLogs(_ context.Context, nodes []api.FullNode, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []*types.Event
 	// sort the events by the TransactionIndex ASC and the logIndex ASC
 	slices.SortFunc(eventsData.EthLogs, func(a, b types.EthLog) int {
@@ -290,7 +284,7 @@ func (p *Parser) ParseEthLogs(_ context.Context, nodes []api.FullNode, eventsDat
 			if err != nil {
 				return nil, fmt.Errorf("error parsing emitter address: %s: %w", event.Emitter, err)
 			}
-			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(nodes, eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
+			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(ctx, eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
 				event.Emitter = consolidatedAddr
 			}
 		}
@@ -352,26 +346,26 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 	return baseFee.Uint64(), nil
 }
 
-func (p *Parser) parseSubTxs(ctx context.Context, nodes []api.FullNode, subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
+func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
 	parentId string, level uint16, systemExecution bool, mainExitCode exitcode.ExitCode, canonical bool) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(ctx, nodes, subTx, mainMsgCid, tipSet, parentId, systemExecution, mainExitCode, canonical)
+		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution, mainExitCode, canonical)
 		if err != nil {
 			continue
 		}
 
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(ctx, nodes, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, mainExitCode, canonical)...)
+		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, mainExitCode, canonical)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(ctx context.Context, nodes []api.FullNode, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, mainExitCode exitcode.ExitCode, canonical bool) (*types.Transaction, error) {
+func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, mainExitCode exitcode.ExitCode, canonical bool) (*types.Transaction, error) {
 	mainFailedTx := mainExitCode.IsError()
 	subcallFailedTx := trace.MsgRct.ExitCode.IsError()
-	actorName, txType, err := p.getTxType(ctx, nodes, trace, mainMsgCid, tipset, canonical)
+	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset, canonical)
 	if err != nil {
 		txType = parser.UnknownStr
 	}
@@ -382,7 +376,7 @@ func (p *Parser) parseTrace(ctx context.Context, nodes []api.FullNode, trace typ
 		p.logger.Errorf("Could not get method name in transaction '%s': %s", mainMsgCid.String(), err)
 	}
 
-	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, nodes, actorName, txType, &parser.LotusMessage{
+	actor, metadata, addressInfo, mErr := p.actorParser.GetMetadata(ctx, actorName, txType, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -424,7 +418,7 @@ func (p *Parser) parseTrace(ctx context.Context, nodes []api.FullNode, trace typ
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
-	p.appendAddressInfo(nodes, &parser.LotusMessage{
+	p.appendAddressInfo(ctx, &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -450,7 +444,7 @@ func (p *Parser) parseTrace(ctx context.Context, nodes []api.FullNode, trace typ
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
-	txFrom, txTo := p.getFromToRobustAddresses(nodes, trace.Msg.From, trace.Msg.To, canonical)
+	txFrom, txTo := p.getFromToRobustAddresses(ctx, trace.Msg.From, trace.Msg.To, canonical)
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
@@ -474,7 +468,7 @@ func (p *Parser) parseTrace(ctx context.Context, nodes []api.FullNode, trace typ
 	}, nil
 }
 
-func (p *Parser) feesTransactions(nodes []api.FullNode, msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
+func (p *Parser) feesTransactions(ctx context.Context, msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
 	var blockCid string
 	var err error
 
@@ -487,7 +481,7 @@ func (p *Parser) feesTransactions(nodes []api.FullNode, msg *typesV2.InvocResult
 		}
 	}
 
-	metadata := p.feesMetadata(nodes, msg, tipset, txType, blockCid, systemExecution, canonical)
+	metadata := p.feesMetadata(ctx, msg, tipset, txType, blockCid, systemExecution, canonical)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
@@ -514,7 +508,7 @@ func (p *Parser) feesTransactions(nodes []api.FullNode, msg *typesV2.InvocResult
 	}
 }
 
-func (p *Parser) feesMetadata(nodes []api.FullNode, msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution, canonical bool) string {
+func (p *Parser) feesMetadata(ctx context.Context, msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution, canonical bool) string {
 	var minerAddress string
 	var err error
 
@@ -532,7 +526,7 @@ func (p *Parser) feesMetadata(nodes []api.FullNode, msg *typesV2.InvocResultV2, 
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)
 		}
 
-		minerAddress, err = actors.ConsolidateToRobustAddress(nodes, minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		minerAddress, err = actors.ConsolidateToRobustAddress(ctx, minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			minerAddress = minerAddr.String()
 			p.logger.Errorf("Error when trying to consolidate miner address to robust: %v", err)
@@ -568,17 +562,17 @@ func (p *Parser) feesMetadata(nodes []api.FullNode, msg *typesV2.InvocResultV2, 
 	return string(metadata)
 }
 
-func (p *Parser) getFromToRobustAddresses(nodes []api.FullNode, from, to address.Address, canonical bool) (string, string) {
+func (p *Parser) getFromToRobustAddresses(ctx context.Context, from, to address.Address, canonical bool) (string, string) {
 	var err error
 	txFrom := from.String()
 	txTo := to.String()
 	if p.config.ConsolidateRobustAddress {
-		txFrom, err = actors.ConsolidateToRobustAddress(nodes, from, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		txFrom, err = actors.ConsolidateToRobustAddress(ctx, from, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			txFrom = from.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
 		}
-		txTo, err = actors.ConsolidateToRobustAddress(nodes, to, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		txTo, err = actors.ConsolidateToRobustAddress(ctx, to, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			txTo = to.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
@@ -588,28 +582,28 @@ func (p *Parser) getFromToRobustAddresses(nodes []api.FullNode, from, to address
 	return txFrom, txTo
 }
 
-func (p *Parser) appendAddressInfo(nodes []api.FullNode, msg *parser.LotusMessage, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) {
+func (p *Parser) appendAddressInfo(ctx context.Context, msg *parser.LotusMessage, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) {
 	if msg == nil {
 		return
 	}
 	if msg.From != address.Undef {
-		fromAdd := p.helper.GetActorAddressInfo(nodes, msg.From, key, height, canonical)
+		fromAdd := p.helper.GetActorAddressInfo(ctx, msg.From, key, height, canonical)
 		parser.AppendToAddressesMap(p.addresses, fromAdd)
 	}
 	if msg.To != address.Undef {
-		toAdd := p.helper.GetActorAddressInfo(nodes, msg.To, key, height, canonical)
+		toAdd := p.helper.GetActorAddressInfo(ctx, msg.To, key, height, canonical)
 		parser.AppendToAddressesMap(p.addresses, toAdd)
 	}
 }
 
-func (p *Parser) getTxType(ctx context.Context, nodes []api.FullNode, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, canonical bool) (actorName string, txType string, err error) {
+func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, canonical bool) (actorName string, txType string, err error) {
 	msg := &parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
 	}
 
-	actorName, txType, err = p.getActorAndMethodName(ctx, nodes, trace, msg, mainMsgCid, tipset, canonical)
+	actorName, txType, err = p.getActorAndMethodName(ctx, trace, msg, mainMsgCid, tipset, canonical)
 	if err != nil {
 		p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v2: %v", mainMsgCid.String(), err)
 	}
@@ -617,7 +611,7 @@ func (p *Parser) getTxType(ctx context.Context, nodes []api.FullNode, trace type
 	// fallback to depracated method
 	if txType == parser.UnknownStr || txType == "" {
 		//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
-		txType, err = p.helper.GetMethodName(nodes, msg, int64(tipset.Height()), tipset.Key(), canonical)
+		txType, err = p.helper.GetMethodName(ctx, msg, int64(tipset.Height()), tipset.Key(), canonical)
 		if err != nil {
 			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v1: %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
@@ -627,10 +621,10 @@ func (p *Parser) getTxType(ctx context.Context, nodes []api.FullNode, trace type
 	return actorName, txType, nil
 }
 
-func (p *Parser) getActorAndMethodName(ctx context.Context, nodes []api.FullNode, trace typesV2.ExecutionTraceV2, msg *parser.LotusMessage, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, canonical bool) (actorName string, txType string, err error) {
+func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.ExecutionTraceV2, msg *parser.LotusMessage, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, canonical bool) (actorName string, txType string, err error) {
 	actorAddress := msg.To
 
-	_, actorName, err = p.helper.GetActorInfoFromAddress(nodes, actorAddress, int64(tipset.Height()), tipset.Key(), canonical)
+	_, actorName, err = p.helper.GetActorInfoFromAddress(ctx, actorAddress, int64(tipset.Height()), tipset.Key(), canonical)
 	if err != nil || actorName == "" {
 		p.logger.Warnf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		if trace.InvokedActor != nil {
@@ -641,7 +635,7 @@ func (p *Parser) getActorAndMethodName(ctx context.Context, nodes []api.FullNode
 		}
 	}
 
-	txType, err = actorsV2.GetMethodName(ctx, nodes, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
+	txType, err = actorsV2.GetMethodName(ctx, trace.Msg.Method, actorName, int64(tipset.Height()), p.network, p.helper, p.logger)
 	if err != nil {
 		txType = parser.UnknownStr
 	}

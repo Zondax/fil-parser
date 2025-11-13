@@ -12,7 +12,6 @@ import (
 	"github.com/ipfs/go-cid"
 
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 
 	"github.com/zondax/fil-parser/actors"
@@ -45,14 +44,14 @@ func NewActorParser(network string, helper *helper.Helper, logger *logger.Logger
 	}
 }
 
-func (p *ActorParser) GetMetadata(ctx context.Context, nodes []api.FullNode, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+func (p *ActorParser) GetMetadata(ctx context.Context, actorName string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 	height int64, key filTypes.TipSetKey, canonical bool) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return "", metadata, nil, nil
 	}
 
-	actorParser, err := p.GetActor(nodes, actorName)
+	actorParser, err := p.GetActor(actorName)
 	if err != nil {
 		return actorName, nil, nil, parser.ErrNotValidActor
 	}
@@ -71,10 +70,10 @@ func (p *ActorParser) LatestSupportedVersion(actor string) (uint64, error) {
 	return 0, nil
 }
 
-func (p *ActorParser) GetActor(nodes []api.FullNode, actor string) (Actor, error) {
+func (p *ActorParser) GetActor(actor string) (Actor, error) {
 	if strings.Contains(actor, manifest.MultisigKey) {
-		return multisig.New(nodes, p.helper, p.logger, p.metrics, GetMethodName), nil
+		return multisig.New(p.helper, p.logger, p.metrics, GetMethodName), nil
 	}
 
-	return internal.GetActor(nodes, actor, p.logger, p.helper, p.metrics)
+	return internal.GetActor(actor, p.logger, p.helper, p.metrics)
 }

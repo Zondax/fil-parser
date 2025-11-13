@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
@@ -14,7 +13,6 @@ import (
 	actorsV2 "github.com/zondax/fil-parser/actors/v2"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
-	"github.com/zondax/fil-parser/tools/mocks"
 )
 
 var powerWithParamsOrReturnTests = []struct {
@@ -169,9 +167,8 @@ func TestActorParserV1_ParseCreateMiner(t *testing.T) {
 }
 
 func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
-	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.PowerKey)
+	actor, err := p.GetActor(manifest.PowerKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -200,9 +197,8 @@ func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
 }
 
 func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
-	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.PowerKey)
+	actor, err := p.GetActor(manifest.PowerKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 
@@ -229,9 +225,8 @@ func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
 }
 
 func TestActorParserV2_ParseCreateMiner(t *testing.T) {
-	nodeMock := &mocks.FullNode{}
 	p := getActorParser(actorsV2.NewActorParser).(*actorsV2.ActorParser)
-	actor, err := p.GetActor([]api.FullNode{nodeMock}, manifest.PowerKey)
+	actor, err := p.GetActor(manifest.PowerKey)
 	require.NoError(t, err)
 	require.NotNil(t, actor)
 

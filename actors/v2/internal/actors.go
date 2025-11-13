@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/lotus/api"
 	"github.com/zondax/fil-parser/actors"
 	actormetrics "github.com/zondax/fil-parser/actors/metrics"
 	"github.com/zondax/fil-parser/actors/v2/account"
@@ -29,7 +28,7 @@ import (
 
 // GetActor returns a new instance of the specified actor type. It does not return multisig actors to avoid
 // circular dependencies, as multisig also needs all actors to parse 'propose'.
-func GetActor(nodes []api.FullNode, actor string, logger *logger.Logger, helper *helper.Helper, metrics *actormetrics.ActorsMetricsClient) (actors.Actor, error) {
+func GetActor(actor string, logger *logger.Logger, helper *helper.Helper, metrics *actormetrics.ActorsMetricsClient) (actors.Actor, error) {
 	actorName := actor
 	if strings.Contains(actor, "/") {
 		parts := strings.Split(actor, "/")
@@ -49,7 +48,7 @@ func GetActor(nodes []api.FullNode, actor string, logger *logger.Logger, helper 
 	case manifest.EvmKey:
 		return evm.New(logger, metrics), nil
 	case manifest.InitKey:
-		return initActor.New(nodes, helper, logger), nil
+		return initActor.New(helper, logger), nil
 	case manifest.MarketKey:
 		return market.New(logger), nil
 	case manifest.MinerKey:
