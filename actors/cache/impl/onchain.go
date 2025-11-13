@@ -67,9 +67,14 @@ func (m *OnChain) GetActorCode(ctx context.Context, address address.Address, key
 	if err != nil {
 		return "", err
 	}
+	if len(nodes) == 0 {
+		return "", fmt.Errorf("no nodes available")
+	}
 	for _, node := range nodes {
 		actorCid, err = m.retrieveActorFromLotus(node, address, key)
-		if err != nil && !IsRetriableError(err) {
+		if err == nil {
+			break
+		} else if !IsRetriableError(err) {
 			return cid.Undef.String(), err
 		}
 	}
@@ -93,10 +98,15 @@ func (m *OnChain) GetRobustAddress(ctx context.Context, address address.Address,
 	if err != nil {
 		return "", err
 	}
+	if len(nodes) == 0 {
+		return "", fmt.Errorf("no nodes available")
+	}
 	// Address is not in cache, get robust address from lotus
 	for _, node := range nodes {
 		robustAdd, err = m.retrieveActorPubKeyFromLotus(node, address, false)
-		if err != nil && !IsRetriableError(err) {
+		if err == nil {
+			break
+		} else if !IsRetriableError(err) {
 			return "", err
 		}
 	}
@@ -120,9 +130,14 @@ func (m *OnChain) GetShortAddress(ctx context.Context, address address.Address, 
 	if err != nil {
 		return "", err
 	}
+	if len(nodes) == 0 {
+		return "", fmt.Errorf("no nodes available")
+	}
 	for _, node := range nodes {
 		shortAdd, err = m.retrieveActorPubKeyFromLotus(node, address, true)
-		if err != nil && !IsRetriableError(err) {
+		if err == nil {
+			break
+		} else if !IsRetriableError(err) {
 			return "", common.ErrKeyNotFound
 		}
 	}
