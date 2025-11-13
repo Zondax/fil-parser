@@ -1,7 +1,6 @@
 package verifreg_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/exitcode"
@@ -13,6 +12,7 @@ import (
 	cid "github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	parserContext "github.com/zondax/fil-parser/context"
 	filMetrics "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -42,7 +42,7 @@ func init() {
 	}
 }
 
-func setupTest(_ *testing.T, network string) verifreg.EventGenerator {
+func setupTest(_ *testing.T, network string) (verifreg.EventGenerator, api.FullNode) {
 	logger := logger.NewDevelopmentLogger()
 	metrics := filMetrics.NewMetricsClient(metrics2.NewNoopMetrics())
 
@@ -61,11 +61,11 @@ func setupTest(_ *testing.T, network string) verifreg.EventGenerator {
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(node)
 	helper := helper.NewHelper(lib, cache, node, logger, metrics)
 
-	return verifreg.NewEventGenerator([]api.FullNode{node}, helper, logger, metrics, network, parser.Config{})
+	return verifreg.NewEventGenerator(helper, logger, metrics, network, parser.Config{}), node
 }
 
 func TestParseUniversalReceiverHook(t *testing.T) {
-	eg := setupTest(t, "mainnet")
+	eg, node := setupTest(t, "mainnet")
 
 	tests := []struct {
 		name      string
@@ -153,7 +153,8 @@ func TestParseUniversalReceiverHook(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := eg.GenerateVerifregEvents(context.Background(), []*types.Transaction{
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			_, err := eg.GenerateVerifregEvents(ctx, []*types.Transaction{
 				{
 					TxBasicBlockData: types.TxBasicBlockData{
 						BasicBlockData: types.BasicBlockData{
