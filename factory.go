@@ -238,8 +238,8 @@ func (p *FilecoinParser) ParseEthLogs(ctx context.Context, nodes []api.FullNode,
 	return parsedResult, nil
 }
 
-func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error) {
-	mCtx := parserContext.SetNodes(ctx, []api.FullNode{p.Helper.GetFilecoinNodeClient()})
+func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, nodes []api.FullNode, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MultisigEvents, error) {
+	mCtx := parserContext.SetNodes(ctx, nodes)
 	multisigTxs, err := p.Helper.FilterTxsByActorType(mCtx, txs, manifest.MultisigKey, tipsetKey, true)
 	if err != nil {
 		return nil, err
@@ -247,23 +247,23 @@ func (p *FilecoinParser) ParseMultisigEvents(ctx context.Context, txs []*types.T
 	return p.parserV2.ParseMultisigEvents(mCtx, multisigTxs, tipsetCid, tipsetKey)
 }
 
-func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
-	mCtx := parserContext.SetNodes(ctx, []api.FullNode{p.Helper.GetFilecoinNodeClient()})
+func (p *FilecoinParser) ParseMinerEvents(ctx context.Context, nodes []api.FullNode, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.MinerEvents, error) {
+	mCtx := parserContext.SetNodes(ctx, nodes)
 	return p.parserV2.ParseMinerEvents(mCtx, txs, tipsetCid, tipsetKey)
 }
 
-func (p *FilecoinParser) ParseVerifregEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.VerifregEvents, error) {
-	mCtx := parserContext.SetNodes(ctx, []api.FullNode{p.Helper.GetFilecoinNodeClient()})
+func (p *FilecoinParser) ParseVerifregEvents(ctx context.Context, nodes []api.FullNode, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.VerifregEvents, error) {
+	mCtx := parserContext.SetNodes(ctx, nodes)
 	return p.parserV2.ParseVerifregEvents(mCtx, txs, tipsetCid, tipsetKey)
 }
 
-func (p *FilecoinParser) ParseDealsEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DealsEvents, error) {
-	mCtx := parserContext.SetNodes(ctx, []api.FullNode{p.Helper.GetFilecoinNodeClient()})
+func (p *FilecoinParser) ParseDealsEvents(ctx context.Context, nodes []api.FullNode, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DealsEvents, error) {
+	mCtx := parserContext.SetNodes(ctx, nodes)
 	return p.parserV2.ParseDealsEvents(mCtx, txs, tipsetCid, tipsetKey)
 }
 
-func (p *FilecoinParser) ParseDataCapEvents(ctx context.Context, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DataCapEvents, error) {
-	mCtx := parserContext.SetNodes(ctx, []api.FullNode{p.Helper.GetFilecoinNodeClient()})
+func (p *FilecoinParser) ParseDataCapEvents(ctx context.Context, nodes []api.FullNode, txs []*types.Transaction, tipsetCid string, tipsetKey types2.TipSetKey) (*types.DataCapEvents, error) {
+	mCtx := parserContext.SetNodes(ctx, nodes)
 	return p.parserV2.ParseDataCapEvents(mCtx, txs, tipsetCid, tipsetKey)
 }
 

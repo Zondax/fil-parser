@@ -1804,7 +1804,6 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 				p, err = NewFilecoinParserWithActorV2(getLib(tt.url), calibNextNodeCacheDataSource, gLogger)
 				node = calibNextNodeCacheDataSource.Node
 			}
-
 			require.NoError(t, err)
 
 			tipset, err := readTipset(tt.height)
@@ -1828,7 +1827,7 @@ func TestParser_MultisigEventsFromTxs(t *testing.T) {
 
 			tipsetCid := txsData.Tipset.GetCidString()
 			tipsetKey := txsData.Tipset.Key()
-			events, err := p.ParseMultisigEvents(t.Context(), parsedResult.Txs, tipsetCid, tipsetKey)
+			events, err := p.ParseMultisigEvents(t.Context(), []api.FullNode{node}, parsedResult.Txs, tipsetCid, tipsetKey)
 			require.NoError(t, err)
 			require.NotNil(t, events)
 
