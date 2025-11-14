@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -65,7 +66,7 @@ func (*Msig) Cancel(network string, msg *parser.LotusMessage, height int64, key 
 	return parseCBOR(rawParams, nil, params(), nil)
 }
 
-func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, proposeKind string, key filTypes.TipSetKey, rawParams, rawReturn []byte, canonical bool) (map[string]interface{}, error) {
+func (m *Msig) Propose(ctx context.Context, network string, msg *parser.LotusMessage, height int64, proposeKind string, key filTypes.TipSetKey, rawParams, rawReturn []byte, canonical bool) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
 	innerParamsRaw, methodNum, to, value, _, err := getProposeParams(network, height, rawParams)
 	if err != nil {
@@ -78,7 +79,7 @@ func (m *Msig) Propose(network string, msg *parser.LotusMessage, height int64, p
 		return nil, err
 	}
 
-	method, innerMsg, err := m.parseInnerProposeMsg(msg, to, network, height, methodNum, innerParamsRaw, innerReturnRaw, key, applied, exitCode, canonical)
+	method, innerMsg, err := m.parseInnerProposeMsg(ctx, msg, to, network, height, methodNum, innerParamsRaw, innerReturnRaw, key, applied, exitCode, canonical)
 	if err != nil {
 		_ = m.metrics.UpdateMultisigProposeMetric(manifest.MultisigKey, proposeKind, fmt.Sprint(methodNum))
 		m.logger.Errorf("could not decode multisig inner params. Method: %v. Err: %v", methodNum.String(), err)

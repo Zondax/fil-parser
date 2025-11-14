@@ -34,14 +34,14 @@ func NewActorParser(helper *helper.Helper, logger *logger.Logger, metrics metric
 	}
 }
 
-func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
+func (p *ActorParser) GetMetadata(ctx context.Context, _ string, txType string, msg *parser.LotusMessage, mainMsgCid cid.Cid, msgRct *parser.LotusMessageReceipt,
 	height int64, key filTypes.TipSetKey, canonical bool) (string, map[string]interface{}, *types.AddressInfo, error) {
 	metadata := make(map[string]interface{})
 	if msg == nil {
 		return "", metadata, nil, nil
 	}
 
-	_, actor, err := p.helper.GetActorInfoFromAddress(msg.To, height, key, canonical)
+	_, actor, err := p.helper.GetActorInfoFromAddress(ctx, msg.To, height, key, canonical)
 	if err != nil {
 		return "", metadata, nil, err
 	}
@@ -68,7 +68,7 @@ func (p *ActorParser) GetMetadata(_ context.Context, _ string, txType string, ms
 	case manifest.PaychKey:
 		metadata, err = p.ParsePaymentchannel(txType, msg, msgRct)
 	case manifest.MultisigKey:
-		metadata, err = p.ParseMultisig(txType, msg, msgRct, height, key, canonical)
+		metadata, err = p.ParseMultisig(ctx, txType, msg, msgRct, height, key, canonical)
 	case manifest.RewardKey:
 		metadata, err = p.ParseReward(txType, msg, msgRct)
 	case manifest.VerifregKey:

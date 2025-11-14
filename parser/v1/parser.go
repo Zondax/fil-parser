@@ -61,6 +61,7 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		logger.Fatal(err.Error())
 		return nil
 	}
+
 	networkName := tools.ParseRawNetworkName(string(network))
 	return &Parser{
 		network:                networkName,
@@ -185,7 +186,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
+			feeTx := p.feesTransactions(ctx, trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
 			if p.config.FeesAsColumn {
 				transaction.FeeData = feeTx.TxMetadata
 			} else {
@@ -234,6 +235,7 @@ func (p *Parser) ParseVerifregEvents(ctx context.Context, verifregTxs []*types.T
 func (p *Parser) ParseDealsEvents(ctx context.Context, dealsTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DealsEvents, error) {
 	return p.dealsEventGenerator.GenerateDealsEvents(ctx, dealsTxs, tipsetCid, tipsetKey)
 }
+
 func (p *Parser) ParseDataCapEvents(ctx context.Context, dataCapTxs []*types.Transaction, tipsetCid string, tipsetKey filTypes.TipSetKey) (*types.DataCapEvents, error) {
 	return nil, errors.New("unimplimented")
 }
@@ -349,7 +351,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
-	p.appendAddressInfo(trace.Msg, tipset.Key(), tipset.Height(), canonical)
+	p.appendAddressInfo(ctx, trace.Msg, tipset.Key(), tipset.Height(), canonical)
 
 	var blockCid string
 	if !systemExecution {
@@ -362,7 +364,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), trace.Msg.Cid().String(), parentId)
 
-	txFrom, txTo := p.getFromToRobustAddresses(trace.Msg.From, trace.Msg.To, canonical)
+	txFrom, txTo := p.getFromToRobustAddresses(ctx, trace.Msg.From, trace.Msg.To, canonical)
 
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
@@ -387,7 +389,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV1.ExecutionTraceV1,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
+func (p *Parser) feesTransactions(ctx context.Context, msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
 	var blockCid string
 	var err error
 
@@ -399,7 +401,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 		}
 	}
 
-	metadata := p.feesMetadata(msg, tipset, txType, blockCid, systemExecution, canonical)
+	metadata := p.feesMetadata(ctx, msg, tipset, txType, blockCid, systemExecution, canonical)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
@@ -425,7 +427,7 @@ func (p *Parser) feesTransactions(msg *typesV1.InvocResultV1, tipset *types.Exte
 	}
 }
 
-func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution, canonical bool) string {
+func (p *Parser) feesMetadata(ctx context.Context, msg *typesV1.InvocResultV1, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution, canonical bool) string {
 	var minerAddress string
 	var err error
 	if !systemExecution && blockCid != "" {
@@ -443,7 +445,7 @@ func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.Extended
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)
 		}
 
-		minerAddress, err = actors.ConsolidateToRobustAddress(minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		minerAddress, err = actors.ConsolidateToRobustAddress(ctx, minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			p.logger.Errorf("Error when trying to consolidate miner address to robust: %v", err)
 		}
@@ -478,17 +480,17 @@ func (p *Parser) feesMetadata(msg *typesV1.InvocResultV1, tipset *types.Extended
 	return string(metadata)
 }
 
-func (p *Parser) getFromToRobustAddresses(from, to address.Address, canonical bool) (string, string) {
+func (p *Parser) getFromToRobustAddresses(ctx context.Context, from, to address.Address, canonical bool) (string, string) {
 	var err error
 	txFrom := from.String()
 	txTo := to.String()
 	if p.config.ConsolidateRobustAddress {
-		txFrom, err = actors.ConsolidateToRobustAddress(from, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		txFrom, err = actors.ConsolidateToRobustAddress(ctx, from, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			txFrom = from.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
 		}
-		txTo, err = actors.ConsolidateToRobustAddress(to, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		txTo, err = actors.ConsolidateToRobustAddress(ctx, to, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			txTo = to.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
@@ -511,12 +513,12 @@ func hasExecutionTrace(trace *typesV1.InvocResultV1) bool {
 	return true
 }
 
-func (p *Parser) appendAddressInfo(msg *filTypes.Message, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) {
+func (p *Parser) appendAddressInfo(ctx context.Context, msg *filTypes.Message, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) {
 	if msg == nil {
 		return
 	}
-	fromAdd := p.helper.GetActorAddressInfo(msg.From, key, height, canonical)
-	toAdd := p.helper.GetActorAddressInfo(msg.To, key, height, canonical)
+	fromAdd := p.helper.GetActorAddressInfo(ctx, msg.From, key, height, canonical)
+	toAdd := p.helper.GetActorAddressInfo(ctx, msg.To, key, height, canonical)
 	parser.AppendToAddressesMap(p.addresses, fromAdd, toAdd)
 }
 
@@ -526,7 +528,7 @@ func (p *Parser) getTxType(ctx context.Context, to, from address.Address, method
 		From:   from,
 		Method: method,
 	}
-	_, actorName, err = p.helper.GetActorInfoFromAddress(msg.To, int64(tipset.Height()), tipset.Key(), canonical)
+	_, actorName, err = p.helper.GetActorInfoFromAddress(ctx, msg.To, int64(tipset.Height()), tipset.Key(), canonical)
 	if err != nil {
 		p.logger.Errorf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 	}
