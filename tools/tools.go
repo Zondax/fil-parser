@@ -172,13 +172,13 @@ func GetBlocksCidByString(str string) []string {
 	return strings.Split(str, ",")
 }
 
-func GetExitCodeStatus(exitCode exitcode.ExitCode) string {
+func GetExitCodeStatus(actorName string, exitCode exitcode.ExitCode) string {
 	code := exitCode.String()
 	status := strings.Split(code, "(")
 	if len(status) == 2 {
 		return status[0]
 	}
-	return CheckExitCodeError(code)
+	return CheckExitCodeError(actorName, code)
 }
 
 func FormatTipsetKey(tipsetKey filTypes.TipSetKey) string {
