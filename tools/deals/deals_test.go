@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	filApiTypes "github.com/filecoin-project/lotus/api/types"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
@@ -139,8 +138,8 @@ func TestParseVerifyDealsForActivation(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -313,8 +312,8 @@ func TestActivateDeals(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)

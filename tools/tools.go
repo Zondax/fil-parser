@@ -181,6 +181,10 @@ func GetExitCodeStatus(actorName string, exitCode exitcode.ExitCode) string {
 	return CheckExitCodeError(actorName, code)
 }
 
+func GetExitCodeOK() string {
+	return GetExitCodeStatus("", exitcode.Ok)
+}
+
 func FormatTipsetKey(tipsetKey filTypes.TipSetKey) string {
 	tipsetKeyStr := tipsetKey.String()
 	tipsetKeyStr = strings.ReplaceAll(tipsetKeyStr, "{", "")
