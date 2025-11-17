@@ -66,7 +66,7 @@ func (m *ZCacheBlockConfirmation) StoreAddressInfo(info types.AddressInfo) {
 	}
 }
 
-func (m *ZCacheBlockConfirmation) GetActorCode(_ context.Context, address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
+func (m *ZCacheBlockConfirmation) GetActorCode(address address.Address, key filTypes.TipSetKey, _, canonical bool) (string, error) {
 	// try canonical first
 	code, err := m.offChainCanonical.GetActorCode(address, key)
 	if err == nil {
@@ -79,7 +79,7 @@ func (m *ZCacheBlockConfirmation) GetActorCode(_ context.Context, address addres
 	return "", err
 }
 
-func (m *ZCacheBlockConfirmation) GetRobustAddress(_ context.Context, address address.Address, canonical bool) (string, error) {
+func (m *ZCacheBlockConfirmation) GetRobustAddress(address address.Address, canonical bool) (string, error) {
 	// try canonical first
 	robust, err := m.offChainCanonical.GetRobustAddress(address)
 	if err == nil {
@@ -92,7 +92,7 @@ func (m *ZCacheBlockConfirmation) GetRobustAddress(_ context.Context, address ad
 	return "", err
 }
 
-func (m *ZCacheBlockConfirmation) GetShortAddress(_ context.Context, address address.Address, canonical bool) (string, error) {
+func (m *ZCacheBlockConfirmation) GetShortAddress(address address.Address, canonical bool) (string, error) {
 	// try canonical first
 	short, err := m.offChainCanonical.GetShortAddress(address)
 	if err == nil {

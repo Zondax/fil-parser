@@ -67,7 +67,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 		}
 
 		// #nosec G115
-		actorName, err := common.GetActorNameFromAddress(ctx, eg.helper, addr, int64(tx.Height), tipsetKey, true)
+		actorName, err := common.GetActorNameFromAddress(eg.helper, addr, int64(tx.Height), tipsetKey, true)
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err
@@ -77,7 +77,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 			continue
 		}
 
-		events, err = eg.createVerifregInfo(ctx, tx, tipsetCid, events)
+		events, err = eg.createVerifregInfo(tx, tipsetCid, events)
 		if err != nil {
 			return nil, fmt.Errorf("could not create verifreg info. err: %w", err)
 		}
@@ -91,7 +91,7 @@ func (eg *eventGenerator) isVerifregMessage(actorName, txType string) bool {
 	return strings.EqualFold(actorName, manifest.VerifregKey)
 }
 
-func (eg *eventGenerator) createVerifregInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
+func (eg *eventGenerator) createVerifregInfo(tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
 
 	metadata := map[string]interface{}{}
 	err := json.Unmarshal([]byte(tx.TxMetadata), &metadata)
@@ -128,7 +128,7 @@ func (eg *eventGenerator) createVerifregInfo(ctx context.Context, tx *types.Tran
 		events.VerifierInfo = append(events.VerifierInfo, verifierInfo)
 		events.ClientInfo = append(events.ClientInfo, clientInfo)
 	case parser.MethodUniversalReceiverHook:
-		clientInfo, dealInfo, err := eg.universalReceiverHook(ctx, tx, tipsetCid)
+		clientInfo, dealInfo, err := eg.universalReceiverHook(tx, tipsetCid)
 		if err != nil {
 			return nil, err
 		}
@@ -255,8 +255,8 @@ func (eg *eventGenerator) removeVerifiedClient(tx *types.Transaction, metadata m
 		}, nil
 }
 
-func (eg *eventGenerator) universalReceiverHook(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
-	clientAddress, clientValue, dealValue, err := eg.parserUniversalReceiverHook(ctx, tx, tipsetCid)
+func (eg *eventGenerator) universalReceiverHook(tx *types.Transaction, tipsetCid string) (*types.VerifregEvent, []*types.VerifregDeal, error) {
+	clientAddress, clientValue, dealValue, err := eg.parserUniversalReceiverHook(tx, tipsetCid)
 	if err != nil {
 		return nil, nil, err
 	}

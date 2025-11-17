@@ -67,7 +67,6 @@ func NewParser(helper *helper.Helper, logger *logger.Logger, metrics metrics.Met
 		logger.Fatal(err.Error())
 		return nil
 	}
-
 	networkName := tools.ParseRawNetworkName(string(network))
 	p := &Parser{
 		network:                networkName,
@@ -191,7 +190,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(ctx, trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
 			if p.config.FeesAsColumn {
 				transaction.FeeData = feeTx.TxMetadata
 			} else {
@@ -225,7 +224,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 	}, nil
 }
 
-func (p *Parser) ParseNativeEvents(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseNativeEvents(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []*types.Event
 	nativeEventsTotal, evmEventsTotal := 0, 0
 	for idx, nativeLog := range eventsData.NativeLog {
@@ -247,7 +246,7 @@ func (p *Parser) ParseNativeEvents(ctx context.Context, eventsData types.EventsD
 			if err != nil {
 				return nil, err
 			}
-			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(ctx, eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
+			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
 				event.Emitter = consolidatedAddr
 			}
 		}
@@ -260,7 +259,7 @@ func (p *Parser) ParseNativeEvents(ctx context.Context, eventsData types.EventsD
 	return &types.EventsParsedResult{EVMEvents: evmEventsTotal, NativeEvents: nativeEventsTotal, ParsedEvents: parsed}, nil
 }
 
-func (p *Parser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
+func (p *Parser) ParseEthLogs(_ context.Context, eventsData types.EventsData) (*types.EventsParsedResult, error) {
 	var parsed []*types.Event
 	// sort the events by the TransactionIndex ASC and the logIndex ASC
 	slices.SortFunc(eventsData.EthLogs, func(a, b types.EthLog) int {
@@ -284,7 +283,7 @@ func (p *Parser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) 
 			if err != nil {
 				return nil, fmt.Errorf("error parsing emitter address: %s: %w", event.Emitter, err)
 			}
-			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(ctx, eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
+			if consolidatedAddr, err := actors.ConsolidateToRobustAddress(eventAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, eventsData.Canonical); err == nil {
 				event.Emitter = consolidatedAddr
 			}
 		}
@@ -418,7 +417,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		_ = p.metrics.UpdateJsonMarshalMetric(parsermetrics.MetadataValue, txType)
 	}
 
-	p.appendAddressInfo(ctx, &parser.LotusMessage{
+	p.appendAddressInfo(&parser.LotusMessage{
 		To:     trace.Msg.To,
 		From:   trace.Msg.From,
 		Method: trace.Msg.Method,
@@ -444,7 +443,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	tipsetCid := tipset.GetCidString()
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
-	txFrom, txTo := p.getFromToRobustAddresses(ctx, trace.Msg.From, trace.Msg.To, canonical)
+	txFrom, txTo := p.getFromToRobustAddresses(trace.Msg.From, trace.Msg.To, canonical)
 	return &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
@@ -468,7 +467,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	}, nil
 }
 
-func (p *Parser) feesTransactions(ctx context.Context, msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
 	var blockCid string
 	var err error
 
@@ -481,7 +480,7 @@ func (p *Parser) feesTransactions(ctx context.Context, msg *typesV2.InvocResultV
 		}
 	}
 
-	metadata := p.feesMetadata(ctx, msg, tipset, txType, blockCid, systemExecution, canonical)
+	metadata := p.feesMetadata(msg, tipset, txType, blockCid, systemExecution, canonical)
 
 	feeID := tools.BuildFeeId(tipset.GetCidString(), blockCid, msg.MsgCid.String())
 
@@ -508,7 +507,7 @@ func (p *Parser) feesTransactions(ctx context.Context, msg *typesV2.InvocResultV
 	}
 }
 
-func (p *Parser) feesMetadata(ctx context.Context, msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution, canonical bool) string {
+func (p *Parser) feesMetadata(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, blockCid string, systemExecution, canonical bool) string {
 	var minerAddress string
 	var err error
 
@@ -526,7 +525,7 @@ func (p *Parser) feesMetadata(ctx context.Context, msg *typesV2.InvocResultV2, t
 			p.logger.Errorf("Error when trying to parse miner address: %v", err)
 		}
 
-		minerAddress, err = actors.ConsolidateToRobustAddress(ctx, minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		minerAddress, err = actors.ConsolidateToRobustAddress(minerAddr, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			minerAddress = minerAddr.String()
 			p.logger.Errorf("Error when trying to consolidate miner address to robust: %v", err)
@@ -562,17 +561,17 @@ func (p *Parser) feesMetadata(ctx context.Context, msg *typesV2.InvocResultV2, t
 	return string(metadata)
 }
 
-func (p *Parser) getFromToRobustAddresses(ctx context.Context, from, to address.Address, canonical bool) (string, string) {
+func (p *Parser) getFromToRobustAddresses(from, to address.Address, canonical bool) (string, string) {
 	var err error
 	txFrom := from.String()
 	txTo := to.String()
 	if p.config.ConsolidateRobustAddress {
-		txFrom, err = actors.ConsolidateToRobustAddress(ctx, from, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		txFrom, err = actors.ConsolidateToRobustAddress(from, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			txFrom = from.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
 		}
-		txTo, err = actors.ConsolidateToRobustAddress(ctx, to, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
+		txTo, err = actors.ConsolidateToRobustAddress(to, p.helper, p.logger, p.config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			txTo = to.String()
 			p.logger.Warnf("Could not consolidate robust address: %v", err)
@@ -582,16 +581,16 @@ func (p *Parser) getFromToRobustAddresses(ctx context.Context, from, to address.
 	return txFrom, txTo
 }
 
-func (p *Parser) appendAddressInfo(ctx context.Context, msg *parser.LotusMessage, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) {
+func (p *Parser) appendAddressInfo(msg *parser.LotusMessage, key filTypes.TipSetKey, height abi.ChainEpoch, canonical bool) {
 	if msg == nil {
 		return
 	}
 	if msg.From != address.Undef {
-		fromAdd := p.helper.GetActorAddressInfo(ctx, msg.From, key, height, canonical)
+		fromAdd := p.helper.GetActorAddressInfo(msg.From, key, height, canonical)
 		parser.AppendToAddressesMap(p.addresses, fromAdd)
 	}
 	if msg.To != address.Undef {
-		toAdd := p.helper.GetActorAddressInfo(ctx, msg.To, key, height, canonical)
+		toAdd := p.helper.GetActorAddressInfo(msg.To, key, height, canonical)
 		parser.AppendToAddressesMap(p.addresses, toAdd)
 	}
 }
@@ -611,7 +610,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 	// fallback to depracated method
 	if txType == parser.UnknownStr || txType == "" {
 		//nolint:staticcheck // GetMethodName is deprecated, using v1 version for compatibility
-		txType, err = p.helper.GetMethodName(ctx, msg, int64(tipset.Height()), tipset.Key(), canonical)
+		txType, err = p.helper.GetMethodName(msg, int64(tipset.Height()), tipset.Key(), canonical)
 		if err != nil {
 			p.logger.Errorf("Error when trying to get method name in tx cid'%s' using v1: %v", mainMsgCid.String(), err)
 			txType = parser.UnknownStr
@@ -624,7 +623,7 @@ func (p *Parser) getTxType(ctx context.Context, trace typesV2.ExecutionTraceV2, 
 func (p *Parser) getActorAndMethodName(ctx context.Context, trace typesV2.ExecutionTraceV2, msg *parser.LotusMessage, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, canonical bool) (actorName string, txType string, err error) {
 	actorAddress := msg.To
 
-	_, actorName, err = p.helper.GetActorInfoFromAddress(ctx, actorAddress, int64(tipset.Height()), tipset.Key(), canonical)
+	_, actorName, err = p.helper.GetActorInfoFromAddress(actorAddress, int64(tipset.Height()), tipset.Key(), canonical)
 	if err != nil || actorName == "" {
 		p.logger.Warnf("Error when trying to get actor name in tx cid'%s': %v", mainMsgCid.String(), err)
 		if trace.InvokedActor != nil {

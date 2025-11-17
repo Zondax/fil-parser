@@ -139,7 +139,6 @@ func TestActorParserV1_MultisigApprove(t *testing.T) {
 
 	for _, tt := range multisigApproveTests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := t.Context()
 			rawParams, rawReturn, err := getParamsAndReturn(manifest.MultisigKey, tt.method)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
@@ -150,7 +149,7 @@ func TestActorParserV1_MultisigApprove(t *testing.T) {
 			tipSet, err := deserializeTipset(manifest.MultisigKey, tt.method)
 			require.NoError(t, err)
 
-			got, err := p.ParseMultisig(ctx, tt.method, msg, &parser.LotusMessageReceipt{
+			got, err := p.ParseMultisig(tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, int64(tipSet.Height()), tipSet.Key(), true)
 			require.NoError(t, err)
@@ -164,13 +163,12 @@ func TestActorParserV1_MultisigWithParamsAndReturn(t *testing.T) {
 
 	for _, tt := range multisigWithParamsAndReturnTests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := t.Context()
 			rawParams, rawReturn, err := getParamsAndReturn(manifest.MultisigKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, err := p.ParseMultisig(ctx, tt.txType, &parser.LotusMessage{
+			got, err := p.ParseMultisig(tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -191,7 +189,6 @@ func TestActorParserV1_MultisigWithParamsOrReturn(t *testing.T) {
 
 	for _, tt := range multisigWithParamsOrReturnTests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := t.Context()
 			rawParams, err := loadFile(manifest.MultisigKey, tt.txType, tt.key)
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
@@ -205,7 +202,7 @@ func TestActorParserV1_MultisigWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, err := p.ParseMultisig(ctx, tt.txType, msg, msgRct, height, filTypes.EmptyTSK, true)
+			got, err := p.ParseMultisig(tt.txType, msg, msgRct, height, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -219,7 +216,6 @@ func TestActorParserV1_MultiSigParams(t *testing.T) {
 
 	for _, tt := range multisigParamsTests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := t.Context()
 			msg, err := deserializeMessage(manifest.MultisigKey, tt.txType)
 			require.NoError(t, err)
 			require.NotNil(t, msg)
@@ -227,7 +223,7 @@ func TestActorParserV1_MultiSigParams(t *testing.T) {
 			tipset, err := deserializeTipset(manifest.MultisigKey, tt.txType)
 			require.NoError(t, err)
 
-			got, err := p.ParseMultisig(ctx, tt.txType, msg, &parser.LotusMessageReceipt{
+			got, err := p.ParseMultisig(tt.txType, msg, &parser.LotusMessageReceipt{
 				Return: nil,
 			}, int64(tipset.Height()), tipset.Key(), true)
 			require.NoError(t, err)

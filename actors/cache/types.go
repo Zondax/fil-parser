@@ -16,9 +16,9 @@ import (
 
 type IActorsCache interface {
 	NewImpl(source common.DataSource, logger *logger.Logger, metrics *cacheMetrics.ActorsCacheMetricsClient, backoff *golemBackoff.BackOff) error
-	GetActorCode(ctx context.Context, add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (string, error)
-	GetRobustAddress(ctx context.Context, add address.Address, canonical bool) (string, error)
-	GetShortAddress(ctx context.Context, add address.Address, canonical bool) (string, error)
+	GetActorCode(add address.Address, key filTypes.TipSetKey, onChainOnly, canonical bool) (string, error)
+	GetRobustAddress(add address.Address, canonical bool) (string, error)
+	GetShortAddress(add address.Address, canonical bool) (string, error)
 	StoreAddressInfo(info types.AddressInfo)
 	GetEVMSelectorSig(ctx context.Context, selectorHash string, canonical bool) (string, error)
 	StoreEVMSelectorSig(ctx context.Context, selectorHash, selectorSig string, canonical bool) error
