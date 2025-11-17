@@ -174,10 +174,13 @@ func GetBlocksCidByString(str string) []string {
 
 func GetExitCodeStatus(actorName string, exitCode exitcode.ExitCode) string {
 	code := exitCode.String()
+	// common exit codes will be of the format Msg(code)
+	// this extracts the Msg e.g Ok(0) -> Ok
 	status := strings.Split(code, "(")
 	if len(status) == 2 {
 		return status[0]
 	}
+	// checking for actor specific exit codes
 	return CheckExitCodeError(actorName, code)
 }
 
