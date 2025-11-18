@@ -65,7 +65,7 @@ func TestCheckExitCodeCommonError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CheckExitCodeError(tt.code.String()); got != tt.want {
+			if got := CheckExitCodeError("", tt.code.String()); got != tt.want {
 				t.Errorf("CheckCheCommonError() = %v, want %v", got, tt.want)
 			}
 		})
@@ -211,7 +211,7 @@ func TestGetExitcodeStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetExitCodeStatus(tt.exitCode); got != tt.want {
+			if got := GetExitCodeStatus("", tt.exitCode); got != tt.want {
 				t.Errorf("GetEexitcode Status() = %v, want %v", got, tt.want)
 			}
 		})
