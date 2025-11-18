@@ -168,7 +168,7 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		mainMsgCid := trace.MsgCid
 		mainMsgExitCode := trace.MsgRct.ExitCode
-		transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, mainMsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution, mainMsgExitCode, txsData.Canonical)
+		actorName, transaction, err := p.parseTrace(ctx, trace.ExecutionTrace, mainMsgCid, txsData.Tipset, uuid.Nil.String(), systemExecution, mainMsgExitCode, "", txsData.Canonical)
 		if err != nil {
 			p.logger.Errorf("Error parsing trace for tx %s: %v", mainMsgCid, err)
 			_ = p.metrics.UpdateParseTraceMetric()
@@ -183,14 +183,14 @@ func (p *Parser) ParseTransactions(ctx context.Context, txsData types.TxsData) (
 
 		// note: we are using the parent MsgRct.ExitCode not the ExecutionTrace.MsgRct.ExitCode
 		subTxs := p.parseSubTxs(ctx, trace.ExecutionTrace.Subcalls, mainMsgCid, txsData.Tipset, txsData.EthLogs,
-			trace.Msg.Cid().String(), transaction.Id, 0, systemExecution, mainMsgExitCode, txsData.Canonical)
+			trace.Msg.Cid().String(), transaction.Id, 0, systemExecution, mainMsgExitCode, actorName, txsData.Canonical)
 		if len(subTxs) > 0 {
 			transactions = append(transactions, subTxs...)
 		}
 
 		// Fees
 		if trace.GasCost.TotalCost.Uint64() > 0 {
-			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id, systemExecution, txsData.Canonical)
+			feeTx := p.feesTransactions(trace, txsData.Tipset, transaction.TxType, transaction.Id, actorName, systemExecution, txsData.Canonical)
 			if p.config.FeesAsColumn {
 				transaction.FeeData = feeTx.TxMetadata
 			} else {
@@ -346,27 +346,34 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 }
 
 func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
-	parentId string, level uint16, systemExecution bool, mainExitCode exitcode.ExitCode, canonical bool) (txs []*types.Transaction) {
+	parentId string, level uint16, systemExecution bool, mainExitCode exitcode.ExitCode, parentActor string, canonical bool) (txs []*types.Transaction) {
 	level++
 	for _, subTx := range subTxs {
-		subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution, mainExitCode, canonical)
+		actorName, subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution, mainExitCode, parentActor, canonical)
 		if err != nil {
 			continue
 		}
-
+		parentExitCode := mainExitCode
+		// if the subcall fails, all children should be marked as failed
+		if subTx.MsgRct.ExitCode.IsError() {
+			parentExitCode = subTx.MsgRct.ExitCode
+		}
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
-		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, mainExitCode, canonical)...)
+		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, parentExitCode, actorName, canonical)...)
 	}
 	return
 }
 
-func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, mainExitCode exitcode.ExitCode, canonical bool) (*types.Transaction, error) {
+func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipset *types.ExtendedTipSet, parentId string, systemExecution bool, mainExitCode exitcode.ExitCode, parentActorName string, canonical bool) (string, *types.Transaction, error) {
 	mainFailedTx := mainExitCode.IsError()
 	subcallFailedTx := trace.MsgRct.ExitCode.IsError()
 	actorName, txType, err := p.getTxType(ctx, trace, mainMsgCid, tipset, canonical)
 	if err != nil {
 		txType = parser.UnknownStr
+	}
+	if parentId == uuid.Nil.String() { // is parent
+		parentActorName = actorName
 	}
 
 	// The main tx may be successful, but the subcall tx is failed, so we don't need to update the method name error metric
@@ -444,7 +451,7 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 	messageUuid := tools.BuildMessageId(tipsetCid, blockCid, mainMsgCid.String(), msgCid, parentId)
 
 	txFrom, txTo := p.getFromToRobustAddresses(trace.Msg.From, trace.Msg.To, canonical)
-	return &types.Transaction{
+	return actorName, &types.Transaction{
 		TxBasicBlockData: types.TxBasicBlockData{
 			BasicBlockData: types.BasicBlockData{
 				// #nosec G115
@@ -460,14 +467,14 @@ func (p *Parser) parseTrace(ctx context.Context, trace typesV2.ExecutionTraceV2,
 		TxFrom:        txFrom,
 		TxTo:          txTo,
 		Amount:        trace.Msg.Value.Int,
-		Status:        tools.GetExitCodeStatus(mainExitCode),
-		SubcallStatus: tools.GetExitCodeStatus(trace.MsgRct.ExitCode),
+		Status:        tools.GetExitCodeStatus(parentActorName, mainExitCode),
+		SubcallStatus: tools.GetExitCodeStatus(actorName, trace.MsgRct.ExitCode),
 		TxType:        txType,
 		TxMetadata:    string(jsonMetadata),
 	}, nil
 }
 
-func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId string, systemExecution, canonical bool) *types.Transaction {
+func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.ExtendedTipSet, txType, parentTxId, parentActorName string, systemExecution, canonical bool) *types.Transaction {
 	var blockCid string
 	var err error
 
@@ -500,8 +507,8 @@ func (p *Parser) feesTransactions(msg *typesV2.InvocResultV2, tipset *types.Exte
 		TxFrom:        msg.Msg.From.String(),
 		TxTo:          parser.BurnAddress,
 		Amount:        msg.GasCost.TotalCost.Int,
-		Status:        tools.GetExitCodeStatus(exitcode.Ok),
-		SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+		Status:        tools.GetExitCodeStatus(parentActorName, exitcode.Ok),
+		SubcallStatus: tools.GetExitCodeStatus(parentActorName, exitcode.Ok),
 		TxType:        parser.TotalFeeOp,
 		TxMetadata:    metadata,
 	}
