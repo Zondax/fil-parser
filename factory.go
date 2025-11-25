@@ -15,7 +15,6 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	types2 "github.com/filecoin-project/lotus/chain/types"
@@ -376,8 +375,8 @@ func (p *FilecoinParser) ParseGenesis(ctx context.Context, genesis *types.Genesi
 			TxTo:          balance.Key,
 			TxFrom:        parser.TxFromGenesis,
 			Amount:        amount.Int,
-			Status:        tools.GetExitCodeStatus(exitcode.Ok),
-			SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+			Status:        tools.GetExitCodeOK(),
+			SubcallStatus: tools.GetExitCodeOK(),
 			TxCid:         tipsetCid,
 			TxType:        txType,
 			TxMetadata:    "{}",

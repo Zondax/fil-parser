@@ -3,7 +3,6 @@ package miner_test
 import (
 	"testing"
 
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/lotus/api"
 	filApiTypes "github.com/filecoin-project/lotus/api/types"
@@ -140,8 +139,8 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -214,8 +213,8 @@ func TestMinerSectors_PreCommitStage(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -304,8 +303,8 @@ func TestMinerSectors_ProveCommitStage(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -373,8 +372,8 @@ func TestMinerSectors_TerminationFaultAndRecoveries(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
@@ -442,8 +441,8 @@ func TestMinerSectors_ExpiryExtension(t *testing.T) {
 					TxFrom:        test.txFrom,
 					TxTo:          test.txTo,
 					TxMetadata:    test.metadata,
-					Status:        tools.GetExitCodeStatus(exitcode.Ok),
-					SubcallStatus: tools.GetExitCodeStatus(exitcode.Ok),
+					Status:        tools.GetExitCodeOK(),
+					SubcallStatus: tools.GetExitCodeOK(),
 				},
 			}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
