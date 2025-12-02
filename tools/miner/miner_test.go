@@ -1,10 +1,10 @@
 package miner_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/lotus/api"
 	filApiTypes "github.com/filecoin-project/lotus/api/types"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	parserContext "github.com/zondax/fil-parser/context"
 	filMetrics "github.com/zondax/fil-parser/metrics"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
@@ -41,7 +42,7 @@ func init() {
 	}
 }
 
-func setupTest(*testing.T) miner.EventGenerator {
+func setupTest(*testing.T) (miner.EventGenerator, api.FullNode) {
 	logger := logger.NewDevelopmentLogger()
 	metrics := filMetrics.NewMetricsClient(metrics2.NewNoopMetrics())
 
@@ -54,13 +55,13 @@ func setupTest(*testing.T) miner.EventGenerator {
 
 	cache := &mocks.IActorsCache{}
 	cache.On("StoreAddressInfo", mock.Anything).Return(nil)
-	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(actorCidStr, nil)
-	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(manifest.MinerKey, nil)
+	cache.On("GetActorCode", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(actorCidStr, nil)
+	cache.On("GetActorNameFromAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(manifest.MinerKey, nil)
 
 	lib := rosettaFilecoinLib.NewRosettaConstructionFilecoin(node)
 	helper := helper.NewHelper(lib, cache, node, logger, metrics)
 
-	return miner.NewEventGenerator(helper, logger, metrics, parser.Config{})
+	return miner.NewEventGenerator(helper, logger, metrics, parser.Config{}), node
 }
 
 func assertSectorEvents(t *testing.T, want []*types.MinerSectorEvent, got []*types.MinerSectorEvent) {
@@ -96,7 +97,7 @@ func gen(from, to uint64) []uint64 {
 }
 
 func TestMinerInfo_AwardBlockReward(t *testing.T) {
-	eg := setupTest(t)
+	eg, node := setupTest(t)
 
 	tests := []struct {
 		name      string
@@ -130,7 +131,8 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.txType, func(t *testing.T) {
-			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			events, err := eg.GenerateMinerEvents(ctx, []*types.Transaction{
 				{
 					TxCid:         txCid,
 					TxType:        test.txType,
@@ -154,7 +156,7 @@ func TestMinerInfo_AwardBlockReward(t *testing.T) {
 }
 
 func TestMinerSectors_PreCommitStage(t *testing.T) {
-	eg := setupTest(t)
+	eg, node := setupTest(t)
 
 	tests := []struct {
 		name      string
@@ -203,7 +205,8 @@ func TestMinerSectors_PreCommitStage(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.txType, func(t *testing.T) {
-			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			events, err := eg.GenerateMinerEvents(ctx, []*types.Transaction{
 				{
 					TxCid:         txCid,
 					TxType:        test.txType,
@@ -222,7 +225,7 @@ func TestMinerSectors_PreCommitStage(t *testing.T) {
 }
 
 func TestMinerSectors_ProveCommitStage(t *testing.T) {
-	eg := setupTest(t)
+	eg, node := setupTest(t)
 
 	tests := []struct {
 		name      string
@@ -292,7 +295,8 @@ func TestMinerSectors_ProveCommitStage(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.txType, func(t *testing.T) {
-			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			events, err := eg.GenerateMinerEvents(ctx, []*types.Transaction{
 				{
 					TxCid:         txCid,
 					TxType:        test.txType,
@@ -311,7 +315,7 @@ func TestMinerSectors_ProveCommitStage(t *testing.T) {
 }
 
 func TestMinerSectors_TerminationFaultAndRecoveries(t *testing.T) {
-	eg := setupTest(t)
+	eg, node := setupTest(t)
 
 	tests := []struct {
 		name      string
@@ -360,7 +364,8 @@ func TestMinerSectors_TerminationFaultAndRecoveries(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.txType, func(t *testing.T) {
-			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			events, err := eg.GenerateMinerEvents(ctx, []*types.Transaction{
 				{
 					TxCid:         txCid,
 					TxType:        test.txType,
@@ -379,7 +384,7 @@ func TestMinerSectors_TerminationFaultAndRecoveries(t *testing.T) {
 }
 
 func TestMinerSectors_ExpiryExtension(t *testing.T) {
-	eg := setupTest(t)
+	eg, node := setupTest(t)
 
 	tests := []struct {
 		name      string
@@ -428,7 +433,8 @@ func TestMinerSectors_ExpiryExtension(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.txType, func(t *testing.T) {
-			events, err := eg.GenerateMinerEvents(context.Background(), []*types.Transaction{
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			events, err := eg.GenerateMinerEvents(ctx, []*types.Transaction{
 				{
 					TxCid:         txCid,
 					TxType:        test.txType,

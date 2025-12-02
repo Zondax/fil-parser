@@ -2,6 +2,7 @@ package actors
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -25,7 +26,7 @@ Still needs to parse:
 
 	Receive
 */
-func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
+func (p *ActorParser) ParseMultisig(ctx context.Context, txType string, msg *parser.LotusMessage, msgRct *parser.LotusMessageReceipt, height int64, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
 	switch txType {
 	case parser.MethodConstructor: // TODO: not tested
 		return p.msigConstructor(msg.Params)
@@ -34,13 +35,13 @@ func (p *ActorParser) ParseMultisig(txType string, msg *parser.LotusMessage, msg
 	case parser.MethodPropose, parser.MethodProposeExported:
 		return p.propose(msg.Params, msgRct.Return)
 	case parser.MethodApprove, parser.MethodApproveExported:
-		return p.approve(msg, msgRct.Return, txType, key, canonical)
+		return p.approve(ctx, msg, msgRct.Return, txType, key, canonical)
 	case parser.MethodCancel, parser.MethodCancelExported:
-		return p.cancel(msg, txType, key, canonical)
+		return p.cancel(ctx, msg, txType, key, canonical)
 	case parser.MethodAddSigner, parser.MethodAddSignerExported, parser.MethodSwapSigner, parser.MethodSwapSignerExported:
-		return p.msigParams(msg, txType, key, canonical)
+		return p.msigParams(ctx, msg, txType, key, canonical)
 	case parser.MethodRemoveSigner, parser.MethodRemoveSignerExported:
-		return p.removeSigner(msg, txType, key, canonical)
+		return p.removeSigner(ctx, msg, txType, key, canonical)
 	case parser.MethodChangeNumApprovalsThreshold, parser.MethodChangeNumApprovalsThresholdExported:
 		return p.changeNumApprovalsThreshold(msg.Params)
 	case parser.MethodLockBalance, parser.MethodLockBalanceExported:
@@ -65,8 +66,8 @@ func (p *ActorParser) msigConstructor(raw []byte) (map[string]interface{}, error
 	return metadata, nil
 }
 
-func (p *ActorParser) msigParams(msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
-	params, err := p.parseMsigParams(msg, method, key, canonical)
+func (p *ActorParser) msigParams(ctx context.Context, msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
+	params, err := p.parseMsigParams(ctx, msg, method, key, canonical)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -107,9 +108,9 @@ func (p *ActorParser) propose(rawParams, rawReturn []byte) (map[string]interface
 	return metadata, nil
 }
 
-func (p *ActorParser) approve(msg *parser.LotusMessage, rawReturn []byte, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
+func (p *ActorParser) approve(ctx context.Context, msg *parser.LotusMessage, rawReturn []byte, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := p.parseMsigParams(msg, method, key, canonical)
+	params, err := p.parseMsigParams(ctx, msg, method, key, canonical)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -124,9 +125,9 @@ func (p *ActorParser) approve(msg *parser.LotusMessage, rawReturn []byte, method
 	return metadata, nil
 }
 
-func (p *ActorParser) cancel(msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
+func (p *ActorParser) cancel(ctx context.Context, msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := p.parseMsigParams(msg, method, key, canonical)
+	params, err := p.parseMsigParams(ctx, msg, method, key, canonical)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -134,9 +135,9 @@ func (p *ActorParser) cancel(msg *parser.LotusMessage, method string, key filTyp
 	return metadata, nil
 }
 
-func (p *ActorParser) removeSigner(msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
+func (p *ActorParser) removeSigner(ctx context.Context, msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (map[string]interface{}, error) {
 	metadata := make(map[string]interface{})
-	params, err := p.parseMsigParams(msg, method, key, canonical)
+	params, err := p.parseMsigParams(ctx, msg, method, key, canonical)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -168,14 +169,15 @@ func (p *ActorParser) lockBalance(raw []byte) (map[string]interface{}, error) {
 	return metadata, nil
 }
 
-func (p *ActorParser) parseMsigParams(msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (string, error) {
+func (p *ActorParser) parseMsigParams(ctx context.Context, msg *parser.LotusMessage, method string, key filTypes.TipSetKey, canonical bool) (string, error) {
 	msgSerial, err := msg.MarshalJSON() // TODO: this may not work properly
 	if err != nil {
 		p.logger.Errorf("Could not parse params. Cannot serialize lotus message: %v", err)
 		return "", err
 	}
 
-	actorCode, err := p.helper.GetActorsCache().GetActorCode(msg.To, key, false, canonical)
+	// uses helper filecoin node client as the v1 package is depracated and unused and a full refactor of v1 multisig is unnecessary.
+	actorCode, err := p.helper.GetActorsCache().GetActorCode(ctx, msg.To, key, false, canonical)
 	if err != nil {
 		return "", err
 	}

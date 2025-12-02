@@ -51,6 +51,19 @@ type NodeApiCallWithRetryOptions[T NodeApiResponse] struct {
 	RetryErrStrings []string
 }
 
+func IsRetriableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	retryErrs := []string{"ipld: could not find", "RPC client error", "503"}
+	for _, retryErr := range retryErrs {
+		if strings.Contains(err.Error(), retryErr) {
+			return true
+		}
+	}
+	return false
+}
+
 // NodeApiCallWithRetry makes an API call with automatic retries for specific errors.
 // Parameters:
 //   - errStrings: list of error strings that SHOULD trigger a retry
