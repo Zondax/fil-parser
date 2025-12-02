@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
+	"github.com/filecoin-project/lotus/api"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/actors"
@@ -25,9 +27,9 @@ const (
 	TxStatusOk = "ok"
 )
 
-func GetActorNameFromAddress(helper *helper.Helper, addr address.Address, height int64, tipsetKey filTypes.TipSetKey, canonical bool) (string, error) {
+func GetActorNameFromAddress(ctx context.Context, helper *helper.Helper, addr address.Address, height int64, tipsetKey filTypes.TipSetKey, canonical bool) (string, error) {
 	// #nosec G115
-	actorName, err := helper.GetActorNameFromAddress(addr, height, tipsetKey, canonical)
+	actorName, err := helper.GetActorNameFromAddress(ctx, addr, height, tipsetKey, canonical)
 	if (actorName == rosettaFilecoinLibActors.UnknownStr || actorName == "") && err != nil {
 		if errors.Is(err, cache.ErrBadAddress) {
 			// the bad address may have been set due to a previous failed request to the node
@@ -43,6 +45,17 @@ func GetActorNameFromAddress(helper *helper.Helper, addr address.Address, height
 
 func IsTxSuccess(tx *types.Transaction) bool {
 	return strings.EqualFold(tx.Status, TxStatusOk) && strings.EqualFold(tx.SubcallStatus, TxStatusOk)
+}
+
+func GetNodesFromContext(ctx context.Context) ([]api.FullNode, error) {
+	nodesVal := ctx.Value("nodes")
+	if nodesVal != nil {
+		nodes, ok := nodesVal.([]api.FullNode)
+		if ok {
+			return nodes, nil
+		}
+	}
+	return nil, fmt.Errorf("nodes missing in context")
 }
 
 func GetBigInt(value map[string]interface{}, key string, canBeNil bool) (*big.Int, error) {
@@ -181,13 +194,13 @@ func JsonEncodedBitfieldToIDs(bitField []int) ([]uint64, error) {
 	return ids, nil
 }
 
-func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logger.Logger, config parser.Config, canonical bool) (string, error) {
+func ConsolidateIDAddress(ctx context.Context, idAddress uint64, helper *helper.Helper, logger *logger.Logger, config parser.Config, canonical bool) (string, error) {
 	addr, err := address.NewIDAddress(idAddress)
 	if err != nil {
 		return "", fmt.Errorf("error parsing id address: %w", err)
 	}
 	if config.ConsolidateRobustAddress {
-		consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort, canonical)
+		consolidatedIDAddress, err := actors.ConsolidateToRobustAddress(ctx, addr, helper, logger, config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			return addr.String(), fmt.Errorf("error consolidating id address: %w", err)
 		}
@@ -196,13 +209,13 @@ func ConsolidateIDAddress(idAddress uint64, helper *helper.Helper, logger *logge
 	return addr.String(), nil
 }
 
-func ConsolidateAddress(addrStr string, helper *helper.Helper, logger *logger.Logger, config parser.Config, canonical bool) (string, error) {
+func ConsolidateAddress(ctx context.Context, addrStr string, helper *helper.Helper, logger *logger.Logger, config parser.Config, canonical bool) (string, error) {
 	if config.ConsolidateRobustAddress {
 		addr, err := address.NewFromString(addrStr)
 		if err != nil {
 			return addrStr, fmt.Errorf("error parsing address: %w", err)
 		}
-		consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, helper, logger, config.RobustAddressBestEffort, canonical)
+		consolidatedAddress, err := actors.ConsolidateToRobustAddress(ctx, addr, helper, logger, config.RobustAddressBestEffort, canonical)
 		if err != nil {
 			return addrStr, fmt.Errorf("error consolidating address: %w", err)
 		}

@@ -273,7 +273,7 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 	return sectorEvents, nil
 }
 
-func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
+func (eg *eventGenerator) parseProveCommitSectorsNI(ctx context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
 	sectorActivations, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 	if err != nil {
 		return nil, err
@@ -290,7 +290,7 @@ func (eg *eventGenerator) parseProveCommitSectorsNI(_ context.Context, tx *types
 		}
 
 		if eg.config.ConsolidateRobustAddress {
-			consolidatedSealerID, err := eg.consolidateIDAddress(sealerID)
+			consolidatedSealerID, err := eg.consolidateIDAddress(ctx, sealerID)
 			if err != nil {
 				eg.logger.Errorf("error consolidating sealer id: %w", err)
 			} else {
@@ -396,7 +396,7 @@ func createSectorEvent(tipsetCid string, tx *types.Transaction, sectorNumber uin
 	}
 }
 
-func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context, pieces []map[string]interface{}) ([]map[string]interface{}, error) {
+func (eg *eventGenerator) consolidatePieceActivationManifests(ctx context.Context, pieces []map[string]interface{}) ([]map[string]interface{}, error) {
 	parsedPieces := make([]map[string]interface{}, 0, len(pieces))
 	for _, piece := range pieces {
 		verifiedAllocationKey, err := common.GetItem[map[string]interface{}](piece, KeyVerifiedAllocationKey, true)
@@ -409,7 +409,7 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 				eg.logger.Errorf("error parsing client id address: %s", err)
 				break
 			}
-			consolidatedClientIDAddr, err := eg.consolidateAddress(clientIDAddrStr)
+			consolidatedClientIDAddr, err := eg.consolidateAddress(ctx, clientIDAddrStr)
 			if err != nil {
 				eg.logger.Errorf("error consolidating client id address: %s", err)
 				break
@@ -431,7 +431,7 @@ func (eg *eventGenerator) consolidatePieceActivationManifests(_ context.Context,
 					eg.logger.Errorf("error parsing notify number: %s", err)
 					break
 				}
-				consolidatedAddr, err := eg.consolidateAddress(addrStr)
+				consolidatedAddr, err := eg.consolidateAddress(ctx, addrStr)
 				if err != nil {
 					eg.logger.Errorf("error consolidating address: %s", err)
 					break

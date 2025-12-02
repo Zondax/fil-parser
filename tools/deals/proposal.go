@@ -36,7 +36,7 @@ const (
 	KeyClientCollateral     = "ClientCollateral"
 )
 
-func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transaction) ([]*types.DealsProposals, error) {
+func (eg *eventGenerator) createDealsInfo(ctx context.Context, tx *types.Transaction) ([]*types.DealsProposals, error) {
 	var value map[string]interface{}
 	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
 	if err != nil {
@@ -52,7 +52,7 @@ func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transacti
 		return nil, fmt.Errorf("error parsing ret: %w", err)
 	}
 
-	dealsInfo, err := eg.parsePublishStorageDeals(tx, params, ret)
+	dealsInfo, err := eg.parsePublishStorageDeals(ctx, tx, params, ret)
 	if err != nil {
 		return nil, fmt.Errorf("error creating events: %w", err)
 	}
@@ -60,7 +60,7 @@ func (eg *eventGenerator) createDealsInfo(_ context.Context, tx *types.Transacti
 	return dealsInfo, nil
 }
 
-func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsProposals, error) {
+func (eg *eventGenerator) parsePublishStorageDeals(ctx context.Context, tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsProposals, error) {
 	dealsInfo := make([]*types.DealsProposals, 0)
 	//#nosec G115
 	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
@@ -176,13 +176,13 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 			return nil, fmt.Errorf("error parsing client collateral: %w", err)
 		}
 		if eg.config.ConsolidateRobustAddress {
-			consolidatedProviderAddress, err := eg.consolidateAddress(providerAddress)
+			consolidatedProviderAddress, err := eg.consolidateAddress(ctx, providerAddress)
 			if err != nil {
 				eg.logger.Errorf("error consolidating provider address: %s", err.Error())
 			} else {
 				providerAddress = consolidatedProviderAddress
 			}
-			consolidatedClientAddress, err := eg.consolidateAddress(clientAddress)
+			consolidatedClientAddress, err := eg.consolidateAddress(ctx, clientAddress)
 			if err != nil {
 				eg.logger.Errorf("error consolidating client address: %s", err.Error())
 			} else {
@@ -216,12 +216,12 @@ func (eg *eventGenerator) parsePublishStorageDeals(tx *types.Transaction, params
 	return dealsInfo, nil
 }
 
-func (eg *eventGenerator) consolidateAddress(addrStr string) (string, error) {
+func (eg *eventGenerator) consolidateAddress(ctx context.Context, addrStr string) (string, error) {
 	addr, err := address.NewFromString(addrStr)
 	if err != nil {
 		return "", fmt.Errorf("error parsing address: %w", err)
 	}
-	consolidatedAddress, err := actors.ConsolidateToRobustAddress(addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
+	consolidatedAddress, err := actors.ConsolidateToRobustAddress(ctx, addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
 	if err != nil {
 		return "", fmt.Errorf("error consolidating address: %w", err)
 	}
