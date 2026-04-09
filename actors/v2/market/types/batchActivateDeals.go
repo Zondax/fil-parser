@@ -411,12 +411,13 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 4 {
+	// // required because of breaking change in go-state-types: https://github.com/filecoin-project/go-state-types/issues/435
+	if extra != 4 && extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
 	// t.SectorNumber  (uint64)
-	{
+	if extra == 4 {
 		maj, extra, err := cr.ReadHeader()
 		if err != nil {
 			return err
