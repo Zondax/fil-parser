@@ -247,7 +247,8 @@ var verifyDealsForActivationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationParams) },
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.VerifyDealsForActivationParams) },
 
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.VerifyDealsForActivationParams) },
+	// // required because of breaking change in go-state-types: https://github.com/filecoin-project/go-state-types/issues/435
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V21.String()) },
 
 	// go-state-types impl. of ActivateDealsParams not upto date with builtin-actors
 	tools.V22.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V22.String()) },
