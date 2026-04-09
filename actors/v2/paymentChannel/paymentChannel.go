@@ -19,6 +19,7 @@ import (
 	paychv15 "github.com/filecoin-project/go-state-types/builtin/v15/paych"
 	paychv16 "github.com/filecoin-project/go-state-types/builtin/v16/paych"
 	paychv17 "github.com/filecoin-project/go-state-types/builtin/v17/paych"
+	paychv18 "github.com/filecoin-project/go-state-types/builtin/v18/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
 
@@ -75,6 +76,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(paychv16.Methods),
 	tools.V26.String(): actors.CopyMethods(paychv16.Methods),
 	tools.V27.String(): actors.CopyMethods(paychv17.Methods),
+	tools.V28.String(): actors.CopyMethods(paychv18.Methods),
 }
 
 func (p *PaymentChannel) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

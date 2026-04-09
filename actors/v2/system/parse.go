@@ -20,6 +20,7 @@ import (
 	systemv15 "github.com/filecoin-project/go-state-types/builtin/v15/system"
 	systemv16 "github.com/filecoin-project/go-state-types/builtin/v16/system"
 	systemv17 "github.com/filecoin-project/go-state-types/builtin/v17/system"
+	systemv18 "github.com/filecoin-project/go-state-types/builtin/v18/system"
 	systemv8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
 	systemv9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 
@@ -83,6 +84,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(systemv16.Methods),
 	tools.V26.String(): actors.CopyMethods(systemv16.Methods),
 	tools.V27.String(): actors.CopyMethods(systemv17.Methods),
+	tools.V28.String(): actors.CopyMethods(systemv18.Methods),
 }
 
 func (*System) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
