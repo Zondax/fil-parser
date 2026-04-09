@@ -27,7 +27,7 @@ import (
 var customSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	// From V20!
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.SectorDeals) },
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.SectorDeals) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	//
 	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
