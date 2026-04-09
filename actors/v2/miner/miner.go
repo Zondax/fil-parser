@@ -20,6 +20,7 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner17 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
+	miner18 "github.com/filecoin-project/go-state-types/builtin/v18/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -123,6 +124,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(customMethods(), miner16.Methods),
 	tools.V26.String(): actors.CopyMethods(customMethods(), miner16.Methods),
 	tools.V27.String(): actors.CopyMethods(customMethods(), miner17.Methods),
+	tools.V28.String(): actors.CopyMethods(customMethods(), miner18.Methods),
 }
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

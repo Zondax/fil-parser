@@ -13,6 +13,7 @@ import (
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
 	builtinInitv16 "github.com/filecoin-project/go-state-types/builtin/v16/init"
 	builtinInitv17 "github.com/filecoin-project/go-state-types/builtin/v17/init"
+	builtinInitv18 "github.com/filecoin-project/go-state-types/builtin/v18/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 	"github.com/filecoin-project/lotus/chain/types/ethtypes"
@@ -57,6 +58,8 @@ func setExecParams(params typegen.CBORUnmarshaler) (cid.Cid, any, error) {
 	}
 
 	switch v := params.(type) {
+	case *builtinInitv18.ExecParams:
+		return setParams(v.CodeCID, v.ConstructorParams)
 	case *builtinInitv17.ExecParams:
 		return setParams(v.CodeCID, v.ConstructorParams)
 	case *builtinInitv16.ExecParams:
@@ -95,6 +98,8 @@ func setExecParams(params typegen.CBORUnmarshaler) (cid.Cid, any, error) {
 		case *legacyInitv1.ExecParams:
 			return setParams(v.CodeCID, v.ConstructorParams)
 	*/
+	case *builtinInitv18.Exec4Params:
+		return setExec4Params(v.CodeCID, v.ConstructorParams, v.SubAddress)
 	case *builtinInitv17.Exec4Params:
 		return setExec4Params(v.CodeCID, v.ConstructorParams, v.SubAddress)
 	case *builtinInitv16.Exec4Params:
@@ -127,6 +132,8 @@ func setReturnParams(msg *parser.LotusMessage, actorCID string, params typegen.C
 		}
 	}
 	switch v := params.(type) {
+	case *builtinInitv18.ExecReturn:
+		return setReturn(v.IDAddress, v.RobustAddress)
 	case *builtinInitv17.ExecReturn:
 		return setReturn(v.IDAddress, v.RobustAddress)
 	case *builtinInitv16.ExecReturn:

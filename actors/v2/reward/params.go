@@ -13,6 +13,7 @@ import (
 	rewardv15 "github.com/filecoin-project/go-state-types/builtin/v15/reward"
 	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
 	rewardv17 "github.com/filecoin-project/go-state-types/builtin/v17/reward"
+	rewardv18 "github.com/filecoin-project/go-state-types/builtin/v18/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/reward"
@@ -111,6 +112,7 @@ var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.AwardBlockRewardParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.AwardBlockRewardParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.AwardBlockRewardParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(rewardv18.AwardBlockRewardParams) },
 }
 
 var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -147,6 +149,7 @@ var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.ThisEpochRewardReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(rewardv18.ThisEpochRewardReturn) },
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -186,6 +189,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 }
 
 func GetMinerFromAwardBlockRewardParams(params any) string {
@@ -243,6 +247,8 @@ func GetMinerFromAwardBlockRewardParams(params any) string {
 	case rewardv16.AwardBlockRewardParams:
 		return p.Miner.String()
 	case rewardv17.AwardBlockRewardParams:
+		return p.Miner.String()
+	case rewardv18.AwardBlockRewardParams:
 		return p.Miner.String()
 	}
 	return ""

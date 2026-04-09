@@ -22,6 +22,7 @@ import (
 	evmv15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
 	evmv16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
 	evmv17 "github.com/filecoin-project/go-state-types/builtin/v17/evm"
+	evmv18 "github.com/filecoin-project/go-state-types/builtin/v18/evm"
 
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/actors/v2/miner"
@@ -81,6 +82,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(evmv16.Methods, customMethods(&Evm{})),
 	tools.V26.String(): actors.CopyMethods(evmv16.Methods, customMethods(&Evm{})),
 	tools.V27.String(): actors.CopyMethods(evmv17.Methods, customMethods(&Evm{})),
+	tools.V28.String(): actors.CopyMethods(evmv18.Methods, customMethods(&Evm{})),
 }
 
 func (e *Evm) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

@@ -11,6 +11,7 @@ import (
 	cronv15 "github.com/filecoin-project/go-state-types/builtin/v15/cron"
 	cronv16 "github.com/filecoin-project/go-state-types/builtin/v16/cron"
 	cronv17 "github.com/filecoin-project/go-state-types/builtin/v17/cron"
+	cronv18 "github.com/filecoin-project/go-state-types/builtin/v18/cron"
 	cronv8 "github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	cronv9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
@@ -101,4 +102,5 @@ var cronConstructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(cronv16.State) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(cronv16.State) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(cronv17.State) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(cronv18.State) },
 }

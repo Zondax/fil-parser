@@ -10,6 +10,7 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner17 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
+	miner18 "github.com/filecoin-project/go-state-types/builtin/v18/miner"
 
 	v10Market "github.com/filecoin-project/go-state-types/builtin/v10/market"
 	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
@@ -19,6 +20,7 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
 	v17Market "github.com/filecoin-project/go-state-types/builtin/v17/market"
+	v18Market "github.com/filecoin-project/go-state-types/builtin/v18/market"
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
@@ -141,6 +143,7 @@ var withdrawBalanceParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.WithdrawBalanceParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.WithdrawBalanceParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.WithdrawBalanceParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.WithdrawBalanceParams) },
 }
 
 var publishStorageDealsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -177,6 +180,7 @@ var publishStorageDealsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.PublishStorageDealsParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.PublishStorageDealsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.PublishStorageDealsParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.PublishStorageDealsParams) },
 }
 
 var publishStorageDealsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -213,6 +217,7 @@ var publishStorageDealsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.PublishStorageDealsReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.PublishStorageDealsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.PublishStorageDealsReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.PublishStorageDealsReturn) },
 }
 
 var verifyDealsForActivationParams = map[string]func() cbg.CBORUnmarshaler{
@@ -251,6 +256,7 @@ var verifyDealsForActivationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V25.String()) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V26.String()) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V27.String()) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return types.NewVerifyDealsForActivationParams(tools.V28.String()) },
 }
 
 var verifyDealsForActivationReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -288,6 +294,7 @@ var verifyDealsForActivationReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifyDealsForActivationReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifyDealsForActivationReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.VerifyDealsForActivationReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.VerifyDealsForActivationReturn) },
 }
 
 var activateDealsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -325,6 +332,7 @@ var activateDealsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V25.String()) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V26.String()) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V27.String()) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsParams(tools.V28.String()) },
 }
 
 var activateDealsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -360,6 +368,7 @@ var activateDealsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V25.String()) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V26.String()) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V27.String()) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return types.NewBatchActivateDealsResult(tools.V28.String()) },
 }
 
 var onMinerSectorsTerminateParams = map[string]func() cbg.CBORUnmarshaler{
@@ -398,6 +407,7 @@ var onMinerSectorsTerminateParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.OnMinerSectorsTerminateParams) },
 }
 
 var computeDataCommitmentParams = map[string]func() cbg.CBORUnmarshaler{
@@ -468,6 +478,7 @@ var getBalanceReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetBalanceReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetBalanceReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetBalanceReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetBalanceReturn) },
 }
 
 var getDealDataCommitmentParams = map[string]func() cbg.CBORUnmarshaler{
@@ -483,6 +494,7 @@ var getDealDataCommitmentParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealDataCommitmentParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealDataCommitmentParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealDataCommitmentParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealDataCommitmentParams) },
 }
 
 var getDealDataCommitmentReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -498,6 +510,7 @@ var getDealDataCommitmentReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealDataCommitmentReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealDataCommitmentReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealDataCommitmentReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealDataCommitmentReturn) },
 }
 
 var getDealClientParams = map[string]func() cbg.CBORUnmarshaler{
@@ -513,6 +526,7 @@ var getDealClientParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealClientParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealClientParams) },
 }
 
 var getDealClientReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -528,6 +542,7 @@ var getDealClientReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealClientReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealClientReturn) },
 }
 
 var getDealProviderParams = map[string]func() cbg.CBORUnmarshaler{
@@ -543,6 +558,7 @@ var getDealProviderParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealProviderParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealProviderParams) },
 }
 
 var getDealProviderReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -558,6 +574,7 @@ var getDealProviderReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealProviderReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealProviderReturn) },
 }
 
 var getDealLabelParams = map[string]func() cbg.CBORUnmarshaler{
@@ -573,6 +590,7 @@ var getDealLabelParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealLabelParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealLabelParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealLabelParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealLabelParams) },
 }
 
 var getDealLabelReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -588,6 +606,7 @@ var getDealLabelReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealLabelReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealLabelReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealLabelReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealLabelReturn) },
 }
 
 var getDealTermParams = map[string]func() cbg.CBORUnmarshaler{
@@ -603,6 +622,7 @@ var getDealTermParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTermParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTermParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealTermParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealTermParams) },
 }
 
 var getDealTermReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -618,6 +638,7 @@ var getDealTermReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTermReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTermReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealTermReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealTermReturn) },
 }
 
 var getDealTotalPriceParams = map[string]func() cbg.CBORUnmarshaler{
@@ -633,6 +654,7 @@ var getDealTotalPriceParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTotalPriceParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTotalPriceParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealTotalPriceParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealTotalPriceParams) },
 }
 
 var getDealTotalPriceReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -648,6 +670,7 @@ var getDealTotalPriceReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTotalPriceReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealTotalPriceReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealTotalPriceReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealTotalPriceReturn) },
 }
 
 var getDealClientCollateralParams = map[string]func() cbg.CBORUnmarshaler{
@@ -663,6 +686,7 @@ var getDealClientCollateralParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientCollateralParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientCollateralParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealClientCollateralParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealClientCollateralParams) },
 }
 
 var getDealClientCollateralReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -678,6 +702,7 @@ var getDealClientCollateralReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientCollateralReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealClientCollateralReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealClientCollateralReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealClientCollateralReturn) },
 }
 
 var getDealProviderCollateralParams = map[string]func() cbg.CBORUnmarshaler{
@@ -693,6 +718,7 @@ var getDealProviderCollateralParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderCollateralParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderCollateralParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealProviderCollateralParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealProviderCollateralParams) },
 }
 
 var getDealProviderCollateralReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -708,6 +734,7 @@ var getDealProviderCollateralReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderCollateralReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealProviderCollateralReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealProviderCollateralReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealProviderCollateralReturn) },
 }
 
 var getDealVerifiedParams = map[string]func() cbg.CBORUnmarshaler{
@@ -723,6 +750,7 @@ var getDealVerifiedParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealVerifiedParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealVerifiedParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealVerifiedParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealVerifiedParams) },
 }
 
 var getDealVerifiedReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -738,6 +766,7 @@ var getDealVerifiedReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealVerifiedReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealVerifiedReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealVerifiedReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealVerifiedReturn) },
 }
 
 var getDealActivationParams = map[string]func() cbg.CBORUnmarshaler{
@@ -753,6 +782,7 @@ var getDealActivationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealActivationParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealActivationParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealActivationParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealActivationParams) },
 }
 
 var getDealActivationReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -768,6 +798,7 @@ var getDealActivationReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealActivationReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealActivationReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealActivationReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealActivationReturn) },
 }
 
 var settleDealPaymentsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -777,6 +808,7 @@ var settleDealPaymentsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SettleDealPaymentsParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SettleDealPaymentsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.SettleDealPaymentsParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.SettleDealPaymentsParams) },
 }
 
 var settleDealPaymentsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -786,6 +818,7 @@ var settleDealPaymentsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SettleDealPaymentsReturn) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SettleDealPaymentsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.SettleDealPaymentsReturn) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.SettleDealPaymentsReturn) },
 }
 
 var sectorChanges = map[string]func() cbg.CBORUnmarshaler{
@@ -795,6 +828,7 @@ var sectorChanges = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(miner16.SectorChanges) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.SectorChanges) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.SectorChanges) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.SectorChanges) },
 }
 
 var getDealSectorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -804,4 +838,5 @@ var getDealSectorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealSectorParams) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.GetDealSectorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.GetDealSectorParams) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.GetDealSectorParams) },
 }

@@ -26,6 +26,7 @@ import (
 	multisig15 "github.com/filecoin-project/go-state-types/builtin/v15/multisig"
 	multisig16 "github.com/filecoin-project/go-state-types/builtin/v16/multisig"
 	multisig17 "github.com/filecoin-project/go-state-types/builtin/v17/multisig"
+	multisig18 "github.com/filecoin-project/go-state-types/builtin/v18/multisig"
 	multisig8 "github.com/filecoin-project/go-state-types/builtin/v8/multisig"
 	multisig9 "github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 	"github.com/filecoin-project/go-state-types/exitcode"
@@ -65,6 +66,7 @@ var removeSignerParams2 = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.RemoveSignerParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.RemoveSignerParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.RemoveSignerParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.RemoveSignerParams{} },
 }
 
 var changeNumApprovalsThresholdParams = map[string]func() cbg.CBORUnmarshaler{
@@ -101,6 +103,7 @@ var changeNumApprovalsThresholdParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ChangeNumApprovalsThresholdParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.ChangeNumApprovalsThresholdParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ChangeNumApprovalsThresholdParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.ChangeNumApprovalsThresholdParams{} },
 }
 
 var lockBalanceParams = map[string]func() cbg.CBORUnmarshaler{
@@ -137,6 +140,7 @@ var lockBalanceParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.LockBalanceParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.LockBalanceParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.LockBalanceParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.LockBalanceParams{} },
 }
 
 var approveReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -173,6 +177,7 @@ var approveReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ApproveReturn{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.ApproveReturn{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ApproveReturn{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.ApproveReturn{} },
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -209,6 +214,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ConstructorParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.ConstructorParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ConstructorParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.ConstructorParams{} },
 }
 
 var addSignerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -245,6 +251,7 @@ var addSignerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.AddSignerParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.AddSignerParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.AddSignerParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.AddSignerParams{} },
 }
 
 var swapSignerParams = map[string]func() cbg.CBORUnmarshaler{
@@ -281,6 +288,7 @@ var swapSignerParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.SwapSignerParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.SwapSignerParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.SwapSignerParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.SwapSignerParams{} },
 }
 
 var txnIDParams = map[string]func() cbg.CBORUnmarshaler{
@@ -317,6 +325,7 @@ var txnIDParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.TxnIDParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.TxnIDParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.TxnIDParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.TxnIDParams{} },
 }
 
 var proposeReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -353,6 +362,7 @@ var proposeReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ProposeReturn{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.ProposeReturn{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ProposeReturn{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.ProposeReturn{} },
 }
 
 var proposeParams = map[string]func() cbg.CBORUnmarshaler{
@@ -389,6 +399,7 @@ var proposeParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return &multisig16.ProposeParams{} },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return &multisig16.ProposeParams{} },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return &multisig17.ProposeParams{} },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return &multisig18.ProposeParams{} },
 }
 
 func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to address.Address, value string, params cbg.CBORUnmarshaler, err error) {
@@ -438,6 +449,8 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 	case *multisig16.ProposeParams:
 		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
 	case *multisig17.ProposeParams:
+		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
+	case *multisig18.ProposeParams:
 		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
 	default:
 		return nil, 0, address.Address{}, "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -491,6 +504,8 @@ func getProposeReturn(network string, height int64, rawReturn []byte) (applied b
 	case *multisig16.ProposeReturn:
 		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig17.ProposeReturn:
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
+	case *multisig18.ProposeReturn:
 		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	default:
 		return false, 0, rawReturn, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

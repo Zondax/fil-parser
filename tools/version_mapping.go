@@ -31,9 +31,9 @@ type version struct {
 
 var (
 	LatestMainnetVersion     version = V27
-	LatestCalibrationVersion version = V27
+	LatestCalibrationVersion version = V28
 
-	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27}
+	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28}
 	supportedVersionsList *list.List
 
 	// V0 genesis, spec-actors: v1, calibration: 0, mainnet: 0
@@ -116,6 +116,9 @@ var (
 
 	// V27 GoldenWeek, builtin-actors(go-state-types): v17, calibration: 3007294, mainnet: 5348280
 	V27 version = version{calibration: 3007294, mainnet: buildconstants.UpgradeGoldenWeekHeight, nodeVersion: 27}
+
+	// V28 Xx, builtin-actors(go-state-types): v18, calibration: <TBD>, mainnet: <TBD>
+	V28 version = version{calibration: 999999999999999, mainnet: buildconstants.UpgradeXxHeight, nodeVersion: 28}
 )
 
 func init() {
@@ -375,6 +378,10 @@ func VersionFromHeight(network string, height int64) version {
 		return V24
 	case V25.IsSupported(network, height):
 		return V25
+	case V26.IsSupported(network, height):
+		return V26
+	case V27.IsSupported(network, height):
+		return V27
 	}
 	return LatestVersion(network)
 }
