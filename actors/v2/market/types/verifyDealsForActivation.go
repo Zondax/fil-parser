@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 
+	v11Market "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/zondax/fil-parser/tools"
 )
 
 type VerifyDealsForActivationParams struct {
@@ -65,6 +67,21 @@ func (t *VerifyDealsForActivationParams) UnmarshalCBOR(r io.Reader) (err error) 
 			t.Sectors[i] = customSectorDeals[version]()
 			if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
 				return fmt.Errorf("unmarshaling t.Sectors[%d]: %w", i, err)
+			}
+
+			// required because of breaking change in go-state-types: https://github.com/filecoin-project/go-state-types/issues/435
+			if version == tools.V21.String() {
+				tmp, ok := t.Sectors[i].(*SectorDeals)
+				if !ok {
+					return fmt.Errorf("error handliing VerifyDealsForActivationParams.SectorDeals V21(v12-actors) edge-case")
+				}
+
+				// use compatible struct to avoid adding the extra field from SectorDeals.
+				t.Sectors[i] = &v11Market.SectorDeals{
+					SectorType:   tmp.SectorType,
+					SectorExpiry: tmp.SectorExpiry,
+					DealIDs:      tmp.DealIDs,
+				}
 			}
 		}
 	}
