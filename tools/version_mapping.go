@@ -117,8 +117,8 @@ var (
 	// V27 GoldenWeek, builtin-actors(go-state-types): v17, calibration: 3007294, mainnet: 5348280
 	V27 version = version{calibration: 3007294, mainnet: buildconstants.UpgradeGoldenWeekHeight, nodeVersion: 27}
 
-	// V28 Xx, builtin-actors(go-state-types): v18, calibration: <TBD>, mainnet: <TBD>
-	V28 version = version{calibration: 999999999999999, mainnet: buildconstants.UpgradeXxHeight, nodeVersion: 28}
+	// V28 FireHorse, builtin-actors(go-state-types): v18, calibration: 3694534, mainnet: <TBD>
+	V28 version = version{calibration: 3694534, mainnet: buildconstants.UpgradeFireHorseHeight, nodeVersion: 28}
 )
 
 func init() {
