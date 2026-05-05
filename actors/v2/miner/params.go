@@ -4,6 +4,9 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
+
+	"github.com/zondax/fil-parser/actors/v2/miner/types"
+
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
@@ -1311,4 +1314,37 @@ var proveCommitSectorsNIReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitSectorsNIReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitSectorsNIReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitSectorsNIReturn) },
+}
+
+// generateSectorLocationParams / Return — added in v18 builtin-actors (NV28 / FireHorse).
+// FRC-42 exported sector status API; only the V28 entry is populated since the methods
+// don't exist in earlier actor versions.
+var generateSectorLocationParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GenerateSectorLocationParams) },
+}
+
+var generateSectorLocationReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GenerateSectorLocationReturn) },
+}
+
+// validateSectorStatusParams / Return — added in v18 builtin-actors (NV28 / FireHorse).
+// Return is a primitive cbg.CborBool aliased in go-state-types; passed directly.
+var validateSectorStatusParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ValidateSectorStatusParams) },
+}
+
+var validateSectorStatusReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V28.String(): func() cbg.CBORUnmarshaler { v := miner18.ValidateSectorStatusReturn(false); return &v },
+}
+
+// getNominalSectorExpirationParams / Return — added in v18 builtin-actors (NV28 / FireHorse).
+// Method takes bare *abi.SectorNumber and returns abi.ChainEpoch. go-state-types doesn't expose
+// these as struct types (only as type aliases), so we use locally-defined wrappers in
+// actors/v2/miner/types/getNominalSectorExpiration.go so future per-version variants drop in here.
+var getNominalSectorExpirationParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.GetNominalSectorExpirationParams) },
+}
+
+var getNominalSectorExpirationReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.GetNominalSectorExpirationReturn) },
 }

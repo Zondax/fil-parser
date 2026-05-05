@@ -52,6 +52,11 @@ func (*Miner) StartNetworkHeight() int64 {
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
 
+// Added in v18 builtin-actors (NV28 / FireHorse) — FRC-42 exported sector status APIs
+var generateSectorLocationMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGenerateSectorLocation))
+var validateSectorStatusMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodValidateSectorStatus))
+var getNominalSectorExpirationMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetNominalSectorExpiration))
+
 // Implemented in a fork https://github.com/ipfs-force-community/builtin-actors/blob/99642572098400e6bbdff27c5126714781350fce/actors/miner/src/lib.rs#L131
 var movePartitionsMethodNum = abi.MethodNum(33)
 
@@ -65,6 +70,18 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 		maxTerminationFeeMethodNum: {
 			Name:   parser.MethodMaxTerminationFee,
 			Method: m.MaxTerminationFeeExported,
+		},
+		generateSectorLocationMethodNum: {
+			Name:   parser.MethodGenerateSectorLocation,
+			Method: m.GenerateSectorLocationExported,
+		},
+		validateSectorStatusMethodNum: {
+			Name:   parser.MethodValidateSectorStatus,
+			Method: m.ValidateSectorStatusExported,
+		},
+		getNominalSectorExpirationMethodNum: {
+			Name:   parser.MethodGetNominalSectorExpiration,
+			Method: m.GetNominalSectorExpirationExported,
 		},
 		// missing in go-state-types
 		nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetBeneficiary): {
@@ -326,6 +343,54 @@ func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []by
 
 func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	return parseGeneric(rawParams, rawReturn, true, &types.MaxTerminationFeeParams{}, &types.MaxTerminationFeeReturn{}, parser.ParamsKey)
+}
+
+// GenerateSectorLocationExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
+// Resolves params + return per-version via generateSectorLocationParams / generateSectorLocationReturn maps,
+// matching the dispatch pattern used elsewhere (e.g. ProveCommitSectors3) so future per-version variants
+// can be added without changing the handler.
+func (*Miner) GenerateSectorLocationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := generateSectorLocationParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := generateSectorLocationReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
+}
+
+// ValidateSectorStatusExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
+func (*Miner) ValidateSectorStatusExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := validateSectorStatusParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := validateSectorStatusReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
+}
+
+// GetNominalSectorExpirationExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
+// Params (SectorNumber) and return (ChainEpoch) are primitive CBOR integers; go-state-types only exposes
+// them as type aliases, so locally-defined struct wrappers in actors/v2/miner/types/ provide the
+// UnmarshalCBOR surface.
+func (*Miner) GetNominalSectorExpirationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getNominalSectorExpirationParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := getNominalSectorExpirationReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Miner) MovePartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
