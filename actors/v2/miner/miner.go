@@ -52,10 +52,11 @@ func (*Miner) StartNetworkHeight() int64 {
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
 
-// Added in v18 builtin-actors (NV28 / FireHorse) — FRC-42 exported sector status APIs
-var generateSectorLocationMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGenerateSectorLocation))
-var validateSectorStatusMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodValidateSectorStatus))
-var getNominalSectorExpirationMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetNominalSectorExpiration))
+// NOTE: GenerateSectorLocation, ValidateSectorStatus, GetNominalSectorExpiration are NOT
+// in customMethods because they don't exist in v8-v17 builtin-actors. They live exclusively
+// in miner18.Methods (v18+) and are picked up automatically via the per-version `methods`
+// map below. Adding them to customMethods makes them visible at every V_N >= V0, which
+// breaks TestVersionCoverage and TestABIMethodNumberToMethodName.
 
 // Implemented in a fork https://github.com/ipfs-force-community/builtin-actors/blob/99642572098400e6bbdff27c5126714781350fce/actors/miner/src/lib.rs#L131
 var movePartitionsMethodNum = abi.MethodNum(33)
@@ -70,18 +71,6 @@ func customMethods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 		maxTerminationFeeMethodNum: {
 			Name:   parser.MethodMaxTerminationFee,
 			Method: m.MaxTerminationFeeExported,
-		},
-		generateSectorLocationMethodNum: {
-			Name:   parser.MethodGenerateSectorLocation,
-			Method: m.GenerateSectorLocationExported,
-		},
-		validateSectorStatusMethodNum: {
-			Name:   parser.MethodValidateSectorStatus,
-			Method: m.ValidateSectorStatusExported,
-		},
-		getNominalSectorExpirationMethodNum: {
-			Name:   parser.MethodGetNominalSectorExpiration,
-			Method: m.GetNominalSectorExpirationExported,
 		},
 		// missing in go-state-types
 		nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodGetBeneficiary): {

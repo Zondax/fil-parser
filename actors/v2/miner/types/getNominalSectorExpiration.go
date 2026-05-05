@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	cbg "github.com/whyrusleeping/cbor-gen"
@@ -43,8 +44,14 @@ func (t *GetNominalSectorExpirationReturn) UnmarshalCBOR(r io.Reader) (err error
 	}
 	switch maj {
 	case cbg.MajUnsignedInt:
+		if extra > math.MaxInt64 {
+			return fmt.Errorf("ChainEpoch value overflows int64: %d", extra)
+		}
 		t.Epoch = abi.ChainEpoch(extra)
 	case cbg.MajNegativeInt:
+		if extra > math.MaxInt64 {
+			return fmt.Errorf("ChainEpoch negative magnitude overflows int64: %d", extra)
+		}
 		t.Epoch = abi.ChainEpoch(-int64(extra) - 1)
 	default:
 		return fmt.Errorf("wrong type for ChainEpoch: %d", maj)

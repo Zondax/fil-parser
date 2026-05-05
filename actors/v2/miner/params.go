@@ -2,7 +2,6 @@ package miner
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin"
 	nonLegacyBuiltin "github.com/filecoin-project/go-state-types/builtin"
 
 	"github.com/zondax/fil-parser/actors/v2/miner/types"
@@ -45,7 +44,7 @@ import (
 func v1Methods() map[abi.MethodNum]nonLegacyBuiltin.MethodMeta {
 	m := &Miner{}
 	return map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
-		builtin.MethodConstructor: {
+		nonLegacyBuiltin.MethodConstructor: {
 			Name:   parser.MethodConstructor,
 			Method: m.Constructor,
 		},
