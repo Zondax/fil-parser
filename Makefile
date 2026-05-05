@@ -10,8 +10,12 @@ install_lint:
 	# so it can't analyze Go 1.25 code. Bumped to v2.x.
 	# TODO: full v2 migration — fix pre-existing issues exposed by v2's broader default
 	# linter set (errcheck, govet, staticcheck/QF1008, goconst hits in legacy actor parsers,
-	# gosec G115 in tools/). Run `make lint` without --default=none to see the backlog (~70).
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v2.12.1
+	# gosec G115 in tools/). See .golangci.yml for the temporary suppressions.
+	#
+	# Using `go install` rather than the upstream install.sh script because the script's
+	# sha256 checksum verification was failing on v2.12.1 (both locally and in CI).
+	# go install rebuilds from source and naturally inherits the project's go directive.
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.1
 
 check-modtidy:
 	go mod tidy
