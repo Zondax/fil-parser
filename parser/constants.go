@@ -124,6 +124,7 @@ const (
 	MethodChangeBeneficiary                   = "ChangeBeneficiary"                   // MethodsMiner
 	MethodChangeBeneficiaryExported           = "ChangeBeneficiaryExported"           // MethodsMiner
 	MethodGetBeneficiary                      = "GetBeneficiary"                      // MethodsMiner
+	MethodGetBeneficiaryExported              = "GetBeneficiaryExported"              // MethodsMiner (FRC-42 export of GetBeneficiary; present since v16)
 	MethodIsControllingAddressExported        = "IsControllingAddressExported"        // MethodsMiner
 	MethodConfirmChangeWorkerAddress          = "ConfirmChangeWorkerAddress"          // MethodsMiner
 	MethodConfirmChangeWorkerAddressExported  = "ConfirmChangeWorkerAddressExported"  // MethodsMiner
