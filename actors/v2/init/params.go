@@ -11,6 +11,7 @@ import (
 	builtinInitv15 "github.com/filecoin-project/go-state-types/builtin/v15/init"
 	builtinInitv16 "github.com/filecoin-project/go-state-types/builtin/v16/init"
 	builtinInitv17 "github.com/filecoin-project/go-state-types/builtin/v17/init"
+	builtinInitv18 "github.com/filecoin-project/go-state-types/builtin/v18/init"
 	builtinInitv8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	builtinInitv9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
@@ -102,6 +103,7 @@ var constructorParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ConstructorParams) },
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ConstructorParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.ConstructorParams) },
+	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv18.ConstructorParams) },
 }
 
 var execParams = map[string]func() typegen.CBORUnmarshaler{
@@ -138,6 +140,7 @@ var execParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecParams) },
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.ExecParams) },
+	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv18.ExecParams) },
 }
 
 var execReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -174,6 +177,7 @@ var execReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecReturn) },
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.ExecReturn) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.ExecReturn) },
+	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv18.ExecReturn) },
 }
 
 var exec4Params = map[string]func() typegen.CBORUnmarshaler{
@@ -189,6 +193,7 @@ var exec4Params = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Params) },
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Params) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.Exec4Params) },
+	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv18.Exec4Params) },
 }
 
 var exec4Return = map[string]func() typegen.CBORUnmarshaler{
@@ -204,4 +209,5 @@ var exec4Return = map[string]func() typegen.CBORUnmarshaler{
 	tools.V25.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Return) },
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv16.Exec4Return) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv17.Exec4Return) },
+	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(builtinInitv18.Exec4Return) },
 }

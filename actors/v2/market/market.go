@@ -20,6 +20,7 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
 	v17Market "github.com/filecoin-project/go-state-types/builtin/v17/market"
+	v18Market "github.com/filecoin-project/go-state-types/builtin/v18/market"
 	v8Market "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	v9Market "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
@@ -78,6 +79,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(v16Market.Methods),
 	tools.V26.String(): actors.CopyMethods(v16Market.Methods),
 	tools.V27.String(): actors.CopyMethods(v17Market.Methods),
+	tools.V28.String(): actors.CopyMethods(v18Market.Methods),
 }
 
 func (m *Market) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

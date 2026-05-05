@@ -20,6 +20,7 @@ import (
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner17 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
+	miner18 "github.com/filecoin-project/go-state-types/builtin/v18/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -50,6 +51,12 @@ func (*Miner) StartNetworkHeight() int64 {
 // Implemented in the rust builtin-actors but not the golang version
 var initialPledgeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodInitialPledge))
 var maxTerminationFeeMethodNum = abi.MethodNum(nonLegacyBuiltin.MustGenerateFRCMethodNum(parser.MethodMaxTerminationFee))
+
+// NOTE: GenerateSectorLocation, ValidateSectorStatus, GetNominalSectorExpiration are NOT
+// in customMethods because they don't exist in v8-v17 builtin-actors. They live exclusively
+// in miner18.Methods (v18+) and are picked up automatically via the per-version `methods`
+// map below. Adding them to customMethods makes them visible at every V_N >= V0, which
+// breaks TestVersionCoverage and TestABIMethodNumberToMethodName.
 
 // Implemented in a fork https://github.com/ipfs-force-community/builtin-actors/blob/99642572098400e6bbdff27c5126714781350fce/actors/miner/src/lib.rs#L131
 var movePartitionsMethodNum = abi.MethodNum(33)
@@ -123,6 +130,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(customMethods(), miner16.Methods),
 	tools.V26.String(): actors.CopyMethods(customMethods(), miner16.Methods),
 	tools.V27.String(): actors.CopyMethods(customMethods(), miner17.Methods),
+	tools.V28.String(): actors.CopyMethods(customMethods(), miner18.Methods),
 }
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -324,6 +332,54 @@ func (*Miner) InitialPledgeExported(network string, height int64, rawReturn []by
 
 func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	return parseGeneric(rawParams, rawReturn, true, &types.MaxTerminationFeeParams{}, &types.MaxTerminationFeeReturn{}, parser.ParamsKey)
+}
+
+// GenerateSectorLocationExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
+// Resolves params + return per-version via generateSectorLocationParams / generateSectorLocationReturn maps,
+// matching the dispatch pattern used elsewhere (e.g. ProveCommitSectors3) so future per-version variants
+// can be added without changing the handler.
+func (*Miner) GenerateSectorLocationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := generateSectorLocationParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := generateSectorLocationReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
+}
+
+// ValidateSectorStatusExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
+func (*Miner) ValidateSectorStatusExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := validateSectorStatusParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := validateSectorStatusReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
+}
+
+// GetNominalSectorExpirationExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
+// Params (SectorNumber) and return (ChainEpoch) are primitive CBOR integers; go-state-types only exposes
+// them as type aliases, so locally-defined struct wrappers in actors/v2/miner/types/ provide the
+// UnmarshalCBOR surface.
+func (*Miner) GetNominalSectorExpirationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := getNominalSectorExpirationParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := getNominalSectorExpirationReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, rawReturn, true, params(), returnValue(), parser.ParamsKey)
 }
 
 func (*Miner) MovePartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

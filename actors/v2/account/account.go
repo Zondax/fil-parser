@@ -21,6 +21,7 @@ import (
 	accountv15 "github.com/filecoin-project/go-state-types/builtin/v15/account"
 	accountv16 "github.com/filecoin-project/go-state-types/builtin/v16/account"
 	accountv17 "github.com/filecoin-project/go-state-types/builtin/v17/account"
+	accountv18 "github.com/filecoin-project/go-state-types/builtin/v18/account"
 	accountv8 "github.com/filecoin-project/go-state-types/builtin/v8/account"
 	accountv9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
 
@@ -72,6 +73,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(accountv16.Methods, buggyMethods()),
 	tools.V26.String(): actors.CopyMethods(accountv16.Methods, buggyMethods()),
 	tools.V27.String(): actors.CopyMethods(accountv17.Methods, buggyMethods()),
+	tools.V28.String(): actors.CopyMethods(accountv18.Methods, buggyMethods()),
 }
 
 func (a *Account) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
