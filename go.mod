@@ -3,12 +3,12 @@ module github.com/zondax/fil-parser
 go 1.25.7
 
 require (
-	github.com/bytedance/sonic v1.14.1
+	github.com/bytedance/sonic v1.15.1
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-f3 v0.8.13
 	github.com/filecoin-project/go-state-types v0.18.0
-	github.com/filecoin-project/lotus v1.36.0-rc1
+	github.com/filecoin-project/lotus v1.36.0
 	github.com/filecoin-project/specs-actors v0.9.15
 	github.com/filecoin-project/specs-actors/v8 v8.0.1
 	github.com/google/uuid v1.6.0
@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	github.com/zondax/golem v0.29.0
-	github.com/zondax/rosetta-filecoin-lib v1.3600.0-rc1
+	github.com/zondax/rosetta-filecoin-lib v1.3600.0
 )
 
 require (
@@ -27,9 +27,9 @@ require (
 	github.com/GeertJohan/go.rice v1.0.3 // indirect
 	github.com/akavel/rsrc v0.8.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
-	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
-	github.com/bytedance/sonic/loader v0.3.0 // indirect
+	github.com/bytedance/sonic/loader v0.5.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/daaku/go.zipexe v1.0.2 // indirect
