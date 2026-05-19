@@ -697,6 +697,21 @@ func TestParser_ParseEvents_FVM_FromTraceFile(t *testing.T) {
 				totalEVMEvents:    0,
 			},
 		},
+		{
+			// V28 (FireHorse) calibration fixture — captured 2026-05-18 from
+			// node-fil-calibration-stable on lotus v1.36.0 stable. V28 activated
+			// on calibration at epoch 3694534; this height (3727000) is ~33k
+			// blocks past activation, ensuring v18 builtin-actor traffic.
+			name:    "parser with traces from v2 and lotus 1.36 (calib, V28/FireHorse)",
+			version: v2.NodeVersionsSupported[13], // "v1.36"
+			url:     calibNextNodeUrl,
+			height:  "3727000",
+			results: expectedResults{
+				totalTraces:       35,
+				totalNativeEvents: 0,
+				totalEVMEvents:    35,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
