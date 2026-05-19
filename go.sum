@@ -942,8 +942,8 @@ github.com/yuin/gopher-lua v1.1.1 h1:kYKnWBjvbNP4XLT3+bPEwAXJx262OhaHDWDVOPjL46M
 github.com/yuin/gopher-lua v1.1.1/go.mod h1:GBR0iDaNXjAgGg9zfCvksxSRnQx76gclCIb7kdAd1Pw=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
-github.com/zondax/golem v0.29.0 h1:exAKRxX7ap5b9FuBLSFtPtdMkPBUqWV6h1DLN1m/pFg=
-github.com/zondax/golem v0.29.0/go.mod h1:MU2oVfrHeSg5d8oFvfuTKVddHebEXwgE/W24uPiRpWI=
+github.com/zondax/golem v0.30.0 h1:s2pmw2sXO05RsHEwyLxRtKdvS5PXWcuIVflj67WFnKs=
+github.com/zondax/golem v0.30.0/go.mod h1:26pzA5IFGWuun+ZzwhRtn5eZKR1c90cVTwZK8H7S2Ss=
 github.com/zondax/rosetta-filecoin-lib v1.3600.0 h1:7gUaOOnfWdLo5JxfrZAFwo1mCkzAt6js4suxBgD6EXI=
 github.com/zondax/rosetta-filecoin-lib v1.3600.0/go.mod h1:wMCnDndFcfU/5EdZtFfW/xpNgkfdDZq8n9Sb7tYFilw=
 gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b h1:CzigHMRySiX3drau9C6Q5CAbNIApmLdat5jPMqChvDA=
