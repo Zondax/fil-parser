@@ -14,6 +14,7 @@ import (
 	v15Market "github.com/filecoin-project/go-state-types/builtin/v15/market"
 	v16Market "github.com/filecoin-project/go-state-types/builtin/v16/market"
 	v17Market "github.com/filecoin-project/go-state-types/builtin/v17/market"
+	v18Market "github.com/filecoin-project/go-state-types/builtin/v18/market"
 
 	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/big"
@@ -26,7 +27,7 @@ import (
 var customSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	// From V20!
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(v11Market.SectorDeals) },
-	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(v12Market.SectorDeals) },
+	tools.V21.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	//
 	tools.V22.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V23.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
@@ -34,6 +35,7 @@ var customSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(SectorDeals) },
 }
 
 // some sector deals INCLUDE the sector number
@@ -47,6 +49,7 @@ var canonicalSectorDeals = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SectorDeals) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.SectorDeals) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.SectorDeals) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.SectorDeals) },
 }
 
 var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
@@ -59,6 +62,7 @@ var verifiedDealInfos = map[string]func() cbg.CBORUnmarshaler{
 	tools.V25.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifiedDealInfo) },
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(v16Market.VerifiedDealInfo) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(v17Market.VerifiedDealInfo) },
+	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(v18Market.VerifiedDealInfo) },
 }
 
 type SectorDeals struct {
@@ -407,12 +411,13 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 4 {
+	// // required because of breaking change in go-state-types: https://github.com/filecoin-project/go-state-types/issues/435
+	if extra != 4 && extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
 	// t.SectorNumber  (uint64)
-	{
+	if extra == 4 {
 		maj, extra, err := cr.ReadHeader()
 		if err != nil {
 			return err

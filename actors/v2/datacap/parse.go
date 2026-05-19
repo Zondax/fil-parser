@@ -20,6 +20,7 @@ import (
 	datacapv15 "github.com/filecoin-project/go-state-types/builtin/v15/datacap"
 	datacapv16 "github.com/filecoin-project/go-state-types/builtin/v16/datacap"
 	datacapv17 "github.com/filecoin-project/go-state-types/builtin/v17/datacap"
+	datacapv18 "github.com/filecoin-project/go-state-types/builtin/v18/datacap"
 	datacapv9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 
 	"github.com/zondax/fil-parser/actors"
@@ -78,6 +79,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V25.String(): actors.CopyMethods(datacapv16.Methods, legacyMethods()),
 	tools.V26.String(): actors.CopyMethods(datacapv16.Methods, legacyMethods()),
 	tools.V27.String(): actors.CopyMethods(datacapv17.Methods, legacyMethods()),
+	tools.V28.String(): actors.CopyMethods(datacapv18.Methods, legacyMethods()),
 }
 
 func (d *Datacap) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

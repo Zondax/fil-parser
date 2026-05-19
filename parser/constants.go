@@ -124,6 +124,7 @@ const (
 	MethodChangeBeneficiary                   = "ChangeBeneficiary"                   // MethodsMiner
 	MethodChangeBeneficiaryExported           = "ChangeBeneficiaryExported"           // MethodsMiner
 	MethodGetBeneficiary                      = "GetBeneficiary"                      // MethodsMiner
+	MethodGetBeneficiaryExported              = "GetBeneficiaryExported"              // MethodsMiner (FRC-42 export of GetBeneficiary; present since v16)
 	MethodIsControllingAddressExported        = "IsControllingAddressExported"        // MethodsMiner
 	MethodConfirmChangeWorkerAddress          = "ConfirmChangeWorkerAddress"          // MethodsMiner
 	MethodConfirmChangeWorkerAddressExported  = "ConfirmChangeWorkerAddressExported"  // MethodsMiner
@@ -146,6 +147,12 @@ const (
 	MethodMaxTerminationFee                   = "MaxTerminationFee"                   // MethodsMiner
 	MethodMovePartitions                      = "MovePartitions"                      // MethodsMiner
 	MethodMaxTerminationFeeExported           = "MaxTerminationFeeExported"           // MethodsMiner
+	MethodGenerateSectorLocation              = "GenerateSectorLocation"              // MethodsMiner (NV28+)
+	MethodGenerateSectorLocationExported      = "GenerateSectorLocationExported"      // MethodsMiner (NV28+)
+	MethodValidateSectorStatus                = "ValidateSectorStatus"                // MethodsMiner (NV28+)
+	MethodValidateSectorStatusExported        = "ValidateSectorStatusExported"        // MethodsMiner (NV28+)
+	MethodGetNominalSectorExpiration          = "GetNominalSectorExpiration"          // MethodsMiner (NV28+)
+	MethodGetNominalSectorExpirationExported  = "GetNominalSectorExpirationExported"  // MethodsMiner (NV28+)
 	MethodPublishStorageDeals                 = "PublishStorageDeals"                 // MethodsMarket
 	MethodPublishStorageDealsExported         = "PublishStorageDealsExported"         // MethodsMarket
 	MethodAddBalance                          = "AddBalance"                          // MethodsMarket

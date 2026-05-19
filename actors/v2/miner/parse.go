@@ -108,7 +108,7 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodChangeBeneficiary, parser.MethodChangeBeneficiaryExported:
 		resp, err := m.ChangeBeneficiaryExported(network, height, msg.Params)
 		return resp, nil, err
-	case parser.MethodGetBeneficiary:
+	case parser.MethodGetBeneficiary, parser.MethodGetBeneficiaryExported:
 		resp, err := m.GetBeneficiary(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodExtendSectorExpiration2:
@@ -155,6 +155,15 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 		return resp, nil, err
 	case parser.MethodMaxTerminationFee, parser.MethodMaxTerminationFeeExported:
 		resp, err := m.MaxTerminationFeeExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodGenerateSectorLocation, parser.MethodGenerateSectorLocationExported:
+		resp, err := m.GenerateSectorLocationExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodValidateSectorStatus, parser.MethodValidateSectorStatusExported:
+		resp, err := m.ValidateSectorStatusExported(network, height, msg.Params, msgRct.Return)
+		return resp, nil, err
+	case parser.MethodGetNominalSectorExpiration, parser.MethodGetNominalSectorExpirationExported:
+		resp, err := m.GetNominalSectorExpirationExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodMovePartitions:
 		resp, err := m.MovePartitions(network, height, msg.Params)
@@ -210,6 +219,7 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodChangeBeneficiary:                  m.ChangeBeneficiaryExported,
 		parser.MethodChangeBeneficiaryExported:          m.ChangeBeneficiaryExported,
 		parser.MethodGetBeneficiary:                     m.GetBeneficiary,
+		parser.MethodGetBeneficiaryExported:             m.GetBeneficiary,
 		parser.MethodExtendSectorExpiration2:            m.ExtendSectorExpiration2,
 		parser.MethodGetOwner:                           m.GetOwnerExported,
 		parser.MethodIsControllingAddressExported:       m.IsControllingAddressExported,
@@ -226,6 +236,12 @@ func (m *Miner) TransactionTypes() map[string]any {
 		parser.MethodInitialPledge:                      m.InitialPledgeExported,
 		parser.MethodMaxTerminationFee:                  m.MaxTerminationFeeExported,
 		parser.MethodMaxTerminationFeeExported:          m.MaxTerminationFeeExported,
+		parser.MethodGenerateSectorLocation:             m.GenerateSectorLocationExported,
+		parser.MethodGenerateSectorLocationExported:     m.GenerateSectorLocationExported,
+		parser.MethodValidateSectorStatus:               m.ValidateSectorStatusExported,
+		parser.MethodValidateSectorStatusExported:       m.ValidateSectorStatusExported,
+		parser.MethodGetNominalSectorExpiration:         m.GetNominalSectorExpirationExported,
+		parser.MethodGetNominalSectorExpirationExported: m.GetNominalSectorExpirationExported,
 		parser.MethodMovePartitions:                     m.MovePartitions,
 	}
 }

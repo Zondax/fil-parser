@@ -30,7 +30,7 @@ func (p *Market) Parse(_ context.Context, network string, height int64, txType s
 	case parser.MethodVerifyDealsForActivation:
 		resp, err := p.VerifyDealsForActivationExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
-	case parser.MethodActivateDeals:
+	case parser.MethodActivateDeals, parser.MethodBatchActivateDeals:
 		resp, err := p.ActivateDealsExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodOnMinerSectorsTerminate:
@@ -120,5 +120,6 @@ func (p *Market) TransactionTypes() map[string]any {
 		parser.MethodGetDealSectorExported:       p.GetDealSectorExported,
 		parser.MethodSettleDealPaymentsExported:  p.SettleDealPaymentsExported,
 		parser.MethodSectorContentChanged:        p.SectorContentChanged,
+		parser.MethodBatchActivateDeals:          p.ActivateDealsExported,
 	}
 }
