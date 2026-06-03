@@ -114,7 +114,7 @@ require (
 	github.com/ipfs/go-ipld-cbor v0.2.1
 	github.com/ipfs/go-ipld-format v0.6.3
 	github.com/ipfs/go-metrics-interface v0.3.0 // indirect
-	github.com/ipld/go-ipld-prime v0.23.0
+	github.com/ipld/go-ipld-prime v0.24.0
 	github.com/klauspost/compress v1.18.6
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
@@ -139,7 +139,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/polydawn/refmt v0.89.1-0.20231129105047-37766d95467a // indirect
+	github.com/polydawn/refmt v0.90.0 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.4 // indirect
