@@ -3,7 +3,7 @@ module github.com/zondax/fil-parser
 go 1.25.7
 
 require (
-	github.com/bytedance/sonic v1.15.1
+	github.com/bytedance/sonic v1.15.2
 	github.com/filecoin-project/go-address v1.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-f3 v0.8.13
