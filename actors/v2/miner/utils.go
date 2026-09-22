@@ -61,6 +61,7 @@ var lockedRewardFactorNum = map[string]*big.Int{
 	tools.V26.String(): big.NewInt(75),
 	tools.V27.String(): big.NewInt(75),
 	tools.V28.String(): big.NewInt(75),
+	tools.V29.String(): big.NewInt(75),
 }
 
 var lockedRewardFactorDenom = map[string]*big.Int{
@@ -99,6 +100,7 @@ var lockedRewardFactorDenom = map[string]*big.Int{
 	tools.V26.String(): big.NewInt(100),
 	tools.V27.String(): big.NewInt(100),
 	tools.V28.String(): big.NewInt(100),
+	tools.V29.String(): big.NewInt(100),
 }
 
 var verifiedDealWeightMultiplier = map[string]*big.Int{
@@ -135,6 +137,7 @@ var verifiedDealWeightMultiplier = map[string]*big.Int{
 	tools.V26.String(): builtin.VerifiedDealWeightMultiplier.Int,
 	tools.V27.String(): builtin.VerifiedDealWeightMultiplier.Int,
 	tools.V28.String(): builtin.VerifiedDealWeightMultiplier.Int,
+	tools.V29.String(): builtin.VerifiedDealWeightMultiplier.Int,
 }
 
 var qualityBaseMultiplier = map[string]*big.Int{
@@ -171,6 +174,7 @@ var qualityBaseMultiplier = map[string]*big.Int{
 	tools.V26.String(): builtin.QualityBaseMultiplier.Int,
 	tools.V27.String(): builtin.QualityBaseMultiplier.Int,
 	tools.V28.String(): builtin.QualityBaseMultiplier.Int,
+	tools.V29.String(): builtin.QualityBaseMultiplier.Int,
 }
 
 func LockedRewardFactorNum(network string, height int64) *big.Int {

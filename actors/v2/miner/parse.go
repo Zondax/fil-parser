@@ -168,6 +168,9 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 	case parser.MethodMovePartitions:
 		resp, err := m.MovePartitions(network, height, msg.Params)
 		return resp, nil, err
+	case parser.MethodUpgradeSectorQuality:
+		resp, err := m.UpgradeSectorQuality(network, height, msg.Params)
+		return resp, nil, err
 	case parser.UnknownStr:
 		resp, err := actors.ParseUnknownMetadata(msg.Params, msgRct.Return)
 		return resp, nil, err
@@ -178,6 +181,7 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 func (m *Miner) TransactionTypes() map[string]any {
 	return map[string]any{
 		parser.MethodSend:                               actors.ParseSend,
+		parser.MethodUpgradeSectorQuality:               m.UpgradeSectorQuality,
 		parser.MethodConstructor:                        m.Constructor,
 		parser.MethodControlAddresses:                   m.ControlAddresses,
 		parser.MethodChangeWorkerAddress:                m.ChangeWorkerAddressExported,

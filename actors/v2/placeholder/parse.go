@@ -21,6 +21,7 @@ import (
 	placeholderv16 "github.com/filecoin-project/go-state-types/builtin/v16/placeholder"
 	placeholderv17 "github.com/filecoin-project/go-state-types/builtin/v17/placeholder"
 	placeholderv18 "github.com/filecoin-project/go-state-types/builtin/v18/placeholder"
+	placeholderv19 "github.com/filecoin-project/go-state-types/builtin/v19/placeholder"
 	"github.com/zondax/fil-parser/actors"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -56,6 +57,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V26.String(): actors.CopyMethods(placeholderv16.Methods),
 	tools.V27.String(): actors.CopyMethods(placeholderv17.Methods),
 	tools.V28.String(): actors.CopyMethods(placeholderv18.Methods),
+	tools.V29.String(): actors.CopyMethods(placeholderv19.Methods),
 }
 
 func (*Placeholder) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

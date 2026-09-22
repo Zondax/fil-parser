@@ -21,6 +21,7 @@ import (
 	powerv16 "github.com/filecoin-project/go-state-types/builtin/v16/power"
 	powerv17 "github.com/filecoin-project/go-state-types/builtin/v17/power"
 	powerv18 "github.com/filecoin-project/go-state-types/builtin/v18/power"
+	powerv19 "github.com/filecoin-project/go-state-types/builtin/v19/power"
 	powerv8 "github.com/filecoin-project/go-state-types/builtin/v8/power"
 	powerv9 "github.com/filecoin-project/go-state-types/builtin/v9/power"
 
@@ -83,6 +84,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V26.String(): actors.CopyMethods(powerv16.Methods),
 	tools.V27.String(): actors.CopyMethods(powerv17.Methods),
 	tools.V28.String(): actors.CopyMethods(powerv18.Methods),
+	tools.V29.String(): actors.CopyMethods(powerv19.Methods),
 }
 
 func (p *Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

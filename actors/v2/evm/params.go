@@ -10,6 +10,7 @@ import (
 	evmv16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
 	evmv17 "github.com/filecoin-project/go-state-types/builtin/v17/evm"
 	evmv18 "github.com/filecoin-project/go-state-types/builtin/v18/evm"
+	evmv19 "github.com/filecoin-project/go-state-types/builtin/v19/evm"
 	typegen "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -26,6 +27,7 @@ var resurrectParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(evmv16.ResurrectParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(evmv17.ResurrectParams) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(evmv18.ResurrectParams) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(evmv19.ResurrectParams) },
 }
 
 var delegateCallParams = map[string]func() typegen.CBORUnmarshaler{
@@ -40,6 +42,7 @@ var delegateCallParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(evmv16.DelegateCallParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(evmv17.DelegateCallParams) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(evmv18.DelegateCallParams) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(evmv19.DelegateCallParams) },
 }
 
 var getBytecodeReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -54,6 +57,7 @@ var getBytecodeReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(evmv16.GetBytecodeReturn) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(evmv17.GetBytecodeReturn) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(evmv18.GetBytecodeReturn) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(evmv19.GetBytecodeReturn) },
 }
 
 var constructorParams = map[string]func() typegen.CBORUnmarshaler{
@@ -68,6 +72,7 @@ var constructorParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(evmv16.ConstructorParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(evmv17.ConstructorParams) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(evmv18.ConstructorParams) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(evmv19.ConstructorParams) },
 }
 
 var getStorageAtParams = map[string]func() typegen.CBORUnmarshaler{
@@ -82,4 +87,5 @@ var getStorageAtParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(evmv16.GetStorageAtParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(evmv17.GetStorageAtParams) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(evmv18.GetStorageAtParams) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(evmv19.GetStorageAtParams) },
 }

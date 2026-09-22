@@ -26,6 +26,7 @@ import (
 	eamv17 "github.com/filecoin-project/go-state-types/builtin/v17/eam"
 	eamv18 "github.com/filecoin-project/go-state-types/builtin/v18/eam"
 
+	eamv19 "github.com/filecoin-project/go-state-types/builtin/v19/eam"
 	typegen "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/zondax/fil-parser/actors"
@@ -66,6 +67,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V26.String(): actors.CopyMethods(eamv16.Methods),
 	tools.V27.String(): actors.CopyMethods(eamv17.Methods),
 	tools.V28.String(): actors.CopyMethods(eamv18.Methods),
+	tools.V29.String(): actors.CopyMethods(eamv19.Methods),
 }
 
 func (e *Eam) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {

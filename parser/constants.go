@@ -75,6 +75,15 @@ const (
 	MethodAwardBlockReward                    = "AwardBlockReward"                    // MethodsReward
 	MethodUpdateNetworkKPI                    = "UpdateNetworkKPI"                    // MethodsReward
 	MethodThisEpochReward                     = "ThisEpochReward"                     // MethodsReward
+	MethodSetWeightRecordsExported            = "SetWeightRecordsExported"            // MethodsReward (NV29 Solstice, FRC-42)
+	MethodStepWeightRecordsExported           = "StepWeightRecordsExported"           // MethodsReward (NV29 Solstice, FRC-42)
+	MethodRegisterStreamExported              = "RegisterStreamExported"              // MethodsReward (NV29 Solstice, FRC-42)
+	MethodRemoveStreamExported                = "RemoveStreamExported"                // MethodsReward (NV29 Solstice, FRC-42)
+	MethodSetDistributionExported             = "SetDistributionExported"             // MethodsReward (NV29 Solstice, FRC-42)
+	MethodSetSharesExported                   = "SetSharesExported"                   // MethodsReward (NV29 Solstice, FRC-42)
+	MethodReplaceAddressExported              = "ReplaceAddressExported"              // MethodsReward (NV29 Solstice, FRC-42)
+	MethodCancelPendingExported               = "CancelPendingExported"               // MethodsReward (NV29 Solstice, FRC-42)
+	MethodClaimExported                       = "ClaimExported"                       // MethodsReward (NV29 Solstice, FRC-42)
 	MethodCreateMiner                         = "CreateMiner"                         // MethodsPower
 	MethodCreateMinerExported                 = "CreateMinerExported"                 // MethodsPower
 	MethodUpdateClaimedPower                  = "UpdateClaimedPower"                  // MethodsPower
@@ -94,6 +103,7 @@ const (
 	MethodProveCommitSector                   = "ProveCommitSector"                   // MethodsMiner - Deprecated
 	MethodSubmitWindowedPoSt                  = "SubmitWindowedPoSt"                  // MethodsMiner
 	MethodApplyRewards                        = "ApplyRewards"                        // MethodsMiner
+	MethodUpgradeSectorQuality                = "UpgradeSectorQuality"                // MethodsMiner (NV29 Solstice)
 	MethodWithdrawBalance                     = "WithdrawBalance"                     // MethodsMiner
 	MethodWithdrawBalanceExported             = "WithdrawBalanceExported"             // MethodsMiner
 	MethodChangeOwnerAddress                  = "ChangeOwnerAddress"                  // MethodsMiner

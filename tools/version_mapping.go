@@ -15,6 +15,11 @@ import (
 
 // The minimimum calibration version is V16 because of a calibration reset.
 
+// placeholderUnscheduledHeight stands in for a network upgrade epoch that upstream has not
+// announced yet. It must stay far in the future but well below math.MaxInt64, because
+// tools/testutil.go averages two adjacent heights and would overflow at MaxInt64.
+const placeholderUnscheduledHeight = 999999999999999
+
 const (
 	CalibrationNetworkNodeType = "calibrationnet"
 	CalibrationNetwork         = "calibration"
@@ -31,9 +36,9 @@ type version struct {
 
 var (
 	LatestMainnetVersion     version = V28
-	LatestCalibrationVersion version = V28
+	LatestCalibrationVersion version = V29
 
-	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28}
+	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}
 	supportedVersionsList *list.List
 
 	// V0 genesis, spec-actors: v1, calibration: 0, mainnet: 0
@@ -119,6 +124,13 @@ var (
 
 	// V28 FireHorse, builtin-actors(go-state-types): v18, calibration: 3694534, mainnet: 6052800
 	V28 version = version{calibration: 3694534, mainnet: buildconstants.UpgradeFireHorseHeight, nodeVersion: 28}
+
+	// V29 Solstice (FIP-0118), builtin-actors(go-state-types): v19.
+	// TODO(NV29): activation heights are still UpgradeHeightUnscheduled upstream. Replace both
+	// placeholders with the real epochs once announced, switch mainnet to
+	// buildconstants.UpgradeSolsticeHeight (only exists once lotus ships the NV29 release), and
+	// promote LatestMainnetVersion to V29.
+	V29 version = version{calibration: placeholderUnscheduledHeight, mainnet: placeholderUnscheduledHeight, nodeVersion: 29}
 )
 
 func init() {
@@ -382,6 +394,11 @@ func VersionFromHeight(network string, height int64) version {
 		return V26
 	case V27.IsSupported(network, height):
 		return V27
+	// V28 needs an explicit case: it stopped being the calibration fall-through when
+	// LatestCalibrationVersion moved to V29. Without this, every height in V28's range
+	// silently resolves to V29. See TestVersionFromHeightResolvesEachVersion.
+	case V28.IsSupported(network, height):
+		return V28
 	}
 	return LatestVersion(network)
 }

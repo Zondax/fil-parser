@@ -21,6 +21,7 @@ import (
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner17 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
 	miner18 "github.com/filecoin-project/go-state-types/builtin/v18/miner"
+	miner19 "github.com/filecoin-project/go-state-types/builtin/v19/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -131,6 +132,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V26.String(): actors.CopyMethods(customMethods(), miner16.Methods),
 	tools.V27.String(): actors.CopyMethods(customMethods(), miner17.Methods),
 	tools.V28.String(): actors.CopyMethods(customMethods(), miner18.Methods),
+	tools.V29.String(): actors.CopyMethods(customMethods(), miner19.Methods),
 }
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -384,4 +386,15 @@ func (*Miner) GetNominalSectorExpirationExported(network string, height int64, r
 
 func (*Miner) MovePartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 	return parseGeneric(rawParams, nil, false, &types.MovePartitionsParams{}, &abi.EmptyValue{}, parser.ParamsKey)
+}
+
+// UpgradeSectorQuality handles the plain-numbered method 37 added in v19 builtin-actors
+// (NV29 / Solstice). Returns abi.EmptyValue upstream, so there is no return block to decode.
+func (*Miner) UpgradeSectorQuality(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := upgradeSectorQualityParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }

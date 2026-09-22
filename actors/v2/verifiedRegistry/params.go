@@ -12,6 +12,7 @@ import (
 	verifregv16 "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
 	verifregv17 "github.com/filecoin-project/go-state-types/builtin/v17/verifreg"
 	verifregv18 "github.com/filecoin-project/go-state-types/builtin/v18/verifreg"
+	verifregv19 "github.com/filecoin-project/go-state-types/builtin/v19/verifreg"
 	verifregv8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	verifregv9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
@@ -121,6 +122,7 @@ var addVerifierParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AddVerifierParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.AddVerifierParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.AddVerifierParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.AddVerifierParams) },
 }
 
 var addVerifiedClientParams = map[string]func() cbg.CBORUnmarshaler{
@@ -158,6 +160,7 @@ var addVerifiedClientParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AddVerifiedClientParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.AddVerifiedClientParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.AddVerifiedClientParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.AddVerifiedClientParams) },
 }
 
 var useBytesParams = map[string]func() cbg.CBORUnmarshaler{
@@ -195,6 +198,7 @@ var useBytesParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.UseBytesParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.UseBytesParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.UseBytesParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.UseBytesParams) },
 }
 
 var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
@@ -232,6 +236,7 @@ var restoreBytesParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RestoreBytesParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RestoreBytesParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RestoreBytesParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RestoreBytesParams) },
 }
 
 var removedVerifiedClientDataCapParams = map[string]func() cbg.CBORUnmarshaler{
@@ -251,6 +256,7 @@ var removedVerifiedClientDataCapParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveDataCapParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RemoveDataCapParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RemoveDataCapParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RemoveDataCapParams) },
 }
 
 var removedVerifiedClientDataCapReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -270,6 +276,7 @@ var removedVerifiedClientDataCapReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveDataCapReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RemoveDataCapReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RemoveDataCapReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RemoveDataCapReturn) },
 }
 
 var removeExpiredAllocationsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -287,6 +294,7 @@ var removeExpiredAllocationsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveExpiredAllocationsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RemoveExpiredAllocationsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RemoveExpiredAllocationsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RemoveExpiredAllocationsParams) },
 }
 
 var removeExpiredAllocationsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -304,6 +312,7 @@ var removeExpiredAllocationsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveExpiredAllocationsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RemoveExpiredAllocationsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RemoveExpiredAllocationsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RemoveExpiredAllocationsReturn) },
 }
 
 var claimAllocationsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -321,6 +330,7 @@ var claimAllocationsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.ClaimAllocationsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.ClaimAllocationsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.ClaimAllocationsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.ClaimAllocationsParams) },
 }
 
 var claimAllocationsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -338,6 +348,7 @@ var claimAllocationsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(types.ClaimAllocationsReturn) },
 }
 
 var getClaimsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -355,6 +366,7 @@ var getClaimsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.GetClaimsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.GetClaimsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.GetClaimsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.GetClaimsParams) },
 }
 
 var getClaimsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -372,6 +384,7 @@ var getClaimsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.GetClaimsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.GetClaimsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.GetClaimsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.GetClaimsReturn) },
 }
 
 var extendClaimTermsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -389,6 +402,7 @@ var extendClaimTermsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.ExtendClaimTermsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.ExtendClaimTermsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.ExtendClaimTermsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.ExtendClaimTermsParams) },
 }
 
 var extendClaimTermsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -406,6 +420,7 @@ var extendClaimTermsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.ExtendClaimTermsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.ExtendClaimTermsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.ExtendClaimTermsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.ExtendClaimTermsReturn) },
 }
 
 var removeExpiredClaimsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -423,6 +438,7 @@ var removeExpiredClaimsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveExpiredClaimsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RemoveExpiredClaimsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RemoveExpiredClaimsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RemoveExpiredClaimsParams) },
 }
 
 var removeExpiredClaimsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -440,6 +456,7 @@ var removeExpiredClaimsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.RemoveExpiredClaimsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.RemoveExpiredClaimsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.RemoveExpiredClaimsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.RemoveExpiredClaimsReturn) },
 }
 
 var universalReceiverParams = map[string]func() cbg.CBORUnmarshaler{
@@ -457,6 +474,7 @@ var universalReceiverParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.UniversalReceiverParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.UniversalReceiverParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.UniversalReceiverParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.UniversalReceiverParams) },
 }
 
 var allocationRequests = map[string]func() cbg.CBORUnmarshaler{
@@ -474,6 +492,7 @@ var allocationRequests = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AllocationRequests) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.AllocationRequests) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.AllocationRequests) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.AllocationRequests) },
 }
 
 var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
@@ -491,4 +510,5 @@ var allocationsResponse = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(verifregv16.AllocationsResponse) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(verifregv17.AllocationsResponse) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(verifregv18.AllocationsResponse) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.AllocationsResponse) },
 }

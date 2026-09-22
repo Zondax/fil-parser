@@ -14,6 +14,7 @@ import (
 	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
 	rewardv17 "github.com/filecoin-project/go-state-types/builtin/v17/reward"
 	rewardv18 "github.com/filecoin-project/go-state-types/builtin/v18/reward"
+	rewardv19 "github.com/filecoin-project/go-state-types/builtin/v19/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 	legacyv1 "github.com/filecoin-project/specs-actors/actors/builtin/reward"
@@ -113,6 +114,7 @@ var awardBlockRewardParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.AwardBlockRewardParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.AwardBlockRewardParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(rewardv18.AwardBlockRewardParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.AwardBlockRewardParams) },
 }
 
 var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -150,6 +152,7 @@ var thisEpochRewardReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(rewardv16.ThisEpochRewardReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(rewardv17.ThisEpochRewardReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(rewardv18.ThisEpochRewardReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.ThisEpochRewardReturn) },
 }
 
 var constructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -190,6 +193,65 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(types.ConstructorParams) },
+}
+
+// SetWeightRecordsExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var setWeightRecordsExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.SetWeightRecordsParams) },
+}
+
+// StepWeightRecordsExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var stepWeightRecordsExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.StepWeightRecordsParams) },
+}
+
+// RegisterStreamExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var registerStreamExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.RegisterStreamParams) },
+}
+
+// RemoveStreamExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var removeStreamExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.RemoveStreamParams) },
+}
+
+// SetDistributionExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var setDistributionExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.SetDistributionParams) },
+}
+
+// SetSharesExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var setSharesExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.SetSharesParams) },
+}
+
+// ReplaceAddressExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var replaceAddressExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.ReplaceAddressParams) },
+}
+
+// CancelPendingExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var cancelPendingExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.CancelPendingParams) },
+}
+
+// ClaimExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
+// first and only supported version.
+var claimExportedParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.ClaimParams) },
+}
+
+var claimExportedReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.ClaimReturn) },
 }
 
 func GetMinerFromAwardBlockRewardParams(params any) string {
@@ -249,6 +311,8 @@ func GetMinerFromAwardBlockRewardParams(params any) string {
 	case rewardv17.AwardBlockRewardParams:
 		return p.Miner.String()
 	case rewardv18.AwardBlockRewardParams:
+		return p.Miner.String()
+	case rewardv19.AwardBlockRewardParams:
 		return p.Miner.String()
 	}
 	return ""
