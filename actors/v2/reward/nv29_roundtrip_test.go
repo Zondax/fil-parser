@@ -32,7 +32,10 @@ func mustMarshal(t *testing.T, m cbg.CBORMarshaler) []byte {
 // param type, not merely registered. Registration tests (TestVersionCoverage,
 // TestABIMethodNumberToMethodName) pass empty payloads, so they would not notice a method
 // pointing at the wrong struct. Here a real payload is encoded with the type the method is
-// supposed to accept and pushed through Parse(); a mis-wired type fails to unmarshal.
+// supposed to accept and pushes it through Parse(). This catches a method wired to a
+// structurally different type. It cannot catch a swap between two identical types --
+// SetWeightRecordsParams and StepWeightRecordsParams are the same shape upstream -- so it is a
+// decode guard, not a full type guard.
 func TestNV29RewardMethodsRoundTrip(t *testing.T) {
 	require.Equal(t, "V29", tools.VersionFromHeight(tools.CalibrationNetwork, nv29Height).String())
 

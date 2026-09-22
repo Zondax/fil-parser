@@ -213,6 +213,14 @@ func (*Reward) SetSharesExported(network string, height int64, raw []byte) (map[
 	return parse(raw, params(), parser.ParamsKey)
 }
 
+// TODO(NV29): builtin-actors master (#1797, queued for the v19.0.1 release) changes this method
+// to return ReplaceAddressReturn — a repr(u8) enum encoded as a CBOR unsigned integer
+// (AddressReplaced=0, OldAddressNotInLedger=1) — and skips the address-replaced event on the
+// OldAddressNotInLedger path. go-state-types v0.19.0 still declares this method as returning
+// abi.EmptyValue and ships no such type, so params-only is correct against the pinned deps.
+// When v19.0.1 and the matching go-state-types land, add a return map here; being a primitive
+// CBOR integer it will likely need a local wrapper struct for UnmarshalCBOR, as
+// miner.GetNominalSectorExpirationExported does.
 func (*Reward) ReplaceAddressExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := replaceAddressExportedParams[version.String()]

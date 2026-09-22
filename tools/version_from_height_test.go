@@ -9,6 +9,10 @@ import "testing"
 // mis-tags every height in the previous version's range as the new version.
 //
 // Add a row here for each version as it is promoted.
+//
+// Note: while LatestMainnetVersion is still V28 the two mainnet rows below pass with or without
+// the fix, because the fall-through already returns V28 on mainnet. The calibration V28 row is
+// the one carrying the guarantee today; the mainnet rows start biting when mainnet is promoted.
 func TestVersionFromHeightResolvesEachVersion(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -27,5 +31,25 @@ func TestVersionFromHeightResolvesEachVersion(t *testing.T) {
 				t.Errorf("VersionFromHeight(%s, %d) = V%d, want V%d", tt.network, tt.height, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestVersionsAfterIncludesCalibrationOnlyVersions guards a trap that silently breaks every
+// network upgrade. VersionsAfter used to walk a VersionIterator, which is bounded by
+// LatestVersion(currentNetwork); the package-level version values carry an empty currentNetwork,
+// so that resolved to LatestMainnetVersion and quietly dropped any version already live on
+// calibration but not yet promoted on mainnet. Callers such as Power.OnConsensusFault feed the
+// result to AnyIsSupported and fall through to "unsupported height" for the missing version.
+func TestVersionsAfterIncludesCalibrationOnlyVersions(t *testing.T) {
+	got := VersionsAfter(V16)
+	found := false
+	for _, v := range got {
+		if v.nodeVersion == LatestCalibrationVersion.nodeVersion {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("VersionsAfter(V16) omitted the latest calibration version V%d; got %v",
+			LatestCalibrationVersion.nodeVersion, got)
 	}
 }

@@ -298,10 +298,20 @@ func VersionsBefore(uptoIncluding version) []version {
 }
 
 // VersionsAfter returns all versions after the given version (inclusive of the start version)
+// VersionsAfter returns start and every supported version above it.
+//
+// It deliberately walks supportedVersions rather than a VersionIterator. The iterator is bounded
+// by LatestVersion(currentNetwork), and the package-level version values (tools.V16 etc.) carry an
+// empty currentNetwork, which resolves to LatestMainnetVersion. That made this function silently
+// omit any version that is live on calibration but not yet promoted on mainnet — exactly the state
+// during every network upgrade. Callers pair the result with IsSupported(network, height), which is
+// itself network-aware, so returning the full set here is both correct and safer.
 func VersionsAfter(start version) []version {
 	var result []version
-	iter := NewVersionIterator(start, start.currentNetwork)
-	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
+	for _, v := range supportedVersions {
+		if v.nodeVersion < start.nodeVersion {
+			continue
+		}
 		v.currentNetwork = start.currentNetwork
 		result = append(result, v)
 	}
