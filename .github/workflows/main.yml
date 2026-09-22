@@ -126,6 +126,19 @@ jobs:
           echo "keys at end of run: $(redis-cli -p 6399 dbsize)"
           redis-cli -p 6399 save
 
+      # The dump is also published as a downloadable artifact. A populated cache costs hours to
+      # build from cold, and a cache entry written by a PR run lives in that PR's merge-ref scope
+      # where nothing else can read it — so having the raw dump.rdb means the same seed can be
+      # reused elsewhere (another branch, dev, or a local run) without paying the backfill again.
+      - name: Upload parser cache dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parser-redis-dump-${{ github.run_id }}
+          path: .redis-data/dump.rdb
+          retention-days: 14
+          if-no-files-found: warn
+
       # Saved on PR runs too, not just dev. A cache written by a pull_request run is scoped to
       # that PR's merge ref (refs/pull/N/merge) and is only restorable by runs of the same PR, so
       # it warms subsequent pushes to the PR without ever polluting dev or other branches. Those
