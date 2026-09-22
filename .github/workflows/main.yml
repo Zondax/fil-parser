@@ -56,8 +56,8 @@ jobs:
     # save and banks its progress.
     timeout-minutes: 360
     permissions:
-      contents: read
-      actions: write        # required to prune old cache entries
+      contents: write       # the dev run commits the refreshed cache seed
+      actions: write        # required to prune old cache entries        # required to prune old cache entries
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -105,6 +105,24 @@ jobs:
           for _ in $(seq 1 30); do redis-cli -p 6399 ping >/dev/null 2>&1 && break; sleep 1; done
           redis-cli -p 6399 ping
           echo "restored keys: $(redis-cli -p 6399 dbsize)"
+
+      # The committed seed is the durable floor. An actions/cache entry written by a PR run lives in
+      # that PR's merge ref and is unreadable by dev or any other branch, and GitHub drops any cache
+      # untouched for 7 days — so without this a cold run could still cost hours. SETNX means
+      # anything already restored from the cache wins; the seed only fills gaps.
+      - name: Seed Redis from the committed cache
+        run: |
+          if [ ! -f testdata/redis-seed.tsv ]; then
+            echo "no seed file; skipping"; exit 0
+          fi
+          before=$(redis-cli -p 6399 dbsize)
+          while IFS=$'\t' read -r k v; do
+            [ -z "$k" ] && continue
+            redis-cli -p 6399 SETNX "$k" "$v" > /dev/null
+          done < testdata/redis-seed.tsv
+          after=$(redis-cli -p 6399 dbsize)
+          echo "seed file entries: $(wc -l < testdata/redis-seed.tsv)"
+          echo "redis keys: ${before} -> ${after}"
 
       # Deliberately below the job budget. A job-level timeout kills the job outright and the
       # cache save never runs, so a slow run would bank nothing and the next run would start cold
@@ -174,6 +192,38 @@ jobs:
         with:
           path: .redis-data
           key: fil-parser-redis-v1-${{ github.run_id }}
+
+      # Regenerate the committed seed from whatever this run actually resolved, and push it back so
+      # the next cold run anywhere starts warm. dev pushes only, so PR runs never write to the repo.
+      #
+      # Entries whose value is the JSON empty string are skipped. That is not cosmetic: an
+      # unresolved lookup used to be written back as "", which poisoned the entry permanently, and
+      # committing those would bake the poisoning into git and restore it on every future run.
+      - name: Regenerate committed cache seed
+        if: always() && github.event_name == 'push' && github.ref_name == 'dev'
+        run: |
+          mkdir -p testdata
+          redis-cli -p 6399 --scan | sort | while IFS= read -r k; do
+            v=$(redis-cli -p 6399 GET "$k")
+            [ -z "$v" ] && continue
+            [ "$v" = '""' ] && continue
+            printf '%s\t%s\n' "$k" "$v"
+          done > testdata/redis-seed.tsv
+          echo "seed entries: $(wc -l < testdata/redis-seed.tsv)"
+
+      - name: Commit cache seed if it changed
+        if: always() && github.event_name == 'push' && github.ref_name == 'dev'
+        run: |
+          if git diff --quiet -- testdata/redis-seed.tsv; then
+            echo "seed unchanged; nothing to commit"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add testdata/redis-seed.tsv
+          # [skip ci] keeps this from retriggering the workflow that produced it.
+          git commit -m "chore(ci): refresh parser cache seed [skip ci]"
+          git push origin HEAD:dev
 
       # Only dev's caches persist past a branch deletion, so only those need capping.
       - name: Prune old parser caches
