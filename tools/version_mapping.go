@@ -15,9 +15,16 @@ import (
 
 // The minimimum calibration version is V16 because of a calibration reset.
 
-// placeholderUnscheduledHeight stands in for a network upgrade epoch that upstream has not
-// announced yet. It must stay far in the future but well below math.MaxInt64, because
-// tools/testutil.go averages two adjacent heights and would overflow at MaxInt64.
+// placeholderUnscheduledHeight stands in for a network upgrade epoch upstream has not announced.
+//
+// The value is not arbitrary: it is exactly lotus's own sentinel,
+// buildconstants.UpgradeHeightUnscheduled = abi.ChainEpoch(999999999999999). We cannot reference
+// that symbol yet because it does not exist in the lotus version this module pins — it lands with
+// the NV29 release. Once the lotus pin is bumped, delete this constant and use
+// buildconstants.UpgradeHeightUnscheduled directly; the value is identical, so that swap is a pure
+// rename with no behaviour change.
+//
+// Do NOT substitute math.MaxInt64: tools/testutil.go averages two adjacent heights and overflows.
 const placeholderUnscheduledHeight = 999999999999999
 
 const (
