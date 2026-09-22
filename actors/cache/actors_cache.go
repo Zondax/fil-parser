@@ -229,7 +229,12 @@ func (a *ActorsCache) IsGenesisActor(addr string) bool {
 
 func (a *ActorsCache) getEVMSelectorSig(ctx context.Context, selectorID string, canonical bool) (string, error) {
 	selectorSig, err := a.offChainCache.GetEVMSelectorSig(ctx, selectorID, canonical)
-	if err == nil {
+	// An empty signature counts as a miss. ZCache.GetEVMSelectorSig swallows the not-found error
+	// and returns ("", nil), so treating err == nil alone as a hit made the onchain fallback below
+	// unreachable whenever a zcache was configured: an uncached selector resolved to "" forever and
+	// 4byte.directory was never queried. That stayed invisible for as long as the shared Redis
+	// happened to already hold every selector under test.
+	if err == nil && selectorSig != "" {
 		return selectorSig, nil
 	}
 	a.logger.Debugf("[ActorsCache] - Unable to retrieve selector_sig from offchain cache for selector_id %s. Trying onchain cache", selectorID)
