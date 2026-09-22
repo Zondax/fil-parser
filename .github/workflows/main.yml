@@ -56,8 +56,9 @@ jobs:
     # save and banks its progress.
     timeout-minutes: 360
     permissions:
-      contents: write       # the dev run commits the refreshed cache seed
-      actions: write        # required to prune old cache entries        # required to prune old cache entries
+      contents: write       # push the cache-seed refresh branch (never dev itself)
+      pull-requests: write  # open the refresh PR
+      actions: write        # prune old cache entries
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -211,19 +212,49 @@ jobs:
           done > testdata/redis-seed.tsv
           echo "seed entries: $(wc -l < testdata/redis-seed.tsv)"
 
-      - name: Commit cache seed if it changed
+      # dev is a protected branch, so a workflow cannot push to it — GitHub rejects that with
+      # GH006 / "protected branch hook declined". Rather than bypass the rule with a privileged
+      # token, the refreshed seed is proposed as an ordinary pull request, which goes through the
+      # same review as anything else touching dev.
+      #
+      # The branch name is fixed and force-pushed, so repeated refreshes update one PR instead of
+      # opening a new one each time. continue-on-error: a stale seed only costs cache warmth and is
+      # never a reason to redden dev.
+      - name: Propose refreshed cache seed as a PR
         if: always() && github.event_name == 'push' && github.ref_name == 'dev'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet -- testdata/redis-seed.tsv; then
-            echo "seed unchanged; nothing to commit"
+            echo "committed seed is still current ($(wc -l < testdata/redis-seed.tsv) entries)"
             exit 0
           fi
+          before=$(git show HEAD:testdata/redis-seed.tsv | wc -l)
+          after=$(wc -l < testdata/redis-seed.tsv)
+          branch=ci/cache-seed-refresh
+          echo "seed drifted: ${before} -> ${after} entries; proposing ${branch}"
+
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
           git add testdata/redis-seed.tsv
-          # [skip ci] keeps this from retriggering the workflow that produced it.
-          git commit -m "chore(ci): refresh parser cache seed [skip ci]"
-          git push origin HEAD:dev
+          git commit -m "chore(ci): refresh parser cache seed (${before} -> ${after} entries)"
+          git push -f origin "$branch"
+
+          if [ "$(gh pr list --head "$branch" --state open --json number --jq 'length')" -gt 0 ]; then
+            echo "existing PR for ${branch} updated by the force-push"
+          else
+            gh pr create --base dev --head "$branch" \
+              --title "chore(ci): refresh parser cache seed" \
+              --body "Opened automatically by the tests job on a push to \`dev\`.
+
+          The committed cache seed drifted from **${before}** to **${after}** entries — runs keep resolving addresses and actor CIDs that were not in the seed, and those are worth keeping so the next cold run stays fast.
+
+          Entries whose value is the JSON empty string are excluded by the generator, so unresolved lookups cannot be baked in. See #566 for why that filter matters.
+
+          Safe to merge or close: if closed, the seed simply stays as-is and this PR reappears on the next dev push that drifts."
+          fi
 
       # Only dev's caches persist past a branch deletion, so only those need capping.
       - name: Prune old parser caches
