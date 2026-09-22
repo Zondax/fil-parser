@@ -51,7 +51,10 @@ jobs:
 
   tests:
     runs-on: zondax-runners
-    timeout-minutes: 120
+    # A cold run re-resolves every address and actor CID over RPC and can take hours. The step
+    # below carries a lower budget so that a run which runs out of time still reaches the cache
+    # save and banks its progress.
+    timeout-minutes: 360
     permissions:
       contents: read
       actions: write        # required to prune old cache entries
@@ -103,7 +106,13 @@ jobs:
           redis-cli -p 6399 ping
           echo "restored keys: $(redis-cli -p 6399 dbsize)"
 
+      # Deliberately below the job budget. A job-level timeout kills the job outright and the
+      # cache save never runs, so a slow run would bank nothing and the next run would start cold
+      # again — the seed could never bootstrap. A step-level timeout just fails this step, and the
+      # `if: always()` steps below still run, so every run saves whatever it managed to resolve
+      # and the next one resumes warmer until a run finally completes inside the window.
       - name: test
+        timeout-minutes: 300
         env:
           REDIS_ADDR: 127.0.0.1:6399
           REDIS_SECRET: ''
