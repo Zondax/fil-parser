@@ -117,9 +117,12 @@ jobs:
           echo "keys at end of run: $(redis-cli -p 6399 dbsize)"
           redis-cli -p 6399 save
 
-      # Saved for PR branches too, not just dev. Branch-scoped caches are deleted automatically
-      # by GitHub when the branch is deleted on merge, so they self-clean and never need pruning;
-      # only dev's persist, and those are capped below.
+      # Saved on PR runs too, not just dev. A cache written by a pull_request run is scoped to
+      # that PR's merge ref (refs/pull/N/merge) and is only restorable by runs of the same PR, so
+      # it warms subsequent pushes to the PR without ever polluting dev or other branches. Those
+      # entries need no pruning: GitHub evicts any cache untouched for 7 days, and evicts by
+      # least-recent-access once the repo passes its 10 GB cache budget. Only dev's caches are
+      # long-lived enough to warrant the explicit cap below.
       - name: Save parser cache
         if: always()
         uses: actions/cache/save@v4
