@@ -242,18 +242,30 @@ jobs:
           git commit -m "chore(ci): refresh parser cache seed (${before} -> ${after} entries)"
           git push -f origin "$branch"
 
-          if [ "$(gh pr list --head "$branch" --state open --json number --jq 'length')" -gt 0 ]; then
+          # Deliberately curl + jq rather than `gh`: the GitHub CLI is not installed on these
+          # self-hosted runners, and `gh pr create` failed with "command not found". jq is
+          # installed by the dependencies step above.
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
+
+          open_count=$(curl -sS "${auth[@]}" \
+            "${api}/pulls?head=${GITHUB_REPOSITORY_OWNER}:${branch}&state=open" | jq 'length')
+
+          if [ "${open_count:-0}" -gt 0 ]; then
             echo "existing PR for ${branch} updated by the force-push"
           else
-            gh pr create --base dev --head "$branch" \
-              --title "chore(ci): refresh parser cache seed" \
-              --body "Opened automatically by the tests job on a push to \`dev\`.
+            body=$(printf '%s' "Opened automatically by the tests job on a push to \`dev\`.
 
-          The committed cache seed drifted from **${before}** to **${after}** entries — runs keep resolving addresses and actor CIDs that were not in the seed, and those are worth keeping so the next cold run stays fast.
+          The committed cache seed drifted from **${before}** to **${after}** entries — runs keep resolving addresses and actor CIDs that were not in the seed, and keeping them means the next cold run stays fast.
 
           Entries whose value is the JSON empty string are excluded by the generator, so unresolved lookups cannot be baked in. See #566 for why that filter matters.
 
-          Safe to merge or close: if closed, the seed simply stays as-is and this PR reappears on the next dev push that drifts."
+          Safe to merge or close: if closed, the seed stays as-is and this reappears on the next dev push that drifts.")
+            curl -sS -X POST "${auth[@]}" "${api}/pulls" \
+              -d "$(jq -n --arg t "chore(ci): refresh parser cache seed (${before} -> ${after} entries)" \
+                          --arg b "$body" --arg h "$branch" \
+                          '{title:$t, body:$b, head:$h, base:"dev"}')" \
+              | jq -r '.html_url // .message'
           fi
 
       # Only dev's caches persist past a branch deletion, so only those need capping.
