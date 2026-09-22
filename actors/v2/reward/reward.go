@@ -19,6 +19,7 @@ import (
 	rewardv16 "github.com/filecoin-project/go-state-types/builtin/v16/reward"
 	rewardv17 "github.com/filecoin-project/go-state-types/builtin/v17/reward"
 	rewardv18 "github.com/filecoin-project/go-state-types/builtin/v18/reward"
+	rewardv19 "github.com/filecoin-project/go-state-types/builtin/v19/reward"
 	rewardv8 "github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	rewardv9 "github.com/filecoin-project/go-state-types/builtin/v9/reward"
 
@@ -78,6 +79,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 	tools.V26.String(): actors.CopyMethods(rewardv16.Methods),
 	tools.V27.String(): actors.CopyMethods(rewardv17.Methods),
 	tools.V28.String(): actors.CopyMethods(rewardv18.Methods),
+	tools.V29.String(): actors.CopyMethods(rewardv19.Methods),
 }
 
 func (r *Reward) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
@@ -148,4 +150,104 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 		}
 	}
 	return metadata, err
+}
+
+// The nine methods below were added to the reward actor in builtin-actors v19 (NV29,
+// Solstice / FIP-0118), which turns the reward actor into a stream allocator. They are
+// FRC-42 dispatched, so their method numbers are name hashes rather than small integers;
+// go-state-types v19 already carries them in rewardv19.Methods, so no customMethods()
+// entry is needed. Params/returns resolve through per-version maps in params.go, matching
+// the dispatch pattern used by the miner actor's v18 FRC-42 methods.
+
+func (*Reward) SetWeightRecordsExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := setWeightRecordsExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) StepWeightRecordsExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := stepWeightRecordsExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) RegisterStreamExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := registerStreamExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) RemoveStreamExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := removeStreamExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) SetDistributionExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := setDistributionExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) SetSharesExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := setSharesExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+// TODO(NV29): builtin-actors master (#1797, queued for the v19.0.1 release) changes this method
+// to return ReplaceAddressReturn — a repr(u8) enum encoded as a CBOR unsigned integer
+// (AddressReplaced=0, OldAddressNotInLedger=1) — and skips the address-replaced event on the
+// OldAddressNotInLedger path. go-state-types v0.19.0 still declares this method as returning
+// abi.EmptyValue and ships no such type, so params-only is correct against the pinned deps.
+// When v19.0.1 and the matching go-state-types land, add a return map here; being a primitive
+// CBOR integer it will likely need a local wrapper struct for UnmarshalCBOR, as
+// miner.GetNominalSectorExpirationExported does.
+func (*Reward) ReplaceAddressExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := replaceAddressExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) CancelPendingExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := cancelPendingExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parse(raw, params(), parser.ParamsKey)
+}
+
+func (*Reward) ClaimExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
+	version := tools.VersionFromHeight(network, height)
+	params, ok := claimExportedParams[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	returnValue, ok := claimExportedReturn[version.String()]
+	if !ok {
+		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
+	}
+	return parseWithReturn(rawParams, rawReturn, params(), returnValue())
 }

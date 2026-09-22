@@ -108,8 +108,16 @@ func getActors(t *testing.T) []v2.Actor {
 
 // TestABIMethodNumberToMethodName tests that the method number is mapped to the correct method name for every version
 func TestABIMethodNumberToMethodName(t *testing.T) {
-	network := "mainnet"
+	// Both networks, not just mainnet. GetSupportedVersions is bounded by that network's latest
+	// version, so a mainnet-only run silently skips any version that is live on calibration but
+	// not yet promoted on mainnet — i.e. the newly added version during every upgrade, which is
+	// exactly the one whose method wiring most needs checking.
+	for _, network := range []string{tools.MainnetNetwork, tools.CalibrationNetwork} {
+		t.Run(network, func(t *testing.T) { testABIMethodNumberToMethodName(t, network) })
+	}
+}
 
+func testABIMethodNumberToMethodName(t *testing.T, network string) {
 	versions := tools.GetSupportedVersions(network)
 	require.NotEmpty(t, versions)
 

@@ -25,6 +25,7 @@ const (
 	KeyFaults                = "Faults"
 	KeyRecoveries            = "Recoveries"
 	KeyExtensions            = "Extensions"
+	KeyUpgrades              = "Upgrades"
 	KeySealProof             = "SealProof"
 	KeySectorActivations     = "SectorActivations"
 	KeyPieces                = "Pieces"
@@ -59,7 +60,10 @@ func (eg *eventGenerator) isMinerSectorMessage(actorName, txType string) bool {
 
 		// expiry extension stage
 		parser.MethodExtendSectorExpiration,
-		parser.MethodExtendSectorExpiration2:
+		parser.MethodExtendSectorExpiration2,
+
+		// quality upgrade stage (NV29 / Solstice, FIP-0118)
+		parser.MethodUpgradeSectorQuality:
 
 		return true
 	}
@@ -104,6 +108,13 @@ func (eg *eventGenerator) createSectorEvents(ctx context.Context, tx *types.Tran
 		sectorEvents, err := eg.parseSectorExpiryExtensions(ctx, tx, tipsetCid, params)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing sector expiry extensions: %w", err)
+		}
+		return sectorEvents, nil
+
+	case parser.MethodUpgradeSectorQuality:
+		sectorEvents, err := eg.parseSectorQualityUpgrades(ctx, tx, tipsetCid, params)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing sector quality upgrades: %w", err)
 		}
 		return sectorEvents, nil
 
@@ -263,6 +274,48 @@ func (eg *eventGenerator) parseSectorExpiryExtensions(_ context.Context, tx *typ
 		jsonData, err := json.Marshal(map[string]interface{}{
 			KeyNewExpiration: newExpiration,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling event: %w", err)
+		}
+		for _, sectorNumber := range sectorNumbers {
+			sectorEvents = append(sectorEvents, createSectorEvent(tipsetCid, tx, sectorNumber, jsonData))
+		}
+	}
+	return sectorEvents, nil
+}
+
+// parseSectorQualityUpgrades handles miner method 37 (UpgradeSectorQuality), added in
+// builtin-actors v19 for NV29 / Solstice (FIP-0118). Params are
+// {Upgrades: [{Deadline, Partition, Sectors bitfield, NewExpiration *ChainEpoch}]}, so the shape
+// matches ExtendSectorExpiration closely — a sector set plus an optional new expiration — except
+// that NewExpiration is optional here ("unset means upgrade only") and the sectors additionally
+// gain full quality-adjusted power.
+func (eg *eventGenerator) parseSectorQualityUpgrades(_ context.Context, tx *types.Transaction, tipsetCid string, params map[string]interface{}) ([]*types.MinerSectorEvent, error) {
+	var sectorEvents []*types.MinerSectorEvent
+	upgrades, err := common.GetSlice[map[string]interface{}](params, KeyUpgrades, true)
+	if err != nil {
+		return nil, err
+	}
+	for _, upgrade := range upgrades {
+		sectorBitField, err := common.GetIntegerSlice[int](upgrade, KeySectors, false)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing integer slice: %w", err)
+		}
+		// NewExpiration is a pointer upstream and is absent for an upgrade-only request.
+		newExpiration, err := common.GetInteger[int64](upgrade, KeyNewExpiration, true)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing new expiration: %w", err)
+		}
+
+		sectorNumbers, err := common.JsonEncodedBitfieldToIDs(sectorBitField)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing sector bitfield: %w", err)
+		}
+		event := map[string]interface{}{}
+		if newExpiration != 0 {
+			event[KeyNewExpiration] = newExpiration
+		}
+		jsonData, err := json.Marshal(event)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling event: %w", err)
 		}

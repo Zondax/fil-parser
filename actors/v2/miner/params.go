@@ -15,6 +15,7 @@ import (
 	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 	miner17 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
 	miner18 "github.com/filecoin-project/go-state-types/builtin/v18/miner"
+	miner19 "github.com/filecoin-project/go-state-types/builtin/v19/miner"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 
@@ -229,6 +230,7 @@ var terminateSectorsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.TerminateSectorsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.TerminateSectorsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.TerminateSectorsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.TerminateSectorsParams) },
 }
 
 var terminateSectorsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -266,6 +268,7 @@ var terminateSectorsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.TerminateSectorsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.TerminateSectorsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.TerminateSectorsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.TerminateSectorsReturn) },
 }
 
 var declareFaultsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -303,6 +306,7 @@ var declareFaultsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.DeclareFaultsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.DeclareFaultsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.DeclareFaultsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.DeclareFaultsParams) },
 }
 
 var declareFaultsRecoveredParams = map[string]func() cbg.CBORUnmarshaler{
@@ -340,6 +344,7 @@ var declareFaultsRecoveredParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.DeclareFaultsRecoveredParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.DeclareFaultsRecoveredParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.DeclareFaultsRecoveredParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.DeclareFaultsRecoveredParams) },
 }
 
 var proveReplicaUpdatesParams = map[string]func() cbg.CBORUnmarshaler{
@@ -368,6 +373,7 @@ var proveReplicaUpdatesParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveReplicaUpdatesParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveReplicaUpdatesParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveReplicaUpdatesParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveReplicaUpdatesParams) },
 }
 
 var preCommitSectorBatchParams2 = map[string]func() cbg.CBORUnmarshaler{
@@ -385,6 +391,7 @@ var preCommitSectorBatchParams2 = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.PreCommitSectorBatchParams2) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.PreCommitSectorBatchParams2) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.PreCommitSectorBatchParams2) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.PreCommitSectorBatchParams2) },
 }
 
 var proveReplicaUpdatesParams2 = map[string]func() cbg.CBORUnmarshaler{
@@ -403,6 +410,7 @@ var proveReplicaUpdatesParams2 = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveReplicaUpdatesParams2) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveReplicaUpdatesParams2) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveReplicaUpdatesParams2) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveReplicaUpdatesParams2) },
 }
 
 var proveReplicaUpdates3Params = map[string]func() cbg.CBORUnmarshaler{
@@ -413,6 +421,7 @@ var proveReplicaUpdates3Params = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveReplicaUpdates3Params) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveReplicaUpdates3Params) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveReplicaUpdates3Params) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveReplicaUpdates3Params) },
 }
 
 var proveReplicaUpdates3Return = map[string]func() cbg.CBORUnmarshaler{
@@ -424,6 +433,7 @@ var proveReplicaUpdates3Return = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveReplicaUpdates3Return) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveReplicaUpdates3Return) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveReplicaUpdates3Return) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveReplicaUpdates3Return) },
 }
 
 var proveCommitAggregateParams = map[string]func() cbg.CBORUnmarshaler{
@@ -453,6 +463,7 @@ var proveCommitAggregateParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitAggregateParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitAggregateParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitAggregateParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveCommitAggregateParams) },
 }
 
 var disputeWindowedPoStParams = map[string]func() cbg.CBORUnmarshaler{
@@ -479,6 +490,7 @@ var disputeWindowedPoStParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.DisputeWindowedPoStParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.DisputeWindowedPoStParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.DisputeWindowedPoStParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.DisputeWindowedPoStParams) },
 }
 
 var reportConsensusFaultParams = map[string]func() cbg.CBORUnmarshaler{
@@ -516,6 +528,7 @@ var reportConsensusFaultParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ReportConsensusFaultParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ReportConsensusFaultParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ReportConsensusFaultParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ReportConsensusFaultParams) },
 }
 
 var changeBeneficiaryParams = map[string]func() cbg.CBORUnmarshaler{
@@ -533,6 +546,7 @@ var changeBeneficiaryParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ChangeBeneficiaryParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ChangeBeneficiaryParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ChangeBeneficiaryParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ChangeBeneficiaryParams) },
 }
 
 var minerConstructorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -570,6 +584,7 @@ var minerConstructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.MinerConstructorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.MinerConstructorParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.MinerConstructorParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.MinerConstructorParams) },
 }
 
 var applyRewardParams = map[string]func() cbg.CBORUnmarshaler{
@@ -607,6 +622,7 @@ var applyRewardParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ApplyRewardParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ApplyRewardParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ApplyRewardParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ApplyRewardParams) },
 }
 
 var deferredCronEventParams = map[string]func() cbg.CBORUnmarshaler{
@@ -644,6 +660,7 @@ var deferredCronEventParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.DeferredCronEventParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.DeferredCronEventParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.DeferredCronEventParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.DeferredCronEventParams) },
 }
 
 var changeMultiaddrsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -681,6 +698,7 @@ var changeMultiaddrsParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ChangeMultiaddrsParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ChangeMultiaddrsParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ChangeMultiaddrsParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ChangeMultiaddrsParams) },
 }
 
 var changePeerIDParams = map[string]func() cbg.CBORUnmarshaler{
@@ -718,6 +736,7 @@ var changePeerIDParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ChangePeerIDParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ChangePeerIDParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ChangePeerIDParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ChangePeerIDParams) },
 }
 
 var changeWorkerAddressParams = map[string]func() cbg.CBORUnmarshaler{
@@ -755,6 +774,7 @@ var changeWorkerAddressParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ChangeWorkerAddressParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ChangeWorkerAddressParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ChangeWorkerAddressParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ChangeWorkerAddressParams) },
 }
 
 var isControllingAddressParams = map[string]func() cbg.CBORUnmarshaler{
@@ -771,6 +791,7 @@ var isControllingAddressParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.IsControllingAddressParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.IsControllingAddressParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.IsControllingAddressParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.IsControllingAddressParams) },
 }
 
 var isControllingAddressReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -787,6 +808,7 @@ var isControllingAddressReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.IsControllingAddressReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.IsControllingAddressReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.IsControllingAddressReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.IsControllingAddressReturn) },
 }
 
 var getOwnerReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -803,6 +825,7 @@ var getOwnerReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.GetOwnerReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.GetOwnerReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GetOwnerReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GetOwnerReturn) },
 }
 
 var getPeerIDReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -819,6 +842,7 @@ var getPeerIDReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.GetPeerIDReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.GetPeerIDReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GetPeerIDReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GetPeerIDReturn) },
 }
 
 var getMultiAddrsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -835,6 +859,7 @@ var getMultiAddrsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.GetMultiAddrsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.GetMultiAddrsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GetMultiAddrsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GetMultiAddrsReturn) },
 }
 
 var getControlAddressesReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -872,6 +897,7 @@ var getControlAddressesReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.GetControlAddressesReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.GetControlAddressesReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GetControlAddressesReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GetControlAddressesReturn) },
 }
 
 var getAvailableBalanceReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -888,6 +914,7 @@ var getAvailableBalanceReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.GetAvailableBalanceReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.GetAvailableBalanceReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GetAvailableBalanceReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GetAvailableBalanceReturn) },
 }
 
 var getVestingFundsReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -904,6 +931,7 @@ var getVestingFundsReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.GetVestingFundsReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.GetVestingFundsReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GetVestingFundsReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GetVestingFundsReturn) },
 }
 
 var getWithdrawBalanceParams = map[string]func() cbg.CBORUnmarshaler{
@@ -941,6 +969,7 @@ var getWithdrawBalanceParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.WithdrawBalanceParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.WithdrawBalanceParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.WithdrawBalanceParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.WithdrawBalanceParams) },
 }
 
 var extendSectorExpiration2Params = map[string]func() cbg.CBORUnmarshaler{
@@ -957,6 +986,7 @@ var extendSectorExpiration2Params = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ExtendSectorExpiration2Params) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ExtendSectorExpiration2Params) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ExtendSectorExpiration2Params) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ExtendSectorExpiration2Params) },
 }
 
 var preCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -992,6 +1022,7 @@ var preCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.PreCommitSectorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.PreCommitSectorParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.PreCommitSectorParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.PreCommitSectorParams) },
 }
 
 var proveCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1029,6 +1060,7 @@ var proveCommitSectorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitSectorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitSectorParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitSectorParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveCommitSectorParams) },
 }
 
 var proveCommitSectors3Params = map[string]func() cbg.CBORUnmarshaler{
@@ -1039,6 +1071,7 @@ var proveCommitSectors3Params = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitSectors3Params) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitSectors3Params) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitSectors3Params) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveCommitSectors3Params) },
 }
 
 var proveCommitSectors3Return = map[string]func() cbg.CBORUnmarshaler{
@@ -1049,6 +1082,7 @@ var proveCommitSectors3Return = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitSectors3Return) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitSectors3Return) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitSectors3Return) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveCommitSectors3Return) },
 }
 
 var internalSectorSetupForPresealParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1058,6 +1092,7 @@ var internalSectorSetupForPresealParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.InternalSectorSetupForPresealParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.InternalSectorSetupForPresealParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.InternalSectorSetupForPresealParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.InternalSectorSetupForPresealParams) },
 }
 
 var submitWindowedPoStParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1095,6 +1130,7 @@ var submitWindowedPoStParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.SubmitWindowedPoStParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.SubmitWindowedPoStParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.SubmitWindowedPoStParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.SubmitWindowedPoStParams) },
 }
 
 var confirmSectorProofsParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1161,6 +1197,7 @@ var checkSectorProvenParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.CheckSectorProvenParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.CheckSectorProvenParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.CheckSectorProvenParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.CheckSectorProvenParams) },
 }
 
 var extendSectorExpirationParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1198,6 +1235,7 @@ var extendSectorExpirationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ExtendSectorExpirationParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ExtendSectorExpirationParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ExtendSectorExpirationParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ExtendSectorExpirationParams) },
 }
 
 var compactSectorNumbersParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1235,6 +1273,7 @@ var compactSectorNumbersParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.CompactSectorNumbersParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.CompactSectorNumbersParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.CompactSectorNumbersParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.CompactSectorNumbersParams) },
 }
 
 func compactPartitionsParams() map[string]func() cbg.CBORUnmarshaler {
@@ -1273,6 +1312,7 @@ func compactPartitionsParams() map[string]func() cbg.CBORUnmarshaler {
 		tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.CompactPartitionsParams) },
 		tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.CompactPartitionsParams) },
 		tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.CompactPartitionsParams) },
+		tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.CompactPartitionsParams) },
 	}
 }
 
@@ -1295,6 +1335,7 @@ var preCommitSectorBatchParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.PreCommitSectorBatchParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.PreCommitSectorBatchParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.PreCommitSectorBatchParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.PreCommitSectorBatchParams) },
 }
 
 var proveCommitSectorsNIParams = map[string]func() cbg.CBORUnmarshaler{
@@ -1304,6 +1345,7 @@ var proveCommitSectorsNIParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitSectorsNIParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitSectorsNIParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitSectorsNIParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveCommitSectorsNIParams) },
 }
 
 var proveCommitSectorsNIReturn = map[string]func() cbg.CBORUnmarshaler{
@@ -1313,6 +1355,7 @@ var proveCommitSectorsNIReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(miner16.ProveCommitSectorsNIReturn) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(miner17.ProveCommitSectorsNIReturn) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ProveCommitSectorsNIReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ProveCommitSectorsNIReturn) },
 }
 
 // generateSectorLocationParams / Return — added in v18 builtin-actors (NV28 / FireHorse).
@@ -1320,20 +1363,24 @@ var proveCommitSectorsNIReturn = map[string]func() cbg.CBORUnmarshaler{
 // don't exist in earlier actor versions.
 var generateSectorLocationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GenerateSectorLocationParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GenerateSectorLocationParams) },
 }
 
 var generateSectorLocationReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.GenerateSectorLocationReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.GenerateSectorLocationReturn) },
 }
 
 // validateSectorStatusParams / Return — added in v18 builtin-actors (NV28 / FireHorse).
 // Return is a primitive cbg.CborBool aliased in go-state-types; passed directly.
 var validateSectorStatusParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(miner18.ValidateSectorStatusParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.ValidateSectorStatusParams) },
 }
 
 var validateSectorStatusReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V28.String(): func() cbg.CBORUnmarshaler { v := miner18.ValidateSectorStatusReturn(false); return &v },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { v := miner19.ValidateSectorStatusReturn(false); return &v },
 }
 
 // getNominalSectorExpirationParams / Return — added in v18 builtin-actors (NV28 / FireHorse).
@@ -1342,8 +1389,19 @@ var validateSectorStatusReturn = map[string]func() cbg.CBORUnmarshaler{
 // actors/v2/miner/types/getNominalSectorExpiration.go so future per-version variants drop in here.
 var getNominalSectorExpirationParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.GetNominalSectorExpirationParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(types.GetNominalSectorExpirationParams) },
 }
 
 var getNominalSectorExpirationReturn = map[string]func() cbg.CBORUnmarshaler{
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(types.GetNominalSectorExpirationReturn) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(types.GetNominalSectorExpirationReturn) },
+}
+
+// upgradeSectorQualityParams handles miner method 37, added in builtin-actors v19 (NV29
+// Solstice / FIP-0118) to raise legacy 1x-QA sectors to full QA power. It is a plain
+// numbered method, not FRC-42, and it is deliberately NOT registered in customMethods():
+// that table is merged into every historical version starting at V0, which would make the
+// method appear to exist long before it did.
+var upgradeSectorQualityParams = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(miner19.UpgradeSectorQualityParams) },
 }

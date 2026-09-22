@@ -12,6 +12,7 @@ import (
 	paychv16 "github.com/filecoin-project/go-state-types/builtin/v16/paych"
 	paychv17 "github.com/filecoin-project/go-state-types/builtin/v17/paych"
 	paychv18 "github.com/filecoin-project/go-state-types/builtin/v18/paych"
+	paychv19 "github.com/filecoin-project/go-state-types/builtin/v19/paych"
 	paychv8 "github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	paychv9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
 	legacyBuiltin "github.com/filecoin-project/specs-actors/actors/builtin"
@@ -114,6 +115,7 @@ var constructorParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(paychv16.ConstructorParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(paychv17.ConstructorParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(paychv18.ConstructorParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(paychv19.ConstructorParams) },
 }
 
 var updateChannelStateParams = map[string]func() cbg.CBORUnmarshaler{
@@ -151,4 +153,5 @@ var updateChannelStateParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V26.String(): func() cbg.CBORUnmarshaler { return new(paychv16.UpdateChannelStateParams) },
 	tools.V27.String(): func() cbg.CBORUnmarshaler { return new(paychv17.UpdateChannelStateParams) },
 	tools.V28.String(): func() cbg.CBORUnmarshaler { return new(paychv18.UpdateChannelStateParams) },
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(paychv19.UpdateChannelStateParams) },
 }

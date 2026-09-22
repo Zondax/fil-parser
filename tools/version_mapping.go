@@ -15,6 +15,18 @@ import (
 
 // The minimimum calibration version is V16 because of a calibration reset.
 
+// placeholderUnscheduledHeight stands in for a network upgrade epoch upstream has not announced.
+//
+// The value is not arbitrary: it is exactly lotus's own sentinel,
+// buildconstants.UpgradeHeightUnscheduled = abi.ChainEpoch(999999999999999). We cannot reference
+// that symbol yet because it does not exist in the lotus version this module pins — it lands with
+// the NV29 release. Once the lotus pin is bumped, delete this constant and use
+// buildconstants.UpgradeHeightUnscheduled directly; the value is identical, so that swap is a pure
+// rename with no behaviour change.
+//
+// Do NOT substitute math.MaxInt64: tools/testutil.go averages two adjacent heights and overflows.
+const placeholderUnscheduledHeight = 999999999999999
+
 const (
 	CalibrationNetworkNodeType = "calibrationnet"
 	CalibrationNetwork         = "calibration"
@@ -31,9 +43,9 @@ type version struct {
 
 var (
 	LatestMainnetVersion     version = V28
-	LatestCalibrationVersion version = V28
+	LatestCalibrationVersion version = V29
 
-	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28}
+	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}
 	supportedVersionsList *list.List
 
 	// V0 genesis, spec-actors: v1, calibration: 0, mainnet: 0
@@ -119,6 +131,13 @@ var (
 
 	// V28 FireHorse, builtin-actors(go-state-types): v18, calibration: 3694534, mainnet: 6052800
 	V28 version = version{calibration: 3694534, mainnet: buildconstants.UpgradeFireHorseHeight, nodeVersion: 28}
+
+	// V29 Solstice (FIP-0118), builtin-actors(go-state-types): v19.
+	// TODO(NV29): activation heights are still UpgradeHeightUnscheduled upstream. Replace both
+	// placeholders with the real epochs once announced, switch mainnet to
+	// buildconstants.UpgradeSolsticeHeight (only exists once lotus ships the NV29 release), and
+	// promote LatestMainnetVersion to V29.
+	V29 version = version{calibration: placeholderUnscheduledHeight, mainnet: placeholderUnscheduledHeight, nodeVersion: 29}
 )
 
 func init() {
@@ -279,10 +298,20 @@ func VersionsBefore(uptoIncluding version) []version {
 }
 
 // VersionsAfter returns all versions after the given version (inclusive of the start version)
+// VersionsAfter returns start and every supported version above it.
+//
+// It deliberately walks supportedVersions rather than a VersionIterator. The iterator is bounded
+// by LatestVersion(currentNetwork), and the package-level version values (tools.V16 etc.) carry an
+// empty currentNetwork, which resolves to LatestMainnetVersion. That made this function silently
+// omit any version that is live on calibration but not yet promoted on mainnet — exactly the state
+// during every network upgrade. Callers pair the result with IsSupported(network, height), which is
+// itself network-aware, so returning the full set here is both correct and safer.
 func VersionsAfter(start version) []version {
 	var result []version
-	iter := NewVersionIterator(start, start.currentNetwork)
-	for v, ok := iter.Begin(); ok; v, ok = iter.Next() {
+	for _, v := range supportedVersions {
+		if v.nodeVersion < start.nodeVersion {
+			continue
+		}
 		v.currentNetwork = start.currentNetwork
 		result = append(result, v)
 	}
@@ -382,6 +411,11 @@ func VersionFromHeight(network string, height int64) version {
 		return V26
 	case V27.IsSupported(network, height):
 		return V27
+	// V28 needs an explicit case: it stopped being the calibration fall-through when
+	// LatestCalibrationVersion moved to V29. Without this, every height in V28's range
+	// silently resolves to V29. See TestVersionFromHeightResolvesEachVersion.
+	case V28.IsSupported(network, height):
+		return V28
 	}
 	return LatestVersion(network)
 }

@@ -51,7 +51,13 @@ jobs:
 
   tests:
     runs-on: zondax-runners
-    timeout-minutes: 120
+    # A cold run re-resolves every address and actor CID over RPC and can take hours. The step
+    # below carries a lower budget so that a run which runs out of time still reaches the cache
+    # save and banks its progress.
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: write        # required to prune old cache entries
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -64,12 +70,129 @@ jobs:
       - name: Install dependencies
         run: |
             sudo apt-get update
-            sudo apt-get install -y build-essential wget curl gettext-base jq git
-      
+            sudo apt-get install -y build-essential wget curl gettext-base jq git redis-server
+
+      # The parser resolves addresses and actor CIDs through a zcache. On a cold cache every
+      # lookup becomes a Lotus RPC call, which is what makes this job slow. The cached values
+      # are chain-immutable (ID-address assignments are permanent, actor code CIDs at a tipset
+      # never change, EVM selector->signature is a hash preimage), so carrying them between runs
+      # is safe and cannot mask a regression.
+      #
+      # A run restores its own branch's cache first, falling back to the base branch's (Actions
+      # allows a PR run to read caches from its base). So the first run on a branch is cold and
+      # every run after it is warm, rather than every PR run paying the cold cost until something
+      # lands on dev.
+      - name: Restore parser cache
+        id: parser-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .redis-data
+          key: fil-parser-redis-v1-
+          restore-keys: |
+            fil-parser-redis-v1-
+
+      - name: Start local Redis
+        run: |
+          mkdir -p .redis-data
+          # Deliberately not 6379: installing redis-server can auto-start a systemd instance on
+          # the default port with its own data dir, which would silently shadow this one.
+          # maxmemory + allkeys-lru bounds the dataset itself, so the seed cannot grow without
+          # limit no matter how many runs contribute to it.
+          redis-server --daemonize yes --port 6399 --bind 127.0.0.1 \
+            --dir "$PWD/.redis-data" --dbfilename dump.rdb \
+            --appendonly no --save '' \
+            --maxmemory 256mb --maxmemory-policy allkeys-lru
+          for _ in $(seq 1 30); do redis-cli -p 6399 ping >/dev/null 2>&1 && break; sleep 1; done
+          redis-cli -p 6399 ping
+          echo "restored keys: $(redis-cli -p 6399 dbsize)"
+
+      # Deliberately below the job budget. A job-level timeout kills the job outright and the
+      # cache save never runs, so a slow run would bank nothing and the next run would start cold
+      # again — the seed could never bootstrap. A step-level timeout just fails this step, and the
+      # `if: always()` steps below still run, so every run saves whatever it managed to resolve
+      # and the next one resumes warmer until a run finally completes inside the window.
+      # Diagnostic, non-fatal. TestParser_ParseEthLogs resolves an EVM selector via the zcache and,
+      # on a miss, falls back to an HTTP GET against the public 4byte.directory API
+      # (actors/cache/impl/utils.go SignatureDBURL). That fallback logs only at Debug level, so when
+      # it fails the test just sees an empty signature and the cause is invisible in CI output.
+      # This prints whether the runner can reach the API at all, so a failure can be attributed to
+      # network reachability rather than guessed at.
+      - name: Probe 4byte.directory reachability (diagnostic only)
+        if: always()
+        continue-on-error: true
+        run: |
+          set +e
+          url="https://www.4byte.directory/api/v1/event-signatures/?hex_signature=0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"
+          echo "resolving www.4byte.directory ..."
+          getent hosts www.4byte.directory || echo "  DNS: could not resolve"
+          code=$(curl -s -o /tmp/4byte.json -w '%{http_code}' --max-time 25 "$url")
+          echo "HTTP status: ${code}"
+          echo "body (first 300 bytes):"; head -c 300 /tmp/4byte.json; echo
+          if [ "$code" = "200" ]; then
+            echo "RESULT: reachable — a selector miss is NOT a network problem"
+          else
+            echo "RESULT: NOT reachable (status=${code}) — selector lookups can only be served from a seeded cache"
+          fi
+
       - name: test
+        timeout-minutes: 300
         env:
-          REDIS_ADDR: ${{ secrets.REDIS_ADDR }}
-          REDIS_SECRET: ${{ secrets.REDIS_SECRET }}
+          REDIS_ADDR: 127.0.0.1:6399
+          REDIS_SECRET: ''
         run: |
           git config --global --add safe.directory "*"
           make test
+
+      - name: Snapshot parser cache
+        if: always()
+        run: |
+          echo "keys at end of run: $(redis-cli -p 6399 dbsize)"
+          redis-cli -p 6399 save
+
+      # The dump is also published as a downloadable artifact. A populated cache costs hours to
+      # build from cold, and a cache entry written by a PR run lives in that PR's merge-ref scope
+      # where nothing else can read it — so having the raw dump.rdb means the same seed can be
+      # reused elsewhere (another branch, dev, or a local run) without paying the backfill again.
+      - name: Upload parser cache dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parser-redis-dump-${{ github.run_id }}
+          path: .redis-data/dump.rdb
+          retention-days: 14
+          if-no-files-found: warn
+
+      # Saved on PR runs too, not just dev. A cache written by a pull_request run is scoped to
+      # that PR's merge ref (refs/pull/N/merge) and is only restorable by runs of the same PR, so
+      # it warms subsequent pushes to the PR without ever polluting dev or other branches. Those
+      # entries need no pruning: GitHub evicts any cache untouched for 7 days, and evicts by
+      # least-recent-access once the repo passes its 10 GB cache budget. Only dev's caches are
+      # long-lived enough to warrant the explicit cap below.
+      - name: Save parser cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .redis-data
+          key: fil-parser-redis-v1-${{ github.run_id }}
+
+      # Only dev's caches persist past a branch deletion, so only those need capping.
+      - name: Prune old parser caches
+        if: always() && github.event_name == 'push' && github.ref_name == 'dev'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const KEEP = 3;
+            const prefix = 'fil-parser-redis-v1-';
+            const res = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner, repo: context.repo.repo,
+              key: prefix, ref: 'refs/heads/dev',
+              sort: 'created_at', direction: 'desc', per_page: 100,
+            });
+            const stale = res.data.actions_caches.slice(KEEP);
+            for (const c of stale) {
+              core.info(`deleting cache ${c.key} (${c.size_in_bytes} bytes)`);
+              await github.rest.actions.deleteActionsCacheById({
+                owner: context.repo.owner, repo: context.repo.repo, cache_id: c.id,
+              });
+            }
+            core.info(`kept ${Math.min(KEEP, res.data.actions_caches.length)} cache(s), deleted ${stale.length}`);

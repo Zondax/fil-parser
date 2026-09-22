@@ -10,6 +10,7 @@ import (
 	eamv16 "github.com/filecoin-project/go-state-types/builtin/v16/eam"
 	eamv17 "github.com/filecoin-project/go-state-types/builtin/v17/eam"
 	eamv18 "github.com/filecoin-project/go-state-types/builtin/v18/eam"
+	eamv19 "github.com/filecoin-project/go-state-types/builtin/v19/eam"
 	typegen "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/tools"
 )
@@ -26,6 +27,7 @@ var createParams = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(eamv16.CreateParams) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(eamv17.CreateParams) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(eamv18.CreateParams) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(eamv19.CreateParams) },
 }
 
 var createExternalReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -40,6 +42,7 @@ var createExternalReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(eamv16.CreateExternalReturn) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(eamv17.CreateExternalReturn) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(eamv18.CreateExternalReturn) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(eamv19.CreateExternalReturn) },
 }
 
 var createReturn = map[string]func() typegen.CBORUnmarshaler{
@@ -54,6 +57,7 @@ var createReturn = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(eamv16.CreateReturn) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(eamv17.CreateReturn) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(eamv18.CreateReturn) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(eamv19.CreateReturn) },
 }
 
 var create2Params = map[string]func() typegen.CBORUnmarshaler{
@@ -68,6 +72,7 @@ var create2Params = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(eamv16.Create2Params) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(eamv17.Create2Params) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(eamv18.Create2Params) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(eamv19.Create2Params) },
 }
 
 var create2Return = map[string]func() typegen.CBORUnmarshaler{
@@ -82,4 +87,5 @@ var create2Return = map[string]func() typegen.CBORUnmarshaler{
 	tools.V26.String(): func() typegen.CBORUnmarshaler { return new(eamv16.Create2Return) },
 	tools.V27.String(): func() typegen.CBORUnmarshaler { return new(eamv17.Create2Return) },
 	tools.V28.String(): func() typegen.CBORUnmarshaler { return new(eamv18.Create2Return) },
+	tools.V29.String(): func() typegen.CBORUnmarshaler { return new(eamv19.Create2Return) },
 }
