@@ -56,8 +56,8 @@ jobs:
     # save and banks its progress.
     timeout-minutes: 360
     permissions:
-      contents: write       # the dev run commits the refreshed cache seed
-      actions: write        # required to prune old cache entries        # required to prune old cache entries
+      contents: read
+      actions: write        # required to prune old cache entries
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -211,19 +211,28 @@ jobs:
           done > testdata/redis-seed.tsv
           echo "seed entries: $(wc -l < testdata/redis-seed.tsv)"
 
-      - name: Commit cache seed if it changed
+      # dev is a protected branch, so a workflow cannot push to it directly — GitHub rejects it
+      # with GH006 / "protected branch hook declined". This step therefore reports what changed and
+      # never fails the build: a refreshed seed is a nice-to-have, not a reason to redden dev.
+      #
+      # The regenerated seed is always available two ways regardless: the parser-redis-dump artifact
+      # uploaded above, and the actions/cache entry. To refresh the committed copy, download the
+      # artifact and open a PR — or grant the workflow a token that can bypass the protection rule,
+      # which is a deliberate decision about who may write to dev rather than something CI should
+      # assume it is allowed to do.
+      - name: Report cache seed drift
         if: always() && github.event_name == 'push' && github.ref_name == 'dev'
+        continue-on-error: true
         run: |
           if git diff --quiet -- testdata/redis-seed.tsv; then
-            echo "seed unchanged; nothing to commit"
+            echo "committed seed is still current ($(wc -l < testdata/redis-seed.tsv) entries)"
             exit 0
           fi
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add testdata/redis-seed.tsv
-          # [skip ci] keeps this from retriggering the workflow that produced it.
-          git commit -m "chore(ci): refresh parser cache seed [skip ci]"
-          git push origin HEAD:dev
+          before=$(git show HEAD:testdata/redis-seed.tsv | wc -l)
+          after=$(wc -l < testdata/redis-seed.tsv)
+          echo "committed seed is stale: ${before} -> ${after} entries"
+          echo "refresh it from the parser-redis-dump artifact of this run, via a PR."
+          git --no-pager diff --stat -- testdata/redis-seed.tsv
 
       # Only dev's caches persist past a branch deletion, so only those need capping.
       - name: Prune old parser caches
