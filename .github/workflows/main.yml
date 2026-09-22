@@ -111,6 +111,29 @@ jobs:
       # again — the seed could never bootstrap. A step-level timeout just fails this step, and the
       # `if: always()` steps below still run, so every run saves whatever it managed to resolve
       # and the next one resumes warmer until a run finally completes inside the window.
+      # Diagnostic, non-fatal. TestParser_ParseEthLogs resolves an EVM selector via the zcache and,
+      # on a miss, falls back to an HTTP GET against the public 4byte.directory API
+      # (actors/cache/impl/utils.go SignatureDBURL). That fallback logs only at Debug level, so when
+      # it fails the test just sees an empty signature and the cause is invisible in CI output.
+      # This prints whether the runner can reach the API at all, so a failure can be attributed to
+      # network reachability rather than guessed at.
+      - name: Probe 4byte.directory reachability (diagnostic only)
+        if: always()
+        continue-on-error: true
+        run: |
+          set +e
+          url="https://www.4byte.directory/api/v1/event-signatures/?hex_signature=0x25eaabaf991947ec22f473a02c14ffbcc08ffe2cef8d81ac12b6db2c14ce23a0"
+          echo "resolving www.4byte.directory ..."
+          getent hosts www.4byte.directory || echo "  DNS: could not resolve"
+          code=$(curl -s -o /tmp/4byte.json -w '%{http_code}' --max-time 25 "$url")
+          echo "HTTP status: ${code}"
+          echo "body (first 300 bytes):"; head -c 300 /tmp/4byte.json; echo
+          if [ "$code" = "200" ]; then
+            echo "RESULT: reachable — a selector miss is NOT a network problem"
+          else
+            echo "RESULT: NOT reachable (status=${code}) — selector lookups can only be served from a seeded cache"
+          fi
+
       - name: test
         timeout-minutes: 300
         env:
