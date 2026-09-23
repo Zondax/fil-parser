@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	filBig "github.com/filecoin-project/go-state-types/big"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/chain/types/ethtypes"
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
@@ -23,6 +24,7 @@ import (
 
 const (
 	cborCodec = 0x51 // DAG-CBOR, used by builtin actors (runtime/src/util/events.rs)
+	rawCodec  = 0x55 // raw, used by the EVM actor (evm/src/interpreter/instructions/log_event.rs)
 
 	flagIndexedKey = 0x02 // Flags::FLAG_INDEXED_KEY, EventBuilder::field
 	flagIndexedAll = 0x03 // Flags::FLAG_INDEXED_ALL, EventBuilder::typ / field_indexed
@@ -242,4 +244,40 @@ func TestParseNativeLog_RewardTokenAmounts(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestParseNativeLog_EVMLog0WithData covers an EVM LOG0 with data: the EVM actor emits only a
+// `d` entry (builtin-actors v19.0.1 actors/evm/src/interpreter/instructions/log_event.rs:52-58).
+func TestParseNativeLog_EVMLog0WithData(t *testing.T) {
+	emitter, err := address.NewDelegatedAddress(10, mustHex(t, "d4c5fb16488aa48081296299d54b0c648c9333da"))
+	require.NoError(t, err)
+
+	data := mustHex(t, "00000000000000000000000000000000000000000000000000000000000000ff")
+	event, err := parseNative(t, emitter, []filTypes.EventEntry{
+		{Flags: flagIndexedAll, Key: EVMDataEventEntryKey, Codec: rawCodec, Value: data},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, types.EventTypeEVM, event.Type)
+	assert.Equal(t, "", event.SelectorID)
+	assert.Equal(t, `{"data":"00000000000000000000000000000000000000000000000000000000000000ff","topics":null}`, event.Metadata)
+}
+
+// TestParseNativeLog_EVMTopicStillValidated keeps the existing behaviour for a t1 entry that
+// cannot be read as a topic.
+func TestParseNativeLog_EVMTopicStillValidated(t *testing.T) {
+	emitter, err := address.NewDelegatedAddress(10, mustHex(t, "d4c5fb16488aa48081296299d54b0c648c9333da"))
+	require.NoError(t, err)
+
+	topic := ethtypes.EthHash{0x01}
+	event, err := parseNative(t, emitter, []filTypes.EventEntry{
+		{Flags: flagIndexedAll, Key: EVMTopic0EventEntryKey, Codec: rawCodec, Value: topic[:]},
+		{Flags: flagIndexedAll, Key: EVMDataEventEntryKey, Codec: rawCodec, Value: []byte{0xff}},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, topic.String(), event.SelectorID)
+
+	_, err = parseNative(t, emitter, []filTypes.EventEntry{
+		{Flags: flagIndexedAll, Key: EVMTopic0EventEntryKey, Codec: 0x52, Value: []byte{}},
+	})
+	assert.Error(t, err)
 }

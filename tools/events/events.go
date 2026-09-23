@@ -54,9 +54,11 @@ func ParseNativeLog(tipset *types.ExtendedTipSet, actorEvent *filTypes.ActorEven
 		if err != nil {
 			return nil, fmt.Errorf("error parsing native evm event entries: %w", err)
 		}
-		// the first item, t1 contains the selector_hash
+		// the first item, t1 contains the selector_hash.
+		// LOG0 has no topics, so its first (and only) entry can be the data entry "d"; such an
+		// event has no selector and gets an empty SelectorID, as an ethLog without topics does.
 		var selectorHash string
-		if parsedEntries[0] != nil {
+		if first := parsedEntries[0]; first != nil && first[parsedEntryKey] == EVMTopic0EventEntryKey {
 			var ok bool
 			selectorHash, ok = parsedEntries[0][parsedEntryValue].(string)
 			if !ok {
