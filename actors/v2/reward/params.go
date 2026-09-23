@@ -238,6 +238,13 @@ var replaceAddressExportedParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.ReplaceAddressParams) },
 }
 
+// ReplaceAddressReturn is a repr(u8) enum encoded as a CBOR unsigned integer
+// (AddressReplaced=0, OldAddressNotInLedger=1), added in builtin-actors v19.0.1 and
+// go-state-types v0.19.1, which gives it its own UnmarshalCBOR.
+var replaceAddressExportedReturn = map[string]func() cbg.CBORUnmarshaler{
+	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(rewardv19.ReplaceAddressReturn) },
+}
+
 // CancelPendingExported was added in builtin-actors v19 (NV29 Solstice), so V29 is the
 // first and only supported version.
 var cancelPendingExportedParams = map[string]func() cbg.CBORUnmarshaler{

@@ -18,8 +18,13 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-// nv29Height is any height that tools.VersionFromHeight resolves to V29 on calibration.
-const nv29Height = int64(999999999999999)
+// nv29Height is the calibration Solstice activation epoch, the first height that
+// tools.VersionFromHeight resolves to V29.
+const nv29Height = int64(4109133)
+
+// ptr takes the address of a value, for go-state-types enums whose CBOR methods have pointer
+// receivers (e.g. ReplaceAddressReturn).
+func ptr[T any](v T) *T { return &v }
 
 func mustMarshal(t *testing.T, m cbg.CBORMarshaler) []byte {
 	t.Helper()
@@ -53,7 +58,8 @@ func TestNV29RewardMethodsRoundTrip(t *testing.T) {
 		{parser.MethodRemoveStreamExported, &rewardv19.RemoveStreamParams{}, nil},
 		{parser.MethodSetDistributionExported, &rewardv19.SetDistributionParams{Writer: addr}, nil},
 		{parser.MethodSetSharesExported, &rewardv19.SetSharesParams{}, nil},
-		{parser.MethodReplaceAddressExported, &rewardv19.ReplaceAddressParams{OldAddress: addr, NewAddress: addr}, nil},
+		{parser.MethodReplaceAddressExported, &rewardv19.ReplaceAddressParams{OldAddress: addr, NewAddress: addr},
+			ptr(rewardv19.ReplaceAddressReturnOldAddressNotInLedger)},
 		{parser.MethodCancelPendingExported, &rewardv19.CancelPendingParams{}, nil},
 		{parser.MethodClaimExported, &rewardv19.ClaimParams{Wallets: []address.Address{addr}},
 			&rewardv19.ClaimReturn{Amounts: []abi.TokenAmount{big.Zero()}}},
@@ -75,5 +81,22 @@ func TestNV29RewardMethodsRoundTrip(t *testing.T) {
 				require.Contains(t, got, parser.ReturnKey, "%s must decode its return", tt.txType)
 			}
 		})
+	}
+}
+
+// TestReplaceAddressExportedDecodesReturn pins the v19.0.1 return: both enum values must come back
+// as themselves, so a return map wired to another type (or dropped) fails here.
+func TestReplaceAddressExportedDecodesReturn(t *testing.T) {
+	addr, err := address.NewFromString("f01234")
+	require.NoError(t, err)
+	params := mustMarshal(t, &rewardv19.ReplaceAddressParams{OldAddress: addr, NewAddress: addr})
+
+	for _, want := range []rewardv19.ReplaceAddressReturn{
+		rewardv19.ReplaceAddressReturnAddressReplaced,
+		rewardv19.ReplaceAddressReturnOldAddressNotInLedger,
+	} {
+		got, err := New(nil).ReplaceAddressExported(tools.CalibrationNetwork, nv29Height, params, mustMarshal(t, ptr(want)))
+		require.NoError(t, err)
+		require.Equal(t, &want, got[parser.ReturnKey])
 	}
 }

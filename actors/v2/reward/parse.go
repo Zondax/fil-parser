@@ -46,7 +46,7 @@ func (p *Reward) Parse(_ context.Context, network string, height int64, txType s
 		resp, err := p.SetSharesExported(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodReplaceAddressExported:
-		resp, err := p.ReplaceAddressExported(network, height, msg.Params)
+		resp, err := p.ReplaceAddressExported(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodCancelPendingExported:
 		resp, err := p.CancelPendingExported(network, height, msg.Params)
