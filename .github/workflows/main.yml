@@ -174,7 +174,7 @@ jobs:
       # reused elsewhere (another branch, dev, or a local run) without paying the backfill again.
       - name: Upload parser cache dump
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: parser-redis-dump-${{ github.run_id }}
           path: .redis-data/dump.rdb
