@@ -30,15 +30,15 @@ func TestNV29MethodsAppearOnlyAtV29(t *testing.T) {
 	ctx := context.Background()
 	const net = tools.CalibrationNetwork
 
-	// Calibration heights: V28 (FireHorse) activated at 3694534; V29 (Solstice) has no
-	// announced epoch yet and currently carries the far-future placeholder from
-	// tools/version_mapping.go. Both are taken via VersionFromHeight below so the test keeps
-	// working once the real V29 height lands.
+	// Calibration heights: V28 (FireHorse) activated at 3694534; V29 (Solstice) activates at
+	// 4109133 (2026-09-28T12:59:30Z). The epoch right before Solstice must still be V28, so the
+	// methods switch exactly at the upgrade.
 	const (
 		v28Height = int64(3694534 + 10)
-		v29Height = int64(999999999999999)
+		v29Height = int64(4109133)
 	)
 	require.Equal(t, "V28", tools.VersionFromHeight(net, v28Height).String())
+	require.Equal(t, "V28", tools.VersionFromHeight(net, v29Height-1).String())
 	require.Equal(t, "V29", tools.VersionFromHeight(net, v29Height).String())
 
 	for _, tc := range []struct {

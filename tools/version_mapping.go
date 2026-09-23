@@ -15,18 +15,6 @@ import (
 
 // The minimimum calibration version is V16 because of a calibration reset.
 
-// placeholderUnscheduledHeight stands in for a network upgrade epoch upstream has not announced.
-//
-// The value is not arbitrary: it is exactly lotus's own sentinel,
-// buildconstants.UpgradeHeightUnscheduled = abi.ChainEpoch(999999999999999). We cannot reference
-// that symbol yet because it does not exist in the lotus version this module pins — it lands with
-// the NV29 release. Once the lotus pin is bumped, delete this constant and use
-// buildconstants.UpgradeHeightUnscheduled directly; the value is identical, so that swap is a pure
-// rename with no behaviour change.
-//
-// Do NOT substitute math.MaxInt64: tools/testutil.go averages two adjacent heights and overflows.
-const placeholderUnscheduledHeight = 999999999999999
-
 const (
 	CalibrationNetworkNodeType = "calibrationnet"
 	CalibrationNetwork         = "calibration"
@@ -132,12 +120,10 @@ var (
 	// V28 FireHorse, builtin-actors(go-state-types): v18, calibration: 3694534, mainnet: 6052800
 	V28 version = version{calibration: 3694534, mainnet: buildconstants.UpgradeFireHorseHeight, nodeVersion: 28}
 
-	// V29 Solstice (FIP-0118), builtin-actors(go-state-types): v19.
-	// TODO(NV29): activation heights are still UpgradeHeightUnscheduled upstream. Replace both
-	// placeholders with the real epochs once announced, switch mainnet to
-	// buildconstants.UpgradeSolsticeHeight (only exists once lotus ships the NV29 release), and
-	// promote LatestMainnetVersion to V29.
-	V29 version = version{calibration: placeholderUnscheduledHeight, mainnet: placeholderUnscheduledHeight, nodeVersion: 29}
+	// V29 Solstice (FIP-0118), builtin-actors(go-state-types): v19, calibration: 4109133 (2026-09-28T12:59:30Z), mainnet: unscheduled
+	// Mainnet follows buildconstants.UpgradeSolsticeHeight, which lotus v1.37.0-rc1 still parks at
+	// UpgradeHeightUnscheduled (999999999999999); promote LatestMainnetVersion to V29 once it is set.
+	V29 version = version{calibration: 4109133, mainnet: buildconstants.UpgradeSolsticeHeight, nodeVersion: 29}
 )
 
 func init() {
