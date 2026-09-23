@@ -274,8 +274,9 @@ func (p *Parser) ParseEthLogs(ctx context.Context, eventsData types.EventsData) 
 		// #nosec G115
 		event, err := eventTools.ParseEthLog(eventsData.Tipset, ethLog, p.helper, uint64(idx), eventsData.Canonical)
 		if err != nil {
+			// event is nil on error, so it must not be read here
 			_ = p.metrics.UpdateParseEthLogMetric()
-			p.logger.Errorf("error retrieving selector_sig for hash: %s err: %s", event.SelectorID, err)
+			return nil, fmt.Errorf("error parsing eth log (tx: %s, log_index: %d): %w", ethLog.TransactionCid, ethLog.LogIndex, err)
 		}
 
 		// we don't consolidate eth addresses
