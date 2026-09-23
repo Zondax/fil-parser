@@ -48,7 +48,7 @@ import (
 
 	metrics "github.com/libp2p/go-libp2p/core/metrics"
 
-	miner "github.com/filecoin-project/go-state-types/builtin/v18/miner"
+	miner "github.com/filecoin-project/go-state-types/builtin/v19/miner"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -1075,6 +1075,34 @@ func (_m *FullNode) EthAddressToFilecoinAddress(ctx context.Context, ethAddress 
 
 	if rf, ok := ret.Get(1).(func(context.Context, ethtypes.EthAddress) error); ok {
 		r1 = rf(ctx, ethAddress)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthBaseFee provides a mock function with given fields: ctx
+func (_m *FullNode) EthBaseFee(ctx context.Context) (ethtypes.EthBigInt, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for EthBaseFee")
+	}
+
+	var r0 ethtypes.EthBigInt
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (ethtypes.EthBigInt, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) ethtypes.EthBigInt); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(ethtypes.EthBigInt)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
