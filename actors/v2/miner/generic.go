@@ -100,6 +100,8 @@ func getControlAddress(controlReturn any) (parser.ControlAddress, error) {
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	case *miner17.GetControlAddressesReturn:
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
+	case *miner19.GetControlAddressesReturn:
+		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	case *miner18.GetControlAddressesReturn:
 		setControlReturn(v.Owner.String(), v.Worker.String(), getControlAddrs(v.ControlAddrs))
 	default:

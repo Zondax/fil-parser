@@ -115,9 +115,15 @@ func (e *Eam) newEamCreate(r typegen.CBORUnmarshaler, msgCid cid.Cid) (string, *
 
 	}
 	switch v := r.(type) {
+	case *eamv19.CreateReturn:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 	case *eamv18.CreateReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv19.Create2Return:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 	case *eamv18.Create2Return:
+		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
+	case *eamv19.CreateExternalReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
 	case *eamv18.CreateExternalReturn:
 		return getReturnStruct(v.ActorID, v.RobustAddress, parser.EthPrefix+hex.EncodeToString(v.EthAddress[:]))
@@ -200,9 +206,15 @@ func validateEamReturn(ret typegen.CBORUnmarshaler) error {
 	}
 
 	switch v := ret.(type) {
+	case *eamv19.CreateReturn:
+		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv18.CreateReturn:
 		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv19.Create2Return:
+		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv18.Create2Return:
+		return checkAndSetAddress(&v.RobustAddress)
+	case *eamv19.CreateExternalReturn:
 		return checkAndSetAddress(&v.RobustAddress)
 	case *eamv18.CreateExternalReturn:
 		return checkAndSetAddress(&v.RobustAddress)

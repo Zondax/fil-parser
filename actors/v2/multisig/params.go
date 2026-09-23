@@ -461,6 +461,8 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
 	case *multisig17.ProposeParams:
 		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
+	case *multisig19.ProposeParams:
+		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
 	case *multisig18.ProposeParams:
 		return parsedParams.Params, parsedParams.Method, parsedParams.To, parsedParams.Value.String(), parsedParams, nil
 	default:
@@ -515,6 +517,8 @@ func getProposeReturn(network string, height int64, rawReturn []byte) (applied b
 	case *multisig16.ProposeReturn:
 		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig17.ProposeReturn:
+		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
+	case *multisig19.ProposeReturn:
 		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
 	case *multisig18.ProposeReturn:
 		return parsedReturn.Applied, parsedReturn.Code, parsedReturn.Ret, parsedReturn, nil
