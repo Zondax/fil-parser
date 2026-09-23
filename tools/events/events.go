@@ -201,7 +201,8 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 	parsedEntries := map[int]map[string]any{}
 
 	var (
-		edgeCaseEntries []int
+		nativeEventType string
+		nodeEntries     []int
 	)
 
 	for idx, entry := range entries {
@@ -237,10 +238,11 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 					return nil, fmt.Errorf("error decoding native event: %w ", err)
 				}
 
-				// if the entry key is a CID or a bigInt, we need to decode the parsedValue further
-				if cidRegex.MatchString(entry.Key) || bigintRegex.MatchString(entry.Key) {
-					edgeCaseEntries = append(edgeCaseEntries, idx)
+				if entry.Key == NativeTypeEventEntryKey && parsedValue.Kind() == datamodel.Kind_String {
+					nativeEventType, _ = parsedValue.AsString()
 				}
+				// CIDs, bigInts, lists and maps need to be decoded further once the event $type is known
+				nodeEntries = append(nodeEntries, idx)
 				parsedEntry[parsedEntryValue] = parsedValue
 			}
 		}
@@ -252,22 +254,29 @@ func parseNativeEventEntry(eventType string, entries []filTypes.EventEntry) (map
 		parsedEntries[idx] = parsedEntry
 	}
 
-	// decode the entry values for the CIDs and BigInts
-	for _, idx := range edgeCaseEntries {
+	// decode the entry values for the CIDs, BigInts, lists and maps.
+	// Scalar nodes are kept as they are: their JSON encoding is the established output format.
+	for _, idx := range nodeEntries {
 		var (
 			err  error
 			data any
 		)
 
-		key := parsedEntries[idx][parsedEntryKey].(string)
-		value := parsedEntries[idx][parsedEntryValue].(datamodel.Node)
+		key, _ := parsedEntries[idx][parsedEntryKey].(string)
+		value, ok := parsedEntries[idx][parsedEntryValue].(datamodel.Node)
+		if !ok {
+			continue
+		}
 		switch {
 		case cidRegex.MatchString(key):
 			data, err = parseCid(value)
-		case bigintRegex.MatchString(key):
+		case isBigIntEntry(nativeEventType, key):
 			data, err = parseBigInt(value)
+		case value.Kind() == datamodel.Kind_List || value.Kind() == datamodel.Kind_Map:
+			// go-ipld-prime list and map nodes marshal to {}, so convert them to plain Go values
+			data, err = nodeToAny(value)
 		default:
-			err = fmt.Errorf("unable to retrieve %s from evm event entry", key)
+			continue
 		}
 
 		if err != nil {
