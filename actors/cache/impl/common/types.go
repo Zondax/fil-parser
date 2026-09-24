@@ -23,44 +23,31 @@ type CacheConfig struct {
 	LatestCacheTTL time.Duration
 }
 
+// Copy returns a deep copy of the config. It is nil-safe: a nil config (or nil
+// embedded/sub configs) are preserved as nil instead of panicking.
 func (c *CacheConfig) Copy() *CacheConfig {
-	return &CacheConfig{
-		CombinedConfig: &zcache.CombinedConfig{
-			GlobalPrefix:       c.GlobalPrefix,
-			IsRemoteBestEffort: c.IsRemoteBestEffort,
-			Local: &zcache.LocalConfig{
-				Prefix:       c.Local.Prefix,
-				Logger:       c.Local.Logger,
-				MetricServer: c.Local.MetricServer,
-				StatsMetrics: c.Local.StatsMetrics,
-				NumCounters:  c.Local.NumCounters,
-				MaxCostMB:    c.Local.MaxCostMB,
-				BufferItems:  c.Local.BufferItems,
-			},
-			Remote: &zcache.RemoteConfig{
-				Network:            c.Remote.Network,
-				Addr:               c.Remote.Addr,
-				Password:           c.Remote.Password,
-				DB:                 c.Remote.DB,
-				DialTimeout:        c.Remote.DialTimeout,
-				ReadTimeout:        c.Remote.ReadTimeout,
-				WriteTimeout:       c.Remote.WriteTimeout,
-				PoolSize:           c.Remote.PoolSize,
-				MinIdleConns:       c.Remote.MinIdleConns,
-				MaxConnAge:         c.Remote.MaxConnAge,
-				PoolTimeout:        c.Remote.PoolTimeout,
-				IdleTimeout:        c.Remote.IdleTimeout,
-				IdleCheckFrequency: c.Remote.IdleCheckFrequency,
-				Prefix:             c.Remote.Prefix,
-				Logger:             c.Remote.Logger,
-				MetricServer:       c.Remote.MetricServer,
-				StatsMetrics:       c.Remote.StatsMetrics,
-			},
-			GlobalLogger:       c.GlobalLogger,
-			GlobalMetricServer: c.GlobalMetricServer,
-			GlobalStatsMetrics: c.GlobalStatsMetrics,
-		},
+	if c == nil {
+		return nil
+	}
+
+	cp := &CacheConfig{
 		Ttl:            c.Ttl,
 		LatestCacheTTL: c.LatestCacheTTL,
 	}
+	if c.CombinedConfig == nil {
+		return cp
+	}
+
+	combined := *c.CombinedConfig
+	if c.Local != nil {
+		local := *c.Local
+		combined.Local = &local
+	}
+	if c.Remote != nil {
+		remote := *c.Remote
+		combined.Remote = &remote
+	}
+	cp.CombinedConfig = &combined
+
+	return cp
 }
