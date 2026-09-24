@@ -23,6 +23,14 @@ func (m *ZCacheBlockConfirmation) NewImpl(source common.DataSource, logger *logg
 	if err := m.offChainCanonical.NewImpl(source, logger, metrics); err != nil {
 		return err
 	}
+	m.offChainLatest = &ZCache{}
+
+	// Without a cache config ZCache runs local-only (in-memory). Build the latest
+	// cache the same way instead of deriving a combined config from a nil one.
+	if source.Config.Cache == nil {
+		return m.offChainLatest.NewImpl(source, logger, metrics)
+	}
+
 	latestSource := common.DataSource{
 		Node: source.Node,
 		Config: common.DataSourceConfig{
@@ -31,7 +39,6 @@ func (m *ZCacheBlockConfirmation) NewImpl(source common.DataSource, logger *logg
 	}
 	latestSource.Config.Cache.Ttl = source.Config.Cache.LatestCacheTTL
 	latestSource.Config.Cache.GlobalPrefix = fmt.Sprintf("%s-%s", "latest", source.Config.Cache.GlobalPrefix)
-	m.offChainLatest = &ZCache{}
 	if err := m.offChainLatest.NewImpl(latestSource, logger, metrics); err != nil {
 		return err
 	}
