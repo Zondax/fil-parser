@@ -10,9 +10,8 @@ import "testing"
 //
 // Add a row here for each version as it is promoted.
 //
-// Note: while LatestMainnetVersion is still V28 the two mainnet rows below pass with or without
-// the fix, because the fall-through already returns V28 on mainnet. The calibration V28 row is
-// the one carrying the guarantee today; the mainnet rows start biting when mainnet is promoted.
+// With LatestMainnetVersion at V29, the mainnet V28 rows rely on the explicit V28 case (the
+// fall-through now returns V29 on mainnet), like the calibration V28 row does.
 func TestVersionFromHeightResolvesEachVersion(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -24,6 +23,11 @@ func TestVersionFromHeightResolvesEachVersion(t *testing.T) {
 		{"calibration V28 range", CalibrationNetwork, 3694534 + 10, 28},
 		{"mainnet V27 range", MainnetNetwork, 5348280 + 10, 27},
 		{"mainnet V28 range", MainnetNetwork, 6052800 + 10, 28},
+		{"calibration V29 range", CalibrationNetwork, 4109133 + 10, 29},
+		// NV29 (Solstice) mainnet: lotus v1.37.0 sets UpgradeSolsticeHeight = 6470279 (2026-10-19T12:59:30Z).
+		{"mainnet last V28 height", MainnetNetwork, 6470279 - 1, 28},
+		{"mainnet V29 at upgrade height", MainnetNetwork, 6470279, 29},
+		{"mainnet V29 range", MainnetNetwork, 6470279 + 10, 29},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,5 +55,17 @@ func TestVersionsAfterIncludesCalibrationOnlyVersions(t *testing.T) {
 	if !found {
 		t.Fatalf("VersionsAfter(V16) omitted the latest calibration version V%d; got %v",
 			LatestCalibrationVersion.nodeVersion, got)
+	}
+}
+
+// V29's mainnet height comes from lotus buildconstants: lotus v1.37.0 schedules it at 6470279.
+// A lotus pin still parking Solstice at UpgradeHeightUnscheduled would silently keep every
+// post-fork mainnet height on V28.
+func TestV29MainnetScheduled(t *testing.T) {
+	if V29.mainnet != 6470279 {
+		t.Fatalf("V29 mainnet height = %d, want 6470279 (lotus v1.37.0 UpgradeSolsticeHeight)", V29.mainnet)
+	}
+	if LatestMainnetVersion.nodeVersion != 29 {
+		t.Fatalf("LatestMainnetVersion = V%d, want V29", LatestMainnetVersion.nodeVersion)
 	}
 }

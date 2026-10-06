@@ -154,7 +154,7 @@ func TestVersionIterator(t *testing.T) {
 	}{
 		{name: "V1 on calibration", version: V0, network: "calibration",
 			expectedVersions: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}},
-		{name: "V1 on mainnet", version: V0, network: "mainnet", expectedVersions: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28}},
+		{name: "V1 on mainnet", version: V0, network: "mainnet", expectedVersions: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -236,7 +236,7 @@ func TestGetSupportedVersions(t *testing.T) {
 		want    []version
 	}{
 		{name: "calibration", network: "calibration", want: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}},
-		{name: "mainnet", network: "mainnet", want: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28}},
+		{name: "mainnet", network: "mainnet", want: []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
