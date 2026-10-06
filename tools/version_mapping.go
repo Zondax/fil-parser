@@ -30,7 +30,7 @@ type version struct {
 }
 
 var (
-	LatestMainnetVersion     version = V28
+	LatestMainnetVersion     version = V29
 	LatestCalibrationVersion version = V29
 
 	supportedVersions     = []version{V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, V21, V22, V23, V24, V25, V26, V27, V28, V29}
@@ -120,9 +120,8 @@ var (
 	// V28 FireHorse, builtin-actors(go-state-types): v18, calibration: 3694534, mainnet: 6052800
 	V28 version = version{calibration: 3694534, mainnet: buildconstants.UpgradeFireHorseHeight, nodeVersion: 28}
 
-	// V29 Solstice (FIP-0118), builtin-actors(go-state-types): v19, calibration: 4109133 (2026-09-28T12:59:30Z), mainnet: unscheduled
-	// Mainnet follows buildconstants.UpgradeSolsticeHeight, which lotus v1.37.0-rc1 still parks at
-	// UpgradeHeightUnscheduled (999999999999999); promote LatestMainnetVersion to V29 once it is set.
+	// V29 Solstice (FIP-0118), builtin-actors(go-state-types): v19, calibration: 4109133 (2026-09-28T12:59:30Z), mainnet: 6470279 (2026-10-19T12:59:30Z)
+	// Mainnet follows buildconstants.UpgradeSolsticeHeight, set to 6470279 by lotus v1.37.0.
 	V29 version = version{calibration: 4109133, mainnet: buildconstants.UpgradeSolsticeHeight, nodeVersion: 29}
 )
 
