@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	github.com/zondax/golem v0.30.0
-	github.com/zondax/rosetta-filecoin-lib v1.3700.1
+	github.com/zondax/rosetta-filecoin-lib v1.3800.0
 )
 
 require (
