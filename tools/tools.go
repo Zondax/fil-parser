@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -42,6 +43,21 @@ func BuildId(input ...string) string {
 
 func BuildMessageId(tipsetCid, blockCid, mainMsgCid, messageCid, parentId string) string {
 	return BuildId(tipsetCid, blockCid, mainMsgCid, messageCid, parentId)
+}
+
+// UniqueSiblingId returns id unchanged the first time it is seen among the
+// sub-calls of one parent, and a derived id for each repeat. Two sibling calls
+// with identical trace messages (same from, to, value, method, params and gas
+// limit, e.g. two equal transfers sent with a fixed gas stipend) otherwise get
+// the same id, and FilterDuplicated keeps only one of them, dropping a real
+// transfer. The first occurrence keeps its id, so existing ids do not change.
+func UniqueSiblingId(seen map[string]int, id string) string {
+	n := seen[id]
+	seen[id] = n + 1
+	if n == 0 {
+		return id
+	}
+	return BuildId(id, "sibling", strconv.Itoa(n))
 }
 
 func BuildFeeId(tipsetCid, blockCid, mainMsgCid string) string {
