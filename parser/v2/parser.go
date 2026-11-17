@@ -355,11 +355,8 @@ func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTrac
 		if err != nil {
 			continue
 		}
-		parentExitCode := mainExitCode
 		// if the subcall fails, all children should be marked as failed
-		if subTx.MsgRct.ExitCode.IsError() {
-			parentExitCode = subTx.MsgRct.ExitCode
-		}
+		parentExitCode := tools.ChildrenExitCode(mainExitCode, subTx.MsgRct.ExitCode)
 		subTransaction.Level = level
 		txs = append(txs, subTransaction)
 		txs = append(txs, p.parseSubTxs(ctx, subTx.Subcalls, mainMsgCid, tipSet, ethLogs, txHash, subTransaction.Id, level, systemExecution, parentExitCode, actorName, canonical)...)

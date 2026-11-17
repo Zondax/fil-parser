@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/filecoin-project/go-state-types/exitcode"
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -352,3 +353,31 @@ func TestBuildCidFromMessageTrace(t *testing.T) {
 		})
 	}
 }*/
+
+func TestChildrenExitCode(t *testing.T) {
+	tests := []struct {
+		name      string
+		inherited exitcode.ExitCode
+		own       exitcode.ExitCode
+		want      exitcode.ExitCode
+	}{
+		{"ok call under ok ancestors passes ok", exitcode.Ok, exitcode.Ok, exitcode.Ok},
+		{"failed call under ok ancestors passes its own error", exitcode.Ok, exitcode.ErrIllegalArgument, exitcode.ErrIllegalArgument},
+		{"ok call under a failed ancestor keeps the ancestor error", exitcode.ErrForbidden, exitcode.Ok, exitcode.ErrForbidden},
+		{"failed call under a failed ancestor passes its own error", exitcode.ErrForbidden, exitcode.SysErrInsufficientFunds, exitcode.SysErrInsufficientFunds},
+		{"actor specific error is an error", exitcode.Ok, exitcode.ExitCode(33), exitcode.ExitCode(33)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, ChildrenExitCode(tt.inherited, tt.own))
+		})
+	}
+
+	// Walk root(ok) -> A(fails) -> B(ok) -> C(ok): every descendant of A must
+	// inherit A's error, even though B and C themselves exited 0.
+	code := exitcode.Ok
+	code = ChildrenExitCode(code, exitcode.ErrIllegalState) // A's children
+	require.Equal(t, exitcode.ErrIllegalState, code)
+	code = ChildrenExitCode(code, exitcode.Ok) // B's children
+	require.Equal(t, exitcode.ErrIllegalState, code)
+}
