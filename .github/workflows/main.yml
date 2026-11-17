@@ -271,7 +271,7 @@ jobs:
       # Only dev's caches persist past a branch deletion, so only those need capping.
       - name: Prune old parser caches
         if: always() && github.event_name == 'push' && github.ref_name == 'dev'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const KEEP = 3;
