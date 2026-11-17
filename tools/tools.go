@@ -184,6 +184,18 @@ func GetExitCodeStatus(actorName string, exitCode exitcode.ExitCode) string {
 	return CheckExitCodeError(actorName, code)
 }
 
+// ChildrenExitCode returns the exit code a call passes down to its sub-calls,
+// which they record as their status. A call that fails reverts its whole
+// subtree (the FVM runs each call in a state transaction that rolls back on a
+// non-zero exit), so its own error is passed down; otherwise the code inherited
+// from its ancestors (ultimately the top-level message) is passed on unchanged.
+func ChildrenExitCode(inherited, own exitcode.ExitCode) exitcode.ExitCode {
+	if own.IsError() {
+		return own
+	}
+	return inherited
+}
+
 func GetExitCodeOK() string {
 	return GetExitCodeStatus("", exitcode.Ok)
 }
