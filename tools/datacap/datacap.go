@@ -3,6 +3,7 @@ package datacap
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/tools"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -46,6 +47,9 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 		DataCapAllowanceEvent: []*types.DataCapAllowanceEvent{},
 	}
 
+	dataCapAllowanceEventIds := tools.NewEventIds()
+	dataCapInfoIds := tools.NewEventIds()
+	dataCapTokenEventIds := tools.NewEventIds()
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -75,13 +79,20 @@ func (eg *eventGenerator) GenerateDataCapEvents(ctx context.Context, transaction
 			return nil, fmt.Errorf("could not create datacap info. err: %w", err)
 		}
 
+		dataCapInfo.ID = dataCapInfoIds.Unique(dataCapInfo.ID, tx.Id)
 		events.DataCapInfo = append(events.DataCapInfo, dataCapInfo)
 		if isDatacapTokenMessage(tx.TxType) {
 			tokenEvents, allowanceEvents, err := eg.createDataCapTokenEvents(ctx, tx, tipsetCid)
 			if err != nil {
 				return nil, fmt.Errorf("could not create datacap token events. err: %w", err)
 			}
+			for i := range tokenEvents {
+				tokenEvents[i].ID = dataCapTokenEventIds.Unique(tokenEvents[i].ID, tx.Id)
+			}
 			events.DataCapTokenEvent = append(events.DataCapTokenEvent, tokenEvents...)
+			for i := range allowanceEvents {
+				allowanceEvents[i].ID = dataCapAllowanceEventIds.Unique(allowanceEvents[i].ID, tx.Id)
+			}
 			events.DataCapAllowanceEvent = append(events.DataCapAllowanceEvent, allowanceEvents...)
 		}
 	}

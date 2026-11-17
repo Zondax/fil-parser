@@ -63,6 +63,36 @@ func UniqueSiblingId(seen map[string]int, id string) string {
 	return BuildId(id, "sibling", strconv.Itoa(n))
 }
 
+// EventIds keeps the ids of one kind of generated event unique across the
+// transactions of one batch. Event ids are built from message-level fields
+// (tx cid, addresses, height, method), so two identical sibling sub-calls of
+// one message, which are distinct transactions since UniqueSiblingId, produce
+// events with the same id. Unique returns the id unchanged the first time it is
+// seen, and also when the same transaction produces it again (an intentional
+// duplicate); when a different transaction produces an id already taken, it
+// returns an id derived from that transaction's id.
+type EventIds struct {
+	owner map[string]string
+}
+
+func NewEventIds() *EventIds {
+	return &EventIds{owner: map[string]string{}}
+}
+
+func (e *EventIds) Unique(id, txId string) string {
+	owner, taken := e.owner[id]
+	if !taken {
+		e.owner[id] = txId
+		return id
+	}
+	if owner == txId {
+		return id
+	}
+	unique := BuildId(id, "tx", txId)
+	e.owner[unique] = txId
+	return unique
+}
+
 func BuildFeeId(tipsetCid, blockCid, mainMsgCid string) string {
 	return BuildId(tipsetCid, blockCid, mainMsgCid, "fee")
 }

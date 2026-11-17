@@ -401,3 +401,25 @@ func TestUniqueSiblingId(t *testing.T) {
 	// A fresh parent starts again from the original id.
 	require.Equal(t, a, UniqueSiblingId(map[string]int{}, a))
 }
+
+func TestEventIdsUnique(t *testing.T) {
+	ids := NewEventIds()
+
+	// First occurrence and repeats from the same transaction keep the id.
+	require.Equal(t, "ev", ids.Unique("ev", "tx1"))
+	require.Equal(t, "ev", ids.Unique("ev", "tx1"))
+
+	// The same event id from another transaction (an identical sibling call)
+	// gets a distinct, deterministic id.
+	other := ids.Unique("ev", "tx2")
+	require.NotEqual(t, "ev", other)
+	require.Equal(t, BuildId("ev", "tx", "tx2"), other)
+	require.Equal(t, other, ids.Unique("ev", "tx2"))
+
+	// A third transaction gets yet another id.
+	third := ids.Unique("ev", "tx3")
+	require.NotEqual(t, other, third)
+
+	// Ids that never collide are unchanged.
+	require.Equal(t, "other-ev", ids.Unique("other-ev", "tx2"))
+}

@@ -3,6 +3,7 @@ package deals
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/tools"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -49,6 +50,10 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		DealsSpaceInfo:   []*types.DealsSpaceInfo{},
 	}
 
+	dealsActivationsIds := tools.NewEventIds()
+	dealsMessagesIds := tools.NewEventIds()
+	dealsProposalsIds := tools.NewEventIds()
+	dealsSpaceInfoIds := tools.NewEventIds()
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -78,12 +83,16 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			return nil, fmt.Errorf("could not create deal message. err: %w", err)
 		}
 
+		dealMessage.ID = dealsMessagesIds.Unique(dealMessage.ID, tx.Id)
 		events.DealsMessages = append(events.DealsMessages, dealMessage)
 
 		if eg.isPublishStorageDeals(tx.TxType) {
 			dealsInfo, err := eg.createDealsInfo(ctx, tx)
 			if err != nil {
 				return nil, fmt.Errorf("could not create deal proposal. err: %w", err)
+			}
+			for i := range dealsInfo {
+				dealsInfo[i].ID = dealsProposalsIds.Unique(dealsInfo[i].ID, tx.Id)
 			}
 			events.DealsProposals = append(events.DealsProposals, dealsInfo...)
 		}
@@ -92,7 +101,13 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			if err != nil {
 				return nil, fmt.Errorf("could not create deal activations. err: %w", err)
 			}
+			for i := range dealActivations {
+				dealActivations[i].ID = dealsActivationsIds.Unique(dealActivations[i].ID, tx.Id)
+			}
 			events.DealsActivations = append(events.DealsActivations, dealActivations...)
+			for i := range dealSpaceInfo {
+				dealSpaceInfo[i].ID = dealsSpaceInfoIds.Unique(dealSpaceInfo[i].ID, tx.Id)
+			}
 			events.DealsSpaceInfo = append(events.DealsSpaceInfo, dealSpaceInfo...)
 		}
 	}
