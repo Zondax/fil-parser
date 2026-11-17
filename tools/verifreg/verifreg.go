@@ -55,6 +55,7 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 		Deals:        make([]*types.VerifregDeal, 0),
 	}
 
+	verifierInfoIds, clientInfoIds, dealsIds := tools.NewEventIds(), tools.NewEventIds(), tools.NewEventIds()
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -77,9 +78,20 @@ func (eg *eventGenerator) GenerateVerifregEvents(ctx context.Context, transactio
 			continue
 		}
 
+		nVerifier, nClient, nDeals := len(events.VerifierInfo), len(events.ClientInfo), len(events.Deals)
 		events, err = eg.createVerifregInfo(ctx, tx, tipsetCid, events)
 		if err != nil {
 			return nil, fmt.Errorf("could not create verifreg info. err: %w", err)
+		}
+		// Keep ids unique across transactions (see tools.EventIds).
+		for _, e := range events.VerifierInfo[nVerifier:] {
+			e.ID = verifierInfoIds.Unique(e.ID, tx.Id)
+		}
+		for _, e := range events.ClientInfo[nClient:] {
+			e.ID = clientInfoIds.Unique(e.ID, tx.Id)
+		}
+		for _, e := range events.Deals[nDeals:] {
+			e.ID = dealsIds.Unique(e.ID, tx.Id)
 		}
 
 	}

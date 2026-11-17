@@ -77,6 +77,8 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 		MultisigInfo: []*types.MultisigInfo{},
 	}
 
+	multisigInfoIds := tools.NewEventIds()
+	proposalsIds := tools.NewEventIds()
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -95,6 +97,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 			if err != nil {
 				return nil, fmt.Errorf("could not create proposal. Err: %s", err)
 			}
+			proposal.ID = proposalsIds.Unique(proposal.ID, tx.Id)
 			events.Proposals = append(events.Proposals, proposal)
 		} else {
 			// Only consider transactions where tx.TxTo is a multisig address
@@ -120,6 +123,7 @@ func (eg *eventGenerator) GenerateMultisigEvents(ctx context.Context, transactio
 			if err != nil {
 				return nil, fmt.Errorf("could not create multisig info. err: %w", err)
 			}
+			multisigInfo.ID = multisigInfoIds.Unique(multisigInfo.ID, tx.Id)
 			events.MultisigInfo = append(events.MultisigInfo, multisigInfo)
 		}
 	}

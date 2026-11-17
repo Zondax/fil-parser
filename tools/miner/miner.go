@@ -3,6 +3,7 @@ package miner
 import (
 	"context"
 	"fmt"
+	"github.com/zondax/fil-parser/tools"
 	"strings"
 
 	"github.com/zondax/golem/pkg/logger"
@@ -45,6 +46,8 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 		MinerSectors: []*types.MinerSectorEvent{},
 	}
 
+	minerInfoIds := tools.NewEventIds()
+	minerSectorsIds := tools.NewEventIds()
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -78,12 +81,16 @@ func (eg *eventGenerator) GenerateMinerEvents(ctx context.Context, transactions 
 			return nil, fmt.Errorf("could not create miner info. err: %w", err)
 		}
 
+		minerInfo.ID = minerInfoIds.Unique(minerInfo.ID, tx.Id)
 		events.MinerInfo = append(events.MinerInfo, minerInfo)
 
 		if eg.isMinerSectorMessage(actorName, tx.TxType) {
 			minerSectors, err := eg.createSectorEvents(ctx, tx, tipsetCid)
 			if err != nil {
 				return nil, fmt.Errorf("could not create miner sector. err: %w", err)
+			}
+			for i := range minerSectors {
+				minerSectors[i].ID = minerSectorsIds.Unique(minerSectors[i].ID, tx.Id)
 			}
 			events.MinerSectors = append(events.MinerSectors, minerSectors...)
 		}
