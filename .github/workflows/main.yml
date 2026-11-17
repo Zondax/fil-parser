@@ -85,7 +85,7 @@ jobs:
       # lands on dev.
       - name: Restore parser cache
         id: parser-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: .redis-data
           key: fil-parser-redis-v1-
@@ -189,7 +189,7 @@ jobs:
       # long-lived enough to warrant the explicit cap below.
       - name: Save parser cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .redis-data
           key: fil-parser-redis-v1-${{ github.run_id }}
