@@ -50,7 +50,10 @@ func BuildMessageId(tipsetCid, blockCid, mainMsgCid, messageCid, parentId string
 // with identical trace messages (same from, to, value, method, params and gas
 // limit, e.g. two equal transfers sent with a fixed gas stipend) otherwise get
 // the same id, and FilterDuplicated keeps only one of them, dropping a real
-// transfer. The first occurrence keeps its id, so existing ids do not change.
+// transfer. The first occurrence keeps its id, so ids only change for repeats
+// and their descendants (whose ids include the parent id; before, they pointed
+// to the first sibling as parent). Rebuild stored rows from a full re-parse
+// rather than upserting by id, or old and new descendant rows coexist.
 func UniqueSiblingId(seen map[string]int, id string) string {
 	n := seen[id]
 	seen[id] = n + 1
