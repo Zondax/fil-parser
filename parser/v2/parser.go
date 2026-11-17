@@ -350,11 +350,13 @@ func (p *Parser) GetBaseFee(traces []byte, tipset *types.ExtendedTipSet) (uint64
 func (p *Parser) parseSubTxs(ctx context.Context, subTxs []typesV2.ExecutionTraceV2, mainMsgCid cid.Cid, tipSet *types.ExtendedTipSet, ethLogs []types.EthLog, txHash string,
 	parentId string, level uint16, systemExecution bool, mainExitCode exitcode.ExitCode, parentActor string, canonical bool) (txs []*types.Transaction) {
 	level++
+	siblingIds := make(map[string]int, len(subTxs))
 	for _, subTx := range subTxs {
 		actorName, subTransaction, err := p.parseTrace(ctx, subTx, mainMsgCid, tipSet, parentId, systemExecution, mainExitCode, parentActor, canonical)
 		if err != nil {
 			continue
 		}
+		subTransaction.Id = tools.UniqueSiblingId(siblingIds, subTransaction.Id)
 		// if the subcall fails, all children should be marked as failed
 		parentExitCode := tools.ChildrenExitCode(mainExitCode, subTx.MsgRct.ExitCode)
 		subTransaction.Level = level

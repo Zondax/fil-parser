@@ -381,3 +381,23 @@ func TestChildrenExitCode(t *testing.T) {
 	code = ChildrenExitCode(code, exitcode.Ok) // B's children
 	require.Equal(t, exitcode.ErrIllegalState, code)
 }
+
+func TestUniqueSiblingId(t *testing.T) {
+	seen := map[string]int{}
+	a := BuildMessageId("ts", "bc", "main", "msgA", "parent")
+	b := BuildMessageId("ts", "bc", "main", "msgB", "parent")
+
+	// First occurrences keep their ids, so existing ids are unchanged.
+	require.Equal(t, a, UniqueSiblingId(seen, a))
+	require.Equal(t, b, UniqueSiblingId(seen, b))
+
+	// Identical siblings get distinct, deterministic ids.
+	a2 := UniqueSiblingId(seen, a)
+	a3 := UniqueSiblingId(seen, a)
+	require.NotEqual(t, a, a2)
+	require.NotEqual(t, a2, a3)
+	require.Equal(t, a2, UniqueSiblingId(map[string]int{a: 1}, a))
+
+	// A fresh parent starts again from the original id.
+	require.Equal(t, a, UniqueSiblingId(map[string]int{}, a))
+}

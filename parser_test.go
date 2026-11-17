@@ -2003,7 +2003,11 @@ func TestParser_ActorVersionComparison(t *testing.T) {
 			url:     nodeUrl,
 			height:  "2907480",
 			results: expectedResults{
-				totalTraces:  650,
+				// 652, not 650: message bafy2bzacecjoni3u... has two pairs of identical
+				// sibling sub-calls (same from/to/method/params; v1 traces record
+				// GasLimit 0 for every call). They used to share an id and one of each
+				// pair was dropped by FilterDuplicated; see tools.UniqueSiblingId.
+				totalTraces:  652,
 				totalAddress: 232,
 				totalTxCids:  102,
 			},
