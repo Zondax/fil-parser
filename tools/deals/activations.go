@@ -37,6 +37,16 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 		return nil, nil, err
 	}
 
+	// SectorContentChanged params are an array of sectors, not a map, so it is handled before
+	// the map-shaped params of the legacy methods are read.
+	if tx.TxType == parser.MethodSectorContentChanged {
+		dealActivations, dealSpaceInfo, err = eg.parseSectorContentChanged(tx, metadata)
+		if err != nil {
+			return nil, nil, err
+		}
+		return dealActivations, dealSpaceInfo, nil
+	}
+
 	params, err := common.GetItem[map[string]interface{}](metadata, KeyParams, false)
 	if err != nil {
 		return nil, nil, err
@@ -345,7 +355,8 @@ func (eg *eventGenerator) isDealActivation(tx *types.Transaction) bool {
 	switch tx.TxType {
 	case parser.MethodActivateDeals,
 		parser.MethodBatchActivateDeals,
-		parser.MethodVerifyDealsForActivation:
+		parser.MethodVerifyDealsForActivation,
+		parser.MethodSectorContentChanged:
 		return true
 	}
 

@@ -125,6 +125,8 @@ func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
 		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported),
 		strings.EqualFold(txType, parser.MethodVerifyDealsForActivation),
 		strings.EqualFold(txType, parser.MethodActivateDeals),
+		// market method 6 is named BatchActivateDeals from actors v12 (NV21) on
+		strings.EqualFold(txType, parser.MethodBatchActivateDeals),
 		strings.EqualFold(txType, parser.MethodSettleDealPaymentsExported),
 		strings.EqualFold(txType, parser.MethodSectorContentChanged):
 		return true

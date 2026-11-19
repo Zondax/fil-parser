@@ -7,52 +7,75 @@ import (
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
-type SectorReturn []bool
+// SectorContentChangedReturn is the return of the market actor's SectorContentChanged method.
+//
+// On the wire every level is serde-transparent, so it is an array with one entry per notified
+// sector, in the order of the params, each holding one `accepted` flag per piece of that sector:
+//
+//	[[bool, ...], [bool, ...], ...]
+//
+// See builtin-actors actors/miner/src/types.rs (SectorContentChangedReturn, SectorReturn,
+// PieceReturn), unchanged from v13 to v19.
+//
+// The previous decoder (SectorReturn []bool) read only the first sector's array, so every
+// sector after the first had no return data.
+type SectorContentChangedReturn [][]bool
 
-func (s *SectorReturn) UnmarshalCBOR(r io.Reader) error {
-	*s = SectorReturn{}
+func (s *SectorContentChangedReturn) UnmarshalCBOR(r io.Reader) (err error) {
+	*s = SectorContentChangedReturn{}
 	cr := cbg.NewCborReader(r)
 
-	maj, _, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
 	defer func() {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
 		}
 	}()
 
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	// first byte tells us the length of the array
-	maj, extra, err := cr.ReadHeader()
+	maj, sectors, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
+	if sectors > cbg.MaxLength {
+		return fmt.Errorf("sector return array too large (%d)", sectors)
+	}
 
-	*s = make(SectorReturn, extra)
-	for i := uint64(0); i < extra; i++ {
-		b, err := cr.ReadByte()
+	result := make(SectorContentChangedReturn, sectors)
+	for i := uint64(0); i < sectors; i++ {
+		maj, pieces, err := cr.ReadHeader()
 		if err != nil {
 			return err
 		}
-
-		switch b {
-		case 0xf5: // cbor true
-			(*s)[i] = true
-		case 0xf4: // cbor false
-			(*s)[i] = false
-		default:
-			return fmt.Errorf("invalid value: %d", b)
+		if maj != cbg.MajArray {
+			return fmt.Errorf("sector return %d should be of type array", i)
 		}
+		if pieces > cbg.MaxLength {
+			return fmt.Errorf("piece return array too large (%d)", pieces)
+		}
+
+		accepted := make([]bool, pieces)
+		for j := uint64(0); j < pieces; j++ {
+			maj, extra, err := cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+			if maj != cbg.MajOther {
+				return fmt.Errorf("piece return %d/%d should be a bool", i, j)
+			}
+			switch extra {
+			case 21: // cbor true
+				accepted[j] = true
+			case 20: // cbor false
+				accepted[j] = false
+			default:
+				return fmt.Errorf("invalid bool value in piece return %d/%d: %d", i, j, extra)
+			}
+		}
+		result[i] = accepted
 	}
 
+	*s = result
 	return nil
 }

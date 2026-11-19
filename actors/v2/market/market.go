@@ -407,7 +407,7 @@ func (*Market) SectorContentChanged(network string, height int64, rawParams, raw
 	metadata[parser.ParamsKey] = params
 
 	if len(rawReturn) > 0 {
-		r := types.SectorReturn{}
+		r := types.SectorContentChangedReturn{}
 		err = r.UnmarshalCBOR(bytes.NewReader(rawReturn))
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshalling sector return: %w", err)
