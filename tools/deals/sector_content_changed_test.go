@@ -415,7 +415,7 @@ func TestBatchActivateDealsIsProcessed(t *testing.T) {
 	require.Equal(t, big.NewInt(34359738368), events.DealsSpaceInfo[0].VerifiedDealSpace)
 }
 
-// ActivateDeals params before actors v12 carry no sector number.
+// ActivateDeals params before actors v13 carry no sector number.
 func TestActivateDealsWithoutSectorNumber(t *testing.T) {
 	eg, node := setupTest(t, "mainnet")
 	ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})

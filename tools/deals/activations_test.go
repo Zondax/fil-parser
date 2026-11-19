@@ -136,3 +136,42 @@ func TestBatchActivateDealsUnusableMetadata(t *testing.T) {
 		})
 	}
 }
+
+// SectorDeals carries the sector number only from actors v13 (NV22) on. For actors v12 (NV21) the
+// decoded metadata shows the Go struct's zero value, which must not be recorded.
+func TestBatchActivateDealsSectorNumberFromActorsV13(t *testing.T) {
+	// as decoded for actors v12: SectorNumber is the zero value
+	v12Metadata := `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":0,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78950968]},{"SectorNumber":0,"SectorType":8,"SectorExpiry":4920235,"DealIDs":[78951195]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":2,"FailCodes":null},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[],"UnsealedCid":{}},{"NonVerifiedDealSpace":"0","VerifiedInfos":[],"UnsealedCid":{}}]}}`
+
+	tests := []struct {
+		name     string
+		network  string
+		height   uint64
+		metadata string
+		// expected sector number per deal, nil when it must not be recorded
+		expected map[uint64]*uint64
+	}{
+		{"mainnet last v12 height, zero value", "mainnet", 3855359, v12Metadata, map[uint64]*uint64{78950968: nil, 78951195: nil}},
+		{"mainnet last v12 height, non-zero value", "mainnet", 3855359, sectorsActivateDealsMetadata, map[uint64]*uint64{78950968: nil, 78951195: nil}},
+		{"mainnet first v13 height", "mainnet", 3855360, sectorsActivateDealsMetadata, map[uint64]*uint64{78950968: ptr(37656), 78951195: ptr(37888)}},
+		{"mainnet first v13 height, sector 0", "mainnet", 3855360, v12Metadata, map[uint64]*uint64{78950968: ptr(0), 78951195: ptr(0)}},
+		{"mainnet v12 fixture height", "mainnet", 3573062, v12Metadata, map[uint64]*uint64{78950968: nil, 78951195: nil}},
+		{"calibration last v12 height", "calibration", 1427973, v12Metadata, map[uint64]*uint64{78950968: nil, 78951195: nil}},
+		{"calibration first v13 height", "calibration", 1427974, sectorsActivateDealsMetadata, map[uint64]*uint64{78950968: ptr(37656), 78951195: ptr(37888)}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			eg, node := setupTest(t, tt.network)
+			ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+			events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{okTx(tt.height, "x", parser.MethodBatchActivateDeals, tt.metadata)}, tipsetCid, filTypes.EmptyTSK)
+			require.NoError(t, err)
+			got := map[uint64]*uint64{}
+			for _, a := range events.DealsActivations {
+				got[a.DealID] = a.SectorNumber
+			}
+			require.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func ptr(v uint64) *uint64 { return &v }

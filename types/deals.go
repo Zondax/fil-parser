@@ -62,7 +62,7 @@ type DealsActivations struct {
 	DealID       uint64 `json:"deal_id"`
 	SectorExpiry int64  `json:"sector_expiry"`
 	// SectorNumber is the sector the deal was activated in. It is known for SectorContentChanged
-	// and for BatchActivateDeals from actors v12 (NV21) on; nil when the params do not carry it.
+	// and for BatchActivateDeals from actors v13 (NV22) on; nil when the params do not carry it.
 	SectorNumber *uint64   `json:"sector_number" gorm:"column:sector_number"`
 	ActionType   string    `json:"action_type"`
 	TxTimestamp  time.Time `json:"tx_timestamp"`

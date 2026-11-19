@@ -314,14 +314,25 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, exac
 		return nil, nil, fmt.Errorf("return has %d activations, expected %d", len(activations), succeeded)
 	}
 
+	// SectorDeals carries the sector number only from actors v13 (NV22) on
+	// (builtin-actors v13.0.0 actors/market/src/types.rs). Actors v12 (NV21) has
+	// {sector_type, sector_expiry, deal_ids}, but the Go types used to decode it have a
+	// SectorNumber field, so the metadata shows its zero value. 0 is a valid sector number, so
+	// it must not be recorded for v12.
+	//#nosec G115
+	hasSectorNumber := tools.VersionFromHeight(eg.network, int64(tx.Height)).NodeVersion() >= tools.V22.NodeVersion()
+
 	activationIdx := 0
 	for dealIdx := range sectorDeals {
 		if failedActivations[int64(dealIdx)] {
 			continue
 		}
-		sectorNumber, err := getOptionalUint64(exactSectorDeals[dealIdx], KeySectorNumber)
-		if err != nil {
-			return nil, nil, err
+		var sectorNumber *uint64
+		if hasSectorNumber {
+			sectorNumber, err = getOptionalUint64(exactSectorDeals[dealIdx], KeySectorNumber)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 		if err := parseDeals(sectorDeals[dealIdx], activations[activationIdx], sectorNumber); err != nil {
 			return nil, nil, err
