@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
+	"strings"
 
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/tools"
@@ -37,18 +39,29 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 	if err = json.Unmarshal([]byte(tx.TxMetadata), &metadata); err != nil {
 		return nil, nil, err
 	}
+	// The same metadata with numbers kept as json.Number, for the fields added with
+	// SectorContentChanged support (sector numbers can exceed 2^53, which float64 rounds).
+	// The legacy fields keep their float64 decoding.
+	exactMetadata, err := decodeExact(tx.TxMetadata)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// SectorContentChanged params are an array of sectors, not a map, so it is handled before
 	// the map-shaped params of the legacy methods are read.
 	if tx.TxType == parser.MethodSectorContentChanged {
-		dealActivations, dealSpaceInfo, err = eg.parseSectorContentChanged(tx, metadata)
+		dealActivations, err = eg.parseSectorContentChanged(tx, exactMetadata)
 		if err != nil {
 			return nil, nil, err
 		}
-		return dealActivations, dealSpaceInfo, nil
+		return dealActivations, nil, nil
 	}
 
 	params, err := common.GetItem[map[string]interface{}](metadata, KeyParams, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	exactParams, err := common.GetItem[map[string]interface{}](exactMetadata, KeyParams, false)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,7 +82,7 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 		if err != nil {
 			return nil, nil, err
 		}
-		dealActivations, dealSpaceInfo, err = eg.parseActivateDeals(tx, params, ret)
+		dealActivations, dealSpaceInfo, err = eg.parseActivateDeals(tx, params, exactParams, ret)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -188,19 +201,14 @@ func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, p
 	return nil, nil
 }
 
-func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
-	//#nosec G115
-	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
+// parseActivateDeals handles ActivateDeals / BatchActivateDeals. exactParams is params decoded with
+// json.Number, used only for the sector number.
+func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, exactParams, ret map[string]interface{}) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
 	dealActivations := []*types.DealsActivations{}
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
 
-	parseDeals := func(params, ret map[string]interface{}) error {
+	parseDeals := func(params, ret map[string]interface{}, sectorNumber *uint64) error {
 		dealIDs, sectorExpiry, err := eg.getActivationFields(params)
-		if err != nil {
-			return err
-		}
-		// the per-sector params carry the sector number from actors v12 (NV21) on
-		sectorNumber, err := getOptionalUint64(params, KeySectorNumber)
 		if err != nil {
 			return err
 		}
@@ -246,10 +254,14 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		return nil
 	}
 
-	// Before NV21 (mainnet) and NV20(calibration), ActivateDeals uses a flat parameter structure
-	if (eg.network == tools.CalibrationNetwork && version.NodeVersion() <= tools.V20.NodeVersion()) ||
-		(eg.network == tools.MainnetNetwork && version.NodeVersion() <= tools.V21.NodeVersion()) {
-		if err := parseDeals(params, ret); err != nil {
+	// The params are either flat {DealIDs, SectorExpiry} (ActivateDeals up to actors v11) or
+	// {Sectors: [{SectorNumber, SectorType, SectorExpiry, DealIDs}], ComputeCid} (BatchActivateDeals,
+	// actors v12 / NV21 on). Dispatch on the shape the actor parser produced rather than on the
+	// network version: the version cutoff used before was off by one on mainnet (NV21 already has
+	// the sectors shape), and the actor parser falls back to other versions' types when the
+	// height's type fails to decode, so the shape is what the metadata actually holds.
+	if _, ok := params[KeySectors]; !ok {
+		if err := parseDeals(params, ret, nil); err != nil {
 			return nil, nil, err
 		}
 		return dealActivations, dealSpaceInfo, nil
@@ -258,6 +270,13 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 	sectorDeals, err := common.GetSlice[map[string]interface{}](params, KeySectors, false)
 	if err != nil {
 		return nil, nil, err
+	}
+	exactSectorDeals, err := common.GetSlice[map[string]interface{}](exactParams, KeySectors, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(exactSectorDeals) != len(sectorDeals) {
+		return nil, nil, fmt.Errorf("sector count mismatch: %d vs %d", len(exactSectorDeals), len(sectorDeals))
 	}
 	// activations can be nil if all activations failed
 	activations, err := common.GetSlice[map[string]interface{}](ret, KeyActivations, true)
@@ -284,12 +303,27 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		}
 	}
 
+	// one activation per sector that did not fail, in order
+	succeeded := 0
+	for dealIdx := range sectorDeals {
+		if !failedActivations[int64(dealIdx)] {
+			succeeded++
+		}
+	}
+	if len(activations) != succeeded {
+		return nil, nil, fmt.Errorf("return has %d activations, expected %d", len(activations), succeeded)
+	}
+
 	activationIdx := 0
 	for dealIdx := range sectorDeals {
 		if failedActivations[int64(dealIdx)] {
 			continue
 		}
-		if err := parseDeals(sectorDeals[dealIdx], activations[activationIdx]); err != nil {
+		sectorNumber, err := getOptionalUint64(exactSectorDeals[dealIdx], KeySectorNumber)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := parseDeals(sectorDeals[dealIdx], activations[activationIdx], sectorNumber); err != nil {
 			return nil, nil, err
 		}
 		activationIdx++
@@ -370,12 +404,49 @@ func (eg *eventGenerator) isDealActivation(tx *types.Transaction) bool {
 	return false
 }
 
-// getOptionalUint64 returns nil when key is absent.
+// decodeExact decodes metadata keeping numbers as json.Number.
+func decodeExact(metadata string) (map[string]interface{}, error) {
+	decoder := json.NewDecoder(strings.NewReader(metadata))
+	decoder.UseNumber()
+	var out map[string]interface{}
+	if err := decoder.Decode(&out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// exactUint64 reads a json.Number (see decodeExact) as a uint64 without losing precision.
+func exactUint64(value map[string]interface{}, key string) (uint64, error) {
+	number, ok := value[key].(json.Number)
+	if !ok {
+		return 0, fmt.Errorf("key %s is not a number: %T", key, value[key])
+	}
+	v, err := strconv.ParseUint(number.String(), 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("key %s: %w", key, err)
+	}
+	return v, nil
+}
+
+// exactInt64 reads a json.Number (see decodeExact) as an int64 without losing precision.
+func exactInt64(value map[string]interface{}, key string) (int64, error) {
+	number, ok := value[key].(json.Number)
+	if !ok {
+		return 0, fmt.Errorf("key %s is not a number: %T", key, value[key])
+	}
+	v, err := strconv.ParseInt(number.String(), 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("key %s: %w", key, err)
+	}
+	return v, nil
+}
+
+// getOptionalUint64 returns nil when key is absent. value must come from decodeExact.
 func getOptionalUint64(value map[string]interface{}, key string) (*uint64, error) {
 	if value == nil || value[key] == nil {
 		return nil, nil
 	}
-	v, err := common.GetInteger[uint64](value, key, false)
+	v, err := exactUint64(value, key)
 	if err != nil {
 		return nil, err
 	}

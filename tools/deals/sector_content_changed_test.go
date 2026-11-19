@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"os"
 	"sort"
@@ -105,7 +106,6 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 			}
 			expiry := map[uint64]int64{}
 			sectorOf := map[uint64]uint64{}
-			size := map[uint64]uint64{}
 			for _, sector := range sectors {
 				for _, piece := range sector.Added {
 					maj, dealID, err := cbg.CborReadHeader(bytes.NewReader(piece.Payload))
@@ -113,7 +113,6 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 					require.Equal(t, byte(cbg.MajUnsignedInt), maj)
 					expiry[dealID] = int64(sector.MinimumCommitmentEpoch)
 					sectorOf[dealID] = uint64(sector.Sector)
-					size[dealID] = uint64(piece.Size)
 				}
 			}
 
@@ -123,7 +122,9 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 
 			// cross-check: the activations are exactly the deal-activated events of the message
 			require.Equal(t, fixture.DealActivatedEvents, dealIDs(events.DealsActivations))
-			require.Len(t, events.DealsSpaceInfo, len(fixture.DealActivatedEvents))
+			// no space rows for SectorContentChanged (see parseSectorContentChanged)
+			require.Empty(t, events.DealsSpaceInfo)
+			require.Len(t, events.DealsMessages, 1)
 
 			ids := map[string]bool{}
 			for _, activation := range events.DealsActivations {
@@ -136,12 +137,6 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 				require.Equal(t, expiry[activation.DealID], activation.SectorExpiry)
 				require.NotNil(t, activation.SectorNumber)
 				require.Equal(t, sectorOf[activation.DealID], *activation.SectorNumber)
-			}
-			for _, space := range events.DealsSpaceInfo {
-				require.Equal(t, []uint64{space.DealID}, space.GroupDealIDs)
-				require.Equal(t, new(big.Int).SetUint64(size[space.DealID]), space.NonVerifiedDealSpace)
-				require.Equal(t, big.NewInt(0), space.VerifiedDealSpace)
-				require.False(t, space.SpaceAsWeight)
 			}
 		})
 	}
@@ -258,7 +253,7 @@ func TestSectorContentChanged_Crafted(t *testing.T) {
 			events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{tx}, tipsetCid, filTypes.EmptyTSK)
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedDeals, dealIDs(events.DealsActivations))
-			require.Len(t, events.DealsSpaceInfo, len(tt.expectedDeals))
+			require.Empty(t, events.DealsSpaceInfo)
 			if tt.parentFailed {
 				require.Empty(t, events.DealsMessages)
 			} else {
@@ -317,18 +312,80 @@ func TestSectorContentChanged_ReturnShapes(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []uint64{100}, dealIDs(events.DealsActivations))
 	})
-	t.Run("legacy flat return with several sectors is ambiguous", func(t *testing.T) {
-		_, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{tx(`{"MethodNum":"2034386435","Params":` + params(2) + `,"Return":[true]}`)}, tipsetCid, filTypes.EmptyTSK)
-		require.Error(t, err)
+	// Metadata stored by parsers before the decoder fix, or otherwise unusable: no activations
+	// (missing flags are never guessed), no error, and the message row is still emitted.
+	unusable := []struct {
+		name     string
+		metadata string
+	}{
+		{"legacy flat return with several sectors", `{"MethodNum":"2034386435","Params":` + params(2) + `,"Return":[true]}`},
+		{"legacy empty return", `{"MethodNum":"2034386435","Params":` + params(1) + `,"Return":[]}`},
+		{"missing return", `{"MethodNum":"2034386435","Params":` + params(1) + `}`},
+		{"raw-only metadata", `{"MethodNum":"2034386435","ParamsRaw":"gQ==","ReturnRaw":"gQ=="}`},
+		{"return with fewer sectors than params", `{"MethodNum":"2034386435","Params":` + params(2) + `,"Return":[[true]]}`},
+		{"return with fewer pieces than params", `{"MethodNum":"2034386435","Params":` + params(1) + `,"Return":[[]]}`},
+		{"params not an array", `{"MethodNum":"2034386435","Params":{"Sector":1},"Return":[[true]]}`},
+	}
+	for _, tt := range unusable {
+		t.Run(tt.name, func(t *testing.T) {
+			events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{tx(tt.metadata)}, tipsetCid, filTypes.EmptyTSK)
+			require.NoError(t, err)
+			require.Empty(t, events.DealsActivations)
+			require.Empty(t, events.DealsSpaceInfo)
+			require.Len(t, events.DealsMessages, 1)
+		})
+	}
+
+	t.Run("an unusable tx does not affect the other txs of the height", func(t *testing.T) {
+		bad := tx(`{"MethodNum":"2034386435","Params":` + params(2) + `,"Return":[true]}`)
+		bad.Id = "bad"
+		good := tx(`{"MethodNum":"2034386435","Params":` + params(1) + `,"Return":[[true]]}`)
+		good.Id = "good"
+		events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{bad, good}, tipsetCid, filTypes.EmptyTSK)
+		require.NoError(t, err)
+		require.Equal(t, []uint64{100}, dealIDs(events.DealsActivations))
+		require.Len(t, events.DealsMessages, 2)
 	})
-	t.Run("return with fewer sectors than params", func(t *testing.T) {
-		_, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{tx(`{"MethodNum":"2034386435","Params":` + params(2) + `,"Return":[[true]]}`)}, tipsetCid, filTypes.EmptyTSK)
-		require.Error(t, err)
-	})
-	t.Run("return with fewer pieces than params", func(t *testing.T) {
-		_, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{tx(`{"MethodNum":"2034386435","Params":` + params(1) + `,"Return":[[]]}`)}, tipsetCid, filTypes.EmptyTSK)
-		require.Error(t, err)
-	})
+}
+
+func TestSectorContentChanged_SectorNumberPrecision(t *testing.T) {
+	eg, node := setupTest(t, "mainnet")
+	ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+
+	// 2^53 + 1 and MaxInt64 are not representable as float64
+	for _, sector := range []uint64{9007199254740993, 9223372036854775807} {
+		metadata := fmt.Sprintf(`{"MethodNum":"2034386435","Params":[{"Sector":%d,"MinimumCommitmentEpoch":9007199254740993,"Added":[{"Data":{"/":"baga6ea4seaqpol3htxs5b2iwsvzqssuuzvld6a3g445gn6axaumw4yzuvkmvgei"},"Size":2048,"Payload":"GGQ="}]}],"Return":[[true]]}`, sector)
+		events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{{
+			TxBasicBlockData: types.TxBasicBlockData{BasicBlockData: types.BasicBlockData{Height: 6559222}},
+			TxCid:            txCid,
+			TxType:           parser.MethodSectorContentChanged,
+			TxFrom:           "f03046733",
+			TxTo:             txTo,
+			TxMetadata:       metadata,
+			Status:           tools.GetExitCodeOK(),
+			SubcallStatus:    tools.GetExitCodeOK(),
+		}}, tipsetCid, filTypes.EmptyTSK)
+		require.NoError(t, err)
+		require.Len(t, events.DealsActivations, 1)
+		require.Equal(t, sector, *events.DealsActivations[0].SectorNumber)
+		require.Equal(t, int64(9007199254740993), events.DealsActivations[0].SectorExpiry)
+	}
+
+	// BatchActivateDeals sector number
+	metadata := `{"MethodNum":"6","Params":{"Sectors":[{"SectorNumber":9007199254740993,"SectorType":8,"SectorExpiry":5388210,"DealIDs":[79174788]}],"ComputeCID":false},"Return":{"ActivationResults":{"SuccessCount":1,"FailCodes":null},"Activations":[{"NonVerifiedDealSpace":"0","VerifiedInfos":[],"UnsealedCid":{}}]}}`
+	events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{{
+		TxBasicBlockData: types.TxBasicBlockData{BasicBlockData: types.BasicBlockData{Height: 3857651}},
+		TxCid:            txCid,
+		TxType:           parser.MethodBatchActivateDeals,
+		TxFrom:           txFrom,
+		TxTo:             txTo,
+		TxMetadata:       metadata,
+		Status:           tools.GetExitCodeOK(),
+		SubcallStatus:    tools.GetExitCodeOK(),
+	}}, tipsetCid, filTypes.EmptyTSK)
+	require.NoError(t, err)
+	require.Len(t, events.DealsActivations, 1)
+	require.Equal(t, uint64(9007199254740993), *events.DealsActivations[0].SectorNumber)
 }
 
 // BatchActivateDeals is the name of market method 6 from actors v12 (NV21) on; it is still called by

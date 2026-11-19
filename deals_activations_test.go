@@ -157,16 +157,10 @@ func TestParser_DealActivationsMatchDealActivatedEvents(t *testing.T) {
 				ids[activation.ID] = true
 			}
 
-			spaceDeals := map[uint64]bool{}
+			// SectorContentChanged produces no space rows (see parseSectorContentChanged)
 			for _, space := range events.DealsSpaceInfo {
-				if space.ActionType != parser.MethodSectorContentChanged {
-					continue
-				}
-				require.Falsef(t, spaceDeals[space.DealID], "deal %d has two space rows", space.DealID)
-				spaceDeals[space.DealID] = true
-				require.Positive(t, space.NonVerifiedDealSpace.Sign())
+				require.NotEqual(t, parser.MethodSectorContentChanged, space.ActionType)
 			}
-			require.Len(t, spaceDeals, tt.sectorContentChanged)
 		})
 	}
 }

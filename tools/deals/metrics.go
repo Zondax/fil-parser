@@ -24,13 +24,14 @@ func newClient(metricsClient metrics.MetricsClient, name string) *dealsMetricsCl
 		name:          name,
 	}
 
-	s.registerModuleMetrics(actorNameFromAddressMetric)
+	s.registerModuleMetrics(actorNameFromAddressMetric, skippedActivationsMetric)
 
 	return s
 }
 
 const (
 	actorNameFromAddress = "fil-parser_deals_actor_name_from_address"
+	skippedActivations   = "fil-parser_deals_skipped_activations"
 )
 
 var (
@@ -38,6 +39,12 @@ var (
 		Name:    actorNameFromAddress,
 		Help:    "get actor name from address",
 		Labels:  []string{},
+		Handler: &collectors.Gauge{},
+	}
+	skippedActivationsMetric = metrics.Metric{
+		Name:    skippedActivations,
+		Help:    "transactions whose deal activations were skipped because their metadata was missing or unusable",
+		Labels:  []string{"tx_type"},
 		Handler: &collectors.Gauge{},
 	}
 )
@@ -63,4 +70,8 @@ func (c *dealsMetricsClient) UpdateMetric(name string, value float64, labels ...
 
 func (c *dealsMetricsClient) UpdateActorNameFromAddressMetric() error {
 	return c.IncrementMetric(actorNameFromAddress)
+}
+
+func (c *dealsMetricsClient) UpdateSkippedActivationsMetric(txType string) error {
+	return c.IncrementMetric(skippedActivations, txType)
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"math/big"
 
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"github.com/zondax/fil-parser/tools"
@@ -34,49 +33,48 @@ const (
 //
 // So a row is emitted for each piece whose flag is true and whose payload decodes as a DealID.
 // Rejected pieces are skipped, as are pieces whose payload is not a DealID (the market never
-// accepts those).
+// accepts those). Missing or ambiguous accepted flags are an error: they are never guessed.
 //
 // SectorExpiry is the sector's minimum_commitment_epoch, which the miner fills with the sector
 // expiration (actors/miner/src/notifications.rs), i.e. the same value as the legacy SectorExpiry.
+// SectorNumber is the notified sector.
 //
-// The space row carries the piece's padded size in NonVerifiedDealSpace, which on these rows is the
-// deal's whole size whether it is verified or not, and VerifiedDealSpace is 0. Whether a deal is
-// verified is not derivable from this call without a state lookup (from v19 the proposal flag no
-// longer determines verified power at all); use the deal proposal for that.
-func (eg *eventGenerator) parseSectorContentChanged(tx *types.Transaction, metadata map[string]interface{}) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
+// No DealsSpaceInfo rows are emitted for this path: the call carries the piece size but not
+// whether the deal is verified, and the legacy rows hold per-sector totals (sometimes weights),
+// so per-deal rows would not be comparable with them. The activation row plus the deal proposal
+// (piece size, verified) carry everything needed.
+//
+// metadata must come from decodeExact.
+func (eg *eventGenerator) parseSectorContentChanged(tx *types.Transaction, metadata map[string]interface{}) ([]*types.DealsActivations, error) {
 	sectors, err := common.GetSlice[map[string]interface{}](metadata, KeyParams, true)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error parsing sector content changed params: %w", err)
+		return nil, fmt.Errorf("error parsing sector content changed params: %w", err)
 	}
 	if len(sectors) == 0 {
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	accepted, err := sectorContentChangedAccepted(metadata[KeyReturn], len(sectors))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	dealActivations := []*types.DealsActivations{}
-	dealSpaceInfo := []*types.DealsSpaceInfo{}
 	for i, sector := range sectors {
-		sectorNumber, err := common.GetInteger[uint64](sector, KeySector, false)
+		sectorNumber, err := exactUint64(sector, KeySector)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error parsing sector %d number: %w", i, err)
+			return nil, fmt.Errorf("error parsing sector %d number: %w", i, err)
 		}
-		minimumCommitmentEpoch, err := common.GetInteger[int64](sector, KeyMinimumCommitmentEpoch, false)
+		minimumCommitmentEpoch, err := exactInt64(sector, KeyMinimumCommitmentEpoch)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error parsing sector %d minimum commitment epoch: %w", i, err)
+			return nil, fmt.Errorf("error parsing sector %d minimum commitment epoch: %w", i, err)
 		}
 		pieces, err := common.GetSlice[map[string]interface{}](sector, KeyAdded, true)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error parsing sector %d pieces: %w", i, err)
-		}
-		if i >= len(accepted) {
-			return nil, nil, fmt.Errorf("sector content changed return has no entry for sector %d", i)
+			return nil, fmt.Errorf("error parsing sector %d pieces: %w", i, err)
 		}
 		if len(accepted[i]) != len(pieces) {
-			return nil, nil, fmt.Errorf("sector content changed return for sector %d has %d entries, expected %d", i, len(accepted[i]), len(pieces))
+			return nil, fmt.Errorf("sector content changed return for sector %d has %d entries, expected %d", i, len(accepted[i]), len(pieces))
 		}
 
 		for j, piece := range pieces {
@@ -85,20 +83,15 @@ func (eg *eventGenerator) parseSectorContentChanged(tx *types.Transaction, metad
 			}
 			dealID, ok, err := pieceDealID(piece)
 			if err != nil {
-				return nil, nil, fmt.Errorf("error parsing sector %d piece %d: %w", i, j, err)
+				return nil, fmt.Errorf("error parsing sector %d piece %d: %w", i, j, err)
 			}
 			if !ok {
 				eg.logger.Warnf("accepted piece without a deal id payload, tx cid %s sector %d piece %d", tx.TxCid, i, j)
 				continue
 			}
-			size, err := common.GetInteger[uint64](piece, KeySize, false)
-			if err != nil {
-				return nil, nil, fmt.Errorf("error parsing sector %d piece %d size: %w", i, j, err)
-			}
 
-			id := tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID))
 			dealActivations = append(dealActivations, &types.DealsActivations{
-				ID:           id,
+				ID:           tools.BuildId(tx.TxCid, tx.TxFrom, tx.TxTo, fmt.Sprint(tx.Height), tx.TxType, fmt.Sprint(dealID)),
 				ActorAddress: tx.TxFrom,
 				Height:       tx.Height,
 				TxCid:        tx.TxCid,
@@ -108,27 +101,16 @@ func (eg *eventGenerator) parseSectorContentChanged(tx *types.Transaction, metad
 				ActionType:   tx.TxType,
 				TxTimestamp:  tx.TxTimestamp,
 			})
-			dealSpaceInfo = append(dealSpaceInfo, &types.DealsSpaceInfo{
-				ID:                   id,
-				Height:               tx.Height,
-				ActorAddress:         tx.TxFrom,
-				TxCid:                tx.TxCid,
-				DealID:               dealID,
-				GroupDealIDs:         []uint64{dealID},
-				NonVerifiedDealSpace: new(big.Int).SetUint64(size),
-				VerifiedDealSpace:    big.NewInt(0),
-				ActionType:           tx.TxType,
-				TxTimestamp:          tx.TxTimestamp,
-			})
 		}
 	}
 
-	return dealActivations, dealSpaceInfo, nil
+	return dealActivations, nil
 }
 
 // sectorContentChangedAccepted reads the per-sector, per-piece accepted flags.
 // The return is [[bool]] (one array per sector). Parsers before the fix stored only the first
-// sector's flags as a flat [bool]; that shape is only unambiguous for a single sector.
+// sector's flags as a flat [bool]. With a single sector that flat array is exactly that sector's
+// flags; with more sectors the other sectors' flags were lost, so it is an error (never guessed).
 func sectorContentChangedAccepted(ret interface{}, sectors int) ([][]bool, error) {
 	values, ok := ret.([]interface{})
 	if !ok {
