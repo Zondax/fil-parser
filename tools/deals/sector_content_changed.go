@@ -60,6 +60,10 @@ func (eg *eventGenerator) parseSectorContentChanged(tx *types.Transaction, metad
 	dealActivations := []*types.DealsActivations{}
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
 	for i, sector := range sectors {
+		sectorNumber, err := common.GetInteger[uint64](sector, KeySector, false)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing sector %d number: %w", i, err)
+		}
 		minimumCommitmentEpoch, err := common.GetInteger[int64](sector, KeyMinimumCommitmentEpoch, false)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error parsing sector %d minimum commitment epoch: %w", i, err)
@@ -100,6 +104,7 @@ func (eg *eventGenerator) parseSectorContentChanged(tx *types.Transaction, metad
 				TxCid:        tx.TxCid,
 				DealID:       dealID,
 				SectorExpiry: minimumCommitmentEpoch,
+				SectorNumber: &sectorNumber,
 				ActionType:   tx.TxType,
 				TxTimestamp:  tx.TxTimestamp,
 			})

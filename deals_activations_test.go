@@ -53,6 +53,11 @@ func dealActivatedEventIDs(t *testing.T, events []*filTypes.ActorEvent) []uint64
 // TestParser_DealActivationsMatchDealActivatedEvents parses whole tipsets and checks that the set of
 // deal activations equals the set of `deal-activated` events the node reports for the tipset, and
 // that no deal is emitted twice.
+//
+// Lotus indexes only events from explicit messages, not from implicit ones such as cron. Activations
+// under cron (e.g. ConfirmSectorProofsValid -> BatchActivateDeals in actors v13) have no indexed
+// event, so the fixtures are tipsets whose activations all come from explicit ProveCommitSectors3 /
+// ProveReplicaUpdates3 messages.
 func TestParser_DealActivationsMatchDealActivatedEvents(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -138,6 +143,7 @@ func TestParser_DealActivationsMatchDealActivatedEvents(t *testing.T) {
 				got = append(got, activation.DealID)
 				if activation.ActionType == parser.MethodSectorContentChanged {
 					sectorContentChanged++
+					require.NotNilf(t, activation.SectorNumber, "deal %d has no sector number", activation.DealID)
 				}
 			}
 			sort.Slice(want, func(i, j int) bool { return want[i] < want[j] })

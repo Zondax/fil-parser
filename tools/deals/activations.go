@@ -23,6 +23,7 @@ const (
 	KeyNonVerifiedDealSpace = "NonVerifiedDealSpace"
 	KeyVerifiedInfos        = "VerifiedInfos"
 	KeySize                 = "Size"
+	KeySectorNumber         = "SectorNumber"
 )
 
 func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Transaction) ([]*types.DealsActivations, []*types.DealsSpaceInfo, error) {
@@ -198,6 +199,11 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 		if err != nil {
 			return err
 		}
+		// the per-sector params carry the sector number from actors v12 (NV21) on
+		sectorNumber, err := getOptionalUint64(params, KeySectorNumber)
+		if err != nil {
+			return err
+		}
 
 		for _, dealID := range dealIDs {
 			dealActivations = append(dealActivations, &types.DealsActivations{
@@ -207,6 +213,7 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, ret 
 				TxCid:        tx.TxCid,
 				DealID:       dealID,
 				SectorExpiry: sectorExpiry,
+				SectorNumber: sectorNumber,
 				ActionType:   tx.TxType,
 				TxTimestamp:  tx.TxTimestamp,
 			})
@@ -361,4 +368,16 @@ func (eg *eventGenerator) isDealActivation(tx *types.Transaction) bool {
 	}
 
 	return false
+}
+
+// getOptionalUint64 returns nil when key is absent.
+func getOptionalUint64(value map[string]interface{}, key string) (*uint64, error) {
+	if value == nil || value[key] == nil {
+		return nil, nil
+	}
+	v, err := common.GetInteger[uint64](value, key, false)
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
 }

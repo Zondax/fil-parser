@@ -104,6 +104,7 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 				sectors = append(sectors, sector)
 			}
 			expiry := map[uint64]int64{}
+			sectorOf := map[uint64]uint64{}
 			size := map[uint64]uint64{}
 			for _, sector := range sectors {
 				for _, piece := range sector.Added {
@@ -111,6 +112,7 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 					require.NoError(t, err)
 					require.Equal(t, byte(cbg.MajUnsignedInt), maj)
 					expiry[dealID] = int64(sector.MinimumCommitmentEpoch)
+					sectorOf[dealID] = uint64(sector.Sector)
 					size[dealID] = uint64(piece.Size)
 				}
 			}
@@ -132,6 +134,8 @@ func TestSectorContentChanged_RealFixtures(t *testing.T) {
 				require.Equal(t, fixture.Height, activation.Height)
 				require.Equal(t, parser.MethodSectorContentChanged, activation.ActionType)
 				require.Equal(t, expiry[activation.DealID], activation.SectorExpiry)
+				require.NotNil(t, activation.SectorNumber)
+				require.Equal(t, sectorOf[activation.DealID], *activation.SectorNumber)
 			}
 			for _, space := range events.DealsSpaceInfo {
 				require.Equal(t, []uint64{space.DealID}, space.GroupDealIDs)
@@ -262,15 +266,19 @@ func TestSectorContentChanged_Crafted(t *testing.T) {
 			}
 
 			minimumCommitment := map[uint64]int64{}
+			sectorOf := map[uint64]uint64{}
 			for _, sector := range tt.sectors {
 				for _, p := range sector.Added {
 					if maj, dealID, err := cbg.CborReadHeader(bytes.NewReader(p.Payload)); err == nil && maj == cbg.MajUnsignedInt {
 						minimumCommitment[dealID] = int64(sector.MinimumCommitmentEpoch)
+						sectorOf[dealID] = uint64(sector.Sector)
 					}
 				}
 			}
 			for _, activation := range events.DealsActivations {
 				require.Equal(t, minimumCommitment[activation.DealID], activation.SectorExpiry)
+				require.NotNil(t, activation.SectorNumber)
+				require.Equal(t, sectorOf[activation.DealID], *activation.SectorNumber)
 			}
 		})
 	}
@@ -343,6 +351,29 @@ func TestBatchActivateDealsIsProcessed(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, events.DealsMessages, 1)
 	require.Equal(t, []uint64{79174788}, dealIDs(events.DealsActivations))
+	require.NotNil(t, events.DealsActivations[0].SectorNumber)
+	require.Equal(t, uint64(5839), *events.DealsActivations[0].SectorNumber)
+	require.Equal(t, int64(5388210), events.DealsActivations[0].SectorExpiry)
 	require.Len(t, events.DealsSpaceInfo, 1)
 	require.Equal(t, big.NewInt(34359738368), events.DealsSpaceInfo[0].VerifiedDealSpace)
+}
+
+// ActivateDeals params before actors v12 carry no sector number.
+func TestActivateDealsWithoutSectorNumber(t *testing.T) {
+	eg, node := setupTest(t, "mainnet")
+	ctx := parserContext.SetNodes(t.Context(), []api.FullNode{node})
+
+	events, err := eg.GenerateDealsEvents(ctx, []*types.Transaction{{
+		TxBasicBlockData: types.TxBasicBlockData{BasicBlockData: types.BasicBlockData{Height: 2383680}},
+		TxCid:            txCid,
+		TxType:           parser.MethodActivateDeals,
+		TxFrom:           txFrom,
+		TxTo:             txTo,
+		TxMetadata:       `{"MethodNum":"6","Params":{"DealIDs":[17507589],"SectorExpiry":3937912}}`,
+		Status:           tools.GetExitCodeOK(),
+		SubcallStatus:    tools.GetExitCodeOK(),
+	}}, tipsetCid, filTypes.EmptyTSK)
+	require.NoError(t, err)
+	require.Equal(t, []uint64{17507589}, dealIDs(events.DealsActivations))
+	require.Nil(t, events.DealsActivations[0].SectorNumber)
 }
