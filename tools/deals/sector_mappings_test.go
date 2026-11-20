@@ -247,30 +247,45 @@ func TestReplicaUpdateMappings_DuplicateSector(t *testing.T) {
 }
 
 // From actors v13 (NV22) on the mappings come from the activations, which carry the sector
-// number; replica updates and pre-commits sent to the miner map nothing.
+// number; replica updates and pre-commits sent to the miner map nothing. The tipset at the upgrade
+// height still runs actors v12 (its deals are activated by v12 BatchActivateDeals, without a
+// sector), so its replica updates and pre-commits do map.
 func TestSectorMappings_NV22Boundary(t *testing.T) {
 	updates := []update{{10, []uint64{1}}}
+	preCommit := `{"MethodNum":"6","Params":{"SealProof":8,"SectorNumber":30,"DealIDs":[7],"Expiration":1}}`
 	for _, tt := range []struct {
-		network        string
-		lastV12, first uint64
+		network                   string
+		before, upgrade, firstV13 uint64
 	}{
-		{tools.MainnetNetwork, 3855359, 3855360},
-		{tools.CalibrationNetwork, 1427973, 1427974},
+		{tools.MainnetNetwork, 3855359, 3855360, 3855361},
+		{tools.CalibrationNetwork, 1427973, 1427974, 1427975},
 	} {
 		t.Run(tt.network, func(t *testing.T) {
-			events := generateWithMiner(t, tt.network,
-				replicaUpdateTx(t, tt.network, tt.lastV12, "a", true, replicaUpdatesParams(t, updates, true), bitfieldCBOR(t, 10)),
-				minerTx(tt.lastV12, "b", parser.MethodPreCommitSector, `{"MethodNum":"6","Params":{"SealProof":8,"SectorNumber":30,"DealIDs":[7],"Expiration":1}}`),
-			)
-			require.Equal(t, []mapping{{10, 1}, {30, 7}}, mappings(t, events))
+			for _, height := range []uint64{tt.before, tt.upgrade} {
+				events := generateWithMiner(t, tt.network,
+					replicaUpdateTx(t, tt.network, height, "a", true, replicaUpdatesParams(t, updates, true), bitfieldCBOR(t, 10)),
+					minerTx(height, "b", parser.MethodPreCommitSector, preCommit),
+				)
+				require.Equalf(t, []mapping{{10, 1}, {30, 7}}, mappings(t, events), "height %d", height)
+			}
 
-			events = generateWithMiner(t, tt.network,
-				replicaUpdateTx(t, tt.network, tt.first, "a", true, replicaUpdatesParams(t, updates, true), bitfieldCBOR(t, 10)),
-				minerTx(tt.first, "b", parser.MethodPreCommitSector, `{"MethodNum":"6","Params":{"SealProof":8,"SectorNumber":30,"DealIDs":[7],"Expiration":1}}`),
+			events := generateWithMiner(t, tt.network,
+				replicaUpdateTx(t, tt.network, tt.firstV13, "a", true, replicaUpdatesParams(t, updates, true), bitfieldCBOR(t, 10)),
+				minerTx(tt.firstV13, "b", parser.MethodPreCommitSector, preCommit),
 			)
 			require.Empty(t, events.DealsSectorMappings)
 		})
 	}
+}
+
+// A (sector, deal) repeated in one call gives one row (it would carry the same id).
+func TestSectorMappings_RepeatedPairInOneCall(t *testing.T) {
+	events := generateWithMiner(t, tools.MainnetNetwork,
+		minerTx(2907480, "a", parser.MethodPreCommitSectorBatch, `{"MethodNum":"25","Params":{"Sectors":[{"SectorNumber":40,"DealIDs":[1,1,2]}]}}`),
+		minerTx(2907480, "b", parser.MethodPreCommitSectorBatch, `{"MethodNum":"25","Params":{"Sectors":[{"SectorNumber":40,"DealIDs":[1]}]}}`),
+	)
+	// the second tx keeps its own row, with a distinct id
+	require.Equal(t, []mapping{{40, 1}, {40, 1}, {40, 2}}, mappings(t, events))
 }
 
 // Unusable metadata never fails the height: the tx's mappings are skipped and the other txs are
@@ -339,4 +354,62 @@ func TestActivationMappings(t *testing.T) {
 		require.Equal(t, minerAddr, m.ActorAddress)
 		require.Equal(t, parser.MethodActivateDeals, m.ActionType)
 	}
+}
+
+// joinTerminatedDeals is the downstream join, on the parser's own rows: a termination with a deal
+// id (actors v12 and the NV22 upgrade tipset) is that deal; a termination with a sector (actors
+// v13+) is every deal mapped to (actor_address, sector_number). Distinct deal ids.
+func joinTerminatedDeals(events *types.DealsEvents) []uint64 {
+	type key struct {
+		miner  string
+		sector uint64
+	}
+	mapped := map[key][]uint64{}
+	for _, m := range events.DealsSectorMappings {
+		k := key{m.ActorAddress, m.SectorNumber}
+		mapped[k] = append(mapped[k], m.DealID)
+	}
+	deals := map[uint64]bool{}
+	for _, t := range events.DealsTerminations {
+		if t.DealID != nil {
+			deals[*t.DealID] = true
+			continue
+		}
+		for _, d := range mapped[key{t.ActorAddress, *t.SectorNumber}] {
+			deals[d] = true
+		}
+	}
+	out := []uint64{}
+	for d := range deals {
+		out = append(out, d)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// The parser's own mappings join its own terminations, across eras: deals mapped before NV22 by a
+// SnapDeals update and by a pre-commit, and a deal activated after NV22 with its sector, are found
+// from one post-NV22 sector termination of the same miner. Synthetic: no real pair of a pre-NV22
+// mapping and a later termination of the same sector is in the fixtures. The values of the SnapDeals
+// update are the real f01919423 update at mainnet 3,573,062 (sector 17923, deal 69334621).
+func TestSectorMappings_JoinTerminations(t *testing.T) {
+	snap := replicaUpdateTx(t, tools.MainnetNetwork, 3573062, "snap", false,
+		replicaUpdatesParams(t, []update{{17923, []uint64{69334621}}, {17924, []uint64{69334622}}}, false), bitfieldCBOR(t, 17923))
+	preCommit := minerTx(2907480, "precommit", parser.MethodPreCommitSector, `{"MethodNum":"6","Params":{"SealProof":8,"SectorNumber":40,"DealIDs":[1,2],"Expiration":1}}`)
+	// actors v13 BatchActivateDeals: sectors 37656 and 37888 (the third sector failed)
+	activation := okTx(3857557, "activation", parser.MethodBatchActivateDeals, sectorsActivateDealsMetadata)
+	activation.TxFrom = minerAddr
+	// a v12 termination with deal ids, for another miner
+	v12 := terminateTx(t, tools.MainnetNetwork, 3000000, "v12", dealIDsTerminateParams(t, 2999990, []uint64{500}))
+	v12.TxFrom = "f01000"
+	// one post-NV22 termination of: the SnapDeals sector, the pre-commit sector, the v13 activation
+	// sector, the sector whose update failed, and a sector that never had deals
+	v13 := terminateTx(t, tools.MainnetNetwork, 6539228, "v13", sectorsTerminateParams(t, 6539228, bitfield.NewFromSet([]uint64{17923, 40, 37656, 17924, 999})))
+	v13.TxFrom = minerAddr
+	// the same sectors terminated by another miner map nothing
+	other := terminateTx(t, tools.MainnetNetwork, 6539228, "other", sectorsTerminateParams(t, 6539228, bitfield.NewFromSet([]uint64{17923, 40})))
+	other.TxFrom = "f09999"
+
+	events := generateWithMiner(t, tools.MainnetNetwork, snap, preCommit, activation, v12, v13, other)
+	require.Equal(t, []uint64{1, 2, 500, 69334621, 78950968}, joinTerminatedDeals(events))
 }

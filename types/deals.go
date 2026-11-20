@@ -102,7 +102,9 @@ type DealsSpaceInfo struct {
 //
 // From actors v13 (NV22) the call carries the terminated sectors instead: there is one row per
 // sector, with SectorNumber set and DealID nil. Downstream maps (ActorAddress, SectorNumber) to
-// deals through DealsActivations.SectorNumber, and applies the same end_epoch filter.
+// deals through DealsSectorMappings, and applies the same end_epoch filter. Actors v13 executes
+// from the tipset after the NV22 upgrade height; the upgrade tipset itself still runs v12 and
+// produces deal id rows.
 type DealsTerminations struct {
 	ID     string `json:"id"`
 	Height uint64 `json:"height"`
@@ -133,6 +135,9 @@ type DealsTerminations struct {
 //     update the return reports as successful (the sector's deal ids are replaced by them);
 //   - every DealsActivations row that has a SectorNumber (SectorContentChanged, and
 //     BatchActivateDeals from actors v13), copied so downstream needs no second source.
+//
+// "Before actors v13" means tipsets executed by actors v12 or older, which includes the tipset at
+// the NV22 upgrade height (the migration runs before the next tipset's messages).
 //
 // These rows are not activations: they are never counted as deal space. The same
 // (actor_address, sector_number, deal_id) can appear more than once (e.g. pre-committed before

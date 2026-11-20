@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/zondax/fil-parser/parser"
@@ -24,7 +25,7 @@ const (
 )
 
 func (eg *eventGenerator) isDealTermination(tx *types.Transaction) bool {
-	return tx.TxType == parser.MethodOnMinerSectorsTerminate
+	return strings.EqualFold(tx.TxType, parser.MethodOnMinerSectorsTerminate)
 }
 
 // createDealTerminations builds the rows of a market OnMinerSectorsTerminate call. The caller has
@@ -43,7 +44,12 @@ func (eg *eventGenerator) isDealTermination(tx *types.Transaction) bool {
 // has the proposals.
 //
 // The shape the actor parser produced is used, not the network version: the metadata holds
-// `DealIDs` for the first shape and `SectorBitField` (or `SectorNumbers`) for the second.
+// `DealIDs` for the first shape and `SectorBitField` for the second. The actor parser decodes the
+// tipset at the NV22 upgrade height with the v13 type, but that tipset still ran actors v12 (see
+// executedNodeVersion), so its calls carry deal ids, which the v13 type reads as a CBOR array
+// (`SectorNumbers`). No v13+ market accepts an array (its params are a BitField), so in a
+// successful call an array is always the v12 deal ids. Duplicate ids in one call are emitted once
+// (the v12 market skips the repeat as already slashed).
 func (eg *eventGenerator) createDealTerminations(tx *types.Transaction) ([]*types.DealsTerminations, error) {
 	metadata, err := decodeExact(tx.TxMetadata)
 	if err != nil {
@@ -70,13 +76,24 @@ func (eg *eventGenerator) createDealTerminations(tx *types.Transaction) ([]*type
 		}
 	}
 
+	dealIDsKey := ""
 	if _, ok := params[KeyDealIDs]; ok {
-		dealIDs, err := exactUint64Slice(params[KeyDealIDs])
+		dealIDsKey = KeyDealIDs
+	} else if numbers, ok := params[KeySectorNumbers].([]interface{}); ok && len(numbers) > 0 {
+		dealIDsKey = KeySectorNumbers
+	}
+	if dealIDsKey != "" {
+		dealIDs, err := exactUint64Slice(params[dealIDsKey])
 		if err != nil {
 			return nil, fmt.Errorf("error parsing deal ids: %w", err)
 		}
 		terminations := make([]*types.DealsTerminations, 0, len(dealIDs))
+		seen := make(map[uint64]bool, len(dealIDs))
 		for _, dealID := range dealIDs {
+			if seen[dealID] {
+				continue
+			}
+			seen[dealID] = true
 			row := newRow("deal", dealID)
 			row.DealID = &dealID
 			terminations = append(terminations, row)
@@ -99,21 +116,11 @@ func (eg *eventGenerator) createDealTerminations(tx *types.Transaction) ([]*type
 
 // terminatedSectors reads the sectors of the actors v13+ params, which the actor parser stores as
 // `SectorBitField` in the bitfield's JSON form (run lengths, go-bitfield RLE MarshalJSON).
-//
-// The actor parser's v13+ type also decodes a CBOR array, as `SectorNumbers`. No v13+ market can
-// accept that (its params are a BitField), so a successful call with an array was executed with
-// the pre-v13 {epoch, deal_ids} params and the array would be deal ids, not sectors. That means
-// the height's actors version disagrees with the chain; it is reported as an error (the tx is
-// skipped and counted), never guessed.
 // params must come from decodeExact.
 func terminatedSectors(params map[string]interface{}) ([]uint64, error) {
-	if numbers, ok := params[KeySectorNumbers].([]interface{}); ok && len(numbers) > 0 {
-		return nil, fmt.Errorf("params carry an array (%s) instead of a sector bitfield", KeySectorNumbers)
-	}
-
 	raw, ok := params[KeySectorBitField]
 	if !ok || raw == nil {
-		return nil, fmt.Errorf("params have neither %s, %s nor %s", KeyDealIDs, KeySectorBitField, KeySectorNumbers)
+		return nil, fmt.Errorf("params have neither %s, %s nor %s", KeyDealIDs, KeySectorNumbers, KeySectorBitField)
 	}
 	sectors, err := decodeBitfieldJSON(raw, maxTerminatedSectors)
 	if err != nil {

@@ -59,11 +59,18 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 	dealsSpaceInfoIds := tools.NewEventIds()
 	dealsTerminationsIds := tools.NewEventIds()
 	dealsSectorMappingsIds := tools.NewEventIds()
+	// appendMappings drops a (miner, sector, deal) repeated within one tx (e.g. a deal listed twice
+	// in a pre-commit): the row would carry the same id.
 	appendMappings := func(tx *types.Transaction, mappings []*types.DealsSectorMappings) {
-		for i := range mappings {
-			mappings[i].ID = dealsSectorMappingsIds.Unique(mappings[i].ID, tx.Id)
+		seen := make(map[string]bool, len(mappings))
+		for _, mapping := range mappings {
+			if seen[mapping.ID] {
+				continue
+			}
+			seen[mapping.ID] = true
+			mapping.ID = dealsSectorMappingsIds.Unique(mapping.ID, tx.Id)
+			events.DealsSectorMappings = append(events.DealsSectorMappings, mapping)
 		}
-		events.DealsSectorMappings = append(events.DealsSectorMappings, mappings...)
 	}
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {

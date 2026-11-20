@@ -62,8 +62,8 @@ func terminationEvents(t *testing.T, events []*filTypes.ActorEvent) (map[uint64]
 //   - every row is a terminated sector of its miner (`sector-terminated` event);
 //   - every deal the market terminated (`deal-terminated` event) is in a terminated sector of its
 //     provider. The deal -> sector mapping was read from the node (StateMarketStorageDeal at the
-//     tipset, before its messages run) and is hard-coded below; deal_id is NULL on the rows, the
-//     mapping is what downstream joins through deals_activations.sector_number.
+//     tipset, before its messages run) and is hard-coded below; deal_id is NULL on the rows, and
+//     downstream joins them to deals through deals_sector_mappings.
 //
 // Not every row has a `deal-terminated` event: the market skips deals with end_epoch <= epoch, and
 // the miner sends every terminated sector that holds data. At 6,541,321 only one of the three

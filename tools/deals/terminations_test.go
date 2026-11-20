@@ -24,12 +24,21 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 )
 
-// Last actors v12 and first actors v13 heights (NV22).
+// Heights around the NV22 (Dragon, actors v13) upgrade. The tipset AT the upgrade height still
+// executes with actors v12: Lotus migrates the state while computing the next tipset (ApplyBlocks
+// runs HandleStateForks for i in [parentEpoch, epoch)) and StateNetworkVersion is 21 there. The
+// actor parser labels the upgrade height v13 (tools.VersionFromHeight) and decodes its params with
+// the v13 types.
 const (
-	mainnetLastV12      = 3855359
-	mainnetFirstV13     = 3855360
-	calibrationLastV12  = 1427973
-	calibrationFirstV13 = 1427974
+	// executed and decoded as actors v12
+	mainnetBeforeUpgrade     = 3855359
+	calibrationBeforeUpgrade = 1427973
+	// the upgrade tipset: executed by actors v12, decoded with the v13 types
+	mainnetUpgrade     = 3855360
+	calibrationUpgrade = 1427974
+	// executed and decoded as actors v13
+	mainnetFirstV13     = 3855361
+	calibrationFirstV13 = 1427975
 )
 
 // dealIDsTerminateParams encodes {epoch, deal_ids}, the params up to actors v12.
@@ -132,11 +141,14 @@ func TestOnMinerSectorsTerminate_DealIDs(t *testing.T) {
 		network string
 		height  uint64
 	}{
-		{tools.MainnetNetwork, 100000},         // actors v0 types
-		{tools.MainnetNetwork, 1000000},        // actors v3/v4 types
-		{tools.MainnetNetwork, 3000000},        // actors v11 types
-		{tools.MainnetNetwork, mainnetLastV12}, // last actors v12 height
-		{tools.CalibrationNetwork, calibrationLastV12},
+		{tools.MainnetNetwork, 100000},  // actors v0 types
+		{tools.MainnetNetwork, 1000000}, // actors v3/v4 types
+		{tools.MainnetNetwork, 3000000}, // actors v11 types
+		{tools.MainnetNetwork, mainnetBeforeUpgrade},
+		{tools.CalibrationNetwork, calibrationBeforeUpgrade},
+		// executed by actors v12, decoded with the v13 type as an array (SectorNumbers)
+		{tools.MainnetNetwork, mainnetUpgrade},
+		{tools.CalibrationNetwork, calibrationUpgrade},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%s %d", tt.network, tt.height), func(t *testing.T) {
@@ -225,45 +237,52 @@ func TestOnMinerSectorsTerminate_RealV13Params(t *testing.T) {
 	}
 }
 
-// Across the v12 -> v13 boundary each height uses its own shape. Params of the other shape do not
-// decode with the height's type (the market would have rejected them too); the tx is skipped,
-// keeps its message row, and does not affect the other txs of the height.
+// Across the v12 -> v13 boundary the rows follow the params shape, not the height label:
+//   - before the upgrade, deal ids decode as {epoch, deal_ids}; a bitfield (which no v12 market
+//     accepts) does not decode: raw-only metadata, skipped, the sibling tx is unaffected;
+//   - at the upgrade tipset the chain still sends v12 deal ids, which the v13 type decodes as an
+//     array: deal rows;
+//   - from the next tipset, the bitfield gives sector rows. An array there would still be read as
+//     deal ids (no v13 market accepts one), never as sectors.
 func TestOnMinerSectorsTerminate_UpgradeBoundary(t *testing.T) {
 	sectors := bitfield.NewFromSet([]uint64{11, 12})
 	for _, tt := range []struct {
-		network           string
-		lastV12, firstV13 uint64
+		network                   string
+		before, upgrade, firstV13 uint64
 	}{
-		{tools.MainnetNetwork, mainnetLastV12, mainnetFirstV13},
-		{tools.CalibrationNetwork, calibrationLastV12, calibrationFirstV13},
+		{tools.MainnetNetwork, mainnetBeforeUpgrade, mainnetUpgrade, mainnetFirstV13},
+		{tools.CalibrationNetwork, calibrationBeforeUpgrade, calibrationUpgrade, calibrationFirstV13},
 	} {
 		t.Run(tt.network, func(t *testing.T) {
-			// right shape on each side
 			events := generate(t, tt.network,
-				terminateTx(t, tt.network, tt.lastV12, "a", dealIDsTerminateParams(t, 100, []uint64{42})),
+				terminateTx(t, tt.network, tt.before, "a", dealIDsTerminateParams(t, 100, []uint64{42})),
 			)
 			require.Equal(t, []uint64{42}, terminatedDeals(t, events))
-			events = generate(t, tt.network,
-				terminateTx(t, tt.network, tt.firstV13, "a", sectorsTerminateParams(t, int64(tt.firstV13), sectors)), //nolint:gosec
-			)
-			require.Equal(t, []uint64{11, 12}, terminatedSectorNumbers(t, events))
 
-			// a bitfield at the last v12 height does not decode as {epoch, deal_ids}: raw-only metadata
 			events = generate(t, tt.network,
-				terminateTx(t, tt.network, tt.lastV12, "a", sectorsTerminateParams(t, int64(tt.lastV12), sectors)), //nolint:gosec
-				terminateTx(t, tt.network, tt.lastV12, "b", dealIDsTerminateParams(t, 100, []uint64{43})),
+				terminateTx(t, tt.network, tt.before, "a", sectorsTerminateParams(t, int64(tt.before), sectors)), //nolint:gosec
+				terminateTx(t, tt.network, tt.before, "b", dealIDsTerminateParams(t, 100, []uint64{43})),
 			)
 			require.Len(t, events.DealsMessages, 2)
 			require.Equal(t, []uint64{43}, terminatedDeals(t, events))
 
-			// deal ids at the first v13 height decode as an array (`SectorNumbers`), which no v13
-			// market accepts: never read as sectors
+			// the upgrade tipset: v12 deal ids (repeated id emitted once)
 			events = generate(t, tt.network,
-				terminateTx(t, tt.network, tt.firstV13, "a", dealIDsTerminateParams(t, 100, []uint64{44})),
-				terminateTx(t, tt.network, tt.firstV13, "b", sectorsTerminateParams(t, int64(tt.firstV13), sectors)), //nolint:gosec
+				terminateTx(t, tt.network, tt.upgrade, "a", dealIDsTerminateParams(t, int64(tt.upgrade), []uint64{44, 45, 44})), //nolint:gosec
 			)
-			require.Len(t, events.DealsMessages, 2)
+			require.Equal(t, []uint64{44, 45}, terminatedDeals(t, events))
+			for _, r := range events.DealsTerminations {
+				require.Equal(t, int64(tt.upgrade), r.TerminationEpoch) //nolint:gosec
+			}
+
+			events = generate(t, tt.network,
+				terminateTx(t, tt.network, tt.firstV13, "a", sectorsTerminateParams(t, int64(tt.firstV13), sectors)), //nolint:gosec
+			)
 			require.Equal(t, []uint64{11, 12}, terminatedSectorNumbers(t, events))
+			events = generate(t, tt.network,
+				terminateTx(t, tt.network, tt.firstV13, "a", dealIDsTerminateParams(t, 100, []uint64{46})),
+			)
+			require.Equal(t, []uint64{46}, terminatedDeals(t, events))
 		})
 	}
 }
@@ -284,7 +303,7 @@ func TestOnMinerSectorsTerminate_UnusableMetadata(t *testing.T) {
 		"null bitfield":         `{"MethodNum":"7","Params":{"Epoch":1,"SectorBitField":null,"SectorNumbers":null}}`,
 		"bad bitfield":          `{"MethodNum":"7","Params":{"Epoch":1,"SectorBitField":[1,0,2]}}`,
 		"huge bitfield":         `{"MethodNum":"7","Params":{"Epoch":1,"SectorBitField":[0,1099511627776]}}`,
-		"sector numbers array":  `{"MethodNum":"7","Params":{"Epoch":1,"SectorBitField":[0],"SectorNumbers":[5]}}`,
+		"bad array":             `{"MethodNum":"7","Params":{"Epoch":1,"SectorBitField":[0],"SectorNumbers":[-5]}}`,
 		"not json":              `{`,
 	} {
 		t.Run(name, func(t *testing.T) {

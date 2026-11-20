@@ -318,9 +318,11 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, exac
 	// (builtin-actors v13.0.0 actors/market/src/types.rs). Actors v12 (NV21) has
 	// {sector_type, sector_expiry, deal_ids}, but the Go types used to decode it have a
 	// SectorNumber field, so the metadata shows its zero value. 0 is a valid sector number, so
-	// it must not be recorded for v12.
-	//#nosec G115
-	hasSectorNumber := tools.VersionFromHeight(eg.network, int64(tx.Height)).NodeVersion() >= tools.V22.NodeVersion()
+	// it must not be recorded for v12. The decoded params cannot tell the two shapes apart (the
+	// actor parser's SectorDeals type reads both and always shows a SectorNumber), so the version
+	// that executed the tipset decides: the tipset at the NV22 upgrade height still ran actors v12
+	// (see executedNodeVersion).
+	hasSectorNumber := executedNodeVersion(eg.network, tx.Height) >= tools.V22.NodeVersion()
 
 	activationIdx := 0
 	for dealIdx := range sectorDeals {

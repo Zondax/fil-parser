@@ -24,7 +24,7 @@ const (
 )
 
 // isSectorMappingMessage reports whether tx is a miner method whose params map sectors to deals
-// before actors v13 (NV22). From actors v13 on, every activation carries its sector number
+// and was executed by actors v7-v12 (before NV22). From actors v13 on, every activation carries its sector number
 // (BatchActivateDeals, SectorContentChanged), and the mapping rows are copied from the activations.
 func (eg *eventGenerator) isSectorMappingMessage(actorName string, tx *types.Transaction) bool {
 	if !strings.Contains(actorName, manifest.MinerKey) {
@@ -39,8 +39,8 @@ func (eg *eventGenerator) isSectorMappingMessage(actorName string, tx *types.Tra
 	default:
 		return false
 	}
-	//#nosec G115
-	return tools.VersionFromHeight(eg.network, int64(tx.Height)).NodeVersion() < tools.V22.NodeVersion()
+	// the tipset at the NV22 upgrade height still ran actors v12 (see executedNodeVersion)
+	return executedNodeVersion(eg.network, tx.Height) < tools.V22.NodeVersion()
 }
 
 // createSectorMappings builds the sector -> deal rows of a successful pre-commit or replica update
