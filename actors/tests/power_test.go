@@ -187,7 +187,7 @@ func TestActorParserV2_PowerWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), network, tools.V20.Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
+			got, _, err := actor.Parse(context.Background(), network, tools.V20.FirstExecutedHeight(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -209,7 +209,7 @@ func TestActorParserV2_PowerWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -240,7 +240,7 @@ func TestActorParserV2_ParseCreateMiner(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, msg)
 
-			got, addr, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.method, msg, &parser.LotusMessageReceipt{
+			got, addr, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), tt.method, msg, &parser.LotusMessageReceipt{
 				Return: rawReturn,
 			}, cid.Undef, filTypes.EmptyTSK, true)
 

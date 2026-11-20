@@ -477,9 +477,14 @@ var universalReceiverParams = map[string]func() cbg.CBORUnmarshaler{
 	tools.V29.String(): func() cbg.CBORUnmarshaler { return new(verifregv19.UniversalReceiverParams) },
 }
 
+// allocationRequests decodes the FRC-46 operator data of a datacap transfer to verifreg. Actors v9
+// (V17) encode AllocationRequest.Provider as an address, hence the custom type; actors v10 (V18)
+// and later encode it as an ActorID, which go-state-types' types decode. The V18 entry once used the
+// custom type because it was fitted to a payload of mainnet 2,683,348, the NV18 upgrade tipset,
+// which actors v9 executed; every payload in the V18 range (e.g. 2,790,000) has an ActorID.
 var allocationRequests = map[string]func() cbg.CBORUnmarshaler{
 	tools.V17.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationRequests[*verifregv9.ClaimExtensionRequest]) },
-	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(types.AllocationRequests[*verifregv10.ClaimExtensionRequest]) },
+	tools.V18.String(): func() cbg.CBORUnmarshaler { return new(verifregv10.AllocationRequests) },
 
 	tools.V19.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.AllocationRequests) },
 	tools.V20.String(): func() cbg.CBORUnmarshaler { return new(verifregv11.AllocationRequests) },

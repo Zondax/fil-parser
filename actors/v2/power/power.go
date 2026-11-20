@@ -88,7 +88,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 }
 
 func (p *Power) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	methods, ok := methods[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -97,7 +97,7 @@ func (p *Power) Methods(_ context.Context, network string, height int64) (map[ab
 }
 
 func (*Power) CurrentTotalPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := currentTotalPowerReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -129,9 +129,9 @@ func (*Power) OnConsensusFault(network string, height int64, msg *parser.LotusMe
 	var data map[string]interface{}
 	var err error
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V15)...):
+	case tools.AnyIsExecutedAt(network, height, tools.VersionsBefore(tools.V15)...):
 		return nil, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.AnyIsSupported(network, height, tools.VersionsAfter(tools.V16)...):
+	case tools.AnyIsExecutedAt(network, height, tools.VersionsAfter(tools.V16)...):
 		return map[string]interface{}{}, nil
 	default:
 		err = fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -140,7 +140,7 @@ func (*Power) OnConsensusFault(network string, height int64, msg *parser.LotusMe
 }
 
 func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -149,7 +149,7 @@ func (*Power) Constructor(network string, height int64, msg *parser.LotusMessage
 }
 
 func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := createMinerParams[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -174,7 +174,7 @@ func (p *Power) CreateMinerExported(network string, msg *parser.LotusMessage, he
 }
 
 func (*Power) EnrollCronEvent(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := enrollCronEventParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -184,7 +184,7 @@ func (*Power) EnrollCronEvent(network string, msg *parser.LotusMessage, height i
 }
 
 func (*Power) UpdateClaimedPower(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := updateClaimedPowerParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -199,7 +199,7 @@ func (*Power) UpdatePledgeTotal(network string, msg *parser.LotusMessage, height
 }
 
 func (*Power) NetworkRawPowerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := networkRawPowerReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -209,7 +209,7 @@ func (*Power) NetworkRawPowerExported(network string, msg *parser.LotusMessage, 
 }
 
 func (*Power) MinerRawPowerExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := minerRawPowerParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -224,7 +224,7 @@ func (*Power) MinerRawPowerExported(network string, msg *parser.LotusMessage, he
 }
 
 func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := minerCountReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -234,7 +234,7 @@ func (*Power) MinerCountExported(network string, msg *parser.LotusMessage, heigh
 }
 
 func (*Power) MinerConsensusCountExported(network string, msg *parser.LotusMessage, height int64, raw, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := minerConsensusCountReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

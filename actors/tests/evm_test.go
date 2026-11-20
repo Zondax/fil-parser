@@ -208,7 +208,7 @@ func TestActorParserV2_EvmWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -230,7 +230,7 @@ func TestActorParserV2_EvmWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -264,7 +264,7 @@ func TestActorParserV2_EVMInvokeContract(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, ethLogs)
 
-	got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), parser.MethodInvokeContract, &parser.LotusMessage{
+	got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), parser.MethodInvokeContract, &parser.LotusMessage{
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: rawReturn,
@@ -294,7 +294,7 @@ func TestActorParserV2_EVMInvokeContractReadOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, ethLogs)
 
-	got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), parser.MethodInvokeContractReadOnly, &parser.LotusMessage{
+	got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), parser.MethodInvokeContractReadOnly, &parser.LotusMessage{
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: rawReturn,
@@ -323,7 +323,7 @@ func TestActorParserV2_EVMInvokeContract_whenCborUnmarshalFail(t *testing.T) {
 
 	hexParamsString := "70a082310000000000000000000000001a5ef7ef64e3fb12be3b43edd77819dc7f034b1f"
 	rawParams, _ := hex.DecodeString(hexParamsString)
-	got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), parser.MethodInvokeContract, &parser.LotusMessage{
+	got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), parser.MethodInvokeContract, &parser.LotusMessage{
 		Params: rawParams,
 	}, &parser.LotusMessageReceipt{
 		Return: rawReturn,

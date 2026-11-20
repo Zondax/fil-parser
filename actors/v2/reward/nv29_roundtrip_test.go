@@ -18,9 +18,9 @@ import (
 	"github.com/zondax/fil-parser/tools"
 )
 
-// nv29Height is the calibration Solstice activation epoch, the first height that
-// tools.VersionFromHeight resolves to V29.
-const nv29Height = int64(4109133)
+// nv29Height is the first calibration tipset executed by V29: Solstice activates at 4109133, and
+// the tipset at the upgrade height is still executed by V28 (tools.ExecutedVersionFromHeight).
+const nv29Height = int64(4109133) + 1
 
 // ptr takes the address of a value, for go-state-types enums whose CBOR methods have pointer
 // receivers (e.g. ReplaceAddressReturn).
@@ -42,7 +42,7 @@ func mustMarshal(t *testing.T, m cbg.CBORMarshaler) []byte {
 // SetWeightRecordsParams and StepWeightRecordsParams are the same shape upstream -- so it is a
 // decode guard, not a full type guard.
 func TestNV29RewardMethodsRoundTrip(t *testing.T) {
-	require.Equal(t, "V29", tools.VersionFromHeight(tools.CalibrationNetwork, nv29Height).String())
+	require.Equal(t, "V29", tools.ExecutedVersionFromHeight(tools.CalibrationNetwork, nv29Height).String())
 
 	addr, err := address.NewFromString("f01234")
 	require.NoError(t, err)

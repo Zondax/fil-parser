@@ -77,6 +77,7 @@ func TestParseUniversalReceiverHook(t *testing.T) {
 	}{
 
 		{
+			// the NV18 upgrade tipset (2,683,348) is executed by actors v9: Provider is an address
 			name:      "NV18",
 			txType:    parser.MethodUniversalReceiverHook,
 			actorName: manifest.VerifregKey,
@@ -86,6 +87,17 @@ func TestParseUniversalReceiverHook(t *testing.T) {
 			height:    2683348,
 		},
 		{
+			// mainnet 2,790,000 (actors v10): AllocationRequest.Provider is an ActorID
+			name:      "NV18 range",
+			txType:    parser.MethodUniversalReceiverHook,
+			actorName: manifest.VerifregKey,
+			txFrom:    txFrom,
+			txTo:      txTo,
+			metadata:  `{"MethodNum":"3726118371","Params":{"Type_":2233613279,"Payload":"hhoAIA0lBgVNAN4Lazp2QAAAAAAAAFhNgoGGGgARICPYKlgoAAGB4gOSICDR58jNGlgp2quDxIKIVbj0CP07ogD/LURzu8p5DTeXNhsAAAAQAAAAABoACTqAGgANLwAaACrKroBA"},"Return":{"AllocationResults":{"SuccessCount":1,"FailCodes":null},"ExtensionResults":{"SuccessCount":0,"FailCodes":null},"NewAllocations":[15773663]}}`,
+			height:    2790000,
+		},
+		{
+			// the NV19 upgrade tipset (2,809,800) is executed by actors v10
 			name:      "NV19",
 			txType:    parser.MethodUniversalReceiverHook,
 			actorName: manifest.VerifregKey,

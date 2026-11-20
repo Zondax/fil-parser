@@ -10,7 +10,7 @@ import (
 
 func (eg *eventGenerator) createDealMessage(tx *types.Transaction, tipsetCid, actorAddress string) (*types.DealsMessages, error) {
 	//#nosec G115
-	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
+	version := tools.ExecutedVersionFromHeight(eg.network, int64(tx.Height))
 
 	txType := tx.TxType
 	if tx.TxType == parser.MethodActivateDeals {
