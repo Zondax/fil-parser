@@ -136,7 +136,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 }
 
 func (m *Miner) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	actorMethods, ok := methods[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -149,7 +149,7 @@ func (*Miner) ConfirmUpdateWorkerKey(network string, height int64, rawParams []b
 }
 
 func (*Miner) TerminateSectors(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := terminateSectorsParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -162,7 +162,7 @@ func (*Miner) TerminateSectors(network string, height int64, rawParams, rawRetur
 }
 
 func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 
 	params, ok := declareFaultsParams[version.String()]
 	if !ok {
@@ -173,7 +173,7 @@ func (*Miner) DeclareFaults(network string, height int64, rawParams []byte) (map
 }
 
 func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := declareFaultsRecoveredParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -186,7 +186,7 @@ func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []b
 // fail validation or deal activation are skipped, not reverted, so the return is the only record
 // of which updates in a batch took effect.
 func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveReplicaUpdatesParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -195,7 +195,7 @@ func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams, rawRe
 }
 
 func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := preCommitSectorBatchParams2[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -204,7 +204,7 @@ func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []by
 }
 
 func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveReplicaUpdatesParams2[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -213,7 +213,7 @@ func (*Miner) ProveReplicaUpdates2(network string, height int64, rawParams, rawR
 }
 
 func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveReplicaUpdates3Params[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -226,7 +226,7 @@ func (*Miner) ProveReplicaUpdates3(network string, height int64, rawParams, rawR
 }
 
 func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveCommitAggregateParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -235,7 +235,7 @@ func (*Miner) ProveCommitAggregate(network string, height int64, rawParams []byt
 }
 
 func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := disputeWindowedPoStParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -245,7 +245,7 @@ func (*Miner) DisputeWindowedPoSt(network string, height int64, rawParams []byte
 
 func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
 
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := reportConsensusFaultParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -254,7 +254,7 @@ func (*Miner) ReportConsensusFault(network string, height int64, rawParams []byt
 }
 
 func (*Miner) ChangeBeneficiaryExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := changeBeneficiaryParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -276,7 +276,7 @@ func (*Miner) GetBeneficiary(network string, height int64, rawParams, rawReturn 
 }
 
 func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := minerConstructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -285,7 +285,7 @@ func (*Miner) Constructor(network string, height int64, rawParams []byte) (map[s
 }
 
 func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := applyRewardParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -309,7 +309,7 @@ func (*Miner) ApplyRewards(network string, height int64, rawParams []byte) (map[
 }
 
 func (*Miner) OnDeferredCronEvent(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := deferredCronEventParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -345,7 +345,7 @@ func (*Miner) MaxTerminationFeeExported(network string, height int64, rawParams,
 // matching the dispatch pattern used elsewhere (e.g. ProveCommitSectors3) so future per-version variants
 // can be added without changing the handler.
 func (*Miner) GenerateSectorLocationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := generateSectorLocationParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -359,7 +359,7 @@ func (*Miner) GenerateSectorLocationExported(network string, height int64, rawPa
 
 // ValidateSectorStatusExported handles the FRC-42 method added in v18 builtin-actors (NV28 / FireHorse).
 func (*Miner) ValidateSectorStatusExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := validateSectorStatusParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -376,7 +376,7 @@ func (*Miner) ValidateSectorStatusExported(network string, height int64, rawPara
 // them as type aliases, so locally-defined struct wrappers in actors/v2/miner/types/ provide the
 // UnmarshalCBOR surface.
 func (*Miner) GetNominalSectorExpirationExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := getNominalSectorExpirationParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -395,7 +395,7 @@ func (*Miner) MovePartitions(network string, height int64, rawParams []byte) (ma
 // UpgradeSectorQuality handles the plain-numbered method 37 added in v19 builtin-actors
 // (NV29 / Solstice). Returns abi.EmptyValue upstream, so there is no return block to decode.
 func (*Miner) UpgradeSectorQuality(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := upgradeSectorQualityParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

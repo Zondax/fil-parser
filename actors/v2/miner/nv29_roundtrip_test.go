@@ -18,8 +18,10 @@ import (
 // NV29 / Solstice) is wired to the correct param type, not merely registered. The coverage
 // tests push empty payloads and so would not catch a wrong struct.
 func TestNV29UpgradeSectorQualityRoundTrip(t *testing.T) {
-	const nv29Height = int64(4109133) // calibration Solstice activation epoch
-	require.Equal(t, "V29", tools.VersionFromHeight(tools.CalibrationNetwork, nv29Height).String())
+	// first calibration tipset executed by V29 (Solstice activates at 4109133; the tipset at the
+	// upgrade height is still executed by V28)
+	const nv29Height = int64(4109133) + 1
+	require.Equal(t, "V29", tools.ExecutedVersionFromHeight(tools.CalibrationNetwork, nv29Height).String())
 
 	var buf bytes.Buffer
 	require.NoError(t, (&miner19.UpgradeSectorQualityParams{}).MarshalCBOR(&buf))

@@ -249,6 +249,13 @@ func (v version) Height() int64 {
 	return int64(v.mainnet)
 }
 
+// FirstExecutedHeight returns the first tipset height executed by v's actors: the tipset at the
+// upgrade height itself is still executed by the previous version (see ExecutedVersionFromHeight).
+// Like Height, it uses the mainnet height unless v carries the calibration network.
+func (v version) FirstExecutedHeight() int64 {
+	return executionLookupHeightInverse(v.Height())
+}
+
 func (v version) NodeVersion() uint {
 	return v.nodeVersion
 }
@@ -403,4 +410,59 @@ func VersionFromHeight(network string, height int64) version {
 		return V28
 	}
 	return LatestVersion(network)
+}
+
+// ExecutedVersionFromHeight returns the network version whose actors executed the messages, the
+// implicit messages and the cron of the tipset at height, i.e. the version that produced its
+// execution trace (StateCompute(height)).
+//
+// It differs from VersionFromHeight only at an upgrade height U. VersionFromHeight labels U with
+// the new version (it returns version N for height >= upgrade(N)). Lotus, however, executes the
+// tipset at U with the old actors: ApplyBlocks runs HandleStateForks (the state migration) for
+// i in [parentEpoch, epoch) before the tipset's messages (chain/consensus/compute_state.go), so
+// the migration at U runs while computing the first tipset after U, and GetNetworkVersion(h)
+// returns the old version for h <= U (chain/stmgr/stmgr.go, atOrBelow = upgrade.Height). On chain,
+// StateNetworkVersion is 21 at mainnet 3,855,360 (NV22) and 22 at 3,855,361. So the version that
+// executed height h is VersionFromHeight(h-1).
+//
+// Null rounds do not change this for the tipset's own messages: they run on a VM at the tipset's
+// epoch, so a tipset at h > U always runs the new actors, even when U itself is a null round.
+// Height 0 and 1 resolve as VersionFromHeight does: an upgrade configured at height 0 is the
+// genesis configuration, not a migration.
+//
+// Use this to pick actor types, method maps and version-dependent semantics of a parsed tipset.
+// Use VersionFromHeight for "the version in force from this height", e.g. with
+// LatestVersion(network).Height() to mean the latest version.
+func ExecutedVersionFromHeight(network string, height int64) version {
+	return VersionFromHeight(network, executionLookupHeight(height))
+}
+
+// IsExecutedAt reports whether v is the version that executed the tipset at height (see
+// ExecutedVersionFromHeight). It is IsSupported with the executed-version semantics.
+func (v version) IsExecutedAt(network string, height int64) bool {
+	return v.IsSupported(network, executionLookupHeight(height))
+}
+
+// AnyIsExecutedAt reports whether any of versions executed the tipset at height (see
+// ExecutedVersionFromHeight). It is AnyIsSupported with the executed-version semantics.
+func AnyIsExecutedAt(network string, height int64, versions ...version) bool {
+	return AnyIsSupported(network, executionLookupHeight(height), versions...)
+}
+
+// executionLookupHeightInverse is the smallest tipset height h with executionLookupHeight(h) ==
+// height.
+func executionLookupHeightInverse(height int64) int64 {
+	if height < 1 {
+		return height
+	}
+	return height + 1
+}
+
+// executionLookupHeight maps a tipset height to the height whose VersionFromHeight is the version
+// that executed it.
+func executionLookupHeight(height int64) int64 {
+	if height <= 1 {
+		return height
+	}
+	return height - 1
 }

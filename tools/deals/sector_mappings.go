@@ -39,8 +39,9 @@ func (eg *eventGenerator) isSectorMappingMessage(actorName string, tx *types.Tra
 	default:
 		return false
 	}
-	// the tipset at the NV22 upgrade height still ran actors v12 (see executedNodeVersion)
-	return executedNodeVersion(eg.network, tx.Height) < tools.V22.NodeVersion()
+	// the tipset at the NV22 upgrade height still ran actors v12 (see tools.ExecutedVersionFromHeight)
+	//#nosec G115
+	return tools.ExecutedVersionFromHeight(eg.network, int64(tx.Height)).NodeVersion() < tools.V22.NodeVersion()
 }
 
 // createSectorMappings builds the sector -> deal rows of a successful pre-commit or replica update

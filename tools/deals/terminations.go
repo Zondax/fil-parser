@@ -44,11 +44,12 @@ func (eg *eventGenerator) isDealTermination(tx *types.Transaction) bool {
 // has the proposals.
 //
 // The shape the actor parser produced is used, not the network version: the metadata holds
-// `DealIDs` for the first shape and `SectorBitField` for the second. The actor parser decodes the
-// tipset at the NV22 upgrade height with the v13 type, but that tipset still ran actors v12 (see
-// executedNodeVersion), so its calls carry deal ids, which the v13 type reads as a CBOR array
-// (`SectorNumbers`). No v13+ market accepts an array (its params are a BitField), so in a
-// successful call an array is always the v12 deal ids. Duplicate ids in one call are emitted once
+// `DealIDs` for the first shape and `SectorBitField` for the second. The tipset at the NV22 upgrade
+// height still ran actors v12, and the actor parser decodes it with the v12 type
+// (tools.ExecutedVersionFromHeight), so it yields `DealIDs`. Metadata produced by an older parser
+// decoded that tipset with the v13 type, which reads the v12 deal ids as a CBOR array
+// (`SectorNumbers`); that shape is still accepted. No v13+ market accepts an array (its params are
+// a BitField), so in a successful call an array is always the v12 deal ids. Duplicate ids in one call are emitted once
 // (the v12 market skips the repeat as already slashed).
 func (eg *eventGenerator) createDealTerminations(tx *types.Transaction) ([]*types.DealsTerminations, error) {
 	metadata, err := decodeExact(tx.TxMetadata)

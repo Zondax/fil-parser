@@ -18,7 +18,20 @@ import (
 	"github.com/zondax/golem/pkg/logger"
 )
 
+// GetMethodName returns the name of methodNum for the actors of the network version in force from
+// height on (tools.VersionFromHeight): at an upgrade height it resolves the new version's methods,
+// so tools.LatestVersion(network).Height() resolves the latest version. That is the right meaning
+// for a message not yet executed (e.g. a mempool message). To name a method of a message in the
+// tipset at height (its execution trace), use GetMethodNameForTipset: the tipset at an upgrade
+// height is executed by the old actors.
 func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error) {
+	return GetMethodNameForTipset(ctx, methodNum, actorName, inForceToTipsetHeight(height), network, helper, logger)
+}
+
+// GetMethodNameForTipset returns the name of methodNum for the actors that executed the tipset at
+// tipsetHeight (tools.ExecutedVersionFromHeight).
+func GetMethodNameForTipset(ctx context.Context, methodNum abi.MethodNum, actorName string, tipsetHeight int64, network string, helper *helper.Helper, logger *logger.Logger) (string, error) {
+	height := tipsetHeight
 	// Shortcut 1 - Method "0" corresponds to "MethodSend"
 	if methodNum == 0 {
 		return parser.MethodSend, nil
@@ -29,14 +42,14 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 		return parser.MethodConstructor, nil
 	}
 
-	actorMethods, err := ActorMethods(ctx, actorName, height, network, helper, logger)
+	actorMethods, err := ActorMethodsForTipset(ctx, actorName, height, network, helper, logger)
 	if err != nil {
 		return "", err
 	}
 
 	method, ok := actorMethods[methodNum]
 	if !ok {
-		version := tools.VersionFromHeight(network, height)
+		version := tools.ExecutedVersionFromHeight(network, height)
 
 		if strings.Contains(actorName, manifest.PlaceholderKey) {
 			return parser.MethodFallback, nil
@@ -82,7 +95,17 @@ func GetMethodName(ctx context.Context, methodNum abi.MethodNum, actorName strin
 // EthAccount and Placeholder can receive tokens with Send and InvokeEVM methods
 // We set evm.Methods instead of empty array of methods. Therefore, we will be able to understand
 // this specific method (3844450837) - tx cid example: bafy2bzacedgmcvsp56ieciutvgwza2qpvz7pvbhhu4l5y5tdl35rwfnjn5buk
+//
+// ActorMethods uses the version in force from height on (see GetMethodName);
+// ActorMethodsForTipset uses the version that executed the tipset at tipsetHeight.
 func ActorMethods(ctx context.Context, actorName string, height int64, network string, helper *helper.Helper, logger *logger.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
+	return ActorMethodsForTipset(ctx, actorName, inForceToTipsetHeight(height), network, helper, logger)
+}
+
+// ActorMethodsForTipset returns the methods of actorName in the actors that executed the tipset at
+// tipsetHeight (tools.ExecutedVersionFromHeight).
+func ActorMethodsForTipset(ctx context.Context, actorName string, tipsetHeight int64, network string, helper *helper.Helper, logger *logger.Logger) (actorMethods map[abi.MethodNum]builtin.MethodMeta, err error) {
+	height := tipsetHeight
 	metricsClient := &metrics.ActorsMetricsClient{MetricsClient: metrics2.NewNoopMetricsClient()}
 	mActorName := actorName
 	actorParser := &ActorParser{network, helper, logger, metricsClient}
@@ -101,6 +124,16 @@ func ActorMethods(ctx context.Context, actorName string, height int64, network s
 	}
 
 	return actorMethods, nil
+}
+
+// inForceToTipsetHeight maps a height to the tipset height that the same actors version executed:
+// tools.ExecutedVersionFromHeight(network, h+1) == tools.VersionFromHeight(network, h). Heights 0
+// and 1 are kept (ExecutedVersionFromHeight does not shift them).
+func inForceToTipsetHeight(height int64) int64 {
+	if height < 1 {
+		return height
+	}
+	return height + 1
 }
 
 func GetBlockCidFromMsgCid(msgCid, txType string, txMetadata map[string]interface{}, tipset *types.ExtendedTipSet, logger *logger.Logger) (string, error) {

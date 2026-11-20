@@ -12,7 +12,7 @@ import (
 )
 
 func (*Miner) ExtendSectorExpiration2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := extendSectorExpiration2Params[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -21,7 +21,7 @@ func (*Miner) ExtendSectorExpiration2(network string, height int64, rawParams []
 }
 
 func (*Miner) PreCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := preCommitSectorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -30,7 +30,7 @@ func (*Miner) PreCommitSector(network string, height int64, rawParams []byte) (m
 }
 
 func (*Miner) ProveCommitSector(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveCommitSectorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -39,7 +39,7 @@ func (*Miner) ProveCommitSector(network string, height int64, rawParams []byte) 
 }
 
 func (*Miner) ProveCommitSectors3(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveCommitSectors3Params[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -52,7 +52,7 @@ func (*Miner) ProveCommitSectors3(network string, height int64, rawParams, rawRe
 }
 
 func (*Miner) InternalSectorSetupForPreseal(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := internalSectorSetupForPresealParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -61,7 +61,7 @@ func (*Miner) InternalSectorSetupForPreseal(network string, height int64, rawPar
 }
 
 func (*Miner) SubmitWindowedPoSt(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := submitWindowedPoStParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -70,7 +70,7 @@ func (*Miner) SubmitWindowedPoSt(network string, height int64, rawParams []byte)
 }
 
 func (*Miner) ConfirmSectorProofsValid(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := confirmSectorProofsParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -93,7 +93,7 @@ func (*Miner) ConfirmSectorProofsValid(network string, height int64, rawParams [
 }
 
 func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := checkSectorProvenParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -102,7 +102,7 @@ func (*Miner) CheckSectorProven(network string, height int64, rawParams []byte) 
 }
 
 func (*Miner) ExtendSectorExpiration(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := extendSectorExpirationParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -111,7 +111,7 @@ func (*Miner) ExtendSectorExpiration(network string, height int64, rawParams []b
 }
 
 func (*Miner) CompactSectorNumbers(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := compactSectorNumbersParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -120,7 +120,7 @@ func (*Miner) CompactSectorNumbers(network string, height int64, rawParams []byt
 }
 
 func (*Miner) CompactPartitions(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := compactPartitionsParams()[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -129,7 +129,7 @@ func (*Miner) CompactPartitions(network string, height int64, rawParams []byte) 
 }
 
 func (*Miner) PreCommitSectorBatch(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := preCommitSectorBatchParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -143,7 +143,7 @@ func (*Miner) GetSectorSize(network string, height int64, rawReturn []byte) (map
 }
 
 func (*Miner) ProveCommitSectorsNI(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := proveCommitSectorsNIParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

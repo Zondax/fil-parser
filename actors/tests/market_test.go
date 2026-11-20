@@ -179,7 +179,7 @@ func TestActorParserV2_MarketWithParamsOrReturn(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, rawParams)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: nil,
@@ -205,7 +205,7 @@ func TestActorParserV2_MarketWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.V20.Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.V20.FirstExecutedHeight(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,

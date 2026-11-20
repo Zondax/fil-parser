@@ -19,7 +19,7 @@ import (
 )
 
 func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("constructorParams: %s not found", version.String())
@@ -43,7 +43,7 @@ func (*Msig) MsigConstructor(network string, height int64, raw []byte) (map[stri
 }
 
 func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := txnIDParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("txnIDParams: %s not found", version.String())
@@ -57,7 +57,7 @@ func (*Msig) Approve(network string, msg *parser.LotusMessage, height int64, key
 }
 
 func (*Msig) Cancel(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := txnIDParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("txnIDParams: %s not found", version.String())
@@ -141,7 +141,7 @@ func (*Msig) paramsToMap(params any) (map[string]any, error) {
 }
 
 func (*Msig) RemoveSigner(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := removeSignerParams2[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("removeSignerParams: %s not found", version.String())
@@ -151,7 +151,7 @@ func (*Msig) RemoveSigner(network string, msg *parser.LotusMessage, height int64
 }
 
 func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := changeNumApprovalsThresholdParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("changeNumApprovalsThresholdParams: %s not found", version.String())
@@ -161,7 +161,7 @@ func (*Msig) ChangeNumApprovalsThreshold(network string, msg *parser.LotusMessag
 }
 
 func (*Msig) LockBalance(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := lockBalanceParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("lockBalanceParams: %s not found", version.String())
@@ -182,7 +182,7 @@ func (m *Msig) InvokeContract(network string, msg *parser.LotusMessage, height i
 }
 
 func (m *Msig) AddSigner(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := addSignerParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("lockBalanceParams: %s not found", version.String())
@@ -191,7 +191,7 @@ func (m *Msig) AddSigner(network string, msg *parser.LotusMessage, height int64,
 	return parseCBOR(rawParams, nil, params(), nil)
 }
 func (m *Msig) SwapSigner(network string, msg *parser.LotusMessage, height int64, key filTypes.TipSetKey, rawParams []byte, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := swapSignerParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("lockBalanceParams: %s not found", version.String())

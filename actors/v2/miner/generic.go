@@ -127,9 +127,9 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 		approvedByNominee     bool
 	)
 	switch {
-	case tools.AnyIsSupported(network, height, tools.VersionsBefore(tools.V16)...):
+	case tools.AnyIsExecutedAt(network, height, tools.VersionsBefore(tools.V16)...):
 		return parser.GetBeneficiaryReturn{}, fmt.Errorf("%w: %d", actors.ErrInvalidHeightForMethod, height)
-	case tools.V17.IsSupported(network, height):
+	case tools.V17.IsExecutedAt(network, height):
 		tmp := &miner9.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -148,7 +148,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
 
-	case tools.V18.IsSupported(network, height):
+	case tools.V18.IsExecutedAt(network, height):
 		tmp := &miner10.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -166,7 +166,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.AnyIsSupported(network, height, tools.V19, tools.V20):
+	case tools.AnyIsExecutedAt(network, height, tools.V19, tools.V20):
 		tmp := &miner11.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -184,7 +184,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V21.IsSupported(network, height):
+	case tools.V21.IsExecutedAt(network, height):
 		tmp := &miner12.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -202,7 +202,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V22.IsSupported(network, height):
+	case tools.V22.IsExecutedAt(network, height):
 		tmp := &miner13.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -220,7 +220,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V23.IsSupported(network, height):
+	case tools.V23.IsExecutedAt(network, height):
 		tmp := &miner14.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -238,7 +238,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V24.IsSupported(network, height):
+	case tools.V24.IsExecutedAt(network, height):
 		tmp := &miner15.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -256,7 +256,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V25.IsSupported(network, height):
+	case tools.V25.IsExecutedAt(network, height):
 		tmp := &miner16.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -274,7 +274,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V26.IsSupported(network, height):
+	case tools.V26.IsExecutedAt(network, height):
 		tmp := &miner16.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -292,7 +292,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V27.IsSupported(network, height):
+	case tools.V27.IsExecutedAt(network, height):
 		tmp := &miner17.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -310,7 +310,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V28.IsSupported(network, height):
+	case tools.V28.IsExecutedAt(network, height):
 		tmp := &miner18.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {
@@ -328,7 +328,7 @@ func getBeneficiaryReturn(network string, height int64, rawReturn []byte) (parse
 			approvedByBeneficiary = tmp.Proposed.ApprovedByBeneficiary
 			approvedByNominee = tmp.Proposed.ApprovedByNominee
 		}
-	case tools.V29.IsSupported(network, height):
+	case tools.V29.IsExecutedAt(network, height):
 		tmp := &miner19.GetBeneficiaryReturn{}
 		err := tmp.UnmarshalCBOR(reader)
 		if err != nil {

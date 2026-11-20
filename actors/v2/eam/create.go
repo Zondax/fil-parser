@@ -13,7 +13,7 @@ import (
 )
 
 func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params := abi.CborBytes{}
 	returnValue, ok := createExternalReturn[version.String()]
 	if !ok {
@@ -23,7 +23,7 @@ func (e *Eam) CreateExternal(network string, height int64, rawParams, rawReturn 
 }
 
 func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := createParams[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -36,7 +36,7 @@ func (e *Eam) Create(network string, height int64, rawParams, rawReturn []byte, 
 }
 
 func (e *Eam) Create2(network string, height int64, rawParams, rawReturn []byte, ec exitcode.ExitCode, msgCid cid.Cid, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := create2Params[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

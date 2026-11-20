@@ -414,7 +414,7 @@ var proposeParams = map[string]func() cbg.CBORUnmarshaler{
 }
 
 func getProposeParams(network string, height int64, rawParams []byte) (raw []byte, methodNum abi.MethodNum, to address.Address, value string, params cbg.CBORUnmarshaler, err error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	tmp, ok := proposeParams[version.String()]
 	if !ok {
 		return nil, 0, address.Address{}, "", nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -471,7 +471,7 @@ func getProposeParams(network string, height int64, rawParams []byte) (raw []byt
 }
 
 func getProposeReturn(network string, height int64, rawReturn []byte) (applied bool, exitCode exitcode.ExitCode, raw []byte, retValue cbg.CBORUnmarshaler, err error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	tmp, ok := proposeReturn[version.String()]
 	if !ok {
 		return false, 0, rawReturn, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

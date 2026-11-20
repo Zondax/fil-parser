@@ -83,7 +83,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 }
 
 func (r *Reward) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	methods, ok := methods[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -92,7 +92,7 @@ func (r *Reward) Methods(_ context.Context, network string, height int64) (map[a
 }
 
 func (*Reward) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -115,7 +115,7 @@ func (*Reward) Constructor(network string, height int64, raw []byte) (map[string
 }
 
 func (*Reward) AwardBlockReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := awardBlockRewardParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -129,7 +129,7 @@ func (*Reward) UpdateNetworkKPI(network string, height int64, raw []byte) (map[s
 }
 
 func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returns, ok := thisEpochRewardReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -160,7 +160,7 @@ func (*Reward) ThisEpochReward(network string, height int64, raw []byte) (map[st
 // the dispatch pattern used by the miner actor's v18 FRC-42 methods.
 
 func (*Reward) SetWeightRecordsExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := setWeightRecordsExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -169,7 +169,7 @@ func (*Reward) SetWeightRecordsExported(network string, height int64, raw []byte
 }
 
 func (*Reward) StepWeightRecordsExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := stepWeightRecordsExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -178,7 +178,7 @@ func (*Reward) StepWeightRecordsExported(network string, height int64, raw []byt
 }
 
 func (*Reward) RegisterStreamExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := registerStreamExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -187,7 +187,7 @@ func (*Reward) RegisterStreamExported(network string, height int64, raw []byte) 
 }
 
 func (*Reward) RemoveStreamExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := removeStreamExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -196,7 +196,7 @@ func (*Reward) RemoveStreamExported(network string, height int64, raw []byte) (m
 }
 
 func (*Reward) SetDistributionExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := setDistributionExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -205,7 +205,7 @@ func (*Reward) SetDistributionExported(network string, height int64, raw []byte)
 }
 
 func (*Reward) SetSharesExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := setSharesExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -217,7 +217,7 @@ func (*Reward) SetSharesExported(network string, height int64, raw []byte) (map[
 // old recipient's share moved (AddressReplaced) or the old address had no share
 // (OldAddressNotInLedger, in which case no address-replaced event is emitted).
 func (*Reward) ReplaceAddressExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := replaceAddressExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -230,7 +230,7 @@ func (*Reward) ReplaceAddressExported(network string, height int64, rawParams, r
 }
 
 func (*Reward) CancelPendingExported(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := cancelPendingExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -239,7 +239,7 @@ func (*Reward) CancelPendingExported(network string, height int64, raw []byte) (
 }
 
 func (*Reward) ClaimExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := claimExportedParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
