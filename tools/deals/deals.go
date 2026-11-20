@@ -99,7 +99,14 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		if eg.isDealActivation(tx) {
 			dealActivations, dealSpaceInfo, err := eg.createDealActivations(ctx, tx)
 			if err != nil {
-				return nil, fmt.Errorf("could not create deal activations. err: %w", err)
+				// Metadata whose params or return are missing or unusable (e.g. raw-only metadata
+				// after a decode failure, or SectorContentChanged metadata stored by a parser
+				// that lost the flags of all sectors but the first) cannot tell which deals were
+				// activated. Skip the activations of this tx only; its message row is kept and
+				// the rest of the height is processed.
+				eg.logger.Warnf("skipping deal activations of tx %s (tx type %s, height %d): %s", tx.TxCid, tx.TxType, tx.Height, err.Error())
+				_ = eg.metrics.UpdateSkippedActivationsMetric(tx.TxType)
+				continue
 			}
 			for i := range dealActivations {
 				dealActivations[i].ID = dealsActivationsIds.Unique(dealActivations[i].ID, tx.Id)
@@ -125,6 +132,8 @@ func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
 		strings.EqualFold(txType, parser.MethodPublishStorageDealsExported),
 		strings.EqualFold(txType, parser.MethodVerifyDealsForActivation),
 		strings.EqualFold(txType, parser.MethodActivateDeals),
+		// market method 6 is named BatchActivateDeals from actors v12 (NV21) on
+		strings.EqualFold(txType, parser.MethodBatchActivateDeals),
 		strings.EqualFold(txType, parser.MethodSettleDealPaymentsExported),
 		strings.EqualFold(txType, parser.MethodSectorContentChanged):
 		return true
