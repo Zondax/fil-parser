@@ -12,6 +12,10 @@ import (
 	"github.com/zondax/fil-parser/types"
 )
 
+// mainnetStableNodeUrl is an archival mainnet node, for heights whose actors the light node no
+// longer has.
+const mainnetStableNodeUrl = "https://node-fil-mainnet-stable.zondax.ch/rpc/v1"
+
 func parseFixtureDeals(t *testing.T, p *FilecoinParser, height string, traces []byte) ([]*types.Transaction, *types.DealsEvents) {
 	node := mainnetCacheDataSource.Node
 	tipset, err := readTipset(height)
@@ -198,9 +202,12 @@ func TestParser_DealsAtNV22UpgradeTipset(t *testing.T) {
 	}
 	require.Equal(t, 7, batchCalls)
 
-	p, err := NewFilecoinParserWithActorV2(getLib(nodeUrl), mainnetCacheDataSource, gLogger)
+	// The tipset has messages to miners that no longer exist; the light node only has the latest
+	// state and cannot resolve them, so this height is parsed against the archival stable node.
+	stable := getCacheDataSource("mainnet", mainnetStableNodeUrl)
+	p, err := NewFilecoinParserWithActorV2(getLib(mainnetStableNodeUrl), stable, gLogger)
 	require.NoError(t, err)
-	node := mainnetCacheDataSource.Node
+	node := stable.Node
 	tipset, err := readTipset(height)
 	require.NoError(t, err)
 	parsed, err := p.ParseTransactions(t.Context(), []api.FullNode{node}, types.TxsData{
