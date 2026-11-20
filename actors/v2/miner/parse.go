@@ -97,7 +97,7 @@ func (m *Miner) Parse(_ context.Context, network string, height int64, txType st
 		resp, err := m.ProveCommitAggregate(network, height, msg.Params)
 		return resp, nil, err
 	case parser.MethodProveReplicaUpdates:
-		resp, err := m.ProveReplicaUpdates(network, height, msg.Params)
+		resp, err := m.ProveReplicaUpdates(network, height, msg.Params, msgRct.Return)
 		return resp, nil, err
 	case parser.MethodPreCommitSectorBatch2:
 		resp, err := m.PreCommitSectorBatch2(network, height, msg.Params)

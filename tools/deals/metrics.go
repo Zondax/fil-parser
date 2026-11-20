@@ -24,14 +24,16 @@ func newClient(metricsClient metrics.MetricsClient, name string) *dealsMetricsCl
 		name:          name,
 	}
 
-	s.registerModuleMetrics(actorNameFromAddressMetric, skippedActivationsMetric)
+	s.registerModuleMetrics(actorNameFromAddressMetric, skippedActivationsMetric, skippedTerminationsMetric, skippedSectorMappingsMetric)
 
 	return s
 }
 
 const (
-	actorNameFromAddress = "fil-parser_deals_actor_name_from_address"
-	skippedActivations   = "fil-parser_deals_skipped_activations"
+	actorNameFromAddress  = "fil-parser_deals_actor_name_from_address"
+	skippedActivations    = "fil-parser_deals_skipped_activations"
+	skippedTerminations   = "fil-parser_deals_skipped_terminations"
+	skippedSectorMappings = "fil-parser_deals_skipped_sector_mappings"
 )
 
 var (
@@ -44,6 +46,18 @@ var (
 	skippedActivationsMetric = metrics.Metric{
 		Name:    skippedActivations,
 		Help:    "transactions whose deal activations were skipped because their metadata was missing or unusable",
+		Labels:  []string{"tx_type"},
+		Handler: &collectors.Gauge{},
+	}
+	skippedSectorMappingsMetric = metrics.Metric{
+		Name:    skippedSectorMappings,
+		Help:    "transactions whose sector to deal mappings were skipped because their metadata was missing or unusable",
+		Labels:  []string{"tx_type"},
+		Handler: &collectors.Gauge{},
+	}
+	skippedTerminationsMetric = metrics.Metric{
+		Name:    skippedTerminations,
+		Help:    "transactions whose deal terminations were skipped because their metadata was missing or unusable",
 		Labels:  []string{"tx_type"},
 		Handler: &collectors.Gauge{},
 	}
@@ -74,4 +88,12 @@ func (c *dealsMetricsClient) UpdateActorNameFromAddressMetric() error {
 
 func (c *dealsMetricsClient) UpdateSkippedActivationsMetric(txType string) error {
 	return c.IncrementMetric(skippedActivations, txType)
+}
+
+func (c *dealsMetricsClient) UpdateSkippedTerminationsMetric(txType string) error {
+	return c.IncrementMetric(skippedTerminations, txType)
+}
+
+func (c *dealsMetricsClient) UpdateSkippedSectorMappingsMetric(txType string) error {
+	return c.IncrementMetric(skippedSectorMappings, txType)
 }

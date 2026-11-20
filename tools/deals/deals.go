@@ -48,12 +48,30 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		DealsProposals:   []*types.DealsProposals{},
 		DealsActivations: []*types.DealsActivations{},
 		DealsSpaceInfo:   []*types.DealsSpaceInfo{},
+
+		DealsTerminations:   []*types.DealsTerminations{},
+		DealsSectorMappings: []*types.DealsSectorMappings{},
 	}
 
 	dealsActivationsIds := tools.NewEventIds()
 	dealsMessagesIds := tools.NewEventIds()
 	dealsProposalsIds := tools.NewEventIds()
 	dealsSpaceInfoIds := tools.NewEventIds()
+	dealsTerminationsIds := tools.NewEventIds()
+	dealsSectorMappingsIds := tools.NewEventIds()
+	// appendMappings drops a (miner, sector, deal) repeated within one tx (e.g. a deal listed twice
+	// in a pre-commit): the row would carry the same id.
+	appendMappings := func(tx *types.Transaction, mappings []*types.DealsSectorMappings) {
+		seen := make(map[string]bool, len(mappings))
+		for _, mapping := range mappings {
+			if seen[mapping.ID] {
+				continue
+			}
+			seen[mapping.ID] = true
+			mapping.ID = dealsSectorMappingsIds.Unique(mapping.ID, tx.Id)
+			events.DealsSectorMappings = append(events.DealsSectorMappings, mapping)
+		}
+	}
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -70,6 +88,20 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err
+		}
+
+		// pre-NV22 pre-commits and replica updates sent to a miner: sector -> deal mappings only
+		if eg.isSectorMappingMessage(actorName, tx) {
+			mappings, err := eg.createSectorMappings(tx)
+			if err != nil {
+				// Same rule as activations: unusable metadata (e.g. raw-only, or a
+				// ProveReplicaUpdates stored without its return) skips this tx only.
+				eg.logger.Warnf("skipping sector deal mappings of tx %s (tx type %s, height %d): %s", tx.TxCid, tx.TxType, tx.Height, err.Error())
+				_ = eg.metrics.UpdateSkippedSectorMappingsMetric(tx.TxType)
+				continue
+			}
+			appendMappings(tx, mappings)
+			continue
 		}
 
 		if !eg.isDealsStateMessage(actorName, tx.TxType) {
@@ -112,10 +144,25 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 				dealActivations[i].ID = dealsActivationsIds.Unique(dealActivations[i].ID, tx.Id)
 			}
 			events.DealsActivations = append(events.DealsActivations, dealActivations...)
+			appendMappings(tx, activationMappings(tx, dealActivations))
 			for i := range dealSpaceInfo {
 				dealSpaceInfo[i].ID = dealsSpaceInfoIds.Unique(dealSpaceInfo[i].ID, tx.Id)
 			}
 			events.DealsSpaceInfo = append(events.DealsSpaceInfo, dealSpaceInfo...)
+		}
+		if eg.isDealTermination(tx) {
+			dealTerminations, err := eg.createDealTerminations(tx)
+			if err != nil {
+				// Same rule as activations: unusable metadata (e.g. raw-only after a decode
+				// failure) skips the terminations of this tx only, never the height.
+				eg.logger.Warnf("skipping deal terminations of tx %s (tx type %s, height %d): %s", tx.TxCid, tx.TxType, tx.Height, err.Error())
+				_ = eg.metrics.UpdateSkippedTerminationsMetric(tx.TxType)
+				continue
+			}
+			for i := range dealTerminations {
+				dealTerminations[i].ID = dealsTerminationsIds.Unique(dealTerminations[i].ID, tx.Id)
+			}
+			events.DealsTerminations = append(events.DealsTerminations, dealTerminations...)
 		}
 	}
 
@@ -135,7 +182,8 @@ func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
 		// market method 6 is named BatchActivateDeals from actors v12 (NV21) on
 		strings.EqualFold(txType, parser.MethodBatchActivateDeals),
 		strings.EqualFold(txType, parser.MethodSettleDealPaymentsExported),
-		strings.EqualFold(txType, parser.MethodSectorContentChanged):
+		strings.EqualFold(txType, parser.MethodSectorContentChanged),
+		strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate):
 		return true
 	}
 
