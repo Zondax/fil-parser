@@ -49,7 +49,8 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		DealsActivations: []*types.DealsActivations{},
 		DealsSpaceInfo:   []*types.DealsSpaceInfo{},
 
-		DealsTerminations: []*types.DealsTerminations{},
+		DealsTerminations:   []*types.DealsTerminations{},
+		DealsSectorMappings: []*types.DealsSectorMappings{},
 	}
 
 	dealsActivationsIds := tools.NewEventIds()
@@ -57,6 +58,13 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 	dealsProposalsIds := tools.NewEventIds()
 	dealsSpaceInfoIds := tools.NewEventIds()
 	dealsTerminationsIds := tools.NewEventIds()
+	dealsSectorMappingsIds := tools.NewEventIds()
+	appendMappings := func(tx *types.Transaction, mappings []*types.DealsSectorMappings) {
+		for i := range mappings {
+			mappings[i].ID = dealsSectorMappingsIds.Unique(mappings[i].ID, tx.Id)
+		}
+		events.DealsSectorMappings = append(events.DealsSectorMappings, mappings...)
+	}
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -73,6 +81,20 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		if err != nil {
 			_ = eg.metrics.UpdateActorNameFromAddressMetric()
 			return nil, err
+		}
+
+		// pre-NV22 pre-commits and replica updates sent to a miner: sector -> deal mappings only
+		if eg.isSectorMappingMessage(actorName, tx) {
+			mappings, err := eg.createSectorMappings(tx)
+			if err != nil {
+				// Same rule as activations: unusable metadata (e.g. raw-only, or a
+				// ProveReplicaUpdates stored without its return) skips this tx only.
+				eg.logger.Warnf("skipping sector deal mappings of tx %s (tx type %s, height %d): %s", tx.TxCid, tx.TxType, tx.Height, err.Error())
+				_ = eg.metrics.UpdateSkippedSectorMappingsMetric(tx.TxType)
+				continue
+			}
+			appendMappings(tx, mappings)
+			continue
 		}
 
 		if !eg.isDealsStateMessage(actorName, tx.TxType) {
@@ -115,6 +137,7 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 				dealActivations[i].ID = dealsActivationsIds.Unique(dealActivations[i].ID, tx.Id)
 			}
 			events.DealsActivations = append(events.DealsActivations, dealActivations...)
+			appendMappings(tx, activationMappings(tx, dealActivations))
 			for i := range dealSpaceInfo {
 				dealSpaceInfo[i].ID = dealsSpaceInfoIds.Unique(dealSpaceInfo[i].ID, tx.Id)
 			}

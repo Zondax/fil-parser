@@ -12,6 +12,8 @@ type DealsEvents struct {
 	DealsSpaceInfo   []*DealsSpaceInfo
 	// DealsTerminations are the market OnMinerSectorsTerminate calls, see DealsTerminations.
 	DealsTerminations []*DealsTerminations
+	// DealsSectorMappings map deals to the sectors that hold them, see DealsSectorMappings.
+	DealsSectorMappings []*DealsSectorMappings
 }
 
 type DealsMessages struct {
@@ -115,4 +117,36 @@ type DealsTerminations struct {
 	TerminationEpoch int64     `json:"termination_epoch"`
 	ActionType       string    `json:"action_type"`
 	TxTimestamp      time.Time `json:"tx_timestamp"`
+}
+
+// DealsSectorMappings records that a miner's sector holds a deal. It is the single source for
+// joining terminations by sector (DealsTerminations from actors v13 on) to deals:
+//
+//	deals_terminations (actor_address, sector_number) -> deals_sector_mappings -> deal_id
+//
+// Rows come from:
+//   - PreCommitSector / PreCommitSectorBatch / PreCommitSectorBatch2 before actors v13 (NV22): the
+//     sector's deal ids. A pre-commit is all-or-nothing, a sector number is never reused, and a
+//     sector whose deals fail to activate is never proven, so a sector that is ever terminated
+//     holds exactly its pre-commit's deals;
+//   - ProveReplicaUpdates / ProveReplicaUpdates2 (SnapDeals) before actors v13: the deals of each
+//     update the return reports as successful (the sector's deal ids are replaced by them);
+//   - every DealsActivations row that has a SectorNumber (SectorContentChanged, and
+//     BatchActivateDeals from actors v13), copied so downstream needs no second source.
+//
+// These rows are not activations: they are never counted as deal space. The same
+// (actor_address, sector_number, deal_id) can appear more than once (e.g. pre-committed before
+// NV22 and activated after it), so downstream joins on distinct deal ids.
+type DealsSectorMappings struct {
+	ID     string `json:"id"`
+	Height uint64 `json:"height"`
+	TxCid  string `json:"tx_cid"`
+	// ActorAddress is the miner, in the same form as DealsActivations.ActorAddress and
+	// DealsTerminations.ActorAddress.
+	ActorAddress string `json:"actor_address"`
+	SectorNumber uint64 `json:"sector_number"`
+	DealID       uint64 `json:"deal_id"`
+	// ActionType is the method the mapping comes from.
+	ActionType  string    `json:"action_type"`
+	TxTimestamp time.Time `json:"tx_timestamp"`
 }

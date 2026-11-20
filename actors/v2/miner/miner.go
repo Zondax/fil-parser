@@ -181,13 +181,17 @@ func (*Miner) DeclareFaultsRecovered(network string, height int64, rawParams []b
 	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
 }
 
-func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
+// ProveReplicaUpdates returns a BitField of the sectors that were updated, in every actors version
+// (specs-actors v7 ProveReplicaUpdates, builtin-actors v8+ prove_replica_updates). Updates that
+// fail validation or deal activation are skipped, not reverted, so the return is the only record
+// of which updates in a batch took effect.
+func (*Miner) ProveReplicaUpdates(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
 	version := tools.VersionFromHeight(network, height)
 	params, ok := proveReplicaUpdatesParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
 	}
-	return parseGeneric(rawParams, nil, false, params(), &abi.EmptyValue{}, parser.ParamsKey)
+	return parseGeneric(rawParams, rawReturn, true, params(), &bitfield.BitField{}, parser.ParamsKey)
 }
 
 func (*Miner) PreCommitSectorBatch2(network string, height int64, rawParams []byte) (map[string]interface{}, error) {

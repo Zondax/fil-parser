@@ -115,26 +115,37 @@ func terminatedSectors(params map[string]interface{}) ([]uint64, error) {
 	if !ok || raw == nil {
 		return nil, fmt.Errorf("params have neither %s, %s nor %s", KeyDealIDs, KeySectorBitField, KeySectorNumbers)
 	}
+	sectors, err := decodeBitfieldJSON(raw, maxTerminatedSectors)
+	if err != nil {
+		return nil, fmt.Errorf("sector bitfield: %w", err)
+	}
+	return sectors, nil
+}
+
+// decodeBitfieldJSON reads a bitfield stored by the actor parser in its JSON form (run lengths,
+// go-bitfield RLE MarshalJSON) and returns its set bits. It fails, without expanding the
+// bitfield, when more than max bits are set.
+func decodeBitfieldJSON(raw interface{}, max uint64) ([]uint64, error) {
 	encoded, err := json.Marshal(raw)
 	if err != nil {
-		return nil, fmt.Errorf("error encoding sector bitfield: %w", err)
+		return nil, fmt.Errorf("error encoding: %w", err)
 	}
 	var bf bitfield.BitField
 	if err := bf.UnmarshalJSON(encoded); err != nil {
-		return nil, fmt.Errorf("error decoding sector bitfield: %w", err)
+		return nil, fmt.Errorf("error decoding: %w", err)
 	}
 	count, err := bf.Count()
 	if err != nil {
-		return nil, fmt.Errorf("error counting sector bitfield: %w", err)
+		return nil, fmt.Errorf("error counting: %w", err)
 	}
-	if count > maxTerminatedSectors {
-		return nil, fmt.Errorf("sector bitfield has %d sectors, more than %d", count, maxTerminatedSectors)
+	if count > max {
+		return nil, fmt.Errorf("has %d bits set, more than %d", count, max)
 	}
-	sectors, err := bf.All(maxTerminatedSectors)
+	bits, err := bf.All(max)
 	if err != nil {
-		return nil, fmt.Errorf("error reading sector bitfield: %w", err)
+		return nil, fmt.Errorf("error reading: %w", err)
 	}
-	return sectors, nil
+	return bits, nil
 }
 
 // exactUint64Slice reads a JSON array decoded by decodeExact as uint64s. null is an empty slice.
