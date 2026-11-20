@@ -10,6 +10,8 @@ type DealsEvents struct {
 	DealsProposals   []*DealsProposals
 	DealsActivations []*DealsActivations
 	DealsSpaceInfo   []*DealsSpaceInfo
+	// DealsTerminations are the market OnMinerSectorsTerminate calls, see DealsTerminations.
+	DealsTerminations []*DealsTerminations
 }
 
 type DealsMessages struct {
@@ -85,4 +87,32 @@ type DealsSpaceInfo struct {
 	SpaceAsWeight bool      `json:"space_as_weight"`
 	ActionType    string    `json:"action_type"`
 	TxTimestamp   time.Time `json:"tx_timestamp"`
+}
+
+// DealsTerminations records a successful market OnMinerSectorsTerminate call, made by a miner when
+// sectors are terminated early (TerminateSectors, faults expired for too long, or the remainder of
+// a termination processed later under cron).
+//
+// Up to actors v12 (NV21) the call carries deal ids: there is one row per deal id, with DealID set
+// and SectorNumber nil. The market skips deals whose end_epoch <= TerminationEpoch (expiries, not
+// early terminations), deals already slashed and deals whose proposal is gone, so downstream must
+// keep only deals with end_epoch > TerminationEpoch (and the first termination per deal).
+//
+// From actors v13 (NV22) the call carries the terminated sectors instead: there is one row per
+// sector, with SectorNumber set and DealID nil. Downstream maps (ActorAddress, SectorNumber) to
+// deals through DealsActivations.SectorNumber, and applies the same end_epoch filter.
+type DealsTerminations struct {
+	ID     string `json:"id"`
+	Height uint64 `json:"height"`
+	TxCid  string `json:"tx_cid"`
+	// ActorAddress is the miner (the caller of the market), in the same form as
+	// DealsActivations.ActorAddress.
+	ActorAddress string  `json:"actor_address"`
+	DealID       *uint64 `json:"deal_id" gorm:"column:deal_id"`
+	SectorNumber *uint64 `json:"sector_number" gorm:"column:sector_number"`
+	// TerminationEpoch is the epoch in the params: the epoch the sectors were terminated at up to
+	// actors v12, the current epoch from actors v13 on.
+	TerminationEpoch int64     `json:"termination_epoch"`
+	ActionType       string    `json:"action_type"`
+	TxTimestamp      time.Time `json:"tx_timestamp"`
 }

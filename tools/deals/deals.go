@@ -48,12 +48,15 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 		DealsProposals:   []*types.DealsProposals{},
 		DealsActivations: []*types.DealsActivations{},
 		DealsSpaceInfo:   []*types.DealsSpaceInfo{},
+
+		DealsTerminations: []*types.DealsTerminations{},
 	}
 
 	dealsActivationsIds := tools.NewEventIds()
 	dealsMessagesIds := tools.NewEventIds()
 	dealsProposalsIds := tools.NewEventIds()
 	dealsSpaceInfoIds := tools.NewEventIds()
+	dealsTerminationsIds := tools.NewEventIds()
 	for _, tx := range transactions {
 		if !common.IsTxSuccess(tx) {
 			eg.logger.Debug("failed tx found, skipping it")
@@ -117,6 +120,20 @@ func (eg *eventGenerator) GenerateDealsEvents(ctx context.Context, transactions 
 			}
 			events.DealsSpaceInfo = append(events.DealsSpaceInfo, dealSpaceInfo...)
 		}
+		if eg.isDealTermination(tx) {
+			dealTerminations, err := eg.createDealTerminations(tx)
+			if err != nil {
+				// Same rule as activations: unusable metadata (e.g. raw-only after a decode
+				// failure) skips the terminations of this tx only, never the height.
+				eg.logger.Warnf("skipping deal terminations of tx %s (tx type %s, height %d): %s", tx.TxCid, tx.TxType, tx.Height, err.Error())
+				_ = eg.metrics.UpdateSkippedTerminationsMetric(tx.TxType)
+				continue
+			}
+			for i := range dealTerminations {
+				dealTerminations[i].ID = dealsTerminationsIds.Unique(dealTerminations[i].ID, tx.Id)
+			}
+			events.DealsTerminations = append(events.DealsTerminations, dealTerminations...)
+		}
 	}
 
 	return events, nil
@@ -135,7 +152,8 @@ func (eg *eventGenerator) isDealsStateMessage(actorName, txType string) bool {
 		// market method 6 is named BatchActivateDeals from actors v12 (NV21) on
 		strings.EqualFold(txType, parser.MethodBatchActivateDeals),
 		strings.EqualFold(txType, parser.MethodSettleDealPaymentsExported),
-		strings.EqualFold(txType, parser.MethodSectorContentChanged):
+		strings.EqualFold(txType, parser.MethodSectorContentChanged),
+		strings.EqualFold(txType, parser.MethodOnMinerSectorsTerminate):
 		return true
 	}
 
