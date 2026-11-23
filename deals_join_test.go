@@ -156,7 +156,8 @@ func TestParser_DealsAddressesConsolidated(t *testing.T) {
 
 // The tipset AT the NV22 upgrade height (mainnet 3,855,360) still executes with actors v12: Lotus
 // migrates the state while computing the next tipset (ApplyBlocks runs HandleStateForks for i in
-// [parentEpoch, epoch)), and StateNetworkVersion is 21 there. tools.VersionFromHeight labels it v13.
+// [parentEpoch, epoch)), and StateNetworkVersion is 21 there (tools.ExecutedVersionFromHeight is V21;
+// tools.VersionFromHeight labels the height V22).
 // The raw trace proves it: its BatchActivateDeals calls (cron ConfirmSectorProofsValid) carry the
 // 3-field v12 SectorDeals {sector_type, sector_expiry, deal_ids}, without a sector number.
 // The deals rows must not record a sector number for them (the decoded metadata shows

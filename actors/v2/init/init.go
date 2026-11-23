@@ -92,7 +92,7 @@ var methods = map[string]map[abi.MethodNum]nonLegacyBuiltin.MethodMeta{
 }
 
 func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi.MethodNum]nonLegacyBuiltin.MethodMeta, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	methods, ok := methods[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -102,7 +102,7 @@ func (i *Init) Methods(_ context.Context, network string, height int64) (map[abi
 }
 
 func (*Init) Constructor(network string, height int64, raw []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := constructorParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -112,7 +112,7 @@ func (*Init) Constructor(network string, height int64, raw []byte) (map[string]i
 }
 
 func (i *Init) Exec(ctx context.Context, network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := execParams[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -139,7 +139,7 @@ func (i *Init) Exec(ctx context.Context, network string, height int64, msg *pars
 }
 
 func (i *Init) Exec4(ctx context.Context, network string, height int64, msg *parser.LotusMessage, raw []byte, ec exitcode.ExitCode, canonical bool) (map[string]interface{}, *types.AddressInfo, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := exec4Params[version.String()]
 	if !ok {
 		return nil, nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

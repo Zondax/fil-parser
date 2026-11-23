@@ -324,7 +324,7 @@ func (h *Helper) isKeylessAccountActor(add address.Address, height int64) (bool,
 	if h.network != tools.MainnetNetwork || add.String() != keylessAccountActor {
 		return false, cid.Undef, ""
 	}
-	version := tools.VersionFromHeight(h.network, int64(height))
+	version := tools.ExecutedVersionFromHeight(h.network, int64(height))
 	if version.NodeVersion() < tools.V23.NodeVersion() {
 		return true, msigCid, manifest.MultisigKey
 	}
@@ -333,7 +333,7 @@ func (h *Helper) isKeylessAccountActor(add address.Address, height int64) (bool,
 
 // GetActorNameFromCid returns the actor name for the given cid and height from rosetta and fallsback to specialLegacyActors.
 func (h *Helper) GetActorNameFromCid(cid cid.Cid, height int64) (string, error) {
-	version := tools.VersionFromHeight(h.network, height)
+	version := tools.ExecutedVersionFromHeight(h.network, height)
 	actorName, err := h.lib.BuiltinActors.GetActorNameFromCidByVersion(cid, version.FilNetworkVersion())
 	if err != nil {
 		// fallback to specialLegacyActors

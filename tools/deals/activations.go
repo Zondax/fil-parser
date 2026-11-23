@@ -93,7 +93,7 @@ func (eg *eventGenerator) createDealActivations(_ context.Context, tx *types.Tra
 
 func (eg *eventGenerator) parseVerifyDealsForActivation(tx *types.Transaction, params, ret map[string]interface{}) ([]*types.DealsSpaceInfo, error) {
 	//#nosec G115
-	version := tools.VersionFromHeight(eg.network, int64(tx.Height))
+	version := tools.ExecutedVersionFromHeight(eg.network, int64(tx.Height))
 	dealSpaceInfo := []*types.DealsSpaceInfo{}
 
 	// Before V3, VerifyDealsForActivation has flat parameters
@@ -321,8 +321,9 @@ func (eg *eventGenerator) parseActivateDeals(tx *types.Transaction, params, exac
 	// it must not be recorded for v12. The decoded params cannot tell the two shapes apart (the
 	// actor parser's SectorDeals type reads both and always shows a SectorNumber), so the version
 	// that executed the tipset decides: the tipset at the NV22 upgrade height still ran actors v12
-	// (see executedNodeVersion).
-	hasSectorNumber := executedNodeVersion(eg.network, tx.Height) >= tools.V22.NodeVersion()
+	// (see tools.ExecutedVersionFromHeight).
+	//#nosec G115
+	hasSectorNumber := tools.ExecutedVersionFromHeight(eg.network, int64(tx.Height)).NodeVersion() >= tools.V22.NodeVersion()
 
 	activationIdx := 0
 	for dealIdx := range sectorDeals {

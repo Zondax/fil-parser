@@ -187,7 +187,7 @@ func TestActorParserV2_VerifiedWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
+			got, _, err := actor.Parse(context.Background(), network, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)
@@ -210,7 +210,7 @@ func TestActorParserV2_VerifiedWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(context.Background(), network, tools.V20.Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), network, tools.V20.FirstExecutedHeight(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,

@@ -2,6 +2,7 @@ package v2_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,15 +32,16 @@ func TestNV29MethodsAppearOnlyAtV29(t *testing.T) {
 	const net = tools.CalibrationNetwork
 
 	// Calibration heights: V28 (FireHorse) activated at 3694534; V29 (Solstice) activates at
-	// 4109133 (2026-09-28T12:59:30Z). The epoch right before Solstice must still be V28, so the
-	// methods switch exactly at the upgrade.
+	// 4109133 (2026-09-28T12:59:30Z). Methods() takes a tipset height: the tipset AT the upgrade
+	// height is still executed by V28 (the migration runs before the next tipset's messages), so
+	// the methods switch at upgrade+1.
 	const (
-		v28Height = int64(3694534 + 10)
-		v29Height = int64(4109133)
+		upgrade   = int64(4109133)
+		v29Height = upgrade + 1
 	)
-	require.Equal(t, "V28", tools.VersionFromHeight(net, v28Height).String())
-	require.Equal(t, "V28", tools.VersionFromHeight(net, v29Height-1).String())
-	require.Equal(t, "V29", tools.VersionFromHeight(net, v29Height).String())
+	require.Equal(t, "V29", tools.VersionFromHeight(net, upgrade).String())
+	require.Equal(t, "V28", tools.ExecutedVersionFromHeight(net, upgrade).String())
+	require.Equal(t, "V29", tools.ExecutedVersionFromHeight(net, v29Height).String())
 
 	for _, tc := range []struct {
 		actor   string
@@ -76,12 +78,14 @@ func TestNV29MethodsAppearOnlyAtV29(t *testing.T) {
 				require.True(t, got[m], "%s should expose %s at V29", tc.actor, m)
 			}
 		})
-		t.Run(tc.actor+"/absent at V28", func(t *testing.T) {
-			got, err := tc.at(v28Height)
-			require.NoError(t, err)
-			for _, m := range tc.methods {
-				require.False(t, got[m], "%s must NOT expose %s at V28 (NV29 method leaked into history)", tc.actor, m)
-			}
-		})
+		for _, h := range []int64{3694534 + 10, upgrade} {
+			t.Run(fmt.Sprintf("%s/absent at V28 tipset %d", tc.actor, h), func(t *testing.T) {
+				got, err := tc.at(h)
+				require.NoError(t, err)
+				for _, m := range tc.methods {
+					require.False(t, got[m], "%s must NOT expose %s at V28 (NV29 method leaked into history)", tc.actor, m)
+				}
+			})
+		}
 	}
 }

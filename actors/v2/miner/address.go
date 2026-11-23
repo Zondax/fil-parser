@@ -13,7 +13,7 @@ import (
 )
 
 func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := changeMultiaddrsParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -23,7 +23,7 @@ func (*Miner) ChangeMultiaddrsExported(network string, height int64, rawParams [
 }
 
 func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := changePeerIDParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -33,7 +33,7 @@ func (*Miner) ChangePeerIDExported(network string, height int64, rawParams []byt
 }
 
 func (*Miner) ChangeWorkerAddressExported(network string, height int64, rawParams []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := changeWorkerAddressParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -47,7 +47,7 @@ func (*Miner) ChangeOwnerAddressExported(network string, height int64, rawParams
 }
 
 func (*Miner) IsControllingAddressExported(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	params, ok := isControllingAddressParams[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -61,7 +61,7 @@ func (*Miner) IsControllingAddressExported(network string, height int64, rawPara
 }
 
 func (*Miner) GetOwnerExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := getOwnerReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -71,7 +71,7 @@ func (*Miner) GetOwnerExported(network string, height int64, rawReturn []byte) (
 }
 
 func (*Miner) GetPeerIDExported(network string, height int64, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := getPeerIDReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -84,7 +84,7 @@ func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []by
 	metadata, err := parseGeneric(rawReturn, nil, false, &types.GetMultiaddrsReturn{}, &abi.EmptyValue{}, parser.ReturnKey)
 	if err != nil {
 		// fallback to canonical parser
-		version := tools.VersionFromHeight(network, height)
+		version := tools.ExecutedVersionFromHeight(network, height)
 		returnValue, ok := getMultiAddrsReturn[version.String()]
 		if !ok {
 			return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)
@@ -96,7 +96,7 @@ func (*Miner) GetMultiaddrsExported(network string, height int64, rawReturn []by
 }
 
 func (*Miner) ControlAddresses(network string, height int64, rawParams, rawReturn []byte) (map[string]interface{}, error) {
-	version := tools.VersionFromHeight(network, height)
+	version := tools.ExecutedVersionFromHeight(network, height)
 	returnValue, ok := getControlAddressesReturn[version.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w: %d", actors.ErrUnsupportedHeight, height)

@@ -320,7 +320,7 @@ func TestActorParserV2_MultisigWithParamsAndReturn(t *testing.T) {
 			require.NotNil(t, rawParams)
 			require.NotNil(t, rawReturn)
 
-			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion(network).Height(), tt.txType, &parser.LotusMessage{
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, &parser.LotusMessage{
 				Params: rawParams,
 			}, &parser.LotusMessageReceipt{
 				Return: rawReturn,
@@ -356,7 +356,7 @@ func TestActorParserV2_MultisigWithParamsOrReturn(t *testing.T) {
 				msg.Params = rawParams
 			}
 
-			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion(network).Height(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
+			got, _, err := actor.Parse(context.Background(), manifest.MultisigKey, tools.LatestVersion(network).FirstExecutedHeight(), tt.txType, msg, msgRct, cid.Undef, filTypes.EmptyTSK, true)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Contains(t, got, tt.key, fmt.Sprintf("%s could no be found in metadata", tt.key))
@@ -404,7 +404,7 @@ func TestActorParserV2_ParseMultisigMetadata(t *testing.T) {
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	require.NoError(t, err, "Error reading CSV file")
-	height := tools.LatestVersion(network).Height()
+	height := tools.LatestVersion(network).FirstExecutedHeight()
 
 	for _, record := range records {
 		require.Len(t, record, 3, "Invalid record")
