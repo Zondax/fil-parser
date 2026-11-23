@@ -62,11 +62,6 @@ func TestExecutedVersionFromHeightAtEveryUpgrade(t *testing.T) {
 // TestExecutedVersionFromHeightMatchesChain pins ExecutedVersionFromHeight to StateNetworkVersion
 // as reported by the Zondax archival (stable) nodes at U and U+1 (2026-11-20). StateNetworkVersion
 // of a tipset is the version of the VM that runs its messages (GetNetworkVersion(ts.Height())).
-//
-// Not listed, because the version table itself disagrees with the chain over a whole range (not an
-// off-by-one; tracked separately): mainnet V4 (the table uses Refuel 130800, which kept NV3; NV4
-// starts after 138720), calibration V21 (the table uses WatermelonFix2 1108174; NV21 starts after
-// 1013134) and calibration V24 (the table uses 2081674; NV24 starts after 2078794).
 func TestExecutedVersionFromHeightMatchesChain(t *testing.T) {
 	chain := []struct {
 		network string
@@ -77,6 +72,8 @@ func TestExecutedVersionFromHeightMatchesChain(t *testing.T) {
 		{MainnetNetwork, 41280, 0, 1},
 		{MainnetNetwork, 51000, 1, 2},
 		{MainnetNetwork, 94000, 2, 3},
+		// Refuel (130800) kept NV3; actors v2 / NV4 starts after Assembly.
+		{MainnetNetwork, 138720, 3, 4},
 		{MainnetNetwork, 140760, 4, 5},
 		{MainnetNetwork, 170000, 5, 6},
 		{MainnetNetwork, 265200, 6, 7},
@@ -107,8 +104,11 @@ func TestExecutedVersionFromHeightMatchesChain(t *testing.T) {
 		{CalibrationNetwork, 322354, 17, 18},
 		{CalibrationNetwork, 489094, 18, 19},
 		{CalibrationNetwork, 492214, 19, 20},
+		// Watermelon; WatermelonFix 1070494 and WatermelonFix2 1108174 stayed on NV21.
+		{CalibrationNetwork, 1013134, 20, 21},
 		{CalibrationNetwork, 1427974, 21, 22},
 		{CalibrationNetwork, 1779094, 22, 23},
+		{CalibrationNetwork, 2078794, 23, 24},
 		{CalibrationNetwork, 2523454, 24, 25},
 		{CalibrationNetwork, 2543614, 25, 26},
 		{CalibrationNetwork, 3007294, 26, 27},

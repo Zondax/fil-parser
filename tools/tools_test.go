@@ -57,9 +57,9 @@ func TestIsSupported(t *testing.T) {
 		{name: "V9 on calibration", version: V9, network: "calibration", height: 265200, want: false},
 		{name: "V9 on mainnet", version: V9, network: "mainnet", height: 265200, want: false},
 
-		{name: "V24 on calibration", version: V24, network: "calibration", height: 2081674, want: true},
+		{name: "V24 on calibration", version: V24, network: "calibration", height: 2078794, want: true},
 		{name: "V24 on mainnet", version: V24, network: "mainnet", height: 1427974, want: false},
-		{name: "V24 on calibration", version: V24, network: "calibration", height: 2081672, want: false},
+		{name: "V24 on calibration", version: V24, network: "calibration", height: 2078793, want: false},
 		{name: "V24 on mainnet", version: V24, network: "mainnet", height: 4461240, want: true},
 	}
 	for _, tt := range tests {
@@ -263,7 +263,8 @@ func TestVersionFromHeight(t *testing.T) {
 		{name: "mainnet", network: "mainnet", height: 41280, want: V1},
 		{name: "mainnet", network: "mainnet", height: 51000, want: V2},
 		{name: "mainnet", network: "mainnet", height: 94000, want: V3},
-		{name: "mainnet", network: "mainnet", height: 130800, want: V4},
+		{name: "mainnet", network: "mainnet", height: 130800, want: V3},
+		{name: "mainnet", network: "mainnet", height: 138720, want: V4},
 		{name: "mainnet", network: "mainnet", height: 140760, want: V5},
 		{name: "mainnet", network: "mainnet", height: 170000, want: V6},
 		{name: "mainnet", network: "mainnet", height: 265200, want: V7},
