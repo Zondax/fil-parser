@@ -45,8 +45,11 @@ var (
 	// V3 Ignition, spec-actors: v1, calibration: 0, mainnet: 94000
 	V3 version = version{calibration: 0, mainnet: buildconstants.UpgradeIgnitionHeight, nodeVersion: 3}
 
-	// V4 Refuel, spec-actors: v2, calibration: 0, mainnet: 130800
-	V4 version = version{calibration: 0, mainnet: buildconstants.UpgradeRefuelHeight, nodeVersion: 4}
+	// V4 Assembly (actors v2), spec-actors: v2, calibration: 0, mainnet: 138720
+	//
+	// Not Refuel (130800): that upgrade kept network version 3 (lotus upgrades.go maps Refuel to
+	// network.Version3 and UpgradeAssemblyHeight, formerly UpgradeActorsV2Height, to network.Version4).
+	V4 version = version{calibration: 0, mainnet: buildconstants.UpgradeAssemblyHeight, nodeVersion: 4}
 	// V5 Tape, spec-actors: v2, calibration: 0, mainnet: 140760
 	V5 version = version{calibration: 0, mainnet: buildconstants.UpgradeTapeHeight, nodeVersion: 5}
 	// V6 Kumquat, spec-actors: v2, calibration: 0, mainnet: 170000
@@ -95,8 +98,11 @@ var (
 	// V20 Thunder, builtin-actors(go-state-types): v11, calibration: 492214, mainnet: 2870280
 	V20 version = version{calibration: 492214, mainnet: buildconstants.UpgradeThunderHeight, nodeVersion: 20}
 
-	// V21 Watermelon, builtin-actors(go-state-types): v12, calibration: 1108174, mainnet: 3469380
-	V21 version = version{calibration: 1108174, mainnet: buildconstants.UpgradeWatermelonHeight, nodeVersion: 21}
+	// V21 Watermelon, builtin-actors(go-state-types): v12, calibration: 1013134, mainnet: 3469380
+	//
+	// Calibration: UpgradeWatermelonHeight 1013134 (NV21, actors v12). WatermelonFix (1070494) and
+	// WatermelonFix2 (1108174) only replaced the buggy v12 miner code and stayed on NV21.
+	V21 version = version{calibration: 1013134, mainnet: buildconstants.UpgradeWatermelonHeight, nodeVersion: 21}
 
 	// V22 Dragon, builtin-actors(go-state-types): v13, calibration: 1427974, mainnet: 3855360
 	V22 version = version{calibration: 1427974, mainnet: buildconstants.UpgradeDragonHeight, nodeVersion: 22}
@@ -104,8 +110,11 @@ var (
 	// V23 Waffle, builtin-actors(go-state-types): v14, calibration: 1779094, mainnet: 4154640
 	V23 version = version{calibration: 1779094, mainnet: buildconstants.UpgradeWaffleHeight, nodeVersion: 23}
 
-	// V24 Tuktuk, builtin-actors(go-state-types): v15, calibration: 2081674, mainnet: 4461240
-	V24 version = version{calibration: 2081674, mainnet: buildconstants.UpgradeTuktukHeight, nodeVersion: 24}
+	// V24 Tuktuk, builtin-actors(go-state-types): v15, calibration: 2078794, mainnet: 4461240
+	//
+	// Calibration: UpgradeTuktukHeight 2078794 (NV24, actors v15). 2081674 (Tuktuk + 2880) was the
+	// planned calibration F3 bootstrap epoch, not a network version boundary.
+	V24 version = version{calibration: 2078794, mainnet: buildconstants.UpgradeTuktukHeight, nodeVersion: 24}
 
 	// V25 Teep, builtin-actors(go-state-types): v16, calibration: 2523454, mainnet: 4878840
 	V25 version = version{calibration: 2523454, mainnet: buildconstants.UpgradeTeepHeight, nodeVersion: 25}
