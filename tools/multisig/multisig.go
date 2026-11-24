@@ -243,27 +243,9 @@ func (eg *eventGenerator) createMultisigInfo(ctx context.Context, tx *types.Tran
 			if !ok {
 				return nil, fmt.Errorf("parsedMetadata is not a map[string]interface{}")
 			}
-			signers, ok := constructorData[metadataSigners].([]string)
-			if ok {
-				consolidatedSigners := make([]string, 0, len(signers))
-				for _, signer := range signers {
-					addr, err := address.NewFromString(signer)
-					if err != nil {
-						eg.logger.Errorf("address.NewFromString(%s): %s", signer, err)
-						break
-					}
-					robustAddr, err := actors.ConsolidateToRobustAddress(ctx, addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
-					if err != nil {
-						eg.logger.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
-						break
-					}
-					consolidatedSigners = append(consolidatedSigners, robustAddr)
-				}
-				// only add the consolidated signers if all the signers were consolidated successfully
-				if len(consolidatedSigners) == len(signers) {
-					constructorData[metadataSigners] = consolidatedSigners
-					parsedMetadata = constructorData
-				}
+			if consolidatedSigners, ok := eg.consolidateConstructorSigners(ctx, constructorData[metadataSigners]); ok {
+				constructorData[metadataSigners] = consolidatedSigners
+				parsedMetadata = constructorData
 			}
 		}
 	}
@@ -321,6 +303,50 @@ func isAddOrRemoveSigner(txType string) bool {
 
 func isConstructor(txType string) bool {
 	return txType == parser.MethodConstructor
+}
+
+// consolidateConstructorSigners converts the Constructor "Signers" to robust addresses.
+// The metadata comes from JSON (tools.ParseTxMetadata), so the list decodes as []interface{};
+// []string is accepted too. It returns ok=false, and the caller keeps the original value, when
+// the value is not a list of strings or any signer cannot be parsed or consolidated.
+// A best-effort miss (empty robust address) keeps that signer as it was.
+func (eg *eventGenerator) consolidateConstructorSigners(ctx context.Context, rawSigners any) ([]string, bool) {
+	var signers []string
+	switch v := rawSigners.(type) {
+	case []string:
+		signers = v
+	case []interface{}:
+		signers = make([]string, 0, len(v))
+		for _, s := range v {
+			signer, ok := s.(string)
+			if !ok {
+				eg.logger.Errorf("multisig constructor signer is not a string: %T", s)
+				return nil, false
+			}
+			signers = append(signers, signer)
+		}
+	default:
+		return nil, false
+	}
+
+	consolidatedSigners := make([]string, 0, len(signers))
+	for _, signer := range signers {
+		addr, err := address.NewFromString(signer)
+		if err != nil {
+			eg.logger.Errorf("address.NewFromString(%s): %s", signer, err)
+			return nil, false
+		}
+		robustAddr, err := actors.ConsolidateToRobustAddress(ctx, addr, eg.helper, eg.logger, eg.config.RobustAddressBestEffort, true)
+		if err != nil {
+			eg.logger.Errorf("actors.ConsolidateToRobustAddress(%s): %s", addr, err)
+			return nil, false
+		}
+		if robustAddr == "" {
+			robustAddr = signer
+		}
+		consolidatedSigners = append(consolidatedSigners, robustAddr)
+	}
+	return consolidatedSigners, true
 }
 
 /*
