@@ -2,7 +2,6 @@ package verifreg
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"strings"
@@ -106,7 +105,7 @@ func (eg *eventGenerator) isVerifregMessage(actorName, txType string) bool {
 func (eg *eventGenerator) createVerifregInfo(ctx context.Context, tx *types.Transaction, tipsetCid string, events *types.VerifregEvents) (*types.VerifregEvents, error) {
 
 	metadata := map[string]interface{}{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &metadata)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &metadata)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}

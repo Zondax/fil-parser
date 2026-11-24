@@ -2,7 +2,6 @@ package datacap
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"strings"
@@ -31,7 +30,7 @@ func (eg *eventGenerator) createDataCapTokenEvents(ctx context.Context, tx *type
 	allowanceEvents := []*types.DataCapAllowanceEvent{}
 
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}

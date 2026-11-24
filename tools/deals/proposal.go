@@ -2,7 +2,6 @@ package deals
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
@@ -38,7 +37,7 @@ const (
 
 func (eg *eventGenerator) createDealsInfo(ctx context.Context, tx *types.Transaction) ([]*types.DealsProposals, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
