@@ -17,6 +17,7 @@ import (
 	"github.com/zondax/fil-parser/actors/cache"
 	"github.com/zondax/fil-parser/parser"
 	"github.com/zondax/fil-parser/parser/helper"
+	"github.com/zondax/fil-parser/tools"
 	"github.com/zondax/fil-parser/types"
 	"github.com/zondax/golem/pkg/logger"
 	rosettaFilecoinLibActors "github.com/zondax/rosetta-filecoin-lib/actors"
@@ -73,27 +74,55 @@ func GetBigInt(value map[string]interface{}, key string, canBeNil bool) (*big.In
 	return bigIntValue, nil
 }
 
+// GetInteger reads an integer from a map decoded from JSON. The value can be a json.Number
+// (tools.UnmarshalJSONUseNumber, exact for any int64/uint64) or a float64 (json.Unmarshal).
 func GetInteger[T constraints.Integer](value map[string]interface{}, key string, canBeNil bool) (T, error) {
-	valueAsFloat, err := GetItem[float64](value, key, canBeNil)
+	raw, err := GetItem[any](value, key, canBeNil)
 	if err != nil {
 		return 0, err
 	}
-
-	return T(valueAsFloat), nil
+	if raw == nil {
+		return 0, nil
+	}
+	v, ok := toInteger[T](raw)
+	if !ok {
+		return 0, fmt.Errorf("key %s not of type number, of type %T", key, raw)
+	}
+	return v, nil
 }
 
+// GetIntegerSlice reads a slice of integers from a map decoded from JSON. See GetInteger.
 func GetIntegerSlice[T constraints.Integer](value map[string]interface{}, key string, canBeNil bool) ([]T, error) {
-	valuesAsFloat, err := GetSlice[float64](value, key, canBeNil)
+	items, err := GetSlice[any](value, key, canBeNil)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]T, len(valuesAsFloat))
-	for i, v := range valuesAsFloat {
-		result[i] = T(v)
+	// non-nil even when the key is absent, as before json.Number support
+	result := make([]T, len(items))
+	for i, item := range items {
+		v, ok := toInteger[T](item)
+		if !ok {
+			return nil, fmt.Errorf("item %v not of type number, of type %T", item, item)
+		}
+		result[i] = v
 	}
 
 	return result, nil
+}
+
+// toInteger converts a JSON-decoded number to T. A float64 keeps the direct T(float64)
+// conversion used before json.Number support; a json.Number is parsed exactly.
+func toInteger[T constraints.Integer](raw any) (T, bool) {
+	if f, ok := raw.(float64); ok {
+		return T(f), true
+	}
+	if ^T(0) < 0 { // signed
+		v, ok := tools.JSONNumberToInt64(raw)
+		return T(v), ok
+	}
+	v, ok := tools.JSONNumberToUint64(raw)
+	return T(v), ok
 }
 
 func GetCID(value map[string]interface{}, key string, canBeNil bool) (cid.Cid, error) {

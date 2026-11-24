@@ -119,6 +119,8 @@ func (m *Msig) Propose(ctx context.Context, network string, msg *parser.LotusMes
 }
 
 // paramsToMap converts the parameters to a map from a generic CBORUnmarshaler interface type.
+// Numbers are kept as json.Number so integers above 2^53 (e.g. a ChangeBeneficiary NewExpiration
+// of MaxInt64) are not rounded through float64.
 func (*Msig) paramsToMap(params any) (map[string]any, error) {
 	dataAsMap := make(map[string]any)
 
@@ -127,10 +129,10 @@ func (*Msig) paramsToMap(params any) (map[string]any, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(tmp, &dataAsMap)
+	err = tools.UnmarshalJSONUseNumber(tmp, &dataAsMap)
 	if err != nil {
 		var dataAsAny any
-		err = json.Unmarshal(tmp, &dataAsAny)
+		err = tools.UnmarshalJSONUseNumber(tmp, &dataAsAny)
 		if err != nil {
 			return nil, err
 		}

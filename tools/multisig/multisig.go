@@ -141,8 +141,8 @@ func (eg *eventGenerator) createProposal(ctx context.Context, tx *types.Transact
 
 	eg.processProposalParams(ctx, metadata, tx.TxType, proposal)
 	if ret, ok := metadata[metadataReturn].(map[string]interface{}); ok {
-		if txnID, ok := ret[metadataTxnIDField].(float64); ok {
-			proposal.ProposalID = int64(txnID)
+		if txnID, ok := tools.JSONNumberToInt64(ret[metadataTxnIDField]); ok {
+			proposal.ProposalID = txnID
 		}
 	}
 
@@ -158,8 +158,8 @@ func (eg *eventGenerator) processProposalParams(ctx context.Context, metadata ma
 		metadata[metadataParams] = eg.parseParams(ctx, metadata)
 
 		if params, ok := metadata[metadataParams].(map[string]interface{}); ok {
-			if metadataID, ok := params[metadataIDField].(float64); ok {
-				proposal.ProposalID = int64(metadataID)
+			if metadataID, ok := tools.JSONNumberToInt64(params[metadataIDField]); ok {
+				proposal.ProposalID = metadataID
 			}
 			jsonParams, err := json.Marshal(params)
 			if err != nil {
@@ -290,7 +290,7 @@ func (eg *eventGenerator) parseParams(ctx context.Context, metadata map[string]i
 	var params map[string]interface{}
 	switch data := metadata[metadataParams].(type) {
 	case string:
-		if err := json.Unmarshal([]byte(data), &params); err != nil {
+		if err := tools.UnmarshalJSONUseNumber([]byte(data), &params); err != nil {
 			eg.logger.Errorf("Error deserializing params string: %v", err)
 			return nil
 		}

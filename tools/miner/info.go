@@ -55,7 +55,7 @@ func (eg *eventGenerator) createMinerInfo(ctx context.Context, tx *types.Transac
 
 func (eg *eventGenerator) parseAwardBlockReward(ctx context.Context, tx *types.Transaction, tipsetCid string) (*types.MinerInfo, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
@@ -93,7 +93,7 @@ func (eg *eventGenerator) parseAwardBlockReward(ctx context.Context, tx *types.T
 
 func (eg *eventGenerator) parseConstructor(ctx context.Context, tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
@@ -128,7 +128,7 @@ func (eg *eventGenerator) parseConstructor(ctx context.Context, tx *types.Transa
 
 func (eg *eventGenerator) parseChangeWorkerAddress(ctx context.Context, tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
@@ -195,7 +195,7 @@ func (eg *eventGenerator) parseChangeMultiaddrs(tx *types.Transaction, tipsetCid
 
 func (eg *eventGenerator) parseChangeBeneficiary(ctx context.Context, tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
@@ -235,7 +235,7 @@ func (eg *eventGenerator) parseChangeBeneficiary(ctx context.Context, tx *types.
 
 func (eg *eventGenerator) parseChangeOwnerAddress(ctx context.Context, tx *types.Transaction, tipsetCid, actorAddress string) (*types.MinerInfo, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}

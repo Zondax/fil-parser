@@ -166,9 +166,14 @@ func (eg *eventGenerator) parserUniversalReceiverHook(ctx context.Context, tx *t
 		switch provider := allocations[i].AllocationData.Provider.(type) {
 		case string:
 			addr, err = common.ConsolidateAddress(ctx, provider, eg.helper, eg.logger, eg.config, true)
-		// any number parsed from json to the interface{} field will be a float64
-		case float64:
-			addr, err = common.ConsolidateIDAddress(ctx, uint64(provider), eg.helper, eg.logger, eg.config, true)
+		// a number decoded by tools.UnmarshalJSONUseNumber into the interface{} field is a
+		// json.Number (float64 with json.Unmarshal)
+		case json.Number, float64:
+			id, ok := tools.JSONNumberToUint64(provider)
+			if !ok {
+				return "", "", nil, fmt.Errorf("invalid provider id: %v", provider)
+			}
+			addr, err = common.ConsolidateIDAddress(ctx, id, eg.helper, eg.logger, eg.config, true)
 		default:
 			return "", "", nil, fmt.Errorf("invalid provider type: %T", allocations[i].AllocationData.Provider)
 		}
@@ -197,7 +202,7 @@ func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height 
 	}
 
 	var txMetadata FRC46TransactionMetadata
-	err = json.Unmarshal([]byte(metadata), &txMetadata)
+	err = tools.UnmarshalJSONUseNumber([]byte(metadata), &txMetadata)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error unmarshalling FRC46 transaction metadata: %w", err)
 	}
@@ -215,7 +220,7 @@ func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height 
 	}
 	tmp := OperatorData{}
 
-	if err := json.Unmarshal([]byte(parsedOperatorData), &tmp); err != nil {
+	if err := tools.UnmarshalJSONUseNumber([]byte(parsedOperatorData), &tmp); err != nil {
 		return nil, nil, fmt.Errorf("error unmarshalling operator data: %w", err)
 	}
 	txMetadata.Params.OperatorData = tmp
@@ -227,7 +232,7 @@ func (eg *eventGenerator) ParseFRC46TransactionMetadata(metadata string, height 
 */
 func (eg *eventGenerator) parseFRC46Data(metadata string, height int64) (*FRC46TransactionParams, error) {
 	parsedMetadata := map[string]interface{}{}
-	err := json.Unmarshal([]byte(metadata), &parsedMetadata)
+	err := tools.UnmarshalJSONUseNumber([]byte(metadata), &parsedMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling metadata: %w", err)
 	}
@@ -259,7 +264,7 @@ func (eg *eventGenerator) parseFRC46Data(metadata string, height int64) (*FRC46T
 		return nil, fmt.Errorf("error parsing frc46 data: %w", err)
 	}
 	tmp := FRC46TransactionParams{}
-	if err := json.Unmarshal([]byte(parsedPayload), &tmp); err != nil {
+	if err := tools.UnmarshalJSONUseNumber([]byte(parsedPayload), &tmp); err != nil {
 		return nil, fmt.Errorf("error unmarshalling frc46 data: %w", err)
 	}
 	return &tmp, nil

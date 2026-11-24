@@ -19,6 +19,7 @@ import (
 	filTypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
 	"github.com/zondax/fil-parser/parser"
+	"github.com/zondax/fil-parser/tools"
 )
 
 /*
@@ -72,7 +73,7 @@ func (p *ActorParser) msigParams(ctx context.Context, msg *parser.LotusMessage, 
 		return map[string]interface{}{}, err
 	}
 	var paramsMap map[string]interface{}
-	err = json.Unmarshal([]byte(params), &paramsMap)
+	err = tools.UnmarshalJSONUseNumber([]byte(params), &paramsMap)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -293,37 +294,37 @@ func ParseMultisigMetadata(txType string, txMetadata string) (interface{}, error
 
 func parseAddVerifierValue(txMetadata string) (interface{}, error) {
 	var v verifreg.AddVerifierParams
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseChangeOwnerAddressValue(txMetadata string) (interface{}, error) {
 	var v ChangeOwnerAddressParams
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseWithdrawBalanceValue(txMetadata string) (interface{}, error) {
 	var v miner.WithdrawBalanceParams
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseInvokeContractValue(txMetadata string) (interface{}, error) {
 	var v InvokeContractParams
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseAddSignerValue(txMetadata string) (interface{}, error) {
 	var v multisig2.AddSignerParams
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseApproveValue(txMetadata string) (interface{}, error) {
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &raw)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +335,7 @@ func parseApproveValue(txMetadata string) (interface{}, error) {
 	}
 
 	var params ApproveValue
-	err = json.Unmarshal([]byte(paramsRaw), &params)
+	err = tools.UnmarshalJSONUseNumber([]byte(paramsRaw), &params)
 	if err != nil {
 		return nil, err
 	}
@@ -349,9 +350,9 @@ func parseApproveValue(txMetadata string) (interface{}, error) {
 		return nil, fmt.Errorf("Applied not found or not a bool")
 	}
 
-	code, ok := returnRaw["Code"].(float64)
+	code, ok := tools.JSONNumberToInt64(returnRaw["Code"])
 	if !ok {
-		return nil, fmt.Errorf("Code not found or not a float64")
+		return nil, fmt.Errorf("Code not found or not a number")
 	}
 
 	ret, ok := returnRaw["Ret"].(string)
@@ -370,7 +371,7 @@ func parseApproveValue(txMetadata string) (interface{}, error) {
 
 func parseCancelValue(txMetadata string) (interface{}, error) {
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &raw)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +382,7 @@ func parseCancelValue(txMetadata string) (interface{}, error) {
 	}
 
 	var paramsRaw map[string]interface{}
-	err = json.Unmarshal([]byte(paramsStr), &paramsRaw)
+	err = tools.UnmarshalJSONUseNumber([]byte(paramsStr), &paramsRaw)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +398,7 @@ func parseCancelValue(txMetadata string) (interface{}, error) {
 
 func parseChangeNumApprovalsThresholdValue(txMetadata string) (interface{}, error) {
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &raw)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -408,8 +409,8 @@ func parseChangeNumApprovalsThresholdValue(txMetadata string) (interface{}, erro
 	}
 
 	var v multisig2.ChangeNumApprovalsThresholdParams
-	if newThreshold, ok := paramsRaw["NewThreshold"].(float64); ok {
-		v.NewThreshold = uint64(newThreshold)
+	if newThreshold, ok := tools.JSONNumberToUint64(paramsRaw["NewThreshold"]); ok {
+		v.NewThreshold = newThreshold
 	} else {
 		return nil, fmt.Errorf("NewThreshold not found or not a number")
 	}
@@ -419,7 +420,7 @@ func parseChangeNumApprovalsThresholdValue(txMetadata string) (interface{}, erro
 
 func parseConstructorValue(txMetadata string) (interface{}, error) {
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &raw)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +441,7 @@ func parseConstructorValue(txMetadata string) (interface{}, error) {
 
 func parseLockBalanceValue(txMetadata string) (interface{}, error) {
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &raw)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +462,7 @@ func parseLockBalanceValue(txMetadata string) (interface{}, error) {
 
 func parseRemoveSignerValue(txMetadata string) (interface{}, error) {
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &raw)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +471,7 @@ func parseRemoveSignerValue(txMetadata string) (interface{}, error) {
 		return nil, fmt.Errorf("Params not found or not a string")
 	}
 	var params multisig2.RemoveSignerParams
-	err = json.Unmarshal([]byte(paramsRaw), &params)
+	err = tools.UnmarshalJSONUseNumber([]byte(paramsRaw), &params)
 	if err != nil {
 		return nil, err
 	}
@@ -479,25 +480,25 @@ func parseRemoveSignerValue(txMetadata string) (interface{}, error) {
 
 func parseSendValue(txMetadata string) (interface{}, error) {
 	var v SendValue
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseSwapSignerValue(txMetadata string) (interface{}, error) {
 	var v multisig2.SwapSignerParams
-	err := json.Unmarshal([]byte(txMetadata), &v)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &v)
 	return v, err
 }
 
 func parseUniversalReceiverHookValue(txMetadata string) (interface{}, error) {
 	var tx TransactionUniversalReceiverHookMetadata
-	err := json.Unmarshal([]byte(txMetadata), &tx)
+	err := tools.UnmarshalJSONUseNumber([]byte(txMetadata), &tx)
 	if err != nil {
 		return nil, err
 	}
 
 	var params UniversalReceiverHookParams
-	err = json.Unmarshal([]byte(tx.Params), &params)
+	err = tools.UnmarshalJSONUseNumber([]byte(tx.Params), &params)
 	if err != nil {
 		return nil, err
 	}
@@ -512,10 +513,12 @@ func parseUniversalReceiverHookValue(txMetadata string) (interface{}, error) {
 	return result, nil
 }
 
+// mapToStruct decodes a map built by UnmarshalJSONUseNumber into v. json.Number values are
+// re-encoded verbatim, so integer fields get the exact value.
 func mapToStruct(m map[string]interface{}, v interface{}) error {
 	data, err := json.Marshal(m)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, v)
+	return tools.UnmarshalJSONUseNumber(data, v)
 }

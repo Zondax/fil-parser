@@ -3,7 +3,6 @@ package tools
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -198,9 +197,11 @@ func SetNodeMetadata[T types.HasNodeInfo](data []T, metadata types.BlockMetadata
 
 }
 
+// ParseTxMetadata decodes a transaction's metadata. Numbers are kept as json.Number (see
+// UnmarshalJSONUseNumber) so that re-encoding the result does not change them.
 func ParseTxMetadata(txMetadata string) (map[string]interface{}, error) {
 	var metadata map[string]interface{}
-	err := json.Unmarshal([]byte(txMetadata), &metadata)
+	err := UnmarshalJSONUseNumber([]byte(txMetadata), &metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal TxMetadata: %v", err)
 	}

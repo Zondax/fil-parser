@@ -72,7 +72,7 @@ func (eg *eventGenerator) isMinerSectorMessage(actorName, txType string) bool {
 
 func (eg *eventGenerator) createSectorEvents(ctx context.Context, tx *types.Transaction, tipsetCid string) ([]*types.MinerSectorEvent, error) {
 	var value map[string]interface{}
-	err := json.Unmarshal([]byte(tx.TxMetadata), &value)
+	err := tools.UnmarshalJSONUseNumber([]byte(tx.TxMetadata), &value)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling tx metadata: %w", err)
 	}
